@@ -1,0 +1,1 @@
+-v --force --timestamp=none --sign - /Users/rawriclark/Projects/Buriza/src/Buriza.App/bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app/libmono-component-hot_reload.dylib
