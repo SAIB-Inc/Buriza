@@ -1,0 +1,23 @@
+@namespace Buriza.UI.Components.Common
+
+<MudTabs 
+    Elevation="2" 
+    Rounded="true" 
+    ApplyEffectsToContainer="true"
+    ActivePanelIndex="@ActivePanelIndex"
+    ActivePanelIndexChanged="@ActivePanelIndexChanged"
+    Class="@(@"
+        !bg-none !shadow-none 
+        [&_.mud-tabs-tabbar]:!bg-transparent 
+        [&_.mud-tab-active]:!text-[var(--mud-palette-dark-darken)] 
+        [&_.mud-tab-slider]:!bg-[var(--mud-palette-primary-lighten)]
+        [&_.mud-tab]:!rounded-full 
+        [&_.mud-tab]:!font-medium 
+        [&_.mud-tab]:!normal-case 
+        [&_.mud-tab]:!text-lg 
+        [&_.mud-tab]:gap-2
+        [&_.mud-tab]:!transition-colors 
+        [&_.mud-tab]:!duration-300 " + Class)"
+>
+    @ChildContent
+</MudTabs>
