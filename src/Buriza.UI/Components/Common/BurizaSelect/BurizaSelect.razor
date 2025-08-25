@@ -1,0 +1,37 @@
+@namespace Buriza.UI.Components.Common
+@typeparam TItem
+
+<MudSelect
+    T="TItem"
+    Variant="Variant"
+    Value="Value"
+    ValueChanged="@ValueChanged"
+    Disabled="@Disabled"
+    ToStringFunc="@ToStringFunc"
+    Adornment="Adornment"
+    AdornmentIcon="@AdornmentIcon"
+    ShrinkLabel="true"
+    RelativeWidth="RelativeWidth"
+    Class="@(@"
+        [&_.mud-input-slot]:!text-[var(--mud-palette-text-primary)]
+        [&_.mud-input-outlined-border]:!border-none
+        [&_.mud-input-adornment-end]:!h-full
+        [&_.mud-input-adornment-end]:!aspect-square
+        [&_.mud-input-adornment-end]:!justify-center
+        [&_.mud-input-adornment-end]:!rounded-sm
+        [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]
+        !border-2
+        !border-[var(--mud-palette-table-lines)]
+        !rounded-full 
+        !select-none " + Class)"
+    PopoverClass="@(@"
+        !bg-[var(--mud-palette-background)]
+        !shadow-none
+        [&.mud-list-item]:rounded-xl!
+        [&.mud-list]:p-2! [&.mud-list]:py-3!
+        !text-[var(--mud-palette-text-primary)]
+        border-none
+        !rounded-[4px] mt-2 !select-none " + PopoverClass)"
+    >
+    @ChildContent
+</MudSelect>

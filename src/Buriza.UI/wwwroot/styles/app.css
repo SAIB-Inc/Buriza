@@ -1,2 +1,32 @@
 @config "../tailwind.config.js";
 @import "tailwindcss";
+
+:root {
+    --dapp-hunterdex-primary: #4F8EFF;
+    --dapp-hunterdex-secondary: #006ED3;
+    --dapp-levvy-primary: #FF993A;
+    --dapp-levvy-secondary: #FF7E07;
+    --dapp-minswap-primary: #5656FF;
+    --dapp-minswap-secondary: #01194A;
+    --dapp-danzo-primary: #BB7C00;
+    --dapp-danzo-secondary: #FFC000;
+}
+
+* {
+    font-family: "Poppins", system-ui, sans-serif;
+}
+
+.mud-tabs-tabbar-wrapper {
+    position: relative;
+    border-radius: 9999px;
+    max-width: max-content;
+    height: 100%;
+    padding: 6px 2px;
+}
+
+.mud-tab-slider.mud-tab-slider-horizontal {
+    height: 39px !important;
+    bottom: 6px !important;
+    border-radius: 9999px;
+    z-index: -1;  
+}

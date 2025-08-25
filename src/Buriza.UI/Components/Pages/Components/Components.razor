@@ -1,0 +1,235 @@
+@using Buriza.UI.Icons
+@using Buriza.UI.Components.Controls
+
+@namespace Buriza.UI.Components.Pages
+
+@page "/components"
+
+<section class="h-screen grid grid-cols-2 !p-8 gap-10!">
+    <div class="space-y-6!">
+        @* Buttons *@
+        <div>
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Buttons
+                </MudText>
+            </div>
+            <div class="flex items-center gap-6">
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                >
+                    Primary Button
+                </BurizaButton>
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Secondary"
+                >
+                    Secondary Button
+                </BurizaButton>
+            </div>
+        </div>
+        @* Text Field *@
+        <div>
+            <MudText Class="!text-3xl !font-semibold mb-2!">
+                Text Field
+            </MudText>
+            <BurizaTextField 
+                Placeholder="Type or paste here..." 
+                Class="mb-4" 
+            />
+        </div>
+        <div class="flex gap-4!">
+            @* Tabs *@
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Tabs
+                </MudText>
+                <BurizaTabs>
+                    <MudTabPanel Text="NFT" Icon="@BurizaIcons.NftSymbolIcon"/>
+                    <MudTabPanel Text="Token" Icon="@BurizaIcons.TokenSymbolIcon"/>
+                </BurizaTabs>
+            </div>
+            @* Select *@
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Menu
+                </MudText>
+                <BurizaSelect TItem="string"
+                    Variant="Variant.Outlined"
+                    AdornmentIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                    Value="@selectedValue"
+                    ValueChanged="@OnValueChanged"
+                    ToStringFunc="@(item => item)"
+                    Class="h-12! [&_input]:!py-[12px]"
+                >
+                    <MudSelectItem Value="@("Item 1")">
+                        
+                    </MudSelectItem>
+                    <MudSelectItem Value="@("Item 2")">Item 2</MudSelectItem>
+                    <MudSelectItem Value="@("Item 3")">Item 3</MudSelectItem>
+                </BurizaSelect>
+            </div>
+        </div>
+        @* Icons *@
+        <div>
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Icons
+                </MudText>
+            </div>
+            <div class="!p-4 !rounded-[12px] grid grid-cols-10 gap-4 bg-[var(--mud-palette-gray-default)] [&_svg]:!text-[40px]">
+                <MudIcon Icon="@BurizaIcons.ActiveNetworksIcon"/>
+                <MudIcon Icon="@BurizaIcons.AdaSynbolIcon" />
+                <MudIcon Icon="@BurizaIcons.AddSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.AddressBookIcon" />
+                <MudIcon Icon="@BurizaIcons.AdvancedSettings1Icon" />
+                <MudIcon Icon="@BurizaIcons.AdvancedSettings2Icon" />
+                <MudIcon Icon="@BurizaIcons.ArrowDown1Icon" />
+                <MudIcon Icon="@BurizaIcons.ArrowDown2Icon" />
+                <MudIcon Icon="@BurizaIcons.ArrowUp1Icon" />
+                <MudIcon Icon="@BurizaIcons.ArrowUp2Icon" />
+                <MudIcon Icon="@BurizaIcons.AssetIcon" />
+                <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.CheckOutlinedIcon" />
+                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
+                <MudIcon Icon="@BurizaIcons.CloseSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.ConectedDappsIcon" />
+                <MudIcon Icon="@BurizaIcons.ContactPageIcon" />
+                <MudIcon Icon="@BurizaIcons.CopySymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.DappSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.DarkModeIcon" />
+                <MudIcon Icon="@BurizaIcons.DeleteSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.DeveloperSettingsIcon" />
+                <MudIcon Icon="@BurizaIcons.FavoriteSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.FilterSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.FullscreenSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.GeneralSettingsIcon" />
+                <MudIcon Icon="@BurizaIcons.HelpAndSupportIcon" />
+                <MudIcon Icon="@BurizaIcons.History1Icon" />
+                <MudIcon Icon="@BurizaIcons.History2Icon" />
+                <MudIcon Icon="@BurizaIcons.InviteSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.LightModeIcon" />
+                <MudIcon Icon="@BurizaIcons.LinkSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.MenuOpenIcon" />
+                <MudIcon Icon="@BurizaIcons.MenuSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.MoreSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.NftSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.NodeSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.NotificationIcon" />
+                <MudIcon Icon="@BurizaIcons.QrScannerIcon" />
+                <MudIcon Icon="@BurizaIcons.ReceiveSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.SearchSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.SecurityAndPrivacyIcon" />
+                <MudIcon Icon="@BurizaIcons.Send1Icon" />
+                <MudIcon Icon="@BurizaIcons.Send2Icon" />
+                <MudIcon Icon="@BurizaIcons.SettingsSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.StakingSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.TokenSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.VotingSymbolIcon" />
+                <MudIcon Icon="@BurizaIcons.Wallet1Icon" />
+                <MudIcon Icon="@BurizaIcons.Wallet2Icon" />
+            </div>
+        </div>
+    </div>
+    <div class="space-y-6!">
+        @* Search Bar *@
+        <div>
+            <MudText Class="!text-3xl !font-semibold mb-2!">
+                Search Bar
+            </MudText>
+            <BurizaSearchBar/>
+        </div>
+         @*  *@
+        <div>
+            <MudText Class="!text-3xl !font-semibold mb-2!">
+                Asset Card
+            </MudText>
+            <BurizaAssetCard
+                AssetIcon="/_content/Buriza.UI/images/assets/tokens/ada.webp"
+                AssetName="ADA"
+                PricePercentage="12.18f"
+                AssetAmount="123.21f"
+                UsdConversion="152.31f"
+            />
+        </div>
+        @* Dapp Cards *@
+        <div>
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Dapp Cards
+                </MudText>
+            </div>
+            <div class="grid grid-cols-4 !gap-3 h-30">
+                <BurizaDappCard
+                    DappTitle="HunderDex"
+                    DappType="Exchanges"
+                    DappClass="!bg-[var(--dapp-hunterdex-primary)]"
+                    DappTheme="bg-[var(--dapp-hunterdex-secondary)]/40"
+                    DappIcon="/_content/Buriza.UI/images/logos/hunterdex.svg"
+                />
+                <BurizaDappCard
+                    DappTitle="Levvy"
+                    DappType="Defi"
+                    DappClass="!bg-[var(--dapp-levvy-primary)] [&_.mud-typography]:!text-black"
+                    DappTheme="bg-[var(--dapp-levvy-secondary)]/40"
+                    DappIcon="/_content/Buriza.UI/images/logos/levvy.svg"
+                />
+                <BurizaDappCard
+                    DappTitle="Minswap"
+                    DappType="Defi"
+                    DappClass="!bg-[var(--dapp-minswap-primary)]"
+                    DappTheme="bg-[var(--dapp-minswap-secondary)]/40"
+                    DappIcon="/_content/Buriza.UI/images/logos/minswap.svg"
+                />
+                <BurizaDappCard
+                    DappTitle="DANZO"
+                    DappType="Games, Defi"
+                    DappClass="!bg-[var(--dapp-danzo-primary)]"
+                    DappTheme="bg-[var(--dapp-danzo-secondary)]/40"
+                    DappIcon="/_content/Buriza.UI/images/logos/danzo.svg"
+                />
+            </div>
+        </div>
+        @* Icons *@
+        <div>
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Buriza Mascots
+                </MudText>
+            </div>
+            <div class="!p-4 grid grid-cols-3 gap-4! !rounded-[12px] bg-[var(--mud-palette-gray-default)] [&_svg]:!text-[40px]">
+                <MudImage
+                    Alt="mascot 1"
+                    Src="/_content/Buriza.UI/images/mascots/mascot_1.webp"
+                    Class="!h-[140px]"
+                />
+                <MudImage
+                    Alt="mascot 2"
+                    Src="/_content/Buriza.UI/images/mascots/mascot_2.webp"
+                    Class="!h-[140px]"
+                />
+                <MudImage
+                    Alt="mascot 3"
+                    Src="/_content/Buriza.UI/images/mascots/mascot_3.webp"
+                    Class="!h-[140px]"
+                />
+                <MudImage
+                    Alt="mascot 4"
+                    Src="/_content/Buriza.UI/images/mascots/mascot_4.webp"
+                />
+                <MudImage
+                    Alt="mascot 5"
+                    Src="/_content/Buriza.UI/images/mascots/mascot_5.webp"
+                    Class="!h-[140px]"
+                />
+                <MudImage
+                    Alt="mascot 6"
+                    Src="/_content/Buriza.UI/images/mascots/mascot_6.webp"
+                    Class="!h-[140px]"
+                />
+            </div>
+        </div>
+    </div>
+</section>
