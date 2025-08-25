@@ -32,8 +32,8 @@ public partial class BurizaButton
 
     private string GetColorClass() => Color switch
     {
-        Color.Primary => "!bg-[var(--mud-palette-primary-lighten)] !text-[var(--mud-palette-secondary-lighten)] hover:!bg-[var(--mud-palette-primary)] focus:!bg-[var(--mud-palette-primary-darken)]",
-        Color.Secondary => "!bg-[var(--mud-palette-secondary-lighten)] !text-[var(--mud-palette-primary-lighten)] hover:!bg-[var(--mud-palette-secondary)] focus:!bg-[var(--mud-palette-secondary-darken)]",
+        Color.Primary => "!bg-[var(--mud-palette-primary-lighten)] !text-[var(--mud-palette-primary-text)] hover:!bg-[var(--mud-palette-primary)] focus:!bg-[var(--mud-palette-primary-darken)]",
+        Color.Secondary => "!bg-[var(--mud-palette-secondary-lighten)] !text-[var(--mud-palette-secondary-text)] hover:!bg-[var(--mud-palette-secondary)] focus:!bg-[var(--mud-palette-secondary-darken)]",
         _ => "bg-gray-300"
     };
 }

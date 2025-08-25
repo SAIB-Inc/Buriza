@@ -1,3 +1,4 @@
+using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -5,6 +6,9 @@ namespace Buriza.UI.Components.Layout;
 
 public partial class MainLayout
 {
+    [Inject]
+    public required AppStateService AppStateService { get; set; }
+
     public static MudTheme BurizaTheme => new()
     {
         Typography = new()
@@ -23,9 +27,11 @@ public partial class MainLayout
             PrimaryLighten = "#AEC6FF",
             Primary = "#4F8EFF",
             PrimaryDarken = "#9EB8F5",
+            PrimaryContrastText = "#002E6B",
             SecondaryLighten = "#002E6B",
             Secondary = "#002456",
             SecondaryDarken = "#001A42",
+            SecondaryContrastText = "#AEC6FF",
             TextPrimary = "#E0E2ED",
             TextSecondary = "#8490B1",
             GrayDefault = "#272A32",
@@ -39,16 +45,29 @@ public partial class MainLayout
             Background = "#FAF9FF",
             BackgroundGray = "#ECEDF8",
             AppbarBackground = "#E0E2ED",
-            PrimaryLighten = "#AEC6FF",
+            PrimaryLighten = "#0057C0",
             Primary = "#227CFF",
+            PrimaryContrastText = "#FFFFFF",
+            SecondaryLighten = "#A6C1FE",
             Secondary = "#0057C0",
+            SecondaryContrastText = "#324E83",
             TextPrimary = "#181B23",
             TextSecondary = "#515E7C",
-            GrayDefault = "#272A32",
+            GrayDefault = "#FFFFFF",
             GrayDark = "#181B23",
             Dark = "#ECEDF8",
             TableLines = "#B9C6E9",
             Success = "#00A663"
         }
     };
+
+    protected override void OnInitialized()
+    {
+        AppStateService.OnChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AppStateService.OnChanged -= StateHasChanged;
+    }
 }
