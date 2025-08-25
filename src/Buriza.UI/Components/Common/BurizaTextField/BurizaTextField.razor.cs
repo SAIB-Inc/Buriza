@@ -26,6 +26,9 @@ public partial class BurizaTextField
     public string Icon { get; set; } = string.Empty;
 
     [Parameter]
+    public int Lines { get; set; }
+
+    [Parameter]
     public Adornment Adornment { get; set; } = Adornment.End;
 
     [Parameter]
@@ -42,7 +45,7 @@ public partial class BurizaTextField
 
     private string TextFieldClass => $"""
         w-full !text-[var(--mud-palette-text-primary)] [&_.mud-input-outlined-border]:!border-none !rounded-[12px]
-        border border-gray-300 !bg-[var(--mud-palette-gray-default)] [&_input]:!pl-5 [&_.mud-input]:!pr-5
+        border border-gray-300 !bg-[var(--mud-palette-gray-default)] [&_input]:!pl-5 [&_.mud-input]:!pr-5 
         {Class}
     """;
 }
