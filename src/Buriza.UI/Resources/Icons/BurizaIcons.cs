@@ -1,4 +1,4 @@
-﻿namespace Buriza.UI.Icons
+﻿namespace Buriza.UI.Resources
 {
     public static class BurizaIcons
     {

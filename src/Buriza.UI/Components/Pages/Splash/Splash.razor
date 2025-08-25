@@ -1,4 +1,4 @@
-@using Buriza.UI.Icons
+@using Buriza.UI.Resources
 
 @page "/splash"
 
@@ -31,11 +31,11 @@
                             <div class="flex flex-col items-center justify-center !mb-10">
                                 <MudImage
                                     Alt="Buriza logo"
-                                    Src="/_content/Buriza.UI/images/logos/buriza.svg"
+                                    Src="@Logos.Buriza"
                                 />
                                 <MudImage
                                     Alt="Buriza mascot 1"
-                                    Src="/_content/Buriza.UI/images/mascots/mascot_1.webp"
+                                    Src="@Mascots.Mascot1"
                                     Class="!w-[227px]"
                                 />
                             </div>
@@ -54,7 +54,7 @@
                             <div class="flex flex-col items-center justify-end !mb-10 h-[252px] sm:h-[240px]">
                                 <MudImage
                                     Alt="Buriza mascot 4"
-                                    Src="/_content/Buriza.UI/images/mascots/mascot_4.webp"
+                                    Src="@Mascots.Mascot4"
                                     Class="!w-full max-w-[329px]"
                                 />
                             </div>
@@ -106,7 +106,7 @@
                 <div>
                     <MudImage
                         Alt="face id"
-                        Src="/_content/Buriza.UI/images/misc/ios_face_id.svg"
+                        Src="@Misc.IosFaceId"
                     />
                 </div>
                 <div class="mt-3!">
@@ -117,3 +117,5 @@
         }
     </div>
 </section>
+
+

@@ -1,6 +1,6 @@
 ﻿{
   "manifest_version": 3,
-  "name": "Buriza Cardano Wallet",
+  "name": "Buriza",
   "description": "Cross-platform Cardano wallet extension",
   "version": "0.1",
   "background": {
@@ -9,7 +9,19 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Buriza Wallet"
+    "default_title": "Buriza Wallet",
+    "default_icon": {
+      "16": "favicon_16.png",
+      "32": "favicon_32.png",
+      "48": "favicon_48.png",
+      "128": "favicon_128.png"
+    }
+  },
+  "icons": {
+    "16": "favicon_16.png",
+    "32": "favicon_32.png",
+    "48": "favicon_48.png",
+    "128": "favicon_128.png"
   },
   "options_ui": {
     "page": "options.html",
