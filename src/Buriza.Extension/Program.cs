@@ -3,8 +3,12 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Blazor.BrowserExtension;
 using Buriza.Extension;
 using Buriza.UI.Components;
+using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+builder.Services.AddMudServices();
+
 builder.UseBrowserExtension(browserExtension =>
 {
     if (browserExtension.Mode == BrowserExtensionMode.Background)
