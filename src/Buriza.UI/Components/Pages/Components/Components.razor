@@ -70,6 +70,15 @@
                     <MudSelectItem Value="@("Item 3")">Item 3</MudSelectItem>
                 </BurizaSelect>
             </div>
+            <div>
+                <MudText Class="!text-3xl !font-semibold mb-2!">
+                    Theme toggle
+                </MudText>
+                <MudIconButton
+                    Icon="@(AppStateService.IsDarkMode ? BurizaIcons.DarkModeIcon : BurizaIcons.LightModeIcon)"
+                    OnClick="@(() => AppStateService.IsDarkMode = !AppStateService.IsDarkMode)"
+                />
+            </div>
         </div>
         @* Icons *@
         <div>
@@ -80,7 +89,7 @@
             </div>
             <div class="!p-4 !rounded-[12px] grid grid-cols-10 gap-4 bg-[var(--mud-palette-gray-default)] [&_svg]:!text-[40px]">
                 <MudIcon Icon="@BurizaIcons.ActiveNetworksIcon"/>
-                <MudIcon Icon="@BurizaIcons.AdaSynbolIcon" />
+                <MudIcon Icon="@BurizaIcons.AdaSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.AddSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.AddressBookIcon" />
                 <MudIcon Icon="@BurizaIcons.AdvancedSettings1Icon" />
@@ -89,6 +98,7 @@
                 <MudIcon Icon="@BurizaIcons.ArrowDown2Icon" />
                 <MudIcon Icon="@BurizaIcons.ArrowUp1Icon" />
                 <MudIcon Icon="@BurizaIcons.ArrowUp2Icon" />
+
                 <MudIcon Icon="@BurizaIcons.AssetIcon" />
                 <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.CheckOutlinedIcon" />
@@ -99,6 +109,7 @@
                 <MudIcon Icon="@BurizaIcons.ContactPageIcon" />
                 <MudIcon Icon="@BurizaIcons.CopySymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.DappSymbolIcon" />
+
                 <MudIcon Icon="@BurizaIcons.DarkModeIcon" />
                 <MudIcon Icon="@BurizaIcons.DeleteSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.DeveloperSettingsIcon" />
@@ -109,6 +120,7 @@
                 <MudIcon Icon="@BurizaIcons.HelpAndSupportIcon" />
                 <MudIcon Icon="@BurizaIcons.History1Icon" />
                 <MudIcon Icon="@BurizaIcons.History2Icon" />
+
                 <MudIcon Icon="@BurizaIcons.InviteSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.LightModeIcon" />
                 <MudIcon Icon="@BurizaIcons.LinkSymbolIcon" />
@@ -119,6 +131,7 @@
                 <MudIcon Icon="@BurizaIcons.NodeSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.NotificationIcon" />
                 <MudIcon Icon="@BurizaIcons.QrScannerIcon" />
+
                 <MudIcon Icon="@BurizaIcons.ReceiveSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.SearchSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.SecurityAndPrivacyIcon" />
@@ -129,6 +142,7 @@
                 <MudIcon Icon="@BurizaIcons.TokenSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.VotingSymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.Wallet1Icon" />
+                
                 <MudIcon Icon="@BurizaIcons.Wallet2Icon" />
             </div>
         </div>
