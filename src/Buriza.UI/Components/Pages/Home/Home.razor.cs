@@ -4,7 +4,7 @@ using MudBlazor;
 
 namespace Buriza.UI.Components.Pages;
 
-public partial class Splash
+public partial class Home
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }

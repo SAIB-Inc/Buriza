@@ -31,7 +31,7 @@
                                 <div class="flex flex-col items-center justify-center !mb-10">
                                     <MudImage
                                         Alt="Buriza logo"
-                                        Src="@Logos.Buriza"
+                                        Src="@(AppStateService.IsDarkMode ? Logos.BurizaDark : Logos.BurizaLight)"
                                     />
                                     <MudImage
                                         Alt="Buriza mascot 1"
@@ -77,7 +77,7 @@
                         Color="Color.Primary"
                         OnClick="OnNextButtonClicked"
                     >
-                        @((IsLastSlide ? "Finish" : "Next"))
+                        Next
                     </BurizaButton>
                 </div>
             }
@@ -107,7 +107,7 @@
                         <div>
                             <MudImage
                                 Alt="face id"
-                                Src="@Misc.IosFaceId"
+                                Src="@(AppStateService.IsDarkMode ? Misc.IosFaceIdDark : Misc.IosFaceIdLight)"
                             />
                         </div>
                         <div class="mt-3!">

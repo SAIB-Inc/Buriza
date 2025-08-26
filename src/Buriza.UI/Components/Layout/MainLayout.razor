@@ -6,6 +6,6 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<main class="bg-[url(/_content/Buriza.UI/images/background/background_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background.webp)] bg-auto bg-center bg-no-repeat">
+<main class="@($"{(AppStateService.IsDarkMode ? "bg-[url(/_content/Buriza.UI/images/background/background_dark_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_dark.webp)]" : "bg-[url(/_content/Buriza.UI/images/background/background_light_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_light.webp)]")} bg-auto bg-center bg-no-repeat")">
     @Body
 </main>

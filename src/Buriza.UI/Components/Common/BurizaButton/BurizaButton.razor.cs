@@ -25,7 +25,7 @@ public partial class BurizaButton
     public RenderFragment? ChildContent { get; set; }
 
     private string ButtonClass => $"""
-        !rounded-full !normal-case !font-medium !text-[var(--mud-palette-background)] h-10 w-full !text-sm
+        !rounded-full !normal-case !font-medium !text-[var(--mud-palette-background)] h-10 w-full !text-sm !shadow-none
         {GetColorClass()}
         {Class}
     """;

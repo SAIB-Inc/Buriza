@@ -4,10 +4,13 @@ using Blazor.BrowserExtension;
 using Buriza.Extension;
 using Buriza.UI.Components;
 using MudBlazor.Services;
+using Buriza.UI.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.Services.AddMudServices();
+
+builder.Services.AddScoped<AppStateService>();
 
 builder.UseBrowserExtension(browserExtension =>
 {

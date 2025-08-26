@@ -56,9 +56,11 @@ public partial class MainLayout
             SecondaryContrastText = "#324E83",
             TextPrimary = "#181B23",
             TextSecondary = "#515E7C",
+            GrayLighter = "#AFAFAF",
+            GrayLight = "#0057C014",
             GrayDefault = "#FFFFFF",
             GrayDark = "#181B23",
-            GrayDarker = "#363942",
+            GrayDarker = "#E0E2ED",
             Dark = "#ECEDF8",
             TableLines = "#B9C6E9",
             Success = "#00A663"
