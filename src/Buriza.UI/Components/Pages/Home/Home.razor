@@ -12,7 +12,7 @@
 <PageTitle>Buriza</PageTitle>
 
 <section class="h-screen">
-    <div class="container mx-auto h-full w-full flex flex-col items-center !px-4 !py-8 !gap-4">
+    <div class="container mx-auto h-full w-full flex flex-col items-center !px-4 !pb-8 !pt-16 !gap-4">
         <div class="w-full flex items-center justify-between">
             <div>
                 <MudImage
@@ -56,13 +56,13 @@
         >
             <div class="h-full flex flex-col justify-between">
                 <div>
-                    <div>
+                    <div class="[&_.mud-select]:!w-max">
                         <BurizaSelect TItem="string"
                             Variant="Variant.Outlined"
                             Value="@("Account01")"
                             AdornmentIcon="@Icons.Material.Filled.KeyboardArrowDown"
                             ToStringFunc="@(item => item)"
-                            Class="[&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-bold [&_.mud-input-slot]:text-[var(--mud-palette-tertiary)]! [&_.mud-icon-root]:text-[var(--mud-palette-tertiary)]!"
+                            Class="[&_.mud-input]:!gap-2 [&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-bold [&_.mud-input-slot]:text-[var(--mud-palette-tertiary)]! [&_.mud-icon-root]:text-[var(--mud-palette-tertiary)]!"
                         >
                             <MudSelectItem Value="@("Account01")">Account01</MudSelectItem>
                             <MudSelectItem Value="@("Account02")">Account02</MudSelectItem>
@@ -140,7 +140,7 @@
                     />
                 </div>
             </div>
-            <div class="!space-y-2 overflow-y-auto max-h-[calc(100vh-438px)] pb-14">
+            <div class="!space-y-2 overflow-y-auto max-h-[calc(100vh-472px)] !rounded-[12px] pb-14">
                 @for(int i=0; i < 10; i++)
                 {
                     <BurizaAssetCard
