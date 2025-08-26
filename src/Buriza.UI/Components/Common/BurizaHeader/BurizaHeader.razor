@@ -1,0 +1,69 @@
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Common
+
+<div>
+    <header class="fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 lg:hidden">
+        @*Receive*@
+        <MudLink 
+            Href="/" 
+            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+        >
+            <MudIcon 
+                Icon="@BurizaIcons.ReceiveSymbolIcon" 
+                Size="Size.Medium" 
+                Class=""
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+        </MudLink>
+
+        @*Send*@
+        <MudLink 
+            Href="/" 
+            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+        >
+            <MudIcon 
+                Icon="@BurizaIcons.Send1Icon" 
+                Size="Size.Medium" 
+                Class=""
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Send</span>
+        </MudLink>
+
+        @*Buriza*@
+        <div class="flex items-center justify-center">
+            <div class="relative w-12 h-12 flex items-center justify-center">
+                <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
+                <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
+                <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
+                <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="!z-10 !text-[38px]"/>
+            </div>
+        </div>
+
+        @*History*@
+        <MudLink 
+            Href="/" 
+            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+        >
+            <MudIcon 
+                Icon="@BurizaIcons.History2Icon" 
+                Size="Size.Medium" 
+                Class=""
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+        </MudLink>
+
+        @*Staking*@
+        <MudLink 
+            Href="/" 
+            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+        >
+            <MudIcon 
+                Icon="@BurizaIcons.StakingSymbolIcon" 
+                Size="Size.Medium" 
+                Class=""
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+        </MudLink>
+    </header>
+</div>
