@@ -32,6 +32,7 @@ public partial class MainLayout
             Secondary = "#002456",
             SecondaryDarken = "#001A42",
             SecondaryContrastText = "#AEC6FF",
+            Tertiary = "#00173D",
             TextPrimary = "#E0E2ED",
             TextSecondary = "#8490B1",
             GrayLighter = "#AFAFAF",
@@ -57,6 +58,7 @@ public partial class MainLayout
             SecondaryLighten = "#A6C1FE",
             Secondary = "#0057C0",
             SecondaryContrastText = "#324E83",
+            Tertiary = "#FEFCFF",
             TextPrimary = "#181B23",
             TextSecondary = "#515E7C",
             GrayLighter = "#AFAFAF",
@@ -67,9 +69,9 @@ public partial class MainLayout
             DarkLighten = "#C1C6D7",
             Dark = "#ECEDF8",
             TableLines = "#B9C6E9",
-            SuccessLighten = "#71FAC9",
+            SuccessLighten = "#77FBAF",
             Success = "#00A663",
-            SuccessDarken = "#002116"
+            SuccessDarken = "#005AC4"
         }
     };
 
