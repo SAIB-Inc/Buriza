@@ -12,7 +12,7 @@
 <PageTitle>Buriza</PageTitle>
 
 <section class="h-screen">
-    <div class="container mx-auto h-full w-full flex flex-col items-center !px-4 !pb-8 !pt-16 !gap-4">
+    <div class="container mx-auto h-full w-full flex flex-col items-center !px-4 !pb-8 !pt-16 !gap-3">
         <div class="w-full flex items-center justify-between">
             <div>
                 <MudImage
@@ -124,19 +124,19 @@
                 <MudTabPanel 
                     Text="Token" 
                     Icon="@BurizaIcons.TokenSymbolIcon"
-                    Class="w-full bg-[#ECEDF8]"
+                    Class="w-full bg-[var(--mud-palette-dark)]"
                     Style="border-radius: 30px 10px 10px 30px"
                 />
                 <MudTabPanel 
                     Text="NFT" 
                     Icon="@BurizaIcons.NftSymbolIcon"
-                    Class="w-full bg-[#ECEDF8]"
+                    Class="w-full bg-[var(--mud-palette-dark)]"
                     Style="border-radius: 10px 30px 30px 10px"
                 />
             </BurizaTabs>
        </div>
         <div class="w-full">
-            <div class="w-full flex items-center justify-between">
+            <div class="w-full flex items-center justify-between !mb-2">
                 <div>
                     <MudText Class="!font-semibold !text-[22px]">
                         Portfolio
@@ -149,7 +149,7 @@
                     />
                 </div>
             </div>
-            <div class="!space-y-2 overflow-y-auto max-h-[calc(100vh-472px)] !rounded-[12px] pb-11">
+            <div class="!space-y-2 overflow-y-auto max-h-[calc(100vh-466px)] !rounded-[12px] pb-11">
                 @for(int i=0; i < 10; i++)
                 {
                     <BurizaAssetCard
