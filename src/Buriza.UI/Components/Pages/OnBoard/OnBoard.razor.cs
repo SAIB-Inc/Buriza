@@ -47,10 +47,6 @@ public partial class OnBoard
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender && _carousel != null)
-        {
-            _carousel.SelectedIndexChanged = EventCallback.Factory.Create<int>(this, OnSlideChanged);
-        }
         base.OnAfterRender(firstRender);
     }
 

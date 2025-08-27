@@ -1,13 +1,15 @@
+@using Buriza.UI.Resources
+
 @page "/onboard"
 
 @namespace Buriza.UI.Components.Pages
 
 <section class="h-screen">
-    <div class="container mx-auto h-full w-full flex flex-col items-center justify-between !px-4 !pt-16 !pb-18 sm:!pb-24">
+    <div class="container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-3 !gap-20 sm:!gap-26">
         <MudCarousel 
             @ref="_carousel"
             TData="object" 
-            Class="mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px]"
+            Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px]"
             ShowArrows="false"
             ShowBullets="false"
             AutoCycle="false"
@@ -15,28 +17,28 @@
             SelectedIndexChanged="@OnSlideChanged"
         >
             @*1st slide*@
-            <MudCarouselItem Class="flex flex-col items-center justify-center gap-6!">
+            <MudCarouselItem Class="max-[376px]:gap-3! flex flex-col items-center justify-center gap-6!">
                 <div>
                     <MudImage
                         Alt="onboard buriza"
-                        Src="/_content/Buriza.UI/images/onboard/onboard_logo.webp"
-                        Class="!w-[340px]"
+                        Src="@Misc.OnboardLogo"
+                        Class="max-[376px]:!w-[280px] !w-[340px]"
                     />
                 </div>
                 <div class="!text-center !space-y-2">
                     <MudText Class="!text-[32px] !font-semibold">
                         Welcome to Buriza
                     </MudText>
-                    <MudText>
+                    <MudText Class="max-[376px]:!text-sm">
                         <span>To get started, create new wallet or</span><br/>
                         <span>import an existing seed phrase</span>
                     </MudText>
                 </div>
             </MudCarouselItem>
             @*2nd slide*@
-            <MudCarouselItem Class="flex flex-col items-center gap-8!">
+            <MudCarouselItem Class="max-[376px]:gap-3! flex flex-col items-center gap-8!">
                 <div class="!text-center !space-y-2 max-w-[360px]">
-                    <div class="relative">
+                    <div class="max-[376px]:!px-[32px] relative">
                         <div>
                             <MudText Class="!text-2xl !font-medium">
                                 Save This Phrase
@@ -45,28 +47,28 @@
                         <div>
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                                Src="@Misc.DiamondYellow"
                                 Class="absolute top-0 -left-2 w-[32px] rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_blue.svg"
+                                Src="@Misc.DiamondBlue"
                                 Class="absolute -top-3 left-5 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                                Src="@Misc.DiamondYellow"
                                 Class="absolute top-3 -right-2 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_purple.svg"
+                                Src="@Misc.DiamondPurple"
                                 Class="absolute -top-5 right-0 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
                     <div>
-                        <MudText Class="!font-light">
+                        <MudText Class="max-[376px]:!text-xs !font-light">
                             <span>This is your</span>
                             <span class="!font-normal">master key. </span>
                             <span>Be sure to</span><br/>
@@ -74,12 +76,12 @@
                         </MudText>
                     </div>
                 </div>
-                <div class="w-full grid grid-cols-3 place-items-center !gap-2 max-w-[360px]">
+                <div class="max-[376px]:!gap-1 w-full grid grid-cols-3 place-items-center !gap-2 max-w-[360px]">
                     @foreach (var pair in (RecoveryPhrase ?? Enumerable.Empty<string>())
                          .Select((item, index) => new { item, index }))
                         {
-                            <div class="w-full max-w-[110px] !py-2 !px-4 h-[36px] bg-[var(--mud-palette-gray-default)] rounded-full">
-                                <MudText Class="!text-sm">
+                            <div class="max-[376px]:h-auto w-full max-w-[110px] !py-2 !px-4 h-[36px] bg-[var(--mud-palette-gray-default)] rounded-full">
+                                <MudText Class="max-[376px]:!text-xs !text-sm">
                                     <span>@(pair.index + 1).</span>
                                     <span>@pair.item</span>
                                 </MudText>
@@ -88,7 +90,7 @@
                 </div>
                 <div class="w-full flex items-center justify-between max-w-[360px]">
                     <div>
-                        <MudText Class="!text-sm !font-medium">
+                        <MudText Class="max-[376px]:!text-xs !text-sm !font-medium">
                             Recovery Phrase Length:
                         </MudText>
                     </div>
@@ -97,7 +99,7 @@
                             T="int" 
                             @bind-Value="PhraseLength" 
                             Outlined="false"
-                            Class="w-[150px] h-[24px] [&_.mud-button-label]:!text-[var(--mud-palette-primary-lighten)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-secondary-lighten)] [&_.mud-button-filled]:!rounded-full [&_.mud-button-filled]:!bg-[var(--mud-palette-primary-lighten)]"
+                            Class="max-[376px]:w-[138px] max-[376px]:[&_.mud-button-label]:!text-xs w-[150px] h-[24px] [&_.mud-button-label]:!text-[var(--mud-palette-primary-lighten)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-secondary-lighten)] [&_.mud-button-filled]:!rounded-full [&_.mud-button-filled]:!bg-[var(--mud-palette-primary-lighten)]"
                         >
                             <MudToggleItem Value="12" />
                             <MudToggleItem Value="15" />
@@ -107,9 +109,9 @@
                 </div>
             </MudCarouselItem>
             @*3rd slide*@
-            <MudCarouselItem Class="flex flex-col items-center gap-8!">
+            <MudCarouselItem Class="max-[376px]:gap-3! flex flex-col items-center gap-8!">
                 <div class="!text-center !space-y-2 max-w-[360px]">
-                    <div class="relative">
+                    <div class="max-[376px]:!px-[32px] relative">
                         <div>
                             <MudText Class="!text-2xl !font-medium">
                                 Recovery Phrase
@@ -118,28 +120,28 @@
                         <div>
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                                Src="@Misc.DiamondYellow"
                                 Class="absolute top-0 -left-2 w-[32px] rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_blue.svg"
+                                Src="@Misc.DiamondBlue"
                                 Class="absolute -top-3 left-5 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                                Src="@Misc.DiamondYellow"
                                 Class="absolute top-3 -right-2 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
-                                Src="/_content/Buriza.UI/images/misc/diamond_purple.svg"
+                                Src="@Misc.DiamondPurple"
                                 Class="absolute -top-5 right-0 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
                     <div>
-                        <MudText Class="!font-light">
+                        <MudText Class="max-[376px]:!text-xs !font-light">
                             <span>Type in the recovery phrase of the</span><br/>
                             <span>walet you wish to import.</span>
                         </MudText>
@@ -149,7 +151,7 @@
                     <BurizaTextField
                         Lines="18"
                         Placeholder="Type or paste here..."
-                        Class="!max-h-[344px] sm:!max-h-[372px]"
+                        Class="max-[376px]:!max-h-[282px] !max-h-[344px] sm:!max-h-[372px]"
                     />
                 </div>
                 <div class="w-full flex items-center justify-between max-w-[360px]">
@@ -177,7 +179,7 @@
                 <div>
                     <MudImage
                         Alt="onboard buriza"
-                        Src="/_content/Buriza.UI/images/mascots/mascot_2.webp"
+                        Src="@Mascots.Mascot2"
                         Class="!w-[219px]"
                     />
                 </div>
@@ -229,7 +231,7 @@
                         </MudText>
                         <MudSwitch
                             T="bool"
-                            Class="!bg-[#32353D] !border !border-[#8B90A0] rounded-full [&_.mud-switch-button]:!text-[#8B90A0] [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!h-[32px] [&_.mud-switch-track]:!bg-transparent"
+                            Class="!bg-[var(--mud-palette-gray-default)] !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)] [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!h-[32px] [&_.mud-switch-track]:!bg-transparent"
                         />
                     </div>
                 </div>
@@ -239,36 +241,36 @@
                 <div class="relative">
                     <MudImage
                         Alt="onboard buriza"
-                        Src="/_content/Buriza.UI/images/mascots/mascot_3.webp"
-                        Class="!w-[176px]"
+                        Src="@Mascots.Mascot3"
+                        Class="max-[376px]:!w-[148px] !w-[176px]"
                     />
                     <MudImage
                         Alt="yellow diamond"
-                        Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                        Src="@Misc.DiamondYellow"
                         Class="absolute top-0 -left-2"
                     />
                     <MudImage
                         Alt="yellow diamond"
-                        Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                        Src="@Misc.DiamondYellow"
                         Class="absolute top-9 -left-6"
                     />
                     <MudImage
                         Alt="yellow diamond"
-                        Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                        Src="@Misc.DiamondYellow"
                         Class="absolute top-4 -right-5"
                     />
                     <MudImage
                         Alt="yellow diamond"
-                        Src="/_content/Buriza.UI/images/misc/diamond_yellow.svg"
+                        Src="@Misc.DiamondYellow"
                         Class="absolute -top-5 right-0"
                     />
                 </div>
                 <div class="!text-center !space-y-2 max-w-[430px]">
-                    <MudText Class="!text-[var(--mud-palette-text-secondary)]">
+                    <MudText Class="max-[376px]:!text-sm !text-[var(--mud-palette-text-secondary)]">
                         Way to go!
                     </MudText>
-                    <MudText Class="!text-2xl !font-medium max-w-[250px] lg:max-w-[430px]">
-                        <span>Congratulations </span><br class="max-sm:!hidden"/>
+                    <MudText Class="max-[376px]:max-w-[200px] max-[376px]:!text-xl !text-2xl !font-medium max-w-[250px] lg:max-w-[430px]">
+                        <span>Congratulations </span><br/>
                         <span>your new wallet has been created!</span>
                     </MudText>
                 </div>
