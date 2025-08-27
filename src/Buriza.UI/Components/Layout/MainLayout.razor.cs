@@ -34,8 +34,11 @@ public partial class MainLayout
             SecondaryContrastText = "#AEC6FF",
             TextPrimary = "#E0E2ED",
             TextSecondary = "#8490B1",
+            GrayLighter = "#AFAFAF",
+            GrayLight = "#2C2C2E",
             GrayDefault = "#272A32",
             GrayDark = "#C1C6D7",
+            GrayDarker = "#363942",
             Dark = "#181B23",
             TableLines = "#23304B",
             Success = "#00B286"
@@ -53,8 +56,11 @@ public partial class MainLayout
             SecondaryContrastText = "#324E83",
             TextPrimary = "#181B23",
             TextSecondary = "#515E7C",
+            GrayLighter = "#AFAFAF",
+            GrayLight = "#0057C014",
             GrayDefault = "#FFFFFF",
             GrayDark = "#181B23",
+            GrayDarker = "#E0E2ED",
             Dark = "#ECEDF8",
             TableLines = "#B9C6E9",
             Success = "#00A663"

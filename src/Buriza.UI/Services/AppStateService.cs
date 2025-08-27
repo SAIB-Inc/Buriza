@@ -4,7 +4,7 @@ public class AppStateService
 {
     #region properties
 
-    private bool _isDarkMode = true;
+    private bool _isDarkMode = false;
     public bool IsDarkMode
     {
         get => _isDarkMode;

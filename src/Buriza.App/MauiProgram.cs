@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+using Buriza.UI.Services;
 
 namespace Buriza.App;
 
@@ -23,6 +24,7 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 		builder.Services.AddMudServices();
+		builder.Services.AddSingleton<AppStateService>();
 
 
 		return builder.Build();

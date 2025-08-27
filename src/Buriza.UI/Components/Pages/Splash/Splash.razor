@@ -1,0 +1,123 @@
+@using Buriza.UI.Resources
+
+@page "/splash"
+
+@namespace Buriza.UI.Components.Pages
+
+<PageTitle>Buriza</PageTitle>
+
+<section class="h-screen">
+    <div class="container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-10 !gap-20 sm:!gap-26">
+        @if (showCarousel)
+            {
+                <div />
+                <MudCarousel 
+                    @ref="_carousel"
+                    Class="mud-width-full max-[376px]:h-[410px] h-[435px] sm:h-[456px]" 
+                    ShowArrows="false"
+                    AutoCycle="false"
+                    TData="object"
+                >
+                    <BulletTemplate Context="selected">
+                        <div class="mud-button-root mud-icon-button mud-icon-button-color-inherit mud-ripple mud-ripple-icon !px-[3px] !py-0 h-[10px]">
+                            <span class="mud-icon-button-label">
+                                <div class="@($"rounded-full h-[7px] transition-all duration-300 {(selected ? "bg-[var(--mud-palette-primary)] w-[30px]" : "bg-[var(--mud-palette-gray-darker)] w-[12px]")}")"></div>
+                            </span>
+                        </div>
+                    </BulletTemplate>
+                    <ChildContent>
+                        <MudCarouselItem>
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="flex flex-col items-center justify-center !mb-10">
+                                    <MudImage
+                                        Alt="Buriza logo"
+                                        Src="@(AppStateService.IsDarkMode ? Logos.BurizaDark : Logos.BurizaLight)"
+                                    />
+                                    <MudImage
+                                        Alt="Buriza mascot 1"
+                                        Src="@Mascots.Mascot1"
+                                        Class="max-[376px]:!w-[200px] !w-[227px]"
+                                    />
+                                </div>
+                                <div>
+                                    <MudText Class="font-medium! !text-center sm:!text-xl">
+                                        <span>The truly </span>
+                                        <span class="text-[var(--mud-palette-primary)]">open-source, </span><br/>
+                                        <span class="text-[var(--mud-palette-primary)]">cross-platform, </span>
+                                        <span>Cardano Wallet</span>
+                                    </MudText>
+                                </div>
+                            </div>
+                        </MudCarouselItem>
+                        <MudCarouselItem>
+                            <div class="flex flex-col items-center justify-center h-full">
+                                <div class="max-[376px]:h-[200px] flex flex-col items-center justify-end !mb-10 h-[252px] sm:h-[240px]">
+                                    <MudImage
+                                        Alt="Buriza mascot 4"
+                                        Src="@Mascots.Mascot4"
+                                        Class="!w-full max-[376px]:max-w-[280px] max-w-[329px]"
+                                    />
+                                </div>
+                                <div>
+                                    <MudText Class="font-medium! !text-center sm:!text-xl">
+                                        <span>Your assets are </span>
+                                        <span class="text-[var(--mud-palette-primary)]">safe </span>
+                                        <span>and </span>
+                                        <span class="text-[var(--mud-palette-primary)]">secure.</span><br/>
+                                        <span>The best part is, Buriza is decentralized!</span>
+                                    </MudText>
+                                </div>
+                            </div>
+                        </MudCarouselItem>
+                    </ChildContent>
+                </MudCarousel>
+                <div class="w-full max-w-[361px]">
+                    <BurizaButton
+                        Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        OnClick="OnNextButtonClicked"
+                    >
+                        Next
+                    </BurizaButton>
+                </div>
+            }
+            else
+            {
+                <div class="w-full h-full flex flex-col items-center justify-center !gap-20">
+                    <div class="flex flex-col items-center justify-between !text-center !gap-5 sm:hidden">
+                        <div>
+                            <MudIcon Icon="@BurizaIcons.LockIcon"/>
+                        </div>
+                        <div>
+                            <MudText>
+                                <span>Swipe up for Face ID or</span><br/>
+                                <span>Enter Passcode</span>
+                            </MudText>
+                        </div>
+                        <div class="flex items-center !gap-4">
+                            <div class="size-3 border-2 border-[var(--mud-palette-gray-lighter)] rounded-full"/>
+                            <div class="size-3 border-2 border-[var(--mud-palette-gray-lighter)] rounded-full"/>
+                            <div class="size-3 border-2 border-[var(--mud-palette-gray-lighter)] rounded-full"/>
+                            <div class="size-3 border-2 border-[var(--mud-palette-gray-lighter)] rounded-full"/>
+                            <div class="size-3 border-2 border-[var(--mud-palette-gray-lighter)] rounded-full"/>
+                            <div class="size-3 border-2 border-[var(--mud-palette-gray-lighter)] rounded-full"/>
+                        </div>                
+                    </div>
+                    <div class="size-[150px] flex flex-col items-center justify-center rounded-[10px] bg-[var(--mud-palette-gray-light)] !text-center sm:hidden">
+                        <div>
+                            <MudImage
+                                Alt="face id"
+                                Src="@(AppStateService.IsDarkMode ? Misc.IosFaceIdDark : Misc.IosFaceIdLight)"
+                            />
+                        </div>
+                        <div class="mt-3!">
+                            <MudText>Face ID</MudText>
+                        </div>
+                    </div>
+                    <div/>
+                </div>
+            }
+    </div>
+</section>
+
+
