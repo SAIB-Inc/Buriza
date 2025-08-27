@@ -1,0 +1,177 @@
+@using Buriza.UI.Resources
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+
+@page "/dapp"
+
+@namespace Buriza.UI.Components.Pages
+
+<section class="h-screen">
+    <div class="container mx-auto h-full w-full flex flex-col items-center !px-4 !pb-8 !pt-16 !gap-4">
+        <div class="h-[221px]">
+            <MudImage
+                Alt="carousel"
+                Src="/_content/Buriza.UI/images/misc/Carousel.png"
+            />
+        </div>
+        <div class="w-full">
+            <div>
+                <div class="flex items-center justify-between !mb-4">
+                    <MudChip
+                        T="string"
+                        Class="!bg-[var(--mud-palette-gray-default)] !font-medium !m-0"
+                    >
+                        All
+                    </MudChip>
+                    <MudChip
+                        T="string"
+                        Class="!bg-[var(--mud-palette-gray-default)] !font-medium !m-0"
+                    >
+                        Defi
+                    </MudChip>
+                    <MudChip
+                        T="string"
+                        Class="!bg-[var(--mud-palette-gray-default)] !font-medium !m-0"
+                    >
+                        Exchanges
+                    </MudChip>
+                    <MudChip
+                        T="string"
+                        Class="!bg-[var(--mud-palette-gray-default)] !font-medium !m-0"
+                    >
+                        Games
+                    </MudChip>
+                    <MudChip
+                        T="string"
+                        Class="!bg-[var(--mud-palette-gray-default)] !font-medium !m-0"
+                    >
+                        Market
+                    </MudChip>
+                </div>
+                <div class="grid grid-cols-2 !gap-3 h-60">
+                    <BurizaDappCard
+                        DappTitle="HunterDex"
+                        DappType="Exchanges"
+                        DappClass="!bg-[var(--dapp-hunterdex-primary)]"
+                        DappTheme="bg-[var(--dapp-hunterdex-secondary)]/40"
+                        DappIcon="/_content/Buriza.UI/images/logos/hunterdex.svg"
+                    />
+                    <BurizaDappCard
+                        DappTitle="Levvy"
+                        DappType="Defi"
+                        DappClass="!bg-[var(--dapp-levvy-primary)] [&_.mud-typography]:!text-black"
+                        DappTheme="bg-[var(--dapp-levvy-secondary)]/40"
+                        DappIcon="/_content/Buriza.UI/images/logos/levvy.svg"
+                    />
+                    <BurizaDappCard
+                        DappTitle="Minswap"
+                        DappType="Defi"
+                        DappClass="!bg-[var(--dapp-minswap-primary)]"
+                        DappTheme="bg-[var(--dapp-minswap-secondary)]/40"
+                        DappIcon="/_content/Buriza.UI/images/logos/minswap.svg"
+                    />
+                    <BurizaDappCard
+                        DappTitle="DANZO"
+                        DappType="Games, Defi"
+                        DappClass="!bg-[var(--dapp-danzo-primary)]"
+                        DappTheme="bg-[var(--dapp-danzo-secondary)]/40"
+                        DappIcon="/_content/Buriza.UI/images/logos/danzo.svg"
+                    />
+                </div>
+            </div>
+            <div>
+                <div class="!mt-4 !mb-2">
+                    <MudText Class="!font-medium">
+                        Favorites
+                    </MudText>
+                </div>
+                <div class="w-full grid grid-cols-4 !gap-6">
+                    <div>
+                        <MudCard
+                            Class="!rounded-[8px] !items-center !justify-center !bg-[var(--dapp-hunterdex-primary)] aspect-square relative"
+                        >
+                            <div class="absolute right-1 top-1 z-20">
+                                <MudIconButton Icon="@BurizaIcons.FavoriteSymbolIcon" Class="!p-0 [&_.mud-icon-root]:!text-white"/>
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="HunterDex"
+                                    Src="/_content/Buriza.UI/images/logos/hunterdex.svg"
+                                    Class="!size-10 !aspect-square !rounded-full"
+                                />
+                            </div>
+                        </MudCard>
+                        <div>
+                            <MudText Class="!text-xs !font-medium !text-center !mt-2">
+                                HunterDex
+                            </MudText>
+                        </div
+                    </div>
+                    <div>
+                        <MudCard
+                            Class="!rounded-[8px] !items-center !justify-center !bg-[var(--dapp-levvy-primary)] aspect-square relative"
+                        >
+                            <div class="absolute right-1 top-1 z-20">
+                                <MudIconButton Icon="@BurizaIcons.FavoriteSymbolIcon" Class="!p-0 [&_.mud-icon-root]:!text-white"/>
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="Levvy"
+                                    Src="/_content/Buriza.UI/images/logos/levvy.svg"
+                                    Class="!size-10 !aspect-square !rounded-full"
+                                />
+                            </div>
+                        </MudCard>
+                        <div>
+                            <MudText Class="!text-xs !font-medium !text-center !mt-2">
+                                Levvy
+                            </MudText>
+                        </div
+                    </div>
+                    <div>
+                        <MudCard
+                            Class="!rounded-[8px] !items-center !justify-center !bg-[var(--dapp-minswap-primary)] aspect-square relative"
+                        >
+                            <div class="absolute right-1 top-1 z-20">
+                                <MudIconButton Icon="@BurizaIcons.FavoriteSymbolIcon" Class="!p-0 [&_.mud-icon-root]:!text-white"/>
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="Levvy"
+                                    Src="/_content/Buriza.UI/images/logos/minswap.svg"
+                                    Class="!size-10 !aspect-square !rounded-full"
+                                />
+                            </div>
+                        </MudCard>
+                        <div>
+                            <MudText Class="!text-xs !font-medium !text-center !mt-2">
+                                Minswap
+                            </MudText>
+                        </div
+                    </div>
+                    <div>
+                        <MudCard
+                            Class="!rounded-[8px] !items-center !justify-center !bg-[var(--dapp-danzo-primary)] aspect-square relative"
+                        >
+                            <div class="absolute right-1 top-1 z-20">
+                                <MudIconButton Icon="@BurizaIcons.FavoriteSymbolIcon" Class="!p-0 [&_.mud-icon-root]:!text-white"/>
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="DANZO"
+                                    Src="/_content/Buriza.UI/images/logos/danzo.svg"
+                                    Class="!size-10 !aspect-square !rounded-full"
+                                />
+                            </div>
+                        </MudCard>
+                        <div>
+                            <MudText Class="!text-xs !font-medium !text-center !mt-2">
+                                DANZO
+                            </MudText>
+                        </div
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

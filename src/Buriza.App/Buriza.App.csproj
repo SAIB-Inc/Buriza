@@ -24,11 +24,15 @@
 		<ApplicationTitle>Buriza</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.saibinc.buriza</ApplicationId>
+        <ApplicationId>com.saibinc.Buriza</ApplicationId>
 
-		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>1</ApplicationVersion>
+        <!-- Versions -->
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <ApplicationVersion>1</ApplicationVersion>
+
+        <!-- iOS Provisioning for Development -->
+        <CodesignKey Condition="'$(Configuration)' == 'Debug' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">Apple Development: kfrgallego@icloud.com (68C9THJRYZ)</CodesignKey>
+        <CodesignProvision Condition="'$(Configuration)' == 'Debug' And $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">Automatic</CodesignProvision>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
