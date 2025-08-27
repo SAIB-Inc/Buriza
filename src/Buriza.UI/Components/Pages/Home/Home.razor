@@ -75,7 +75,7 @@
                         </MudText>
                         <MudIconButton
                             Icon="@BurizaIcons.CopySymbolIcon"
-                            Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:text-[var(--mud-palette-tertiary)]!"
+                            Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:text-[var(--mud-palette-tertiary)]/60!"
                         />
                     </div>
                 </div>
@@ -106,41 +106,50 @@
                         T="string"
                         Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
                     >
-                        +$1,1234.95
+                        <MudIcon
+                            Icon="@BurizaIcons.ArrowUp1Icon"
+                            Class="!mr-[-2px] !ml-[-6px]"
+                        />
+                        <span>
+                            +28.00%
+                        </span>
                     </MudChip>
                 </div>
             </div>
         </MudCard>
        <div class="w-full">
             <BurizaTabs
-                Class="!w-full [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+                Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
             >
-                <MudTabPanel 
-                    Text="NFT" 
-                    Icon="@BurizaIcons.NftSymbolIcon"
-                    Class="w-full"
-                />
                 <MudTabPanel 
                     Text="Token" 
                     Icon="@BurizaIcons.TokenSymbolIcon"
-                    Class="w-full"
+                    Class="w-full bg-[#ECEDF8]"
+                    Style="border-radius: 30px 10px 10px 30px"
+                />
+                <MudTabPanel 
+                    Text="NFT" 
+                    Icon="@BurizaIcons.NftSymbolIcon"
+                    Class="w-full bg-[#ECEDF8]"
+                    Style="border-radius: 10px 30px 30px 10px"
                 />
             </BurizaTabs>
        </div>
         <div class="w-full">
             <div class="w-full flex items-center justify-between">
                 <div>
-                    <MudText Class="!font-medium !text-[22px]">
+                    <MudText Class="!font-semibold !text-[22px]">
                         Portfolio
                     </MudText>
                 </div>
                 <div>
                     <MudIconButton
                         Icon="@BurizaIcons.FilterSymbolIcon"
+                        Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
                     />
                 </div>
             </div>
-            <div class="!space-y-2 overflow-y-auto max-h-[calc(100vh-472px)] !rounded-[12px] pb-14">
+            <div class="!space-y-2 overflow-y-auto max-h-[calc(100vh-472px)] !rounded-[12px] pb-11">
                 @for(int i=0; i < 10; i++)
                 {
                     <BurizaAssetCard
