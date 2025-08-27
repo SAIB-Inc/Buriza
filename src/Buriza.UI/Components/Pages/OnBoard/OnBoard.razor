@@ -5,11 +5,18 @@
 @namespace Buriza.UI.Components.Pages
 
 <section class="h-screen">
-    <div class="container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-3 !gap-20 sm:!gap-26">
+    <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-3 !gap-20 sm:!gap-26 sm:justify-between">
+        <div class="max-sm:!hidden absolute bottom-0 right-0">
+            <MudImage
+                Alt="buriza mascot"
+                Src="@Mascots.Mascot5"
+                Class="w-[330px]"
+            />
+        </div>
         <MudCarousel 
             @ref="_carousel"
             TData="object" 
-            Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px]"
+            Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px] max-h-[545px]  sm:max-h-[580px]"
             ShowArrows="false"
             ShowBullets="false"
             AutoCycle="false"
@@ -276,7 +283,7 @@
                 </div>
             </MudCarouselItem>
         </MudCarousel>
-        <div class="!space-y-3 w-full max-w-[360px]">
+        <div class="!space-y-3 w-full max-w-[360px] h-[92px] flex flex-col justify-end">
             @if (ShowSecondaryButton)
             {
                 <BurizaButton
