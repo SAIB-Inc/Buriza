@@ -39,6 +39,7 @@ public partial class MainLayout
             GrayDefault = "#272A32",
             GrayDark = "#C1C6D7",
             GrayDarker = "#363942",
+            DarkLighten = "#8B90A0",
             Dark = "#181B23",
             TableLines = "#23304B",
             Success = "#00B286"
@@ -58,9 +59,10 @@ public partial class MainLayout
             TextSecondary = "#515E7C",
             GrayLighter = "#AFAFAF",
             GrayLight = "#0057C014",
-            GrayDefault = "#FFFFFF",
+            GrayDefault = "#E0E2ED",
             GrayDark = "#181B23",
             GrayDarker = "#E0E2ED",
+            DarkLighten = "#C1C6D7",
             Dark = "#ECEDF8",
             TableLines = "#B9C6E9",
             Success = "#00A663"
