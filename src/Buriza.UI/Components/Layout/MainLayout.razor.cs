@@ -59,7 +59,7 @@ public partial class MainLayout
             TextSecondary = "#515E7C",
             GrayLighter = "#AFAFAF",
             GrayLight = "#0057C014",
-            GrayDefault = "#FFFFFF",
+            GrayDefault = "#E0E2ED",
             GrayDark = "#181B23",
             GrayDarker = "#E0E2ED",
             DarkLighten = "#C1C6D7",
