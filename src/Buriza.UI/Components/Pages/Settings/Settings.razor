@@ -1,0 +1,169 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@page "/settings"
+
+@namespace Buriza.UI.Components.Pages
+
+<PageTitle>Buriza</PageTitle>
+
+<section class="h-screen">
+    <div class="container !mx-auto !px-4">
+        <div class="flex justify-between !pt-[50px]">
+            <div class="flex align-center">
+                <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
+                <MudText Class="!text-[22px] !font-medium">Settings</MudText>
+            </div>
+            <div>
+                <MudImage></MudImage>
+            </div>
+        </div>
+
+        <div>
+            <div
+                class="!bg-[var(--mud-palette-dark)] flex justify-between align-center !mt-[25px] !py-4 !pl-5 !pr-4 !rounded-[28px]">
+                <MudText>Search...</MudText>
+                <MudIcon Icon="@BurizaIcons.SearchSymbolIcon" />
+            </div>
+
+            <div class="flex flex-col gap-y-3">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !mt-4 !py-4">
+                    <MudNavMenu Dense="true">
+                        <MudNavLink Href="/general" Class="!p-0 !m-0">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.GeneralSettingsIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">General</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/security">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.SecurityAndPrivacyIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Security & Privacy</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/advanced">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.AdvancedSettings1Icon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Advanced</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/node">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.NodeSymbolIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Node</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                        </MudNavLink>
+                    </MudNavMenu>
+                </MudPaper>
+
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !py-4">
+                    <MudNavMenu Dense="true">
+
+                        <MudNavLink Href="/network">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.ActiveNetworksIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Active Networks</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/contacts">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.ContactPageIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Contacts</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/dapps">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.ConnectedDappsIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Connected DApps</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                        </MudNavLink>
+                    </MudNavMenu>
+                </MudPaper>
+
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !py-4">
+                    <MudNavMenu Dense="true">
+                        <MudNavLink Href="/developer">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.DeveloperSettingsIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Developer Settings</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                        </MudNavLink>
+                    </MudNavMenu>
+                </MudPaper>
+
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !py-4">
+                    <MudNavMenu Dense="true">
+
+                        <MudNavLink Href="/friends">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.InviteSymbolIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">Invite Your Friends</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/buriza">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2">About Buriza</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                        </MudNavLink>
+
+                        <MudNavLink Href="/support">
+                            <div class="flex">
+                                <MudIcon Icon="@BurizaIcons.HelpAndSupportIcon"
+                                    Class="!text-[var(--mud-palette-primary)]" />
+                                <MudText Class="ml-2 !text-[var(--mud-palette-primary)]">Help & Support</MudText>
+                                <MudSpacer />
+                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            </div>
+                        </MudNavLink>
+                    </MudNavMenu>
+                </MudPaper>
+            </div>
+        </div>
+
+    </div>
+</section>
