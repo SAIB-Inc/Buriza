@@ -1,0 +1,40 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@page "/node"
+
+@namespace Buriza.UI.Components.Pages
+
+<PageTitle>Buriza</PageTitle>
+
+<section class="h-screen">
+    <div class="container !mx-auto !px-4">
+        <div class="flex justify-between !pt-[50px] !mb-[25px]">
+            <div class="flex align-center">
+                <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
+                <MudText Class="!text-[22px] !font-medium">Custom Node</MudText>
+            </div>
+            <div>
+                <MudImage></MudImage>
+            </div>
+        </div>
+
+        <div>
+            <div>
+                <MudText Class="!mb-6">We use the open protocol for UTxO based blockchain called UTxO RPC (U5C). Learn more about utxorpc
+                <MudLink Href="https://utxorpc.org/">https://utxorpc.org/</MudLink>.</MudText>
+                <BurizaTextField Placeholder="Input a URL..." Class="mb-3" />
+                <BurizaTextField Placeholder="Input API Key..." Class="mb-3" />
+            </div>
+            <div class="w-[calc(100%-32px)] fixed bottom-[112px]">
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                >
+                    Enable
+                </BurizaButton>
+            </div>
+        </div>
+    </div>
+</section>

@@ -10,7 +10,7 @@
 
 <section class="h-screen">
     <div class="container !mx-auto !px-4">
-        <div class="flex justify-between !pt-[50px]">
+        <div class="flex justify-between !pt-[50px] !mb-[25px]">
             <div class="flex align-center">
                 <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
                 <MudText Class="!text-[22px] !font-medium">Settings</MudText>
@@ -21,24 +21,23 @@
         </div>
 
         <div>
-            <div
-                class="!bg-[var(--mud-palette-dark)] flex justify-between align-center !mt-[25px] !py-4 !pl-5 !pr-4 !rounded-[28px]">
-                <MudText>Search...</MudText>
-                <MudIcon Icon="@BurizaIcons.SearchSymbolIcon" />
-            </div>
-
+            <BurizaSearchBar />
             <div class="flex flex-col gap-y-3">
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !mt-4 !py-4">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] !py-2">
                     <MudNavMenu Dense="true">
                         <MudNavLink Href="/general" Class="!p-0 !m-0">
-                            <div class="flex">
-                                <MudIcon Icon="@BurizaIcons.GeneralSettingsIcon"
-                                    Class="!text-[var(--mud-palette-primary)]" />
-                                <MudText Class="ml-2">General</MudText>
-                                <MudSpacer />
-                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                            <div>
+                                <div class="flex">
+                                    <MudIcon Icon="@BurizaIcons.GeneralSettingsIcon"
+                                        Class="!text-[var(--mud-palette-primary)]" />
+                                    <MudText Class="ml-2">General</MudText>
+                                    <MudSpacer />
+                                    <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
+                                </div>
+                                <div>
+                                    <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
+                                </div>
                             </div>
-                            <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
                         <MudNavLink Href="/security">
@@ -75,7 +74,7 @@
                     </MudNavMenu>
                 </MudPaper>
 
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !py-4">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] !py-2">
                     <MudNavMenu Dense="true">
 
                         <MudNavLink Href="/network">
@@ -112,7 +111,7 @@
                     </MudNavMenu>
                 </MudPaper>
 
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !py-4">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] !py-2">
                     <MudNavMenu Dense="true">
                         <MudNavLink Href="/developer">
                             <div class="flex">
@@ -126,7 +125,7 @@
                     </MudNavMenu>
                 </MudPaper>
 
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[28px] !py-4">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] !py-2">
                     <MudNavMenu Dense="true">
 
                         <MudNavLink Href="/friends">
@@ -164,6 +163,5 @@
                 </MudPaper>
             </div>
         </div>
-
     </div>
 </section>
