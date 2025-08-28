@@ -3,7 +3,7 @@
 @namespace Buriza.UI.Components.Common
 
 <div>
-    <header class="fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 lg:hidden">
+    <header class="max-[376px]:bottom-4 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 lg:hidden">
         @*Receive*@
         <MudLink 
             Href="/" 
@@ -50,7 +50,7 @@
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">History</span>
         </MudLink>
 
         @*Staking*@
@@ -63,7 +63,7 @@
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Staking</span>
         </MudLink>
     </header>
 </div>
