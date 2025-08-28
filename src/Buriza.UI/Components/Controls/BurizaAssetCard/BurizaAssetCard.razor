@@ -3,10 +3,10 @@
 @namespace Buriza.UI.Components.Controls
 
 <MudCard
-    Class="shadow-none! !flex-row items-center justify-between !px-4 !py-2 !rounded-[12px] !bg-[var(--mud-palette-gray-default)]"
+    Class="shadow-sm! !gap-4 !flex-row items-center justify-between !px-4 !py-2 !rounded-[12px] !bg-[var(--mud-palette-dark)]"
 >
     <div class="flex items-center gap-2!">
-        <div class="w-[56px] h-[56px] aspect-square rounded-full overflow-hidden">
+        <div class="aspect-square rounded-full overflow-hidden w-[48px] h-[48px] sm:w-[56px] sm:h-[56px] ">
             <MudImage
                 Alt="@AssetName"
                 Src="@AssetIcon"
@@ -26,17 +26,17 @@
             </div>
         </div>
     </div>
-    <div class="max-w-[267px]">
+    <div class="max-w-[150px] sm:max-w-[267px]">
         <MudImage
             Alt="sample graph"
-            Src="/_content/Buriza.UI/images/misc/graph_positive.webp"
+            Src="@Misc.GraphPositive"
         />
     </div>
     <div class="!mt-1">
-        <MudText Class="!font-semibold !leading-[20px]">
+        <MudText Class="!font-semibold !leading-[20px] !w-full !text-end">
             @AssetAmount
         </MudText>
-        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
+        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
            ≈ $@UsdConversion
         </MudText>
     </div>
