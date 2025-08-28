@@ -42,6 +42,7 @@ public partial class MainLayout
             GrayDarker = "#363942",
             Dark = "#181B23",
             TableLines = "#23304B",
+            Divider = "#414754",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
             SuccessDarken = "#002116"
@@ -67,6 +68,7 @@ public partial class MainLayout
             GrayDarker = "#E0E2ED",
             Dark = "#ECEDF8",
             TableLines = "#B9C6E9",
+            Divider = "#C1C6D7",
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
             SuccessDarken = "#005AC4"
