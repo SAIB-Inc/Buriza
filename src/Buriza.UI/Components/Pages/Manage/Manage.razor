@@ -39,7 +39,7 @@
         <div class="w-full !space-y-3 !mt-5 h-[calc(100%-160px)] flex flex-col justify-between">
             @if(IsAccountFormVisible)
             {
-                <div class="w-full !rounded-[12px] !bg-[#1C1F27] !p-4 flex items-center justify-between">
+                <div class="w-full !rounded-[12px] !bg-[var(--mud-palette-dark-darken)] !p-4 flex items-center justify-between">
                     <div class="flex items-center !gap-3">
                         <div>
                             <MudImage
@@ -70,7 +70,7 @@
                         var walletIndex = j;
                         <MudExpansionPanel 
                             HeaderClass="!p-4"
-                            Class="w-full !rounded-[12px] !bg-[#1C1F27] [&_.mud-expand-panel-content]:!px-4"
+                            Class="w-full !rounded-[12px] !bg-[var(--mud-palette-dark-darken)] [&_.mud-expand-panel-content]:!px-4"
                         >
                             <TitleContent>
                                 <div class="flex items-center !gap-3">
@@ -82,7 +82,7 @@
                                                 Class="!w-[46px] aspect-square !rounded-full"
                                             />
                                         </div>
-                                        <div class="absolute -right-1 -bottom-1 !p-1 rounded-full bg-[#1C1F27] flex items-center justify-center">
+                                        <div class="absolute -right-1 -bottom-1 !p-1 rounded-full !bg-[var(--mud-palette-dark-darken)] flex items-center justify-center">
                                             <MudIconButton
                                                 Icon="@Icons.Material.Filled.Edit"
                                                 Class="!p-0 !bg-[var(--mud-palette-primary-lighten)] !text-[var(--mud-palette-background)] !rounded-full !size-[16px] [&_.mud-icon-root]:!text-[10px]"
