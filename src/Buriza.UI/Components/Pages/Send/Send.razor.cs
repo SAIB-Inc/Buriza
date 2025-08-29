@@ -14,10 +14,38 @@ public partial class Send
         public decimal Balance { get; set; } = 5304.01m;
     }
     
-    private List<TokenEntry> tokenEntries = new() { new TokenEntry { ImageSrc = Tokens.Ada } };
-    
-    private void AddToken()
+    public class Recipient
     {
-        tokenEntries.Add(new TokenEntry { ImageSrc = Tokens.Ada });
+        public int Id { get; set; }
+        public string Address { get; set; } = "";
+        public List<TokenEntry> TokenEntries { get; set; } = new() { new TokenEntry { ImageSrc = Tokens.Ada } };
+    }
+    
+    private List<Recipient> recipients = new() { new Recipient { Id = 1 } };
+    
+    private void AddRecipient()
+    {
+        recipients.Add(new Recipient { Id = recipients.Count + 1 });
+    }
+    
+    private void RemoveRecipient(Recipient recipient)
+    {
+        if (recipients.Count > 1)
+        {
+            recipients.Remove(recipient);
+        }
+    }
+    
+    private void AddToken(Recipient recipient)
+    {
+        recipient.TokenEntries.Add(new TokenEntry { ImageSrc = Tokens.Ada });
+    }
+    
+    private void RemoveToken(Recipient recipient, TokenEntry entry)
+    {
+        if (recipient.TokenEntries.Count > 1)
+        {
+            recipient.TokenEntries.Remove(entry);
+        }
     }
 }

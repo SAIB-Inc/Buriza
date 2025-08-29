@@ -29,19 +29,30 @@
                     <MudIconButton
                         Icon="@BurizaIcons.AddSymbolIcon"
                         Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="AddRecipient"
                     />
                 </div>
             }
         </div>
-        <div class="!mt-5 w-full">
-            <MudCard
-                Class="!w-full !bg-[var(--mud-palette-background-gray)] !rounded-[12px] !p-4 !gap-4"
-            >
-                <div class="!mt-2">
-                    <MudText Class="!text-sm">
-                        Recipient 1
-                    </MudText>
-                </div>
+        <div class="!mt-5 w-full overflow-y-auto h-[calc(100%-210px)] !space-y-4">
+            @foreach (var recipient in recipients)
+            {
+                <MudCard
+                    Class="!w-full !bg-[var(--mud-palette-background-gray)] !rounded-[12px] !p-4 !gap-4"
+                >
+                    <div class="!mt-2 flex items-center justify-between">
+                        <MudText Class="!text-sm">
+                            Recipient @recipient.Id
+                        </MudText>
+                        @if (recipients.Count > 1)
+                        {
+                            <MudIconButton
+                                Icon="@BurizaIcons.DeleteSymbolIcon"
+                                Class="!p-0"
+                                OnClick="() => RemoveRecipient(recipient)"
+                            />
+                        }
+                    </div>
                 @if(IsConfirmed)
                 {
                     <div class="!space-y-2">
@@ -137,9 +148,19 @@
                 else
                 {
                     <div class="!space-y-2">
-                        @foreach (var entry in tokenEntries)
+                        @foreach (var entry in recipient.TokenEntries)
                         {
-                            <div class="rounded-[8px] !p-3 border border-[var(--mud-palette-table-lines)]">
+                            <div class="rounded-[8px] !p-3 border border-[var(--mud-palette-table-lines)] relative">
+                                @if (recipient.TokenEntries.Count > 1)
+                                {
+                                    <div class="absolute -top-2 -right-2 ">
+                                        <MudIconButton
+                                            Icon="@Icons.Material.Filled.Remove"
+                                            Class="!p-[5px] !bg-[#1C1F27] [&_.mud-icon-root]:!text-[10px]"
+                                            OnClick="() => RemoveToken(recipient, entry)"
+                                        />
+                                    </div>
+                                }
                                 <div class="w-full flex items-center justify-between">
                                     <div>
                                         <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
@@ -253,13 +274,14 @@
                         <BurizaButton
                             Ripple="false"
                             Class="text-[var(--mud-palette-primary-lighten)]! !bg-transparent w-max!"
-                            OnClick="AddToken"
+                            OnClick="() => AddToken(recipient)"
                         >
                             + Add Token
                         </BurizaButton>
                     }
                 </div>
-            </MudCard>
+                </MudCard>
+            }
         </div>
         <div class="w-[calc(100%-32px)] fixed bottom-30 z-20 lg:max-w-[430px]">
             <BurizaButton
