@@ -57,16 +57,16 @@
                                             </MudText>
                                         </div>
                                         <div class="flex items-center justify-end !gap-2">
-                                            <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                                            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
                                                 9f7a...1b93d2
                                             </MudText>
                                             <MudIconButton
                                                 Icon="@BurizaIcons.CopySymbolIcon"
-                                                Class="!p-0 [&_.mud-icon-root]:!text-sm [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/70"
+                                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
                                             />
                                         </div>
                                     </div>
-                                    <div class="rounded-r-[12px] overflow-hidden">
+                                    <div class="rounded-r-[12px] overflow-hidden !shadow-[var(--mud-elevation-2)]">
                                         <BurizaButton 
                                             Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]!"
                                             OnClick="() => IsSummaryDisplayed = true"
@@ -171,7 +171,7 @@
                     </MudText>
                 </div>
                 <MudCard
-                    Class="!bg-[var(--mud-palette-background-gray)] !p-4 !rounded-[12px] !gap-6"
+                    Class="!bg-[var(--mud-palette-background-gray)] !p-4 !rounded-[12px] !gap-6 !shadow-[var(--mud-elevation-2)]"
                 >
                     <div class="!space-y-4">
                         <div class="w-full flex items-center justify-between">
@@ -186,7 +186,7 @@
                                 </MudText>
                                 <MudIconButton
                                     Icon="@BurizaIcons.CopySymbolIcon"
-                                    Class="!p-0 [&_.mud-icon-root]:!text-lg [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/70"
+                                    Class="!p-0 [&_.mud-icon-root]:!text-lg [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
                                 />
                             </div>
                         </div>
@@ -279,7 +279,7 @@
                             </div>
                             <div class="w-full flex items-center justify-between">
                                 <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
-                                    Expired by
+                                    Expires by
                                 </MudText>
                                 <MudText Class="!text-sm !font-medium">
                                     No limit

@@ -46,7 +46,8 @@ public partial class MainLayout
             TableLines = "#23304B",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
-            SuccessDarken = "#002116"
+            SuccessDarken = "#002116",
+            Error = "#FF5449"
         },
         PaletteLight = new()
         {
@@ -73,7 +74,8 @@ public partial class MainLayout
             TableLines = "#B9C6E9",
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
-            SuccessDarken = "#005AC4"
+            SuccessDarken = "#005AC4",
+            Error = "#BA1A1A"
         }
     };
 
