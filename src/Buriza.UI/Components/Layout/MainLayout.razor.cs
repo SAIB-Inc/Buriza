@@ -43,10 +43,12 @@ public partial class MainLayout
             DarkLighten = "#8B90A0",
             Dark = "#181B23",
             DarkDarken = "#1C1F27",
+            DarkContrastText = "#1C1F27",
             TableLines = "#23304B",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
-            SuccessDarken = "#002116"
+            SuccessDarken = "#002116",
+            Error = "#FF5449"
         },
         PaletteLight = new()
         {
@@ -68,12 +70,14 @@ public partial class MainLayout
             GrayDark = "#181B23",
             GrayDarker = "#E0E2ED",
             DarkLighten = "#C1C6D7",
-            Dark = "#ECEDF8",
+            Dark = "#E6E7F3",
             DarkDarken = "#E8EFFB",
+            DarkContrastText = "#ECEDF8",
             TableLines = "#B9C6E9",
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
-            SuccessDarken = "#005AC4"
+            SuccessDarken = "#005AC4",
+            Error = "#BA1A1A"
         }
     };
 
