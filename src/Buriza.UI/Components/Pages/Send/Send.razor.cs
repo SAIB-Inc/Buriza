@@ -6,6 +6,8 @@ public partial class Send
 {
     protected bool IsConfirmed { get; set; }
     
+
+    //Transfer to .Data Project - another PR
     public class TokenEntry
     {
         public string Name { get; set; } = "ADA";
