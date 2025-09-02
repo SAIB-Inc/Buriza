@@ -46,6 +46,7 @@ public partial class BurizaTextField
     private string TextFieldClass => $"""
         w-full !text-[var(--mud-palette-text-primary)] [&_.mud-input-outlined-border]:!border-none !rounded-[12px]
         border border-gray-300 !bg-[var(--mud-palette-gray-default)] [&_input]:!pl-5 [&_.mud-input]:!pr-5 
+        [&_input::placeholder]:!opacity-100
         {Class}
     """;
 }

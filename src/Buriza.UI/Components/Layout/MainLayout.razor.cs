@@ -1,13 +1,19 @@
 using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using MudBlazor;
 
 namespace Buriza.UI.Components.Layout;
 
-public partial class MainLayout
+public partial class MainLayout : IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
+    
+    [Inject] 
+    public required NavigationManager Navigation { get; set; }
+    
+    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success");
 
     public static MudTheme BurizaTheme => new()
     {
@@ -43,11 +49,13 @@ public partial class MainLayout
             DarkLighten = "#8B90A0",
             Dark = "#181B23",
             DarkDarken = "#1C1F27",
+            DarkContrastText = "#1C1F27",
             Divider = "#414754",
             TableLines = "#23304B",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
-            SuccessDarken = "#002116"
+            SuccessDarken = "#002116",
+            Error = "#FF5449"
         },
         PaletteLight = new()
         {
@@ -69,13 +77,15 @@ public partial class MainLayout
             GrayDark = "#181B23",
             GrayDarker = "#E0E2ED",
             DarkLighten = "#C1C6D7",
-            Dark = "#ECEDF8",
-            DarkDarken = "#ECEDF8",
+            Dark = "#E0E2ED",
+            DarkDarken = "#E8EFFB",
+            DarkContrastText = "#ECEDF8",
             Divider = "#C1C6D7",
             TableLines = "#B9C6E9",
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
-            SuccessDarken = "#005AC4"
+            SuccessDarken = "#005AC4",
+            Error = "#BA1A1A"
         }
     };
 
