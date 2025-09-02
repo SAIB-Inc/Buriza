@@ -10,20 +10,20 @@
 
 <section class="h-screen">
     <div class="h-full container !mx-auto !px-4 overflow-y-clip">
-        <div class="flex justify-between !pt-[50px] !mb-[25px]">
+        <div class="flex justify-between !pt-16 !mb-[25px]">
             <div class="flex align-center">
                 <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
                 <MudText Class="!text-[22px] !font-medium">Settings</MudText>
             </div>
             <div>
-                <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px] ml-4"></MudImage>
+                <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px] !ml-4"></MudImage>
             </div>
         </div>
 
         <div>
             <BurizaSearchBar/>
-            <div class="flex flex-col gap-y-3 min-h-[210px] max-[376px]:max-h-[calc(100vh-212px)] !space-y-2 overflow-y-auto max-h-[calc(100vh-88px)] !rounded-[12px] !pb-11">
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip">
+            <div class="flex flex-col gap-y-3 min-h-[210px] max-[376px]:max-h-[calc(100vh-252px)] !space-y-2 overflow-y-auto max-h-[calc(100vh-88px)] !rounded-[12px] !pb-11">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-xs">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
                         <div>
                             <MudNavLink Href="/general" Class="[&_a.mud-nav-link]:!pt-2">
@@ -76,7 +76,7 @@
                     </MudNavMenu>
                 </MudPaper>
 
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-sm">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
 
                         <MudNavLink Href="/network" Class="[&_a.mud-nav-link]:!pt-2">
@@ -113,7 +113,7 @@
                     </MudNavMenu>
                 </MudPaper>
 
-                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip">
+                <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-md">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
                         <MudNavLink Href="/developer" Class="[&_a.mud-nav-link]:!pt-2 [&_a.mud-nav-link]:!pb-2">
                             <div class="flex">
