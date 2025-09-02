@@ -1,13 +1,19 @@
 using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using MudBlazor;
 
 namespace Buriza.UI.Components.Layout;
 
-public partial class MainLayout
+public partial class MainLayout : IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
+    
+    [Inject] 
+    public required NavigationManager Navigation { get; set; }
+    
+    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success");
 
     public static MudTheme BurizaTheme => new()
     {

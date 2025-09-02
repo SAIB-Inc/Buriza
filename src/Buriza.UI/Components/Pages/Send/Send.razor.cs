@@ -1,9 +1,13 @@
 using Buriza.UI.Resources;
+using Microsoft.AspNetCore.Components;
 
 namespace Buriza.UI.Components.Pages;
 
 public partial class Send
 {
+    [Inject]
+    public required NavigationManager Navigation { get; set; } = null!;
+    
     protected bool IsConfirmed { get; set; }
     
 
@@ -48,6 +52,18 @@ public partial class Send
         if (recipient.TokenEntries.Count > 1)
         {
             recipient.TokenEntries.Remove(entry);
+        }
+    }
+    
+    private void HandleSend()
+    {
+        if (IsConfirmed)
+        {
+            Navigation.NavigateTo("/transaction/success");
+        }
+        else
+        {
+            IsConfirmed = true;
         }
     }
 }
