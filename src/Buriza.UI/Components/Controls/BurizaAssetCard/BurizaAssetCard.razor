@@ -1,4 +1,5 @@
 @using Buriza.UI.Resources
+@using Buriza.Data.Models.Enums
 
 @namespace Buriza.UI.Components.Controls
 
@@ -6,7 +7,7 @@
     Class="shadow-sm! !gap-4 !flex-row items-center justify-between !px-4 !py-2 !rounded-[12px] !bg-[var(--mud-palette-dark)]"
 >
     <div class="flex items-center gap-2!">
-        <div class="aspect-square rounded-full overflow-hidden w-[48px] h-[48px] sm:w-[56px] sm:h-[56px] ">
+        <div class="@($"{(AssetType == AssetType.Token ? "!rounded-full" : "!rounded-[8px]")} aspect-square overflow-hidden w-[48px] h-[48px] sm:w-[56px] sm:h-[56px]")">
             <MudImage
                 Alt="@AssetName"
                 Src="@AssetIcon"
@@ -18,12 +19,23 @@
                     @AssetName
                 </MudText>
             </div>
-            <div class="@($"flex items-center {(PricePercentage >= 0 ? "!text-[var(--mud-palette-success)]" : "!text-[var(--mud-palette-error)]")}")">
-                <MudIcon Icon="@(PricePercentage >= 0 ? BurizaIcons.ArrowUp1Icon : BurizaIcons.ArrowDown1Icon)" Class="!ml-[-6px] !mr-[-4px]"/>
-                <MudText Class="!text-sm">
-                    @Math.Abs(PricePercentage)%
-                </MudText>
-            </div>
+            @if (AssetType == AssetType.Token)
+            {
+                <div class="@($"flex items-center {(PricePercentage >= 0 ? "!text-[var(--mud-palette-success)]" : "!text-[var(--mud-palette-error)]")}")">
+                    <MudIcon Icon="@(PricePercentage >= 0 ? BurizaIcons.ArrowUp1Icon : BurizaIcons.ArrowDown1Icon)" Class="!ml-[-6px] !mr-[-4px]"/>
+                    <MudText Class="!text-sm">
+                        @Math.Abs(PricePercentage)%
+                    </MudText>
+                </div>
+            }
+            else
+            {
+                <div>
+                    <MudText Class="!text-sm">
+                        @CollectionName
+                    </MudText>
+                </div>
+            }
         </div>
     </div>
     <div class="max-w-[150px] sm:max-w-[267px]">
@@ -33,11 +45,26 @@
         />
     </div>
     <div class="!mt-1">
-        <MudText Class="!font-semibold !leading-[20px] !w-full !text-end">
-            @AssetAmount
-        </MudText>
-        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
-           ≈ $@UsdConversion
-        </MudText>
+        @if (AssetType == AssetType.Token)
+        {
+            <MudText Class="!font-semibold !leading-[20px] !w-full !text-end">
+                @AssetAmount
+            </MudText>
+            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
+               ≈ $@UsdConversion
+            </MudText>
+        }
+        else
+        {
+            <MudText Class="!font-semibold !leading-[20px] !w-full !text-end">
+                $@UsdConversion
+            </MudText>
+            <div class="@($"flex items-center justify-end {(PricePercentage >= 0 ? "!text-[var(--mud-palette-success)]" : "!text-[var(--mud-palette-error)]")}")">
+                <MudIcon Icon="@(PricePercentage >= 0 ? BurizaIcons.ArrowUp1Icon : BurizaIcons.ArrowDown1Icon)" Class="!ml-[-6px] !mr-[-4px]"/>
+                <MudText Class="!text-sm">
+                    @Math.Abs(PricePercentage)%
+                </MudText>
+            </div>
+        }
     </div>
 </MudCard>

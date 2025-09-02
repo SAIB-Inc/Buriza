@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Buriza.Data.Models.Enums;
 
 namespace Buriza.UI.Components.Controls;
 
@@ -18,4 +19,10 @@ public partial class BurizaAssetCard
 
     [Parameter]
     public float UsdConversion { get; set; }
+
+    [Parameter]
+    public AssetType AssetType { get; set; } = AssetType.Token;
+
+    [Parameter]
+    public string CollectionName { get; set; } = string.Empty;
 }

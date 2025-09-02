@@ -3,6 +3,7 @@
 @using Buriza.UI.Resources
 @using Buriza.UI.Data
 @using Buriza.Data.Models.Common
+@using Buriza.Data.Models.Enums
 
 @page "/"
 @page "/popup.html"
@@ -122,6 +123,7 @@
        <div class="w-full">
             <BurizaTabs
                 Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+                @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
             >
                 <MudTabPanel 
                     Text="Token" 
@@ -152,15 +154,33 @@
                 </div>
             </div>
             <div class="min-h-[210px] max-[376px]:max-h-[calc(100vh-390px)] !space-y-2 overflow-y-auto max-h-[calc(100vh-466px)] !rounded-[12px] pb-11">
-                @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
+                @if (AppStateService.SelectedAssetType == AssetType.Token)
                 {
-                    <BurizaAssetCard
-                        AssetIcon="@tokenAsset.AssetIcon"
-                        AssetName="@tokenAsset.AssetName"
-                        PricePercentage="@tokenAsset.PricePercentage"
-                        AssetAmount="@tokenAsset.AssetAmount"
-                        UsdConversion="@tokenAsset.UsdConversion"
-                    />
+                    @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
+                    {
+                        <BurizaAssetCard
+                            AssetIcon="@tokenAsset.AssetIcon"
+                            AssetName="@tokenAsset.AssetName"
+                            PricePercentage="@tokenAsset.PricePercentage"
+                            AssetAmount="@tokenAsset.AssetAmount"
+                            UsdConversion="@tokenAsset.UsdConversion"
+                        />
+                    }
+                }
+                else
+                {
+                    @foreach(NftAsset nftAsset in NftAssetData.GetDummyNftAssets())
+                    {
+                        <BurizaAssetCard
+                            AssetIcon="@nftAsset.AssetIcon"
+                            AssetName="@nftAsset.AssetName"
+                            PricePercentage="@nftAsset.PricePercentage"
+                            AssetAmount="@nftAsset.AssetAmount"
+                            UsdConversion="@nftAsset.UsdConversion"
+                            AssetType="AssetType.NFT"
+                            CollectionName="@nftAsset.CollectionName"
+                        />
+                    }
                 }
             </div>
         </div>

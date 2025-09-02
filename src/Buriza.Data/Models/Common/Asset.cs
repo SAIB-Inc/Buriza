@@ -14,6 +14,7 @@ public record NftAsset(
     string AssetIcon,
     string AssetName,
     string CollectionName,
+    float AssetAmount,
     float PricePercentage,
     float UsdConversion
 );
