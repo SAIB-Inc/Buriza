@@ -18,10 +18,10 @@
                     @AssetName
                 </MudText>
             </div>
-            <div class="flex items-center !text-[var(--mud-palette-success)]">
-                <MudIcon Icon="@BurizaIcons.ArrowUp1Icon" Class="!ml-[-6px] !mr-[-4px]"/>
+            <div class="@($"flex items-center {(PricePercentage >= 0 ? "!text-[var(--mud-palette-success)]" : "!text-[var(--mud-palette-error)]")}")">
+                <MudIcon Icon="@(PricePercentage >= 0 ? BurizaIcons.ArrowUp1Icon : BurizaIcons.ArrowDown1Icon)" Class="!ml-[-6px] !mr-[-4px]"/>
                 <MudText Class="!text-sm">
-                    @PricePercentage%
+                    @Math.Abs(PricePercentage)%
                 </MudText>
             </div>
         </div>
@@ -29,7 +29,7 @@
     <div class="max-w-[150px] sm:max-w-[267px]">
         <MudImage
             Alt="sample graph"
-            Src="@Misc.GraphPositive"
+            Src="@(PricePercentage >= 0 ? Misc.GraphPositive : Misc.GraphNegative)"
         />
     </div>
     <div class="!mt-1">
