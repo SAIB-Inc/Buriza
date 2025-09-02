@@ -1,0 +1,64 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@page "/selectasset"
+
+@namespace Buriza.UI.Components.Pages
+
+<section class="min-h-[600px] h-screen">
+    <div class="max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 container mx-auto h-full w-full flex flex-col items-center !px-4 !pb-8 !pt-16 !gap-3 lg:max-w-[430px]">
+        <div class="w-full flex items-center justify-between">
+            <div class="flex items-center !gap-2">
+                <div>
+                    <MudIconButton
+                        Icon="@BurizaIcons.ChevronRightIcon"
+                        Href="/send"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    />
+                </div>
+                <div>
+                    <MudText Class="!text-[22px] !font-medium">
+                        Select Assets
+                    </MudText>
+                </div>
+            </div>
+            <div class="flex items-center !gap-5">
+                <MudIconButton
+                    Icon="@BurizaIcons.AddSymbolIcon"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                />
+            </div>
+        </div>
+        <div class="w-full">
+            <BurizaTabs
+                Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+            >
+                <MudTabPanel 
+                    Text="Token" 
+                    Icon="@BurizaIcons.TokenSymbolIcon"
+                    Class="w-full bg-[var(--mud-palette-dark)]"
+                    Style="border-radius: 30px 10px 10px 30px"
+                />
+                <MudTabPanel 
+                    Text="NFT" 
+                    Icon="@BurizaIcons.NftSymbolIcon"
+                    Class="w-full bg-[var(--mud-palette-dark)]"
+                    Style="border-radius: 10px 30px 30px 10px"
+                />
+            </BurizaTabs>
+        </div>
+        <div class="!space-y-2 h-full max-h-[calc(100%-140px)] !pb-11 w-full overflow-y-auto !rounded-[12px]">
+            @for(int i=0; i < 15; i++)
+            {
+                <BurizaAssetCard
+                    AssetIcon="@Tokens.Ada"
+                    AssetName="ADA"
+                    PricePercentage="12.18f"
+                    AssetAmount="123.21f"
+                    UsdConversion="152.31f"
+                />
+            }
+        </div>
+    </div>
+</section>

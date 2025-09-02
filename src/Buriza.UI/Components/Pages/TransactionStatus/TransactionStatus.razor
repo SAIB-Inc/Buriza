@@ -1,0 +1,41 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@page "/transaction/success"
+
+@namespace Buriza.UI.Components.Pages
+
+<section class="min-h-[600px] h-screen">
+    <div class="max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !pb-8 !pt-16 !gap-35 lg:max-w-[430px]">
+        <div class="flex flex-col items-center justify-center !gap-4">
+            <div>
+                <MudImage
+                    Alt="Successful"
+                    Src="@Mascots.Mascot6"
+                    Class="!max-w-[120px] !w-full"
+                />
+            </div>
+            <div class="!text-center">
+                <MudText Class="!text-[32px] !font-semibold">
+                    Successfully Sent
+                </MudText>
+                <MudText Class="!text-sm">
+                    <span>Your transaction has been sent to the </span><br/>
+                    <span>network and will be processed </span><br/>
+                    <span>in a few seconds.</span>
+                </MudText>
+            </div>
+        </div>
+        <div class="w-[calc(100%-32px)] fixed bottom-30 z-20 lg:max-w-[430px]">
+            <BurizaButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                Class="!w-full"
+                OnClick="NavigateToSend"
+            >
+                Done
+            </BurizaButton>
+        </div>
+    </div>
+</section>
