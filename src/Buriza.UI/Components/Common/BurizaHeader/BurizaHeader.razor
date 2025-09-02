@@ -6,64 +6,72 @@
     <header class="max-[376px]:bottom-4 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 lg:hidden">
         @*Receive*@
         <MudLink 
-            Href="/dapp" 
-            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Href="/receive" 
+            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.ReceiveSymbolIcon" 
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+            <span class="@GetSpanClass("/receive")">Receive</span>
         </MudLink>
 
         @*Send*@
         <MudLink 
             Href="/send" 
-            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.Send1Icon" 
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Send</span>
+            <span class="@GetSpanClass("/send")">Send</span>
         </MudLink>
 
         @*Buriza*@
-        <div class="flex items-center justify-center">
-            <div class="relative w-12 h-12 flex items-center justify-center">
+        <div class="relative flex items-center justify-center bg-[var(--mud-palette-appbar-background)]">
+            <div class="relative w-12 h-12 flex items-center justify-center cursor-pointer" @onclick="ToggleSettings">
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="!z-10 !text-[38px] !text-[var(--mud-palette-white)]"/>
+            </div>
+            <div class="@($"absolute {(isSettingsVisible ? "-top-20" : "top-0")} flex flex-col items-center justify-center !gap-2 -z-10 transition-all duration-300")">
+                <MudIcon 
+                    Icon="@BurizaIcons.SettingsSymbolIcon"
+                    Size="Size.Medium" 
+                    Class=""
+                />
+                <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
             </div>
         </div>
 
         @*History*@
         <MudLink 
             Href="/history" 
-            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.History2Icon" 
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">History</span>
+            <span class="@GetSpanClass("/history")">History</span>
         </MudLink>
 
-        @*Staking*@
+        @*Manage*@
         <MudLink 
-            Href="/" 
-            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Href="/manage"
+            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.StakingSymbolIcon" 
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Staking</span>
+            <span class="@GetSpanClass("/manage")">Manage</span>
         </MudLink>
     </header>
 </div>
