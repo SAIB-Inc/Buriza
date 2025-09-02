@@ -13,7 +13,9 @@ public partial class MainLayout : IDisposable
     [Inject] 
     public required NavigationManager Navigation { get; set; }
     
-    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success");
+    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success") || 
+                                   Navigation.Uri.Contains("/onboard") || 
+                                   Navigation.Uri.Contains("/splash");
 
     public static MudTheme BurizaTheme => new()
     {
