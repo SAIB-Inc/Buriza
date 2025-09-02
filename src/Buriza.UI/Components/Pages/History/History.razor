@@ -1,4 +1,7 @@
 @using Buriza.UI.Resources
+@using Buriza.UI.Data
+@using Buriza.Data.Models.Common
+@using Buriza.Data.Models.Enums
 
 @page "/history"
 
@@ -7,8 +10,8 @@
 <PageTitle>Buriza</PageTitle>
 
 <section class="h-screen">
-    <div class="container mx-auto h-[calc(100%-48px)] overflow-y-auto w-full flex flex-col items-center !px-4 !py-16 !gap-6">
-        <div class="w-full flex items-center justify-between">
+    <div class="container mx-auto w-full h-full flex flex-col items-center !py-16 !gap-6">
+        <div class="w-full flex items-center justify-between !px-4">
             <div class="flex items-center !gap-2">
                 <div>
                     <MudIconButton
@@ -37,125 +40,58 @@
         </div>
         @if (!IsSummaryDisplayed)
         {
-            <div class="w-full !space-y-6">
-                @for (int j = 0; j < 3; j++)
+            <div class="w-full !space-y-6 h-[calc(100%-72px)] overflow-y-auto !px-4 !pb-7">
+                @foreach (TransactionHistory transaction in TransactionHistoryData.GetDummyTransactions())
                 {
                     <div>
-                        <div class="w-full !mb-3">
-                            <MudText Class="!text-center !font-medium !text-sm">
-                                September 06, 2025
-                            </MudText>
+                        <div class="w-full flex items-center justify-between !mb-2">
+                            <div>
+                                <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                                    @GetRelativeTime(transaction.Timestamp)
+                                </MudText>
+                            </div>
+                            <div class="flex items-center justify-end !gap-2">
+                                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                                    @transaction.TransactionId
+                                </MudText>
+                                <MudIconButton
+                                    Icon="@BurizaIcons.CopySymbolIcon"
+                                    Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
+                                />
+                            </div>
                         </div>
-                        <div class="!space-y-4">
-                            @for (int i = 0; i < 2; i++)
+                        <div class="rounded-r-[12px] overflow-hidden !shadow-[var(--mud-elevation-2)]">
+                            @foreach (TransactionAsset asset in transaction.Assets)
                             {
-                                <div>
-                                    <div class="w-full flex items-center justify-between !mb-2">
-                                        <div>
-                                            <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
-                                                23 minutes ago
-                                            </MudText>
-                                        </div>
-                                        <div class="flex items-center justify-end !gap-2">
-                                            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
-                                                9f7a...1b93d2
-                                            </MudText>
-                                            <MudIconButton
-                                                Icon="@BurizaIcons.CopySymbolIcon"
-                                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
+                                <BurizaButton 
+                                    Class="@($"py-2! px-4! h-max! odd:bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! {(transaction.Type == TransactionType.Sent ? "border-[var(--mud-palette-error)]" : "border-[var(--mud-palette-success)]")}!")"
+                                    OnClick="() => IsSummaryDisplayed = true"
+                                >
+                                    <div class="flex items-center gap-4!">
+                                        <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
+                                            <MudImage
+                                                Alt="@asset.AssetName"
+                                                Src="@asset.AssetIcon"
                                             />
                                         </div>
+                                        <div class="!mt-1">
+                                            <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
+                                                @(transaction.Type == TransactionType.Sent ? "Sent:" : "Received:")
+                                            </MudText>
+                                            <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
+                                                @asset.AssetName
+                                            </MudText>
+                                        </div>
                                     </div>
-                                    <div class="rounded-r-[12px] overflow-hidden !shadow-[var(--mud-elevation-2)]">
-                                        <BurizaButton 
-                                            Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]!"
-                                            OnClick="() => IsSummaryDisplayed = true"
-                                        >
-                                            <div class="flex items-center gap-4!">
-                                                <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
-                                                    <MudImage
-                                                        Alt="ada"
-                                                        Src="@Tokens.Ada"
-                                                    />
-                                                </div>
-                                                <div class="!mt-1">
-                                                    <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
-                                                        Sent:
-                                                    </MudText>
-                                                    <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
-                                                        ADA
-                                                    </MudText>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <MudText Class="!text-sm !font-semibold !text-[var(--mud-palette-error)] !text-end">
-                                                    -212.28
-                                                </MudText>
-                                                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end ">
-                                                    ≈ $199.02
-                                                </MudText>
-                                            </div>
-                                        </BurizaButton>
-                                        <BurizaButton 
-                                            Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-success)]!"
-                                            OnClick="() => IsSummaryDisplayed = true"
-                                        >
-                                            <div class="flex items-center gap-4!">
-                                                <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
-                                                    <MudImage
-                                                        Alt="ada"
-                                                        Src="@Tokens.Snek"
-                                                    />
-                                                </div>
-                                                <div class="!mt-1">
-                                                    <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
-                                                        Received:
-                                                    </MudText>
-                                                    <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
-                                                        SNEK
-                                                    </MudText>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <MudText Class="!text-sm !font-semibold !text-[var(--mud-palette-success)] !text-end">
-                                                    -212.28
-                                                </MudText>
-                                                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
-                                                    ≈ $199.02
-                                                </MudText>
-                                            </div>
-                                        </BurizaButton>
-                                        <BurizaButton 
-                                            Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]!"
-                                            OnClick="() => IsSummaryDisplayed = true"
-                                        >
-                                            <div class="flex items-center gap-4!">
-                                                <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
-                                                    <MudImage
-                                                        Alt="ada"
-                                                        Src="@Tokens.Angel"
-                                                    />
-                                                </div>
-                                                <div class="!mt-1">
-                                                    <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
-                                                        Sent:
-                                                    </MudText>
-                                                    <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
-                                                        ANGEL
-                                                    </MudText>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <MudText Class="!text-sm !font-semibold !text-[var(--mud-palette-error)] !text-end">
-                                                    -212.28
-                                                </MudText>
-                                                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
-                                                    ≈ $199.02
-                                                </MudText>
-                                            </div>
-                                        </BurizaButton>
+                                    <div>
+                                        <MudText Class="@($"!text-sm !font-semibold !text-end {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
+                                            @(transaction.Type == TransactionType.Sent ? "" : "+")@asset.Amount
+                                        </MudText>
+                                        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
+                                            ≈ $@asset.UsdValue
+                                        </MudText>
                                     </div>
-                                </div>
+                                </BurizaButton>
                             }
                         </div>
                     </div>
@@ -164,7 +100,7 @@
         }
         else
         {
-            <div class="w-full">
+            <div class="w-full !space-y-6 h-[calc(100%-72px)] overflow-y-auto !px-4 !pb-7">
                 <div class="w-full !mb-3">
                     <MudText Class="!text-center !font-medium">
                         Summary of your activity
