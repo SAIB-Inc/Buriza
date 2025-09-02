@@ -43,6 +43,7 @@ public partial class MainLayout
             DarkLighten = "#8B90A0",
             Dark = "#181B23",
             DarkDarken = "#1C1F27",
+            Divider = "#414754",
             TableLines = "#23304B",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
@@ -51,7 +52,7 @@ public partial class MainLayout
         PaletteLight = new()
         {
             Background = "#FAF9FF",
-            BackgroundGray = "#ECEDF8",
+            BackgroundGray = "#FFFFFF",
             AppbarBackground = "#E0E2ED",
             PrimaryLighten = "#0057C0",
             Primary = "#227CFF",
@@ -70,6 +71,7 @@ public partial class MainLayout
             DarkLighten = "#C1C6D7",
             Dark = "#ECEDF8",
             DarkDarken = "#ECEDF8",
+            Divider = "#C1C6D7",
             TableLines = "#B9C6E9",
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
