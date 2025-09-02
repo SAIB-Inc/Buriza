@@ -53,7 +53,7 @@ public partial class MainLayout
         PaletteLight = new()
         {
             Background = "#FAF9FF",
-            BackgroundGray = "#ECEDF8",
+            BackgroundGray = "#FFFFFF",
             AppbarBackground = "#E0E2ED",
             PrimaryLighten = "#0057C0",
             Primary = "#227CFF",
