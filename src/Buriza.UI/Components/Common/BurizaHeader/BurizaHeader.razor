@@ -2,7 +2,7 @@
 
 @namespace Buriza.UI.Components.Common
 
-<div>
+<div class="relative">
     <header class="max-[376px]:bottom-4 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 lg:hidden">
         @*Receive*@
         <MudLink 
@@ -31,20 +31,12 @@
         </MudLink>
 
         @*Buriza*@
-        <div class="relative flex items-center justify-center bg-[var(--mud-palette-appbar-background)]">
+        <div class="relative flex items-center justify-center">
             <div class="relative w-12 h-12 flex items-center justify-center cursor-pointer" @onclick="ToggleSettings">
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="!z-10 !text-[38px] !text-[var(--mud-palette-white)]"/>
-            </div>
-            <div class="@($"absolute {(isSettingsVisible ? "-top-20" : "top-0")} flex flex-col items-center justify-center !gap-2 -z-10 transition-all duration-300")">
-                <MudIcon 
-                    Icon="@BurizaIcons.SettingsSymbolIcon"
-                    Size="Size.Medium" 
-                    Class=""
-                />
-                <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
             </div>
         </div>
 
@@ -74,4 +66,64 @@
             <span class="@GetSpanClass("/manage")">Manage</span>
         </MudLink>
     </header>
+
+    @*pop up*@
+    <div class="@($"left-1/2 -translate-x-1/2 fixed {(isSettingsVisible ? "bottom-30" : "bottom-10")} duration-200") z-80">
+        <div>
+            <MudIconButton
+                Icon="@BurizaIcons.CloseSymbolIcon"
+                OnClick="ToggleSettings"
+                Class="!p-1 !bg-[var(--mud-palette-secondary-lighten)] [&_.mud-icon-root]:!text-xl [&_.mud-icon-root]:!text-[var(--mud-palette-secondary-text)]"
+            />
+        </div>
+
+        @*top*@
+         <MudLink
+            Href="/" 
+            Class="@($"absolute flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-top-17 left-1/2 -translate-x-1/2 opacity-100" : "-top-7 left-1/2 -translate-x-1/2 opacity-0")}")"
+            @onclick="CloseSettings"
+        >
+            <MudIcon
+                Icon="@BurizaIcons.MenuSymbolIcon"
+                Size="Size.Medium" 
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Dapp</span>
+        </MudLink>
+
+        @*left*@
+        <MudLink 
+            Href="/"
+            Class="@($"absolute flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-top-3 -left-20 opacity-100" : "-top-7 left-1/2 -translate-x-1/2 opacity-0")}")"
+            @onclick="CloseSettings"
+        >
+            <MudIcon
+                Icon="@BurizaIcons.FavoriteSymbolIcon"
+                Size="Size.Medium" 
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Manage</span>
+        </MudLink>
+
+        @*right*@
+        <MudLink
+            Href="/" 
+            Class="@($"absolute flex flex-col items-center justify-center !gap-2 transition-all duration-300 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-top-3 -right-20 opacity-100" : "-top-7 left-1/2 -translate-x-1/2 opacity-0")}")"
+            @onclick="CloseSettings"
+        >
+            <MudIcon
+                Icon="@BurizaIcons.SettingsSymbolIcon"
+                Size="Size.Medium" 
+            />
+            <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
+        </MudLink>
+    </div>
+    <MudOverlay Visible="isSettingsVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="CloseSettings"/>
 </div>
+
+@* <div>
+    <MudIcon 
+        Icon="@BurizaIcons.SettingsSymbolIcon"
+        Size="Size.Medium" 
+        Class=""
+    />
+    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
+</div> *@

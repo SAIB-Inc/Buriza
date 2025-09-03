@@ -24,6 +24,11 @@ public partial class BurizaHeader : IDisposable
         isSettingsVisible = !isSettingsVisible;
     }
     
+    private void CloseSettings()
+    {
+        isSettingsVisible = false;
+    }
+    
     private string GetSpanClass(string route)
     {
         bool isActive = Navigation.Uri.Contains(route) || (route == "/" && (Navigation.Uri.EndsWith("/") || Navigation.Uri.Contains("/popup") || Navigation.Uri.Contains("/options") || Navigation.Uri.Contains("/index")));
