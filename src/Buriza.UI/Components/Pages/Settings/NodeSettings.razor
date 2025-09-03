@@ -2,15 +2,15 @@
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
 
-@page "/node"
+@page "/settings/node"
 
 @namespace Buriza.UI.Components.Pages
 
 <PageTitle>Buriza</PageTitle>
 
 <section class="h-screen">
-    <div class="h-full container !mx-auto !px-4">
-        <div class="flex justify-between !pt-16 !mb-[25px]">
+    <div class="h-full container !mx-auto !px-4 !py-16">
+        <div class="flex justify-between !mb-[25px]">
             <div class="flex align-center">
                 <MudNavLink Href="/settings" Class="!size-fit !p-0 [&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!m-0">
                     <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <div class="min-h-[calc(100%-202px)] flex flex-col justify-between !pb-12">
+        <div class="min-h-[calc(100vh-202px)] flex flex-col justify-between !pb-12">
             <div>
                 <MudText Class="!mb-6">We use the open protocol for UTxO based blockchain called UTxO RPC (U5C). Learn more about utxorpc
                 <MudLink Href="https://utxorpc.org/">https://utxorpc.org/</MudLink>.</MudText>
