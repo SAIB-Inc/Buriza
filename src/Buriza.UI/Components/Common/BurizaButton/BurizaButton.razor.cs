@@ -13,10 +13,10 @@ public partial class BurizaButton
     public string Href { get; set; } = string.Empty;
 
     [Parameter]
-    public bool Ripple { get; set; } = true;
+    public bool Disabled { get; set; } = false;
 
     [Parameter]
-    public bool Disabled { get; set; } = false;
+    public bool Ripple { get; set; } = true;
 
     [Parameter]
     public Color Color { get; set; } = Color.Default;
