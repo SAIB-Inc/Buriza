@@ -1,0 +1,28 @@
+
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@page "/receive"
+
+@namespace Buriza.UI.Components.Pages
+
+<section class="h-screen">
+    <div class="h-full container !mx-auto !px-4 !py-16 overflow-y-clip">
+        <div class="flex justify-between !mb-[82px]">
+            <div class="flex align-center">
+                <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
+                <MudText Class="!text-[22px] !font-medium">Your Address</MudText>
+            </div>
+            <div>
+                <MudIcon Icon="@BurizaIcons.AdvancedSettings2Icon" Class="mr-4 ml-1" />
+            </div>
+        </div>
+
+        <div>
+            <MudImage Alt="QR Code" Src="@Misc.BurizaQrCode" Class="!h-[280px] !mx-auto"></MudImage>
+            <MudText Class="font-semibold">Account1</MudText>
+            <MudText><span class="font-bold">addr</span>1q9g5p5kz0t9v8f7s6l3d4h8j2k0y5m5c4a7w5p2x9u8z7y5n2qz<span class="font-bold">8f6j3h0a</span></MudText>
+        </div>
+    </div>
+</section>
