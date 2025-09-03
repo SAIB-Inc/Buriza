@@ -5,6 +5,9 @@ namespace Buriza.UI.Components.Pages;
 
 public partial class OnBoard
 {
+    [Inject]
+    public required NavigationManager Navigation { get; set; }
+    
     protected int PhraseLength { get; set; } = 24;
     protected MudCarousel<object>? _carousel;
     protected bool IsLastSlide => _carousel != null && _carousel.SelectedIndex == _carousel.Items.Count - 1;
@@ -57,10 +60,17 @@ public partial class OnBoard
 
     private void OnNextButtonClicked()
     {
-        _carousel?.Next();
-        if (_carousel != null)
+        if (IsLastSlide)
         {
-            CurrentSlide = _carousel.SelectedIndex;
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            _carousel?.Next();
+            if (_carousel != null)
+            {
+                CurrentSlide = _carousel.SelectedIndex;
+            }
         }
     }
 
