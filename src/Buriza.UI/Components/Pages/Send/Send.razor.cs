@@ -1,5 +1,6 @@
 using Buriza.UI.Resources;
 using Microsoft.AspNetCore.Components;
+using Buriza.Data.Models.Common;
 
 namespace Buriza.UI.Components.Pages;
 
@@ -10,31 +11,14 @@ public partial class Send
     
     protected bool IsConfirmed { get; set; }
     
-
-    //Transfer to .Data Project - another PR
-    public class TokenEntry
+    protected List<Recipient> recipients = new() { new Recipient { Id = 1, TokenEntries = [new TokenEntry { ImageSrc = Tokens.Ada }] } };
+    
+    protected void AddRecipient()
     {
-        public string Name { get; set; } = "ADA";
-        public string ImageSrc { get; set; } = "";
-        public decimal Amount { get; set; }
-        public decimal Balance { get; set; } = 5304.01m;
+        recipients.Add(new Recipient { Id = recipients.Count + 1, TokenEntries = [new TokenEntry { ImageSrc = Tokens.Ada }] });
     }
     
-    public class Recipient
-    {
-        public int Id { get; set; }
-        public string Address { get; set; } = "";
-        public List<TokenEntry> TokenEntries { get; set; } = new() { new TokenEntry { ImageSrc = Tokens.Ada } };
-    }
-    
-    private List<Recipient> recipients = new() { new Recipient { Id = 1 } };
-    
-    private void AddRecipient()
-    {
-        recipients.Add(new Recipient { Id = recipients.Count + 1 });
-    }
-    
-    private void RemoveRecipient(Recipient recipient)
+    protected void RemoveRecipient(Recipient recipient)
     {
         if (recipients.Count > 1)
         {
@@ -42,12 +26,12 @@ public partial class Send
         }
     }
     
-    private void AddToken(Recipient recipient)
+    protected void AddToken(Recipient recipient)
     {
         recipient.TokenEntries.Add(new TokenEntry { ImageSrc = Tokens.Ada });
     }
     
-    private void RemoveToken(Recipient recipient, TokenEntry entry)
+    protected void RemoveToken(Recipient recipient, TokenEntry entry)
     {
         if (recipient.TokenEntries.Count > 1)
         {
@@ -55,7 +39,7 @@ public partial class Send
         }
     }
     
-    private void HandleSend()
+    protected void HandleSend()
     {
         if (IsConfirmed)
         {
