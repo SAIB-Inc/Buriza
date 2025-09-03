@@ -2,6 +2,7 @@
 @using Buriza.UI.Data
 @using Buriza.Data.Models.Common
 @using Buriza.Data.Models.Enums
+@using System.Linq
 
 @page "/history"
 
@@ -40,58 +41,70 @@
         </div>
         @if (!IsSummaryDisplayed)
         {
-            <div class="w-full !space-y-6 h-[calc(100%-72px)] overflow-y-auto !px-4 !pb-7">
-                @foreach (TransactionHistory transaction in TransactionHistoryData.GetDummyTransactions())
+            <div class="w-full !space-y-7 h-[calc(100%-72px)] overflow-y-auto !px-4 !pb-7">
+                @foreach (IGrouping<string, TransactionHistory> dateGroup in TransactionHistoryData.GetDummyTransactions().GroupBy(t => t.Timestamp.ToString("MMMM dd, yyyy")))
                 {
                     <div>
-                        <div class="w-full flex items-center justify-between !mb-2">
-                            <div>
-                                <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
-                                    @GetRelativeTime(transaction.Timestamp)
-                                </MudText>
-                            </div>
-                            <div class="flex items-center justify-end !gap-2">
-                                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
-                                    @transaction.TransactionId
-                                </MudText>
-                                <MudIconButton
-                                    Icon="@BurizaIcons.CopySymbolIcon"
-                                    Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
-                                />
-                            </div>
+                        <div class="w-full !mb-3">
+                            <MudText Class="!text-center !font-medium !text-sm">
+                                @dateGroup.Key
+                            </MudText>
                         </div>
-                        <div class="rounded-r-[12px] overflow-hidden !shadow-[var(--mud-elevation-2)]">
-                            @foreach (TransactionAsset asset in transaction.Assets)
+                        <div class="!space-y-4">
+                            @foreach (TransactionHistory transaction in dateGroup)
                             {
-                                <BurizaButton 
-                                    Class="@($"py-2! px-4! h-max! odd:bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! {(transaction.Type == TransactionType.Sent ? "border-[var(--mud-palette-error)]" : "border-[var(--mud-palette-success)]")}!")"
-                                    OnClick="() => IsSummaryDisplayed = true"
-                                >
-                                    <div class="flex items-center gap-4!">
-                                        <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
-                                            <MudImage
-                                                Alt="@asset.AssetName"
-                                                Src="@asset.AssetIcon"
+                                <div>
+                                    <div class="w-full flex items-center justify-between !mb-2">
+                                        <div>
+                                            <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                                                @GetRelativeTime(transaction.Timestamp)
+                                            </MudText>
+                                        </div>
+                                        <div class="flex items-center justify-end !gap-2">
+                                            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                                                @transaction.TransactionId
+                                            </MudText>
+                                            <MudIconButton
+                                                Icon="@BurizaIcons.CopySymbolIcon"
+                                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
                                             />
                                         </div>
-                                        <div class="!mt-1">
-                                            <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
-                                                @(transaction.Type == TransactionType.Sent ? "Sent:" : "Received:")
-                                            </MudText>
-                                            <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
-                                                @asset.AssetName
-                                            </MudText>
-                                        </div>
                                     </div>
-                                    <div>
-                                        <MudText Class="@($"!text-sm !font-semibold !text-end {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
-                                            @(transaction.Type == TransactionType.Sent ? "" : "+")@asset.Amount
-                                        </MudText>
-                                        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
-                                            ≈ $@asset.UsdValue
-                                        </MudText>
+                                    <div class="rounded-r-[12px] overflow-hidden !shadow-[var(--mud-elevation-2)]">
+                                        @foreach (TransactionAsset asset in transaction.Assets)
+                                        {
+                                            <BurizaButton 
+                                                Class="@($"py-2! px-4! h-max! odd:bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! {(transaction.Type == TransactionType.Sent ? "border-[var(--mud-palette-error)]" : "border-[var(--mud-palette-success)]")}!")"
+                                                OnClick="() => IsSummaryDisplayed = true"
+                                            >
+                                                <div class="flex items-center gap-4!">
+                                                    <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
+                                                        <MudImage
+                                                            Alt="@asset.AssetName"
+                                                            Src="@asset.AssetIcon"
+                                                        />
+                                                    </div>
+                                                    <div class="!mt-1">
+                                                        <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
+                                                            @(transaction.Type == TransactionType.Sent ? "Sent:" : "Received:")
+                                                        </MudText>
+                                                        <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
+                                                            @asset.AssetName
+                                                        </MudText>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <MudText Class="@($"!text-sm !font-semibold !text-end {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
+                                                        @(transaction.Type == TransactionType.Sent ? "" : "+")@asset.Amount
+                                                    </MudText>
+                                                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
+                                                        ≈ $@asset.UsdValue
+                                                    </MudText>
+                                                </div>
+                                            </BurizaButton>
+                                        }
                                     </div>
-                                </BurizaButton>
+                                </div>
                             }
                         </div>
                     </div>
