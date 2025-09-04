@@ -10,18 +10,19 @@
 <section class="h-screen">
     <div class="h-full container !mx-auto !px-4 !py-16 overflow-y-clip">
 
-        <MudCarousel TData="object" @ref="_carousel" @bind-SelectedIndex="CurrentSlide" ShowArrows="false"
+        <MudCarousel TData="object" @ref="_carousel" ShowArrows="false"
             ShowBullets="false" AutoCycle="false" EnableSwipeGesture="false" Class="!h-full">
 
             @* 1st Slide *@
             <MudCarouselItem>
                 <div class="flex justify-between !mb-[82px]">
                     <div class="flex align-center">
-                        <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
+                        <MudIconButton Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" Href="/" />
                         <MudText Class="!text-[22px] !font-medium">Your Address</MudText>
                     </div>
                     <div>
-                        <MudIcon Icon="@BurizaIcons.AdvancedSettings2Icon" Class="mr-4 ml-1" />
+                        <MudIconButton Icon="@BurizaIcons.AdvancedSettings2Icon" Class="mr-4 ml-1"
+                            OnClick="OnAdvancedModeButtonClicked" />
                     </div>
                 </div>
 
@@ -50,7 +51,77 @@
 
             @* 2nd Slide *@
             <MudCarouselItem>
-                
+                <div class="flex justify-between !mb-[26px]">
+                    <div class="flex align-center">
+                        <MudIconButton Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1"
+                            OnClick="OnBackButtonClicked" />
+                        <MudText Class="!text-[22px] !font-medium">Your Address</MudText>
+                    </div>
+                    <div>
+                        <MudIconButton Icon="@BurizaIcons.CloseSymbolIcon" Class="mr-4 ml-1"
+                            OnClick="OnBackButtonClicked" />
+                    </div>
+                </div>
+
+                <div
+                    class="w-full !bg-[var(--mud-palette-dark-darken)] flex items-center justify-between !p-4 !mb-6 shadow-[var(--mud-elevation-2)] !rounded-[12px]">
+                    <div class="flex items-center !gap-3">
+                        <div class="relative">
+                            <div>
+                                <MudImage Alt="Avatar" Src="@Misc.Avatar"
+                                    Class="!w-[46px] aspect-square !rounded-full" />
+                            </div>
+                        </div>
+                        <div>
+                            <MudText Class="!font-medium">
+                                WalletName1
+                            </MudText>
+                        </div>
+                    </div>
+                    <div>
+                        <MudIconButton Icon="@BurizaIcons.ChevronLeftIcon" Class="!p-0" />
+                    </div>
+                </div>
+
+                <div class="max-h-[calc(100vh-314px)] flex flex-col gap-y-3 overflow-y-auto !pb-11">
+                    @foreach (var account in Accounts)
+                    {
+                        <MudCard Class="flex flex-col gap-y-3 !p-4 !bg-[var(--mud-palette-background-gray)] shadow-[var(--mud-elevation-2)] rounded-xl border border-solid border-[var(--mud-palette-table-lines)]">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <MudImage Alt="Avatar" Src="@account.AvatarUrl" Class="!w-9 aspect-square !rounded-full !mr-2" />
+                                    <MudText Class="font-semibold">@account.Name</MudText>
+                                </div>
+                                <div>
+                                    <MudIconButton Icon="@BurizaIcons.QrScannerIcon" Class="self-start !p-0" />
+                                </div>
+                            </div>
+                            <div>
+                                <MudText Align="Align.Left" Class="!mr-[76px] !text-xs break-words">
+                                    <span class="font-bold">@account.Start</span>@account.Middle<span class="font-bold">@account.End</span>
+                                </MudText>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <MudText Align="Align.Left" Class="!font-semibold !text-xs">@account.DerivationPath</MudText>
+                                <MudChip T="object" Class="@(GetChipColor(account.Status) + " min-w-[63px] max-h-5")">
+                                    <MudIcon Icon="@GetChipIcon(account.Status)" Class="!w-3 !h-3 !mr-1" />
+                                    @switch (account.Status)
+                                    {
+                                        case AccountStatus.Used:
+                                            <MudText Class="!text-[8px]">Used</MudText>
+                                            break;
+                                        case AccountStatus.Unused:
+                                            <MudText Class="!text-[8px]">Unused</MudText>
+                                            break;
+                                        case AccountStatus.Balance:
+                                            <MudText Class="!text-[8px]">@account.Balance.ToString("")</MudText>
+                                            break;
+                                        }
+                                </MudChip>
+                            </div>
+                        </MudCard>
+                    }
+                </div>
 
             </MudCarouselItem>
 
