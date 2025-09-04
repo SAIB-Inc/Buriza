@@ -9,38 +9,53 @@
 
 <section class="h-screen">
     <div class="h-full container !mx-auto !px-4 !py-16 overflow-y-clip">
-        <div class="flex justify-between !mb-[82px]">
-            <div class="flex align-center">
-                <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
-                <MudText Class="!text-[22px] !font-medium">Your Address</MudText>
-            </div>
-            <div>
-                <MudIcon Icon="@BurizaIcons.AdvancedSettings2Icon" Class="mr-4 ml-1" />
-            </div>
-        </div>
 
-        <div class="w-full">
-            <div class="!mb-11">
-                <MudImage Alt="QR Code" Src="@Misc.BurizaQrCode" Class="!h-[280px] !mx-auto"></MudImage>
-            </div>
-            <div class="!px-4">
-                <MudText Class="!text-[22px] !font-semibold" Align="Align.Center">Account1</MudText>
-                <MudText Class="break-words" Align="Align.Center"><span class="font-bold"
-                        Align="Align.Center">addr</span>1q9g5p5kz0t9v8f7s6l3d4h8j2k0y5m5c4a7w5p2x9u8z7y5n2qz<span
-                        class="font-bold">8f6j3h0a</span></MudText>
-            </div>
-        </div>
+        <MudCarousel TData="object" @ref="_carousel" @bind-SelectedIndex="CurrentSlide" ShowArrows="false"
+            ShowBullets="false" AutoCycle="false" EnableSwipeGesture="false" Class="!h-full">
 
-        <div class="min-h-[calc(100vh-695px)] flex justify-between items-end gap-x-2 overflow-y-auto">
-            <BurizaButton Variant="Variant.Filled" Color="Color.Primary">
-                Share QR Code
-            </BurizaButton>
-            <MudIconButton 
-                Icon="@BurizaIcons.CopySymbolIcon" 
-                Variant="Variant.Filled" 
-                Color="Color.Secondary"
-                Class="!rounded-full !p-2">
-            </MudIconButton>
-        </div>
+            @* 1st Slide *@
+            <MudCarouselItem>
+                <div class="flex justify-between !mb-[82px]">
+                    <div class="flex align-center">
+                        <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
+                        <MudText Class="!text-[22px] !font-medium">Your Address</MudText>
+                    </div>
+                    <div>
+                        <MudIcon Icon="@BurizaIcons.AdvancedSettings2Icon" Class="mr-4 ml-1" />
+                    </div>
+                </div>
+
+                <div class="w-full">
+                    <div class="!mb-11">
+                        <MudImage Alt="QR Code" Src="@Misc.BurizaQrCode" Class="!h-[280px] !mx-auto"></MudImage>
+                    </div>
+                    <div class="!px-4">
+                        <MudText Class="!text-[22px] !font-semibold" Align="Align.Center">Account1</MudText>
+                        <MudText Class="break-words" Align="Align.Center"><span class="font-bold"
+                                Align="Align.Center">addr</span>1q9g5p5kz0t9v8f7s6l3d4h8j2k0y5m5c4a7w5p2x9u8z7y5n2qz<span
+                                class="font-bold">8f6j3h0a</span></MudText>
+                    </div>
+                </div>
+
+                <div class="min-h-[calc(100vh-695px)] flex justify-between items-end gap-x-2 overflow-y-auto">
+                    <BurizaButton Variant="Variant.Filled" Color="Color.Primary">
+                        Share QR Code
+                    </BurizaButton>
+                    <MudIconButton Icon="@BurizaIcons.CopySymbolIcon" Variant="Variant.Filled" Color="Color.Secondary"
+                        Class="!rounded-full !p-2">
+                    </MudIconButton>
+                </div>
+
+            </MudCarouselItem>
+
+            @* 2nd Slide *@
+            <MudCarouselItem>
+                
+
+            </MudCarouselItem>
+
+        </MudCarousel>
+
     </div>
+
 </section>
