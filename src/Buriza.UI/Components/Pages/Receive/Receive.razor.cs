@@ -12,23 +12,24 @@ public partial class Receive
 
     protected MudCarousel<object>? _carousel;
 
-    private int _selectedAccountIndex = 0;
-    private Account SelectedAccount => Accounts[_selectedAccountIndex];
+    protected int _selectedAccountIndex = 0;
+    protected Account SelectedAccount => Accounts[_selectedAccountIndex];
 
-    private enum AccountStatus
+    // Move to data project
+    protected enum AccountStatus
     {
         Used,
         Unused,
         Balance
     }
 
-    private class Account
+    protected class Account
     {
         public int Index { get; set; }
         public string AvatarUrl { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
 
-        private string _address = string.Empty;
+        protected string _address = string.Empty;
         public string Address
         {
             get => _address;
@@ -71,7 +72,8 @@ public partial class Receive
         }
     }
 
-    private List<Account> Accounts =
+    // Move to data project
+    protected List<Account> Accounts =
     [
         new Account
         {
@@ -112,23 +114,23 @@ public partial class Receive
         }
     ];
 
-    private void OnAccountCardClicked(int index)
+    protected void OnAccountCardClicked(int index)
     {
         _selectedAccountIndex = index;
         _carousel?.Previous();
     }
 
-    private void OnAdvancedModeButtonClicked()
+    protected void OnAdvancedModeButtonClicked()
     {
         _carousel?.Next();
     }
 
-    private void OnBackButtonClicked()
+    protected void OnBackButtonClicked()
     {
         _carousel?.Previous();
     }
 
-    private static string GetChipColor(AccountStatus status)
+    protected static string GetChipColor(AccountStatus status)
     {
         return status switch
         {
@@ -139,12 +141,12 @@ public partial class Receive
         };
     }
 
-    private static string GetChipIcon(AccountStatus status)
+    protected static string GetChipIcon(AccountStatus status)
     {
         return status switch
         {
             AccountStatus.Used => BurizaIcons.CheckOutlinedIcon,
-            AccountStatus.Unused => BurizaIcons.AdaSymbolIcon,
+            AccountStatus.Unused => Icons.Material.Outlined.Circle,
             AccountStatus.Balance => BurizaIcons.AdaSymbolIcon,
             _ => ""
         };
