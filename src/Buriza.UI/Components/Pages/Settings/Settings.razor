@@ -9,8 +9,8 @@
 <PageTitle>Buriza</PageTitle>
 
 <section class="h-screen">
-    <div class="h-full container !mx-auto !px-4 !py-16 overflow-y-clip">
-        <div class="flex justify-between !mb-[25px]">
+    <div class="h-full container !mx-auto !py-16 overflow-y-clip">
+        <div class="flex justify-between !mb-[25px] !px-4">
             <div class="flex align-center">
                 <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
                 <MudText Class="!text-[22px] !font-medium">Settings</MudText>
@@ -20,12 +20,15 @@
             </div>
         </div>
 
-        <div>
-            <BurizaSearchBar />
-            <div class="flex flex-col gap-y-3 min-h-[210px] max-[480px]:max-h-[calc(100vh-306px)] !space-y-2 overflow-y-auto max-h-[calc(100vh-88px)] !rounded-[12px] !pb-11">
+        <div class="h-full">
+            <div class="!px-4">
+                <BurizaSearchBar />
+            </div>
+            
+            <div class="flex flex-col gap-y-3 min-h-[210px] max-[376px]:max-h-[calc(100%-306px)] !space-y-2 !overflow-y-auto max-h-[calc(100vh-306px)] !rounded-[12px] !pb-11 !px-4">
                 <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-sm">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-2">
+                        <MudNavLink Href="/settings/general" Class="[&_a.mud-nav-link]:!pt-2 active:!text-[var(--mud-palette-primary)]" >
                             <div>
                                 <div class="flex !mt-2">
                                     <MudIcon Icon="@BurizaIcons.GeneralSettingsIcon"
@@ -40,7 +43,7 @@
                             </div>
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-[8.5px]">
+                        <MudNavLink Href="/settings/security" Class="[&_a.mud-nav-link]:!pt-[8.5px] active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2">
                                 <MudIcon Icon="@BurizaIcons.SecurityAndPrivacyIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -51,7 +54,7 @@
                             <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-[8.5px]">
+                        <MudNavLink Href="/settings/advanced" Class="[&_a.mud-nav-link]:!pt-[8.5px] active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2">
                                 <MudIcon Icon="@BurizaIcons.AdvancedSettings1Icon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -62,7 +65,7 @@
                             <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings/node" Class="[&_a.mud-nav-link]:!pt-[8.5px] [&_a.mud-nav-link]:!pb-2">
+                        <MudNavLink Href="/settings/node" Class="[&_a.mud-nav-link]:!pt-[8.5px] [&_a.mud-nav-link]:!pb-2 active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2 !mb-2">
                                 <MudIcon Icon="@BurizaIcons.NodeSymbolIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -77,7 +80,7 @@
                 <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-sm">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-2">
+                        <MudNavLink Href="/settings/networks" Class="[&_a.mud-nav-link]:!pt-2 active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2">
                                 <MudIcon Icon="@BurizaIcons.ActiveNetworksIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -88,7 +91,7 @@
                             <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-[8.5px]">
+                        <MudNavLink Href="/settings/contacts" Class="[&_a.mud-nav-link]:!pt-[8.5px] active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2">
                                 <MudIcon Icon="@BurizaIcons.ContactPageIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -99,7 +102,7 @@
                             <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-[8.5px] [&_a.mud-nav-link]:!pb-2">
+                        <MudNavLink Href="/settings/dapps" Class="[&_a.mud-nav-link]:!pt-[8.5px] [&_a.mud-nav-link]:!pb-2 active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2 !mb-2">
                                 <MudIcon Icon="@BurizaIcons.ConnectedDappsIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -113,7 +116,7 @@
 
                 <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-sm">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-2 [&_a.mud-nav-link]:!pb-2">
+                        <MudNavLink Href="/settings/develope" Class="[&_a.mud-nav-link]:!pt-2 [&_a.mud-nav-link]:!pb-2 active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2 !mb-2">
                                 <MudIcon Icon="@BurizaIcons.DeveloperSettingsIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -128,7 +131,7 @@
                 <MudPaper Class="!bg-[var(--mud-palette-dark)] !rounded-[12px] overflow-clip !shadow-sm">
                     <MudNavMenu Dense="true" Class="[&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!mx-4">
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-2">
+                        <MudNavLink Href="/settings/invite" Class="[&_a.mud-nav-link]:!pt-2 active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2">
                                 <MudIcon Icon="@BurizaIcons.InviteSymbolIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -139,7 +142,7 @@
                             <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-[8.5px]">
+                        <MudNavLink Href="/settings/about" Class="[&_a.mud-nav-link]:!pt-[8.5px] active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2">
                                 <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
@@ -150,7 +153,7 @@
                             <hr class="!border-t !border-[var(--mud-palette-divider)] !mt-2" />
                         </MudNavLink>
 
-                        <MudNavLink Href="/settings" Class="[&_a.mud-nav-link]:!pt-[8.5px] [&_a.mud-nav-link]:!pb-2">
+                        <MudNavLink Href="/settings/support" Class="[&_a.mud-nav-link]:!pt-[8.5px] [&_a.mud-nav-link]:!pb-2 active:!text-[var(--mud-palette-primary)]">
                             <div class="flex !mt-2 !mb-2">
                                 <MudIcon Icon="@BurizaIcons.HelpAndSupportIcon"
                                     Class="!text-[var(--mud-palette-primary)]" />
