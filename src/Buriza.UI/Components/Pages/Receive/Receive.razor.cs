@@ -12,15 +12,19 @@ public partial class Receive
 
     protected MudCarousel<object>? _carousel;
 
-    public enum AccountStatus
+    private int _selectedAccountIndex = 0;
+    private Account SelectedAccount => Accounts[_selectedAccountIndex];
+
+    private enum AccountStatus
     {
         Used,
         Unused,
         Balance
     }
 
-    public class Account
+    private class Account
     {
+        public int Index { get; set; }
         public string AvatarUrl { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
 
@@ -31,7 +35,7 @@ public partial class Receive
             set
             {
                 _address = value;
-                SplitAddress(); // automatically split whenever Address is set
+                SplitAddress();
             }
         }
 
@@ -67,10 +71,11 @@ public partial class Receive
         }
     }
 
-    private List<Account> Accounts = new()
-    {
+    private List<Account> Accounts =
+    [
         new Account
         {
+            Index = 0,
             AvatarUrl = Misc.Avatar,
             Name = "Account1",
             Address = "addr1q9g5p5kz0t9v8f7s6l3d4h8j2k0y5m5c4a7w5p2x9u8z7y5n2qz8f6j3h0a",
@@ -79,6 +84,7 @@ public partial class Receive
         },
         new Account
         {
+            Index = 1,
             AvatarUrl = Misc.Avatar,
             Name = "Account2",
             DerivationPath = "m/1852’/1815’/2’",
@@ -88,6 +94,7 @@ public partial class Receive
         },
         new Account
         {
+            Index = 2,
             AvatarUrl = Misc.Avatar,
             Name = "Account3",
             Address = "addr1q9g5p5kz0t9v8f7s6l3d4h8j2k0y5m5c4a7w5p2x9u8z7y5n2qz8f6j3h0a",
@@ -96,13 +103,20 @@ public partial class Receive
         },
         new Account
         {
+            Index = 2,
             AvatarUrl = Misc.Avatar,
             Name = "Account3",
             Address = "addr1q9g5p5kz0t9v8f7s6l3d4h8j2k0y5m5c4a7w5p2x9u8z7y5n2qz8f6j3h0a",
             DerivationPath = "m/1852’/1815’/3’",
             Status = AccountStatus.Unused
         }
-    };
+    ];
+
+    private void OnAccountCardClicked(int index)
+    {
+        _selectedAccountIndex = index;
+        _carousel?.Previous();
+    }
 
     private void OnAdvancedModeButtonClicked()
     {
@@ -119,8 +133,8 @@ public partial class Receive
         return status switch
         {
             AccountStatus.Used => "!bg-[var(--mud-palette-primary)]",
-            AccountStatus.Unused => "!bg-[var(--mud-palette-warning)] !text-[var(--mud-palette-tertiary)]",
-            AccountStatus.Balance => "!bg-[var(--mud-palette-info)] !text-[var(--mud-palette-tertiary)]",
+            AccountStatus.Unused => "!bg-[var(--mud-palette-warning)]",
+            AccountStatus.Balance => "!bg-[var(--mud-palette-info)]",
             _ => ""
         };
     }
