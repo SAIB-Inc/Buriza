@@ -57,7 +57,9 @@ public partial class MainLayout : IDisposable
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
             SuccessDarken = "#002116",
-            Error = "#FF5449"
+            Error = "#FF5449",
+            Info = "#00B286",
+            Warning = "#FF9C39"
         },
         PaletteLight = new()
         {
@@ -87,7 +89,9 @@ public partial class MainLayout : IDisposable
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
             SuccessDarken = "#005AC4",
-            Error = "#BA1A1A"
+            Error = "#BA1A1A",
+            Info = "#51DDAE",
+            Warning = "#FF9C39"
         }
     };
 
