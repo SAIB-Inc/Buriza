@@ -209,7 +209,7 @@
                         />
                     </div>
                 </div>
-                <div class="w-full !space-y-6 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+                <div class="w-full !space-y-6 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-265px)]">
                     @for (int j = 0; j < 3; j++)
                     {
                         <div>
@@ -330,6 +330,22 @@
                         </div>
                     }
                 </div>
+            </div>
+            <div class="flex items-center !gap-4 !mt-4">
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@BurizaIcons.ReceiveSymbolIcon"
+                >
+                    Receive
+                </BurizaButton>
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@BurizaIcons.Send1Icon"
+                >
+                    Send
+                </BurizaButton>
             </div>
         </div>
     </div>
