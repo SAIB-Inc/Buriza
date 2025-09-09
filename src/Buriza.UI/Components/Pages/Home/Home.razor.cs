@@ -8,4 +8,11 @@ public partial class Home
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
+    
+    private bool IsCard2Expanded { get; set; } = false;
+    
+    private void ToggleCardExpansion()
+    {
+        IsCard2Expanded = !IsCard2Expanded;
+    }
 }
