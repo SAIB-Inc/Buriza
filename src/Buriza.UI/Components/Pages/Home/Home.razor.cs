@@ -4,7 +4,7 @@ using MudBlazor;
 
 namespace Buriza.UI.Components.Pages;
 
-public partial class Home
+public partial class Home : IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
@@ -14,5 +14,15 @@ public partial class Home
     private void ToggleCardExpansion()
     {
         IsCard2Expanded = !IsCard2Expanded;
+    }
+
+    protected override void OnInitialized()
+    {
+        AppStateService.OnChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AppStateService.OnChanged -= StateHasChanged;
     }
 }
