@@ -12,6 +12,11 @@
     --dapp-minswap-secondary: #01194A;
     --dapp-danzo-primary: #BB7C00;
     --dapp-danzo-secondary: #FFC000;
+    --card-wallet-secondary: #51DDAE;
+    --card-wallet-text: #003828;
+    --card-wallet-chip: #002116;
+    --card-wallet-subtext: #00173D;
+    --card-wallet-overlay: #B5E6FF4D
 }
 
 * {

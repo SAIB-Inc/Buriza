@@ -1,4 +1,5 @@
 @using Buriza.UI.Components.Common
+@using Buriza.UI.Resources
 
 @inherits LayoutComponentBase
 
@@ -13,5 +14,341 @@
     {
         <BurizaHeader />
     }
-    @Body
+    <div class="items-between justify-between w-full md:!gap-4 md:h-screen md:flex mx-auto md:!container md:!px-4 md:!pb-8 xl:!gap-8">
+        <div class="flex-1 min-w-0 relative md:!pt-6">
+            <MudDrawerContainer Class="max-lg:hidden relative">
+                <MudDrawer 
+                    @bind-Open="@AppStateService.IsSidebarOpen" 
+                    Fixed="false" 
+                    Elevation="1" 
+                    Variant="@DrawerVariant.Mini" 
+                    Breakpoint="Breakpoint.None"
+                    MiniWidth="80px"
+                    Class="!h-full !shadow-sm !bg-[var(--mud-palette-dark)] !overflow-visible [&_.mud-drawer-content]:overflow-hidden !rounded-[16px] !py-6 flex flex-col items-between [&_.mud-drawer-content]:justify-between"
+                >
+                    <div class="absolute -right-3 top-10">
+                        <MudIconButton
+                            Icon="@BurizaIcons.ChevronLeftIcon"
+                            aria-label="open"
+                            OnClick="@ToggleSidebar"
+                            Class="@($"!border !border-[var(--mud-palette-divider)] !bg-[var(--mud-palette-dark)] [&_.mud-icon-root]:!text-base !p-[3px] [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:transition-all [&_.mud-icon-root]:duration-300 {(AppStateService.IsSidebarOpen ? "[&_.mud-icon-root]:rotate-180" : "")}")"
+                        />
+                    </div>
+                    <div>
+                        <div class="!px-3 flex items-center">
+                            <div>
+                                <MudIcon
+                                    Icon="@BurizaIcons.BurizaSymbolIcon"
+                                    Class="!text-[58px] !text-[var(--mud-palette-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="Buriza Logo"
+                                    Src="@(AppStateService.IsDarkMode ? Logos.BurizaWordmarkDark : Logos.BurizaWordmarkLight)"
+                                    Class="@($"!min-w-30 !max-w-30 flex-shrink-0 !-ml-2 transition-opacity duration-300 {(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                />
+                            </div>
+                        </div>
+                        <MudNavMenu Class="!mt-10 !space-y-3 flex flex-col items-center justify-center !px-5 !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.AssetIcon" 
+                                Href="/"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Assets
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.History2Icon" 
+                                Href="/history"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                History
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.StakingSymbolIcon"
+                                Href="/staking" 
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Staking
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.VotingSymbolIcon"
+                                Href="/voting"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Voting
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.DappSymbolIcon"
+                                Href="/dapp"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                DApps
+                            </MudNavLink>
+                        </MudNavMenu>
+                    </div>
+                    <div class="!space-y-3 !px-5">
+                        <MudNavMenu Class="!mt-10 !space-y-3 flex flex-col items-center justify-center !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.NotificationIcon" 
+                                Href="/notifications"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Notifications
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.SettingsSymbolIcon" 
+                                Href="/settings"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Settings
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.HelpAndSupportIcon"
+                                Href="/help" 
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Help And Support
+                            </MudNavLink>
+                        </MudNavMenu>
+                        <div class="w-full flex items-center !gap-2 !p-2">
+                            <div class="p-[2px]! rounded-full h-6 w-6 flex items-center justify-center min-w-6 xl:p-1">
+                                <div class="relative">
+                                    <div
+                                        class="w-2 absolute aspect-square bg-[var(--mud-palette-success)]/60 delay-150! rounded-full animate-ping xl:p-1!" />
+                                    <div class="w-2 aspect-square bg-[var(--mud-palette-success)] rounded-full" />
+                                </div>
+                            </div>
+                            <div class="@($"transition-opacity duration-300 whitespace-nowrap {(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")">
+                                <MudText Class="!text-[var(--mud-palette-success)]">
+                                    <span>
+                                        Block
+                                    </span>
+                                    <span>
+                                        #12345
+                                    </span>
+                                </MudText>
+                            </div>
+                        </div>
+                    </div>
+                </MudDrawer>
+                <div>
+                    @Body
+                </div>
+            </MudDrawerContainer>
+            <div class="lg:hidden">
+                @Body
+            </div>
+        </div>
+        <div class="max-lg:hidden !pt-6 flex flex-col !gap-3 h-full flex-shrink-0 lg:w-[300px] xl:w-[338px]">
+            <div class="w-full flex items-center !gap-8 h-[56px] !mb-6">
+                <div>
+                    <MudIconButton
+                        Icon="@(AppStateService.IsDarkMode ? BurizaIcons.LightModeIcon : BurizaIcons.DarkModeIcon)"
+                        OnClick="@ToggleTheme"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    />
+                </div>
+                <div class="flex items-center !gap-4 w-full">
+                    <div class="max-w-[48px] max-h-[48px] overflow-hidden rounded-full">
+                        <MudImage
+                            Alt="nft profile"
+                            Src="@Nfts.Nft1"
+                            Class="!w-full aspect-square"
+                        />
+                    </div>
+                    <div class="w-full">
+                        <div class="[&_.mud-select]:!w-full [&_.mud-input]:!pr-0">
+                            <BurizaSelect TItem="string"
+                                Variant="Variant.Outlined"
+                                Value="@("Account01")"
+                                AdornmentIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                ToStringFunc="@(item => item)"
+                                Class="[&_.mud-input]:!gap-2 [&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-bold [&_.mud-input-slot]:text-[var(--mud-palette-text-primary)]! [&_.mud-icon-root]:text-[var(--mud-palette-text-primary)]!"
+                            >
+                                <MudSelectItem Value="@("Account01")">Account01</MudSelectItem>
+                                <MudSelectItem Value="@("Account02")">Account02</MudSelectItem>
+                                <MudSelectItem Value="@("Account03")">Account03</MudSelectItem>
+                            </BurizaSelect>
+                        </div>
+                        <div class="flex items-center !gap-2">
+                            <MudText Class="!text-xs text-[var(--mud-palette-text-secondary)]!">
+                                addr1q9rvp...az138441s15a
+                            </MudText>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[var(--mud-palette-dark)] !rounded-[16px] !pt-4 !pb-0 h-full">
+                <div class="w-full flex items-center justify-between !px-4">
+                    <div>
+                        <MudText Class="!font-medium !text-[22px]">
+                            History
+                        </MudText>
+                    </div>
+                    <div>
+                        <MudIconButton
+                            Icon="@BurizaIcons.FilterSymbolIcon"
+                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
+                        />
+                    </div>
+                </div>
+                <div class="w-full !space-y-6 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-273px)]">
+                    @for (int j = 0; j < 3; j++)
+                    {
+                        <div>
+                            <div class="w-full !mb-3">
+                                <MudText Class="!text-center !font-medium !text-sm">
+                                    September 06, 2025
+                                </MudText>
+                            </div>
+                            <div class="!space-y-4">
+                                @for (int i = 0; i < 2; i++)
+                                {
+                                    <div>
+                                        <div class="w-full flex items-center justify-between !mb-2">
+                                            <div>
+                                                <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                                                    23 minutes ago
+                                                </MudText>
+                                            </div>
+                                            <div class="flex items-center justify-end !gap-2">
+                                                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                                                    9f7a...1b93d2
+                                                </MudText>
+                                                <MudIconButton
+                                                    Icon="@BurizaIcons.CopySymbolIcon"
+                                                    Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="rounded-r-[12px] overflow-hidden !shadow-sm">
+                                            <BurizaButton 
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-drawer-background)]!"
+                                            >
+                                                <div class="flex items-center gap-4!">
+                                                    <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
+                                                        <MudImage
+                                                            Alt="ada"
+                                                            Src="@Tokens.Ada"
+                                                        />
+                                                    </div>
+                                                    <div class="!mt-1">
+                                                        <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
+                                                            Sent:
+                                                        </MudText>
+                                                        <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
+                                                            ADA
+                                                        </MudText>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <MudText Class="!text-sm !font-semibold !text-[var(--mud-palette-error)] !text-end">
+                                                        -212.28
+                                                    </MudText>
+                                                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end ">
+                                                        ≈ $199.02
+                                                    </MudText>
+                                                </div>
+                                            </BurizaButton>
+                                            <BurizaButton 
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-success)]!"
+                                            >
+                                                <div class="flex items-center gap-4!">
+                                                    <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
+                                                        <MudImage
+                                                            Alt="ada"
+                                                            Src="@Tokens.Snek"
+                                                        />
+                                                    </div>
+                                                    <div class="!mt-1">
+                                                        <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
+                                                            Received:
+                                                        </MudText>
+                                                        <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
+                                                            SNEK
+                                                        </MudText>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <MudText Class="!text-sm !font-semibold !text-[var(--mud-palette-success)] !text-end">
+                                                        -212.28
+                                                    </MudText>
+                                                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
+                                                        ≈ $199.02
+                                                    </MudText>
+                                                </div>
+                                            </BurizaButton>
+                                            <BurizaButton 
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-drawer-background)]!"
+                                            >
+                                                <div class="flex items-center gap-4!">
+                                                    <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
+                                                        <MudImage
+                                                            Alt="ada"
+                                                            Src="@Tokens.Angel"
+                                                        />
+                                                    </div>
+                                                    <div class="!mt-1">
+                                                        <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
+                                                            Sent:
+                                                        </MudText>
+                                                        <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
+                                                            ANGEL
+                                                        </MudText>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <MudText Class="!text-sm !font-semibold !text-[var(--mud-palette-error)] !text-end">
+                                                        -212.28
+                                                    </MudText>
+                                                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
+                                                        ≈ $199.02
+                                                    </MudText>
+                                                </div>
+                                            </BurizaButton>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="flex items-center !gap-4 !mt-4">
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@BurizaIcons.ReceiveSymbolIcon"
+                >
+                    Receive
+                </BurizaButton>
+                <BurizaButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@BurizaIcons.Send1Icon"
+                >
+                    Send
+                </BurizaButton>
+            </div>
+        </div>
+    </div>
 </main>
+

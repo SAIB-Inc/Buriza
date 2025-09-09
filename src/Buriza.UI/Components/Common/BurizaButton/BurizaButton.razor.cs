@@ -13,6 +13,12 @@ public partial class BurizaButton
     public string Href { get; set; } = string.Empty;
 
     [Parameter]
+    public string StartIcon { get; set; } = string.Empty;
+
+    [Parameter]
+    public string EndIcon { get; set; } = string.Empty;
+
+    [Parameter]
     public bool Disabled { get; set; } = false;
 
     [Parameter]

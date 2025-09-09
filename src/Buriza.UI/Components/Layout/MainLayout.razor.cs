@@ -12,10 +12,20 @@ public partial class MainLayout : IDisposable
     
     [Inject] 
     public required NavigationManager Navigation { get; set; }
-    
-    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success") || 
-                                   Navigation.Uri.Contains("/onboard") || 
+
+    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success") ||
+                                   Navigation.Uri.Contains("/onboard") ||
                                    Navigation.Uri.Contains("/splash");
+
+    protected void ToggleSidebar()
+    {
+        AppStateService.IsSidebarOpen = !AppStateService.IsSidebarOpen;
+    }
+
+    protected void ToggleTheme()
+    {
+        AppStateService.IsDarkMode = !AppStateService.IsDarkMode;
+    }
 
     public static MudTheme BurizaTheme => new()
     {
@@ -48,10 +58,11 @@ public partial class MainLayout : IDisposable
             GrayDefault = "#272A32",
             GrayDark = "#C1C6D7",
             GrayDarker = "#363942",
+            DrawerBackground = "#1C1F27",
             DarkLighten = "#8B90A0",
             Dark = "#181B23",
             DarkDarken = "#1C1F27",
-            DarkContrastText = "#1C1F27",
+            DarkContrastText = "#272A32",
             Divider = "#414754",
             TableLines = "#23304B",
             SuccessLighten = "#71FAC9",
@@ -80,6 +91,7 @@ public partial class MainLayout : IDisposable
             GrayDefault = "#FFFFFF",
             GrayDark = "#181B23",
             GrayDarker = "#E0E2ED",
+            DrawerBackground = "#FFFFFF",
             DarkLighten = "#C1C6D7",
             Dark = "#E0E2ED",
             DarkDarken = "#E8EFFB",

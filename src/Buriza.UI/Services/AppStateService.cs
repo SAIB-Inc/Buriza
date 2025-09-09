@@ -18,6 +18,20 @@ public class AppStateService
         }
     }
 
+    private bool _isSidebarOpen = false;
+    public bool IsSidebarOpen
+    {
+        get => _isSidebarOpen;
+        set
+        {
+            if (_isSidebarOpen != value)
+            {
+                _isSidebarOpen = value;
+                NotifyChanged();
+            }
+        }
+    }
+
     #endregion
 
     #region event
