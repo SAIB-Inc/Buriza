@@ -72,7 +72,7 @@
                                 T="string"
                                 Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
                             >
-                                +$1,1234.95
+                                +$1,234.95
                             </MudChip>
                         </div>
                         <div class="h-full flex flex-col items-end justify-between">
@@ -122,17 +122,17 @@
                 >
                     <div class="flex items-center justify-between !p-4">
                         <div class="!space-y-2">
-                            <MudText Class="!text-[var(--mud-palette-tertiary)] !font-medium">
+                            <MudText Class="!text-[var(--card-wallet-text)] !font-medium">
                                 Total balance
                             </MudText>
-                            <MudText Class="!text-nowrap !text-[var(--mud-palette-tertiary)] !text-[40px] !font-bold">
+                            <MudText Class="!text-nowrap !text-[var(--card-wallet-text)] !text-[40px] !font-bold">
                                 $ 10,000.00
                             </MudText>
                             <MudChip
                                 T="string"
-                                Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
+                                Class="!bg-[var(--card-wallet-chip)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
                             >
-                                +$1,1234.95
+                                +$1,234.95
                             </MudChip>
                         </div>
                         <div class="h-full flex flex-col items-end justify-between">
@@ -161,17 +161,17 @@
                     </div>
                     <div class="bg-[var(--card-wallet-overlay)] !p-4">
                         <div>
-                            <MudText Class="!text-[22px] text-[var(--mud-palette-primary-text)]! !font-semibold">
+                            <MudText Class="!text-[22px] text-[var(--card-wallet-subtext)]! !font-semibold">
                                 Account02
                             </MudText>
                         </div>
                         <div class="flex items-center !gap-2">
-                            <MudText Class="text-[var(--mud-palette-primary-text)]!">
+                            <MudText Class="text-[var(--card-wallet-subtext)]!">
                                 addr1q9rvp...az138441s15a
                             </MudText>
                             <MudIconButton
                                 Icon="@BurizaIcons.CopySymbolIcon"
-                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]/60!"
+                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:text-[var(--card-wallet-subtext)]/60!"
                             />
                         </div>
                     </div>
@@ -187,8 +187,6 @@
                     </div>
                 </MudCard>
             </div>
-
-            @*page indicator*@
             <div class="!px-[3px] !py-0 h-[10px] w-full flex justify-end items-center !gap-1 !mt-4 !mb-3">
                 <div class="@($"rounded-full h-[7px] transition-all duration-300 {(!IsCard2Expanded ? "bg-[var(--mud-palette-primary)] w-[30px]" : "bg-[var(--mud-palette-gray-darker)] w-[12px]")}")" />
                 <div class="@($"rounded-full h-[7px] transition-all duration-300 {(IsCard2Expanded ? "bg-[var(--mud-palette-primary)] w-[30px]" : "bg-[var(--mud-palette-gray-darker)] w-[12px]")}")" />
@@ -232,7 +230,7 @@
                         T="string"
                         Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
                     >
-                        +$1,1234.95
+                        +$1,234.95
                     </MudChip>
                 </div>
             </div>
@@ -293,20 +291,20 @@
                         />
                     </div>
                 </div>
-                <div class="max-md:hidden w-full w-full">
+                <div class="max-md:hidden w-full flex items-center justify-end">
                     <BurizaTabs
-                        Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full [&_.mud-tabs-scroll-button]:hidden"
+                        Class="!max-w-[318px] !w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full [&_.mud-tooltip-root]: [&_.mud-tabs-scroll-button]:hidden"
                     >
                         <MudTabPanel 
                             Text="Token" 
                             Icon="@BurizaIcons.TokenSymbolIcon"
-                            Class="w-full bg-[var(--mud-palette-gray-default)] max-xl:!gap-0 max-xl:!min-w-[100px]"
+                            Class="w-full bg-[var(--mud-palette-gray-default)] !min-w-[100px] max-xl:!gap-0"
                             Style="border-radius: 30px 10px 10px 30px"
                         />
                         <MudTabPanel 
                             Text="NFT" 
                             Icon="@BurizaIcons.NftSymbolIcon"
-                            Class="w-full bg-[var(--mud-palette-gray-default)] max-xl:!gap-0 max-xl:!min-w-[100px]"
+                            Class="w-full bg-[var(--mud-palette-gray-default)] !min-w-[100px] max-xl:!gap-0"
                             Style="border-radius: 10px 30px 30px 10px"
                         />
                     </BurizaTabs>
