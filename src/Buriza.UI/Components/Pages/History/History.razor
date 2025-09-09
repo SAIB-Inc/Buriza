@@ -40,19 +40,20 @@
         <div class="max-md:hidden w-full">
             <BurizaSearchBar/>
         </div>
-        <div class="w-full rounded-[16px] h-full md:bg-[var(--mud-palette-dark)] md:!pt-6">
-            <div class="max-lg:hidden w-full flex items-center justify-between !mb-4 md:!px-6">
+        <div class="w-full rounded-[16px] h-full md:bg-[var(--mud-palette-dark)] md:!pt-4">
+            <div class="max-lg:hidden w-full flex items-center justify-between !mb-4 md:!px-6 h-[38px]">
                 <MudText Class="!font-medium !text-[22px]">
                     History
                 </MudText>
                 <MudIconButton
                     Icon="@BurizaIcons.FilterSymbolIcon"
                     Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    OnClick="ToggleFilterDrawer"
                 />
             </div>
             @if (!IsSummaryDisplayed)
             {
-                <div class="max-[376px]:h-[calc(100vh-124px)] max-md:!px-4 w-full !space-y-6 overflow-y-auto h-[calc(100vh-192px)] !pb-6 md:!px-6 lg:h-[calc(100vh-213px)]">
+                <div class="max-[376px]:h-[calc(100vh-124px)] max-md:!px-4 w-full !space-y-6 overflow-y-auto h-[calc(100vh-192px)] !pb-6 md:!pb-14 md:!px-6 lg:h-[calc(100vh-213px)] lg:!pb-6">
                     @for (int j = 0; j < 3; j++)
                     {
                         <div>
@@ -83,8 +84,8 @@
                                         </div>
                                         <div class="rounded-r-[12px] overflow-hidden shadow-sm!">
                                             <BurizaButton 
-                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-dark-darken)]!"
-                                                OnClick="() => IsSummaryDisplayed = true"
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-drawer-background)]!"
+                                                OnClick="HandleTransactionClick"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
@@ -112,8 +113,8 @@
                                                 </div>
                                             </BurizaButton>
                                             <BurizaButton 
-                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-success)]! md:bg-[var(--mud-palette-gray-default)]!"
-                                                OnClick="() => IsSummaryDisplayed = true"
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark-text)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-success)]!"
+                                                OnClick="HandleTransactionClick"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
@@ -141,8 +142,8 @@
                                                 </div>
                                             </BurizaButton>
                                             <BurizaButton 
-                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-dark-darken)]!"
-                                                OnClick="() => IsSummaryDisplayed = true"
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-drawer-background)]!"
+                                                OnClick="HandleTransactionClick"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
