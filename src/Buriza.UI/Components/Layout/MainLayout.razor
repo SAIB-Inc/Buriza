@@ -24,7 +24,7 @@
                     Variant="@DrawerVariant.Mini" 
                     Breakpoint="Breakpoint.None"
                     MiniWidth="80px"
-                    Class="!h-full !bg-[var(--mud-palette-dark)] !overflow-visible [&_.mud-drawer-content]:overflow-hidden !rounded-[16px] !py-6 flex flex-col items-between [&_.mud-drawer-content]:justify-between"
+                    Class="!h-full !shadow-sm !bg-[var(--mud-palette-dark)] !overflow-visible [&_.mud-drawer-content]:overflow-hidden !rounded-[16px] !py-6 flex flex-col items-between [&_.mud-drawer-content]:justify-between"
                 >
                     <div class="absolute -right-3 top-10">
                         <MudIconButton
@@ -45,7 +45,7 @@
                             <div>
                                 <MudImage
                                     Alt="Buriza Logo"
-                                    Src="@Logos.BurizaWordmark"
+                                    Src="@(AppStateService.IsDarkMode ? Logos.BurizaWordmarkDark : Logos.BurizaWordmarkLight)"
                                     Class="@($"!min-w-30 !max-w-30 flex-shrink-0 !-ml-2 transition-opacity duration-300 {(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
                                 />
                             </div>
@@ -239,9 +239,9 @@
                                                 />
                                             </div>
                                         </div>
-                                        <div class="rounded-r-[12px] overflow-hidden !shadow-[var(--mud-elevation-2)]">
+                                        <div class="rounded-r-[12px] overflow-hidden !shadow-sm">
                                             <BurizaButton 
-                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]!"
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-drawer-background)]!"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
@@ -297,7 +297,7 @@
                                                 </div>
                                             </BurizaButton>
                                             <BurizaButton 
-                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]!"
+                                                Class="py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[var(--mud-palette-error)]! md:bg-[var(--mud-palette-drawer-background)]!"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">

@@ -57,7 +57,7 @@
         <div class="max-md:!hidden w-full">
             <div class="w-full flex items-center h-[249px] !gap-4">
                 <MudCard 
-                    Class="@($"!bg-[url(/_content/Buriza.UI/images/background/wallet_account_background.webp)] bg-cover bg-center bg-no-repeat !transition-all !duration-500 !ease-in-out cursor-pointer {(IsCard2Expanded ? "w-[25%] xl:w-[20%]" : "w-[100%] xl:w-[70%]")} !h-full !bg-[var(--mud-palette-primary)] !rounded-[16px] !justify-between overflow-hidden")"
+                    Class="@($"!shadow-sm !bg-[url(/_content/Buriza.UI/images/background/wallet_account_background.webp)] bg-cover bg-center bg-no-repeat !transition-all !duration-500 !ease-in-out cursor-pointer {(IsCard2Expanded ? "w-[25%] xl:w-[20%]" : "w-[100%] xl:w-[70%]")} !h-full !bg-[var(--mud-palette-primary)] !rounded-[16px] !justify-between overflow-hidden")"
                     @onclick="ToggleCardExpansion"
                 >
                     <div class="flex items-center justify-between !p-4">
@@ -117,7 +117,7 @@
                     </div>
                 </MudCard>
                 <MudCard 
-                    Class="@($"!bg-[url(/_content/Buriza.UI/images/background/wallet_account_background.webp)] bg-cover bg-center bg-no-repeat !transition-all !duration-500 ease-in-out cursor-pointer {(IsCard2Expanded ? "w-[100%] xl:w-[70%]" : "w-[25%] xl:w-[20%]")} !h-full !bg-[var(--card-wallet-secondary)] !rounded-[16px] !justify-between overflow-hidden")"
+                    Class="@($"!shadow-sm  !bg-[url(/_content/Buriza.UI/images/background/wallet_account_background.webp)] bg-cover bg-center bg-no-repeat !transition-all !duration-500 ease-in-out cursor-pointer {(IsCard2Expanded ? "w-[100%] xl:w-[70%]" : "w-[25%] xl:w-[20%]")} !h-full !bg-[var(--card-wallet-secondary)] !rounded-[16px] !justify-between overflow-hidden")"
                     @onclick="ToggleCardExpansion"
                 >
                     <div class="flex items-center justify-between !p-4">
@@ -146,7 +146,7 @@
                             <div>
                                 <MudChip
                                     T="string"
-                                    Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
+                                    Class="!bg-[var(--card-wallet-chip)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
                                 >
                                     <MudIcon
                                         Icon="@BurizaIcons.ArrowUp1Icon"
@@ -177,7 +177,7 @@
                     </div>
                 </MudCard>
                 <MudCard 
-                    Class="!h-full !bg-[var(--mud-palette-dark)] !rounded-[16px] !p-4 w-[15%] xl:w-[10%]"
+                    Class="!shadow-sm !h-full !bg-[var(--mud-palette-dark)] !rounded-[16px] !p-4 w-[15%] xl:w-[10%]"
                 >
                     <div class="w-full h-full border-2 border-dashed border-[var(--mud-palette-secondary-text)] !rounded-[8px] flex items-center justify-center" style="border-width: 3px;"
                         <MudIcon
@@ -276,7 +276,7 @@
                 />
             </BurizaTabs>
        </div>
-        <div class="w-full md:bg-[var(--mud-palette-dark)] md:!pt-4 md:!rounded-[16px] ">
+        <div class="w-full md:bg-[var(--mud-palette-dark)] md:!shadow-sm md:!pt-4 md:!rounded-[16px] ">
             <div class="flex items-center justify-between !mb-2 md:!mb-5 md:!px-4 xl:!px-6">
                 <div class="max-md:justify-between w-full flex items-center !gap-3">
                     <div>
