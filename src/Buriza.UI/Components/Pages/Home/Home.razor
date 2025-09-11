@@ -29,7 +29,7 @@
                         <div class="w-2 aspect-square bg-[var(--mud-palette-success)] rounded-full" />
                     </div>
                     <div>
-                        <MudText Class="!text-[var(--mud-palette-success)]">
+                        <MudText Class="max-[376px]:!text-xs !text-[var(--mud-palette-success)]">
                             <span>
                                 Block
                             </span>
@@ -39,15 +39,20 @@
                         </MudText>
                     </div>
                 </div>
-                <div>
+                <div class="max-[376px]:!flex">
                     <MudBadge
-                        BadgeClass="!bg-[var(--mud-palette-error)] !min-w-2 !px-1 !h-2 !top-[2px] !left-[13px]"
+                        BadgeClass="max-[376px]:!top-[14px] !bg-[var(--mud-palette-error)] !min-w-2 !px-1 !h-2 !top-[2px] !left-[13px]"
                     >
                         <MudIconButton
                             Icon="@BurizaIcons.NotificationIcon"
-                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                            Class="max-[376px]:!py-3 !p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                         />
                     </MudBadge>
+                    <MudIconButton
+                        Icon="@BurizaIcons.FullscreenSymbolIcon"
+                        Class="max-[376px]:!block !hidden !px-2 [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
+                    >
+                    </MudIconButton>
                 </div>
             </div>
         </div>
@@ -70,7 +75,7 @@
                             </MudText>
                             <MudChip
                                 T="string"
-                                Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
+                                Class="max-[376px]:!text-xs !bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
                             >
                                 +$1,234.95
                             </MudChip>
@@ -92,7 +97,7 @@
                                         Icon="@BurizaIcons.ArrowUp1Icon"
                                         Class="!mr-[-2px] !ml-[-6px]"
                                     />
-                                    <span>
+                                    <span class="max-[376px]:!text-xs ">
                                         +28.00%
                                     </span>
                                 </MudChip>
@@ -161,9 +166,7 @@
                     </div>
                     <div class="bg-[var(--card-wallet-overlay)] !p-4">
                         <div>
-                            <MudText Class="!text-[22px] text-[var(--card-wallet-subtext)]! !font-semibold">
-                                Account02
-                            </MudText>
+                            h
                         </div>
                         <div class="flex items-center !gap-2">
                             <MudText Class="text-[var(--card-wallet-subtext)]!">
@@ -203,7 +206,7 @@
                             Value="@("Account01")"
                             AdornmentIcon="@Icons.Material.Filled.KeyboardArrowDown"
                             ToStringFunc="@(item => item)"
-                            Class="[&_.mud-input]:!gap-2 [&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-bold [&_.mud-input-slot]:text-[var(--mud-palette-tertiary)]! [&_.mud-icon-root]:text-[var(--mud-palette-tertiary)]!"
+                            Class="[&_.mud-input]:!gap-2 [&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-semibold [&_.mud-input-slot]:text-[var(--mud-palette-tertiary)]! [&_.mud-icon-root]:text-[var(--mud-palette-tertiary)]!"
                         >
                             <MudSelectItem Value="@("Account01")">Account01</MudSelectItem>
                             <MudSelectItem Value="@("Account02")">Account02</MudSelectItem>
@@ -228,7 +231,7 @@
                 <div>
                     <MudChip
                         T="string"
-                        Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] !font-semibold !m-0"
+                        Class="!bg-[var(--mud-palette-success-darken)] !text-[var(--mud-palette-success-lighten)] max-[376px]:!text-xs !font-semibold !m-0"
                     >
                         +$1,234.95
                     </MudChip>
@@ -251,7 +254,7 @@
                             Icon="@BurizaIcons.ArrowUp1Icon"
                             Class="!mr-[-2px] !ml-[-6px]"
                         />
-                        <span>
+                        <span class="max-[376px]:!text-xs">
                             +28.00%
                         </span>
                     </MudChip>
