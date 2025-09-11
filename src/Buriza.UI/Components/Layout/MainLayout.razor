@@ -439,7 +439,8 @@
             />
         </div>
     </MudDrawerHeader>
-    <div class="w-full !px-4">
+    @*Summary*@
+    <div class="@($"w-full !px-4 {(Navigation.Uri.Contains("/history") ? "" : "hidden")}")">
         <div class="w-full !mb-3">
             <MudText Class="!text-center !font-medium">
                 Summary of your activity
@@ -571,5 +572,79 @@
                 </div>
             </div>
         </MudCard>
+    </div>
+
+    @*authorize dapp*@
+    <div class="@($"w-full h-full !px-4 !pb-8 flex flex-col items-center justify-between {(Navigation.Uri.Contains("/dapp") ? "" : "hidden")}")">
+        <div class="w-full">
+            <div class="w-full flex flex-col items-center justify-center !text-center !gap-6">
+                <div>
+                    <MudImage
+                        Alt="DexHunter Logo"
+                        Src="@Logos.Hunterdex"
+                        Class="!w-20"
+                    />
+                </div>
+                <div>
+                    <MudText Class="!font-bold !text-2xl !text-[var(--mud-palette-text-primary)]">
+                        DexHunter
+                    </MudText>
+                    <MudText Class="!text-xl !text-[var(--mud-palette-text-secondary)]">
+                        Exchanges
+                    </MudText>
+                </div>
+            </div>
+            <div class="relative rounded-[12px] border border-[#414754] !p-4 !mt-6 !space-y-3">
+                <div class="absolute -top-3 left-3 !bg-[var(--mud-palette-background)] !px-2">
+                    <MudText Class="!text-sm">
+                        Allow this site to:
+                    </MudText>
+                </div>
+                <MudListItem
+                    T="string"
+                    Disabled="true"
+                    Text="See which network the wallet is connected to" 
+                    Icon="@Icons.Material.Outlined.CheckCircle"
+                    Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
+                />
+                <MudListItem
+                    T="string"
+                    Disabled="true"
+                    Text="See your wallet UTXOs" 
+                    Icon="@Icons.Material.Outlined.CheckCircle"
+                    Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
+                />
+                <MudListItem
+                    T="string"
+                    Disabled="true"
+                    Text="See your wallet balance" 
+                    Icon="@Icons.Material.Outlined.CheckCircle"
+                    Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
+                />
+                <MudListItem
+                    T="string"
+                    Disabled="true"
+                    Text="See your wallet different addresses, including reward account" 
+                    Icon="@Icons.Material.Outlined.CheckCircle"
+                    Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
+                />
+            </div>
+            <div>
+            </div>
+        </div>
+        <div class="w-full">
+            <BurizaButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                Class="!w-full [&_.mud-button-label]:!gap-2"
+            >
+                <MudIcon
+                    Icon="@BurizaIcons.LinkSymbolIcon"
+                />
+                <span>
+                    Authorize DexHunter
+                </span>
+            </BurizaButton>
+        </div>
     </div>
 </MudDrawer>

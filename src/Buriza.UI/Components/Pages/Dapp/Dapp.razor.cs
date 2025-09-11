@@ -1,7 +1,17 @@
+using Buriza.UI.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+
 namespace Buriza.UI.Components.Pages;
 
 public partial class Dapp
 {
+    [Inject]
+    public required AppStateService AppStateService { get; set; }
+    
+    [Inject]
+    public required IJSRuntime JSRuntime { get; set; }
+    
     protected int ExpandedCard = 1;
     protected int ExpandedDesktopSlide = 0;
     protected bool ShowAuthorization = false;
@@ -17,8 +27,17 @@ public partial class Dapp
         ExpandedDesktopSlide = slideIndex;
     }
     
-    protected void OnDappCardClicked()
+    protected async Task OnDappCardClicked()
     {
-        ShowAuthorization = true;
+        int screenWidth = await JSRuntime.InvokeAsync<int>("getScreenWidth");
+        
+        if (screenWidth >= 1024)
+        {
+            AppStateService.IsFilterDrawerOpen = true;
+        }
+        else
+        {
+            ShowAuthorization = true;
+        }
     }
 }

@@ -16,7 +16,7 @@ public partial class History
 
     protected async Task HandleTransactionClick()
     {
-        var screenWidth = await JSRuntime.InvokeAsync<int>("getScreenWidth");
+        int screenWidth = await JSRuntime.InvokeAsync<int>("getScreenWidth");
         
         if (screenWidth >= 1024)
         {
