@@ -30,11 +30,6 @@ public partial class MainLayout : IDisposable
         AppStateService.IsDarkMode = !AppStateService.IsDarkMode;
     }
 
-    protected void ToggleFilterDrawer()
-    {
-        AppStateService.IsFilterDrawerOpen = !AppStateService.IsFilterDrawerOpen;
-    }
-
     public static MudTheme BurizaTheme => new()
     {
         Typography = new()
