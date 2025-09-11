@@ -17,7 +17,7 @@
     }
     <div class="items-between justify-between w-full md:!gap-4 md:h-screen md:flex mx-auto md:!container md:!px-4 md:!pb-8 xl:!gap-8">
         <div class="flex-1 min-w-0 relative md:!pt-6">
-            <MudDrawerContainer Class="max-lg:hidden relative">
+            <MudDrawerContainer Class="@($"relative {(Navigation.Uri.Contains("/onboard") || Navigation.Uri.Contains("/splash") ? "hidden" : "max-lg:hidden")}")">
                 <MudDrawer 
                     @bind-Open="@AppStateService.IsSidebarOpen" 
                     Fixed="false" 
@@ -154,13 +154,13 @@
                     @Body
                 </div>
             </MudDrawerContainer>
-            <div class="lg:hidden">
+            <div class="@($"{(Navigation.Uri.Contains("/onboard") || Navigation.Uri.Contains("/splash") ? "lg:block" : "lg:hidden")}")">
                 @Body
             </div>
         </div>
 
         @*right sidebar*@
-        @if (!Navigation.Uri.Contains("/dapp"))
+        @if (!Navigation.Uri.Contains("/dapp") && !Navigation.Uri.Contains("/onboard") && !Navigation.Uri.Contains("/splash"))
         {
             <div class="max-lg:hidden !pt-6 flex flex-col !gap-3 h-full flex-shrink-0 lg:w-[300px] xl:w-[338px]">
             <div class="w-full flex items-center !gap-8 h-[56px] !mb-6">
