@@ -32,6 +32,20 @@ public class AppStateService
         }
     }
 
+    private bool _isFilterDrawerOpen = false;
+    public bool IsFilterDrawerOpen
+    {
+        get => _isFilterDrawerOpen;
+        set
+        {
+            if (_isFilterDrawerOpen != value)
+            {
+                _isFilterDrawerOpen = value;
+                NotifyChanged();
+            }
+        }
+    }
+
     #endregion
 
     #region event

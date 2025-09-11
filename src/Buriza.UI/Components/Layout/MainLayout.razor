@@ -1,4 +1,5 @@
 @using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
 
 @inherits LayoutComponentBase
@@ -197,20 +198,74 @@
                 </div>
             </div>
             <div class="bg-[var(--mud-palette-dark)] !rounded-[16px] !pt-4 !pb-0 h-full">
+                
                 <div class="w-full flex items-center justify-between !px-4">
-                    <div>
-                        <MudText Class="!font-medium !text-[22px]">
-                            History
-                        </MudText>
+                    <div class="flex items-center !gap-3 h-[38px]">
+                        <div>
+                            <MudText Class="!font-medium !text-[22px]">
+                                @SidebarTitle
+                            </MudText>
+                        </div>
+                        @if (ShowTabs)
+                        {
+                            <div>
+                                <MudIconButton
+                                    Icon="@BurizaIcons.FilterSymbolIcon"
+                                    Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
+                                />
+                            </div>
+                        }
                     </div>
-                    <div>
-                        <MudIconButton
-                            Icon="@BurizaIcons.FilterSymbolIcon"
-                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
-                        />
-                    </div>
+                    @if (ShowTabs)
+                    {
+                        <div>
+                            <BurizaTabs
+                                Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full max-h-[38px]! [&_.mud-tab-slider.mud-tab-slider-horizontal]:h-[32px]! [&_.mud-tab-slider.mud-tab-slider-horizontal]:bottom-[10px]! [&_.mud-tab]:min-h-8! [&_.mud-icon-root]:!text-xl [&_.mud-tabs-tabbar-wrapper]:!w-full [&_.mud-tabs-scroll-button]:hidden"
+                            >
+                                <MudTabPanel 
+                                    Icon="@BurizaIcons.TokenSymbolIcon"
+                                    Class="w-full bg-[var(--mud-palette-gray-default)] !min-w-[50px] max-xl:!gap-0"
+                                    Style="border-radius: 30px 10px 10px 30px"
+                                />
+                                <MudTabPanel 
+                                    Icon="@BurizaIcons.NftSymbolIcon"
+                                    Class="w-full bg-[var(--mud-palette-gray-default)] !min-w-[50px] max-xl:!gap-0"
+                                    Style="border-radius: 10px 30px 30px 10px"
+                                />
+                            </BurizaTabs>
+                        </div>
+                    }
+                    else
+                    {
+                        <div>
+                            <MudIconButton
+                                Icon="@BurizaIcons.FilterSymbolIcon"
+                                Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
+                            />
+                        </div>
+                    }
                 </div>
-                <div class="w-full !space-y-6 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-273px)]">
+                @if (ShowTabs)
+                {
+                    @* Portfolio *@
+                    <div class="w-full !space-y-2 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-278px)]">
+                        @for(int i=0; i < 10; i++)
+                        {
+                            <BurizaAssetCard
+                                AssetIcon="@Tokens.Ada"
+                                AssetName="ADA"
+                                PricePercentage="12.18f"
+                                AssetAmount="123.21f"
+                                UsdConversion="152.31f"
+                                Class="[&_.graph]:hidden"
+                            />
+                        }
+                    </div>
+                }
+                else
+                {
+                    @* History *@
+                    <div class="w-full !space-y-6 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-278px)]">
                     @for (int j = 0; j < 3; j++)
                     {
                         <div>
@@ -330,7 +385,8 @@
                             </div>
                         </div>
                     }
-                </div>
+                    </div>
+                }
             </div>
             <div class="flex items-center !gap-4 !mt-4">
                 <BurizaButton
@@ -352,3 +408,164 @@
     </div>
 </main>
 
+<MudDrawer 
+    @bind-Open="@AppStateService.IsFilterDrawerOpen" 
+    Elevation="1" 
+    Variant="@DrawerVariant.Temporary"
+    Anchor="Anchor.End"
+    Width="393px"
+    Class="max-md:!hidden !bg-[var(--mud-palette-background)]"
+>
+    <MudDrawerHeader Class="items-center justify-between !mb-6 !px-4 !pt-8">
+        <div class="flex items-center !gap-2">
+            <MudIconButton
+                Icon="@BurizaIcons.ChevronRightIcon"
+                Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
+            />
+            <MudText Class="!text-[22px] !font-medium !text-[var(--mud-palette-text-primary)]">
+                Sent
+            </MudText>
+        </div>
+        <div>
+            <MudIconButton
+                Icon="@BurizaIcons.CloseSymbolIcon"
+                Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
+            />
+        </div>
+    </MudDrawerHeader>
+    <div class="w-full !px-4">
+        <div class="w-full !mb-3">
+            <MudText Class="!text-center !font-medium">
+                Summary of your activity
+            </MudText>
+        </div>
+        <MudCard
+            Class="!bg-[var(--mud-palette-background-gray)] !p-4 !rounded-[12px] !gap-6 shadow-sm!"
+        >
+            <div class="!space-y-4">
+                <div class="w-full flex items-center justify-between">
+                    <div>
+                        <MudText Class="!text-sm">
+                            Transaction ID:
+                        </MudText>
+                    </div>
+                    <div class="flex items-center justify-end !gap-2">
+                        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                            9f7a...1b93d2
+                        </MudText>
+                        <MudIconButton
+                            Icon="@BurizaIcons.CopySymbolIcon"
+                            Class="!p-0 [&_.mud-icon-root]:!text-lg [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
+                        />
+                    </div>
+                </div>
+                <div class="w-full flex items-center justify-between">
+                    <MudText Class="!text-sm">
+                        Timestamp:
+                    </MudText>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                        03/07/2025 16:17:20
+                    </MudText>
+                </div>
+            </div>
+            <div class="!space-y-2">
+                <div class="w-full bg-[var(--mud-palette-background)] rounded-[8px] !px-3 !py-[10px]">
+                    <MudText Class="!text-sm">
+                        <span class="!text-[var(--mud-palette-text-secondary)]">From:</span>
+                        <span>addr1q...8r7z4lgcqrqt9uu</span>
+                    </MudText>
+                </div>
+                <div class="w-full bg-[var(--mud-palette-background)] rounded-[8px] !px-3 !py-[10px]">
+                    <MudText Class="!text-sm">
+                        <span class="!text-[var(--mud-palette-text-secondary)]">To:</span>
+                        <span>addr1q...17xpubmzsrqt9jp</span>
+                    </MudText>
+                </div>
+            </div>
+            <div class="border border-[var(--mud-palette-table-lines)] !p-3 !rounded-[8px] !space-y-3">
+                <div>
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Assets
+                    </MudText>
+                </div>
+                <div class="w-full flex items-center justify-between">
+                    <div class="flex items-center !gap-2">
+                        <div class="rounded-full overflow-hidden">
+                            <MudImage
+                                Alt=""
+                                Src="@Tokens.Snek"
+                                Class="!w-8 aspect-square"
+                            />
+                        </div>
+                        <div>
+                            <MudText Class="!font-semibold !text-sm">
+                                SNEK
+                            </MudText>
+                        </div>
+                    </div>
+                    <div>
+                        <MudText Class="!text-end !text-sm !font-semibold">
+                            -551.28
+                        </MudText>
+                    </div>
+                </div>
+                <div class="w-full flex items-center justify-between">
+                    <div class="flex items-center !gap-2">
+                        <div class="rounded-full overflow-hidden">
+                            <MudImage
+                                Alt=""
+                                Src="@Tokens.Ada"
+                                Class="!w-8 aspect-square"
+                            />
+                        </div>
+                        <div>
+                            <MudText Class="!font-semibold !text-sm">
+                                ADA
+                            </MudText>
+                        </div>
+                    </div>
+                    <div>
+                        <MudText Class="!text-end !text-sm !font-semibold">
+                            -1,551.28
+                        </MudText>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <MudText Class="!text-[11px]">
+                        Additional Information
+                    </MudText>
+                </div>
+                <div class="!space-y-2 !mt-4">
+                    <div class="w-full flex items-center justify-between">
+                        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
+                            Collateral
+                        </MudText>
+                        <MudText Class="!text-sm !font-medium">
+                            ₳433.00
+                        </MudText>
+                    </div>
+                    <div class="w-full flex items-center justify-between">
+                        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
+                            Expires by
+                        </MudText>
+                        <MudText Class="!text-sm !font-medium">
+                            No limit
+                        </MudText>
+                    </div>
+                    <div class="w-full flex items-center justify-between">
+                        <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
+                            Transaction fee
+                        </MudText>
+                        <MudText Class="!text-sm !font-medium">
+                            ₳0.034
+                        </MudText>
+                    </div>
+                </div>
+            </div>
+        </MudCard>
+    </div>
+</MudDrawer>

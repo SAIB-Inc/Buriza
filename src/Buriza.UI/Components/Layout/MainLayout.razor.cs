@@ -13,9 +13,12 @@ public partial class MainLayout : IDisposable
     [Inject] 
     public required NavigationManager Navigation { get; set; }
 
-    private bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success") ||
+    protected bool IsHeaderHidden => Navigation.Uri.Contains("/transaction/success") ||
                                    Navigation.Uri.Contains("/onboard") ||
                                    Navigation.Uri.Contains("/splash");
+
+    protected string SidebarTitle => Navigation.Uri.Contains("/history") ? "Portfolio" : "History";
+    protected bool ShowTabs => Navigation.Uri.Contains("/history");
 
     protected void ToggleSidebar()
     {
@@ -110,10 +113,17 @@ public partial class MainLayout : IDisposable
     protected override void OnInitialized()
     {
         AppStateService.OnChanged += StateHasChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    protected void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        StateHasChanged();
     }
 
     public void Dispose()
     {
         AppStateService.OnChanged -= StateHasChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }
