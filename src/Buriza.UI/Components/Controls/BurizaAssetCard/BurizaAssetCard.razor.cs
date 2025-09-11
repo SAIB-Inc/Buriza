@@ -11,6 +11,9 @@ public partial class BurizaAssetCard
     public string AssetName { get; set; } = string.Empty;
 
     [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
     public float PricePercentage { get; set; }
 
     [Parameter]
