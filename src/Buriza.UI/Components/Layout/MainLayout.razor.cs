@@ -124,6 +124,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             Background = "#10131B",
             BackgroundGray = "#0B0E15",
+            OverlayDark = "#000000",
             AppbarBackground = "#0E0E0E",
             PrimaryLighten = "#AEC6FF",
             Primary = "#4F8EFF",
