@@ -2,10 +2,11 @@ using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using MudBlazor;
+using static Buriza.UI.Services.DrawerContentType;
 
 namespace Buriza.UI.Components.Layout;
 
-public partial class MainLayout : IDisposable
+public partial class MainLayout : LayoutComponentBase, IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
@@ -17,18 +18,30 @@ public partial class MainLayout : IDisposable
                                    Navigation.Uri.Contains("/onboard") ||
                                    Navigation.Uri.Contains("/splash");
 
-    protected string SidebarTitle => Navigation.Uri.Contains("/history") ? "Portfolio" : "History";
-    protected bool ShowTabs => Navigation.Uri.Contains("/history");
+    protected string DrawerTitle => AppStateService.CurrentDrawerContent switch
+    {
+        Summary => "Sent",
+        AuthorizeDapp => "Authorize App",
+        Receive => "Receive",
+        Send => "Send Assets", 
+        Settings => "Settings",
+        Manage => "Manage",
+        _ => "Details"
+    };
 
     protected void ToggleSidebar()
     {
         AppStateService.IsSidebarOpen = !AppStateService.IsSidebarOpen;
     }
 
-    protected void ToggleTheme()
+    protected void HandleAddRecipient()
     {
-        AppStateService.IsDarkMode = !AppStateService.IsDarkMode;
+        // Event to communicate with SendSection
+        OnAddRecipient?.Invoke();
     }
+
+    // Event to communicate with SendSection
+    public static Action? OnAddRecipient { get; set; }
 
     public static MudTheme BurizaTheme => new()
     {
@@ -114,11 +127,31 @@ public partial class MainLayout : IDisposable
     {
         AppStateService.OnChanged += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
+        
+        // Set initial drawer content based on current route
+        SetDrawerContentForCurrentRoute();
     }
 
     protected void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+        SetDrawerContentForCurrentRoute();
         StateHasChanged();
+    }
+    
+    private void SetDrawerContentForCurrentRoute()
+    {
+        if (Navigation.Uri.Contains("/history"))
+        {
+            AppStateService.CurrentDrawerContent = Summary;
+        }
+        else if (Navigation.Uri.Contains("/dapp"))
+        {
+            AppStateService.CurrentDrawerContent = AuthorizeDapp;
+        }
+        else
+        {
+            AppStateService.CurrentDrawerContent = None;
+        }
     }
 
     public void Dispose()
