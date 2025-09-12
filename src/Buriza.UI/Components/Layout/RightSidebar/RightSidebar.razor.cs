@@ -29,4 +29,9 @@ public partial class RightSidebar
     {
         AppStateService.SetDrawerContent(Receive);
     }
+
+    protected void OpenManageDrawer()
+    {
+        AppStateService.SetDrawerContent(Manage);
+    }
 }
