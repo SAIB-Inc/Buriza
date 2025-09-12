@@ -1,0 +1,22 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="w-full h-full !px-4 !pb-8 flex flex-col items-center justify-between">
+    <div>
+        <MudText Class="!mb-6 !text-[var(--mud-palette-text-primary)]">We use the open protocol for UTxO based blockchain called UTxO RPC (U5C). Learn more about utxorpc
+        <MudLink Href="https://utxorpc.org/">https://utxorpc.org/</MudLink>.</MudText>
+        <BurizaTextField Placeholder="Input a URL..." Class="mb-3" />
+        <BurizaTextField Placeholder="Input API Key..." Class="mb-3" />
+    </div>
+    <div class="w-full">
+        <BurizaButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+        >
+            Enable
+        </BurizaButton>
+    </div>
+</div>

@@ -27,6 +27,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         SelectAsset => "Select Assets",
         TransactionStatus => "Transaction Sent",
         Settings => "Settings",
+        NodeSettings => "Node Settings",
         Manage => "Manage",
         _ => "Details"
     };
@@ -49,6 +50,10 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             OnResetSendConfirmation?.Invoke();
         }
+        else if (AppStateService.CurrentDrawerContent == NodeSettings)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
         else
         {
             AppStateService.IsFilterDrawerOpen = false;
@@ -58,6 +63,11 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     protected void HandleAddRecipient()
     {
         OnAddRecipient?.Invoke();
+    }
+
+    protected void HandleSettingsClick()
+    {
+        AppStateService.SetDrawerContent(Settings);
     }
 
     public static Action? OnAddRecipient { get; set; }
