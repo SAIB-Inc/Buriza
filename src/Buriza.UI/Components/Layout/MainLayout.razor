@@ -177,34 +177,37 @@
     Class="max-md:!hidden !bg-[var(--mud-palette-background)] !fixed"
 >
     <MudDrawerHeader Class="items-center justify-between !mb-6 !px-4 !pt-8">
-        <div class="flex items-center !gap-2">
-            <MudIconButton
-                Icon="@BurizaIcons.ChevronRightIcon"
-                Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
-            />
-            <MudText Class="!text-[22px] !font-medium !text-[var(--mud-palette-text-primary)]">
-                @DrawerTitle
-            </MudText>
-        </div>
-        <div>
-            @if (AppStateService.CurrentDrawerContent == Send)
-            {
+        @if (AppStateService.CurrentDrawerContent != TransactionStatus)
+        {
+            <div class="flex items-center !gap-2">
                 <MudIconButton
-                    Icon="@BurizaIcons.AddSymbolIcon"
-                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                    OnClick="@HandleAddRecipient"
-                />
-            }
-            else
-            {
-                <MudIconButton
-                    Icon="@BurizaIcons.CloseSymbolIcon"
+                    Icon="@BurizaIcons.ChevronRightIcon"
                     Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                     OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
                 />
-            }
-        </div>
+                <MudText Class="!text-[22px] !font-medium !text-[var(--mud-palette-text-primary)]">
+                    @DrawerTitle
+                </MudText>
+            </div>
+            <div>
+                @if (AppStateService.CurrentDrawerContent == Send)
+                {
+                    <MudIconButton
+                        Icon="@BurizaIcons.AddSymbolIcon"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="@HandleAddRecipient"
+                    />
+                }
+                else
+                {
+                    <MudIconButton
+                        Icon="@BurizaIcons.CloseSymbolIcon"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
+                    />
+                }
+            </div>
+        }
     </MudDrawerHeader>
     <DrawerContent />
 </MudDrawer>

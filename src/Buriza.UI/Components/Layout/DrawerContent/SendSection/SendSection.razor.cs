@@ -1,5 +1,7 @@
 using Buriza.UI.Resources;
+using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
+using static Buriza.UI.Services.DrawerContentType;
 
 namespace Buriza.UI.Components.Layout;
 
@@ -7,6 +9,9 @@ public partial class SendSection : IDisposable
 {
     [Inject]
     public required NavigationManager Navigation { get; set; }
+    
+    [Inject]
+    public required AppStateService AppStateService { get; set; }
     
     protected bool IsConfirmed { get; set; }
 
@@ -69,7 +74,8 @@ public partial class SendSection : IDisposable
     {
         if (IsConfirmed)
         {
-            Navigation.NavigateTo("/transaction/success");
+            // Change drawer content to TransactionStatus instead of navigating away
+            AppStateService.SetDrawerContent(TransactionStatus);
         }
         else
         {

@@ -9,6 +9,7 @@ public enum DrawerContentType
     AuthorizeDapp,  // for dapp page  
     Receive,        // button click
     Send,           // button click
+    TransactionStatus, // transaction success/status
     Settings,       // button click
     Manage          // button click
 }
