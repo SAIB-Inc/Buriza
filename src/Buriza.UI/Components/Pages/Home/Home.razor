@@ -319,8 +319,8 @@
                 </div>
             </div>
             <div class="max-[376px]:!max-h-[calc(100vh-390px)] max-[376px]:!pb-12 !min-h-[calc(100vh-470px)] !pb-11 !space-y-2 overflow-y-auto !max-h-[calc(100vh-552px)] !rounded-[12px] md:!max-h-[calc(100vh-604px)] md:!pb-13 lg:max-h-[calc(100vh-426px)] lg:!pb-4 lg:!max-h-[calc(100vh-527px)] md:!px-4 xl:!px-6">
-                @for(int i=0; i < 10; i++)
-                {
+                @if (AppStateService.SelectedAssetType == AssetType.Token)
+                {                                    
                     @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
                     {
                         <BurizaAssetCard
@@ -330,7 +330,7 @@
                             AssetAmount="@tokenAsset.AssetAmount"
                             UsdConversion="@tokenAsset.UsdConversion"
                         />
-                    }
+                    }                    
                 }
                 else
                 {
