@@ -36,11 +36,22 @@ public partial class SendSection : IDisposable
     protected override void OnInitialized()
     {
         MainLayout.OnAddRecipient += AddRecipient;
+        AppStateService.OnChanged += OnAppStateChanged;
     }
 
     public void Dispose()
     {
         MainLayout.OnAddRecipient -= AddRecipient;
+        AppStateService.OnChanged -= OnAppStateChanged;
+    }
+
+    private void OnAppStateChanged()
+    {
+        if (!AppStateService.IsFilterDrawerOpen && IsConfirmed)
+        {
+            IsConfirmed = false;
+            StateHasChanged();
+        }
     }
     
     private void AddRecipient()
@@ -81,5 +92,11 @@ public partial class SendSection : IDisposable
         {
             IsConfirmed = true;
         }
+    }
+
+    private void HandleSelectAsset()
+    {
+        // Change drawer content to SelectAsset section
+        AppStateService.SetDrawerContent(SelectAsset);
     }
 }

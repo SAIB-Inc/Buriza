@@ -23,7 +23,9 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         Summary => "Sent",
         AuthorizeDapp => "Authorize App",
         Receive => "Receive",
-        Send => "Send Assets", 
+        Send => "Send Assets",
+        SelectAsset => "Select Assets",
+        TransactionStatus => "Transaction Sent",
         Settings => "Settings",
         Manage => "Manage",
         _ => "Details"
