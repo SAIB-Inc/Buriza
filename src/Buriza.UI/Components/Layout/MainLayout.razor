@@ -198,6 +198,14 @@
                         OnClick="@HandleAddRecipient"
                     />
                 }
+                else if (AppStateService.CurrentDrawerContent == Receive)
+                {
+                    <MudIconButton
+                        Icon="@(IsReceiveAdvancedMode ? BurizaIcons.CloseSymbolIcon : BurizaIcons.AdvancedSettings2Icon)"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="@(IsReceiveAdvancedMode ? (() => SetReceiveAdvancedMode(false)) : HandleAdvancedModeToggle)"
+                    />
+                }
                 else if (AppStateService.CurrentDrawerContent != Send || !IsSendConfirmed)
                 {
                     <MudIconButton
