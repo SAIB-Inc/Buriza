@@ -1,0 +1,38 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="relative !gap-6 !pb-8 flex flex-col items-center !px-4">
+    <div class="w-full">
+        <BurizaTabs
+            Class="!w-full [&_.mud-tab-active]:!bg-transparent !text-[var(--mud-palette-text-primary)] [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+        >
+            <MudTabPanel 
+                Text="Token" 
+                Icon="@BurizaIcons.TokenSymbolIcon"
+                Class="w-full bg-[var(--mud-palette-dark)]"
+                Style="border-radius: 30px 10px 10px 30px"
+            />
+            <MudTabPanel 
+                Text="NFT" 
+                Icon="@BurizaIcons.NftSymbolIcon"
+                Class="w-full bg-[var(--mud-palette-dark)]"
+                Style="border-radius: 10px 30px 30px 10px"
+            />
+        </BurizaTabs>
+    </div>
+    <div class="!space-y-2 h-full max-h-[calc(100vh-208px)] w-full overflow-y-auto !rounded-[12px]">
+        @for(int i=0; i < 15; i++)
+        {
+            <BurizaAssetCard
+                AssetIcon="@Tokens.Ada"
+                AssetName="ADA"
+                PricePercentage="12.18f"
+                AssetAmount="123.21f"
+                UsdConversion="152.31f"
+            />
+        }
+    </div>
+</div>

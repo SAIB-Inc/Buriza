@@ -17,5 +17,8 @@ public partial class BurizaDappCard
     public string DappClass { get; set; } = string.Empty;
 
     [Parameter]
-    public string DappTheme { get; set; } = string.Empty;
+    public string DappThemeSecondary { get; set; } = string.Empty;
+
+    [Parameter]
+    public string DappThemePrimary { get; set; } = string.Empty;
 }

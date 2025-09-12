@@ -105,7 +105,7 @@
                 <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" />
                 <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                 <MudIcon Icon="@BurizaIcons.CloseSymbolIcon" />
-                <MudIcon Icon="@BurizaIcons.ConectedDappsIcon" />
+                <MudIcon Icon="@BurizaIcons.ConnectedDappsIcon" />
                 <MudIcon Icon="@BurizaIcons.ContactPageIcon" />
                 <MudIcon Icon="@BurizaIcons.CopySymbolIcon" />
                 <MudIcon Icon="@BurizaIcons.DappSymbolIcon" />
@@ -179,29 +179,33 @@
                 <BurizaDappCard
                     DappTitle="HunderDex"
                     DappType="Exchanges"
-                    DappClass="!bg-[var(--dapp-hunterdex-primary)]"
-                    DappTheme="bg-[var(--dapp-hunterdex-secondary)]/40"
+                    DappClass="[&_.mud-typography]:!text-black"
+                    DappThemePrimary="!bg-[var(--dapp-hunterdex-primary)]"
+                    DappThemeSecondary="bg-[var(--dapp-hunterdex-secondary)]/40"
                     DappIcon="/_content/Buriza.UI/images/logos/hunterdex.svg"
                 />
                 <BurizaDappCard
                     DappTitle="Levvy"
                     DappType="Defi"
-                    DappClass="!bg-[var(--dapp-levvy-primary)] [&_.mud-typography]:!text-black"
-                    DappTheme="bg-[var(--dapp-levvy-secondary)]/40"
+                    DappClass="[&_.mud-typography]:!text-black"
+                    DappThemePrimary="!bg-[var(--dapp-levvy-primary)]"
+                    DappThemeSecondary="bg-[var(--dapp-levvy-secondary)]/40"
                     DappIcon="/_content/Buriza.UI/images/logos/levvy.svg"
                 />
                 <BurizaDappCard
                     DappTitle="Minswap"
                     DappType="Defi"
-                    DappClass="!bg-[var(--dapp-minswap-primary)]"
-                    DappTheme="bg-[var(--dapp-minswap-secondary)]/40"
+                    DappClass="[&_.mud-typography]:!text-black"
+                    DappThemePrimary="!bg-[var(--dapp-minswap-primary)]"
+                    DappThemeSecondary="bg-[var(--dapp-minswap-secondary)]/40"
                     DappIcon="/_content/Buriza.UI/images/logos/minswap.svg"
                 />
                 <BurizaDappCard
                     DappTitle="DANZO"
                     DappType="Games, Defi"
-                    DappClass="!bg-[var(--dapp-danzo-primary)]"
-                    DappTheme="bg-[var(--dapp-danzo-secondary)]/40"
+                    DappClass="[&_.mud-typography]:!text-black"
+                    DappThemePrimary="!bg-[var(--dapp-danzo-primary)]"
+                    DappThemeSecondary="bg-[var(--dapp-danzo-secondary)]/40"
                     DappIcon="/_content/Buriza.UI/images/logos/danzo.svg"
                 />
             </div>
@@ -247,3 +251,44 @@
         </div>
     </div>
 </section>
+
+<section class="!p-8">
+    <div class="mb-6">
+        <MudText Class="!text-3xl !font-semibold mb-4">
+            MudDrawer Test
+        </MudText>
+    </div>
+    
+    <div class="mb-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Menu" OnClick="ToggleDrawer">
+            Toggle Drawer
+        </MudButton>
+    </div>
+    
+    <div class="bg-gray-100 rounded-lg min-h-[400px] overflow-hidden relative" style="position: relative;">
+        <MudPaper Height="200px" Style="overflow:hidden; position:relative;">
+            <MudDrawerContainer Class="mud-height-full">
+                <MudDrawer @bind-Open="@_open" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true" Breakpoint="Breakpoint.None">
+                    <MudNavMenu>
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Store">Store</MudNavLink>
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.LibraryBooks">Library</MudNavLink>
+                        <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Group">Community</MudNavLink>
+                    </MudNavMenu>
+                </MudDrawer>
+                <div class="d-flex justify-center align-center mud-height-full">
+                    <MudButton OnClick="@ToggleDrawer" Color="Color.Primary">Toggle</MudButton>
+                </div>
+            </MudDrawerContainer>
+        </MudPaper>
+    </div>
+</section>
+
+@code
+{
+    private bool _open = false;
+
+    private void ToggleDrawer()
+    {
+        _open = !_open;
+    }
+}

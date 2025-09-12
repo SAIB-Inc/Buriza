@@ -1,4 +1,7 @@
 @using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+@using static Buriza.UI.Services.DrawerContentType
 
 @inherits LayoutComponentBase
 
@@ -13,5 +16,212 @@
     {
         <BurizaHeader />
     }
-    @Body
+    <div class="items-between justify-between w-full md:!gap-4 md:h-screen md:flex mx-auto md:!container md:!px-4 md:!pb-8 xl:!gap-8">
+        <div class="flex-1 min-w-0 relative md:!pt-6">
+            <MudDrawerContainer Class="@($"relative {(Navigation.Uri.Contains("/onboard") || Navigation.Uri.Contains("/splash") ? "hidden" : "max-lg:hidden")}")">
+                <MudDrawer 
+                    @bind-Open="@AppStateService.IsSidebarOpen" 
+                    Fixed="false" 
+                    Elevation="1" 
+                    Variant="@DrawerVariant.Mini" 
+                    Breakpoint="Breakpoint.None"
+                    MiniWidth="80px"
+                    Class="!h-full !shadow-sm !bg-[var(--mud-palette-dark)] !overflow-visible [&_.mud-drawer-content]:overflow-hidden !rounded-[16px] !py-6 flex flex-col items-between [&_.mud-drawer-content]:justify-between"
+                >
+                    <div class="absolute -right-3 top-10">
+                        <MudIconButton
+                            Icon="@BurizaIcons.ChevronLeftIcon"
+                            aria-label="open"
+                            OnClick="@ToggleSidebar"
+                            Class="@($"!border !border-[var(--mud-palette-divider)] !bg-[var(--mud-palette-dark)] [&_.mud-icon-root]:!text-base !p-[3px] [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:transition-all [&_.mud-icon-root]:duration-300 {(AppStateService.IsSidebarOpen ? "[&_.mud-icon-root]:rotate-180" : "")}")"
+                        />
+                    </div>
+                    <div>
+                        <div class="!px-3 flex items-center">
+                            <div>
+                                <MudIcon
+                                    Icon="@BurizaIcons.BurizaSymbolIcon"
+                                    Class="!text-[58px] !text-[var(--mud-palette-primary)]"
+                                />
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="Buriza Logo"
+                                    Src="@(AppStateService.IsDarkMode ? Logos.BurizaWordmarkDark : Logos.BurizaWordmarkLight)"
+                                    Class="@($"!min-w-30 !max-w-30 flex-shrink-0 !-ml-2 transition-opacity duration-300 {(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                />
+                            </div>
+                        </div>
+                        <MudNavMenu Class="!mt-10 !space-y-3 flex flex-col items-center justify-center !px-5 !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.AssetIcon" 
+                                Href="/"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Assets
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.History2Icon" 
+                                Href="/history"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                History
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.StakingSymbolIcon"
+                                Href="/staking" 
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Staking
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.VotingSymbolIcon"
+                                Href="/voting"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Voting
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.DappSymbolIcon"
+                                Href="/dapp"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                DApps
+                            </MudNavLink>
+                        </MudNavMenu>
+                    </div>
+                    <div class="!space-y-3 !px-5">
+                        <MudNavMenu Class="!mt-10 !space-y-3 flex flex-col items-center justify-center !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.NotificationIcon" 
+                                Href="/notifications"
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Notifications
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.SettingsSymbolIcon" 
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                                OnClick="@HandleSettingsClick"
+                            >
+                                Settings
+                            </MudNavLink>
+                            <MudNavLink 
+                                Match="NavLinkMatch.All" 
+                                Icon="@BurizaIcons.HelpAndSupportIcon"
+                                Href="/help" 
+                                Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
+                                ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                            >
+                                Help And Support
+                            </MudNavLink>
+                        </MudNavMenu>
+                        <div class="w-full flex items-center !gap-2 !p-2">
+                            <div class="p-[2px]! rounded-full h-6 w-6 flex items-center justify-center min-w-6 xl:p-1">
+                                <div class="relative">
+                                    <div
+                                        class="w-2 absolute aspect-square bg-[var(--mud-palette-success)]/60 delay-150! rounded-full animate-ping xl:p-1!" />
+                                    <div class="w-2 aspect-square bg-[var(--mud-palette-success)] rounded-full" />
+                                </div>
+                            </div>
+                            <div class="@($"transition-opacity duration-300 whitespace-nowrap {(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")">
+                                <MudText Class="!text-[var(--mud-palette-success)]">
+                                    <span>
+                                        Block
+                                    </span>
+                                    <span>
+                                        #12345
+                                    </span>
+                                </MudText>
+                            </div>
+                        </div>
+                    </div>
+                </MudDrawer>
+                <div>
+                    @Body
+                </div>
+            </MudDrawerContainer>
+            <div class="@($"{(Navigation.Uri.Contains("/onboard") || Navigation.Uri.Contains("/splash") ? "lg:block" : "lg:hidden")}")">
+                @Body
+            </div>
+        </div>
+
+        @*right sidebar*@
+        @if (!Navigation.Uri.Contains("/dapp") && !Navigation.Uri.Contains("/onboard") && !Navigation.Uri.Contains("/splash"))
+        {
+            <RightSidebar />
+        }
+    </div>
 </main>
+
+<MudDrawer 
+    @bind-Open="@AppStateService.IsFilterDrawerOpen" 
+    Elevation="1" 
+    Variant="@DrawerVariant.Temporary"
+    Anchor="Anchor.End"
+    Width="393px"
+    Class="max-md:!hidden !bg-[var(--mud-palette-background)] !fixed"
+>
+    <MudDrawerHeader Class="items-center justify-between !mb-6 !px-4 !pt-8">
+        @if (AppStateService.CurrentDrawerContent != TransactionStatus)
+        {
+            <div class="flex items-center !gap-2">
+                <MudIconButton
+                    Icon="@BurizaIcons.ChevronRightIcon"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    OnClick="@HandleBackNavigation"
+                />
+                <MudText Class="!text-[22px] !font-medium !text-[var(--mud-palette-text-primary)]">
+                    @DrawerTitle
+                </MudText>
+            </div>
+            <div>
+                @if (AppStateService.CurrentDrawerContent == Send && !IsSendConfirmed)
+                {
+                    <MudIconButton
+                        Icon="@BurizaIcons.AddSymbolIcon"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="@HandleAddRecipient"
+                    />
+                }
+                else if (AppStateService.CurrentDrawerContent == Settings || AppStateService.CurrentDrawerContent == NodeSettings)
+                {
+                    <div>
+                        <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px] !ml-4"></MudImage>
+                    </div>
+                }
+                else if (AppStateService.CurrentDrawerContent == Receive)
+                {
+                    <MudIconButton
+                        Icon="@(IsReceiveAdvancedMode ? BurizaIcons.CloseSymbolIcon : BurizaIcons.AdvancedSettings2Icon)"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="@(IsReceiveAdvancedMode ? (() => SetReceiveAdvancedMode(false)) : HandleAdvancedModeToggle)"
+                    />
+                }
+                else if (AppStateService.CurrentDrawerContent != Send || !IsSendConfirmed)
+                {
+                    <MudIconButton
+                        Icon="@BurizaIcons.CloseSymbolIcon"
+                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                        OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
+                    />
+                }
+            </div>
+        }
+    </MudDrawerHeader>
+    <DrawerContent />
+</MudDrawer>

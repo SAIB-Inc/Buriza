@@ -2,12 +2,12 @@
 
 @namespace Buriza.UI.Components.Common
 
-<div class="relative">
-    <header class="max-[376px]:bottom-4 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 lg:hidden">
+<div>
+    <header class="max-[376px]:bottom-3 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 max-w-[738px] lg:hidden">
         @*Receive*@
         <MudLink 
             Href="/receive" 
-            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.ReceiveSymbolIcon" 
@@ -50,33 +50,33 @@
 
                 @*top*@
                 <MudLink
-                    Href="/" 
+                    Href="/dapp" 
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-1/2 -translate-y-[68px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="CloseSettings"
                 >
                     <MudIcon
-                        Icon="@BurizaIcons.MenuSymbolIcon"
+                        Icon="@BurizaIcons.AssetIcon"
                         Size="Size.Medium" 
                     />
-                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Dapp</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Assets</span>
                 </MudLink>
 
                 @*left*@
                 <MudLink 
-                    Href="/"
+                    Href="/dapp"
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-[90px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="CloseSettings"
                 >
                     <MudIcon
-                        Icon="@BurizaIcons.FavoriteSymbolIcon"
+                        Icon="@BurizaIcons.DappSymbolIcon"
                         Size="Size.Medium" 
                     />
-                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Manage</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">DApp</span>
                 </MudLink>
 
                 @*right*@
                 <MudLink 
-                    Href="/"
+                    Href="/settings"
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "translate-x-[36px] -translate-y-[12px] opacity-100 delay-250" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="CloseSettings"
                 >
@@ -105,7 +105,7 @@
         @*Manage*@
         <MudLink 
             Href="/manage"
-            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.StakingSymbolIcon" 
@@ -117,12 +117,3 @@
     </header>
     <MudOverlay Visible="isSettingsVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="CloseSettings"/>
 </div>
-
-@* <div>
-    <MudIcon 
-        Icon="@BurizaIcons.SettingsSymbolIcon"
-        Size="Size.Medium" 
-        Class=""
-    />
-    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
-</div> *@
