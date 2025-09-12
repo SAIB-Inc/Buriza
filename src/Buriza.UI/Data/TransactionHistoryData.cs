@@ -17,9 +17,9 @@ public static class TransactionHistoryData
                 ToAddress: "addr1q...17xpubmzsrqt9jp",
                 Type: TransactionType.Sent,
                 Assets: [
-                    new TransactionAsset(Tokens.Ada, "ADA", -212.28m, 199.02m),
-                    new TransactionAsset(Tokens.Angel, "ANGEL", -45.75m, 18.30m),
-                    new TransactionAsset(Tokens.Snek, "SNEK", -1200.50m, 89.15m)
+                    new TransactionAsset(Tokens.Ada, "ADA", -212.28m, 192.57m),
+                    new TransactionAsset(Tokens.Strike, "STRIKE", -15.50m, 25.74m),
+                    new TransactionAsset(Tokens.Meld, "MELD", -850.20m, 7.11m)
                 ],
                 CollateralAda: 433.00m,
                 TransactionFeeAda: 0.034m
@@ -32,9 +32,9 @@ public static class TransactionHistoryData
                 ToAddress: "addr1q...8r7z4lgcqrqt9uu",
                 Type: TransactionType.Received,
                 Assets: [
-                    new TransactionAsset(Tokens.Snek, "SNEK", 1500.00m, 245.80m),
-                    new TransactionAsset(Tokens.Hosky, "HOSKY", 8500.00m, 125.75m),
-                    new TransactionAsset(Tokens.Ada, "ADA", 75.25m, 70.50m)
+                    new TransactionAsset(Tokens.Usdc, "USDC", 1500.00m, 1504.50m),
+                    new TransactionAsset(Tokens.Djed, "DJED", 850.75m, 858.61m),
+                    new TransactionAsset(Tokens.Ada, "ADA", 75.25m, 68.22m)
                 ],
                 CollateralAda: 0m,
                 TransactionFeeAda: 0.021m
@@ -47,9 +47,9 @@ public static class TransactionHistoryData
                 ToAddress: "addr1q...9k2m5ngcqrqt7qq",
                 Type: TransactionType.Sent,
                 Assets: [
-                    new TransactionAsset(Tokens.Angel, "ANGEL", -85.50m, 32.15m),
-                    new TransactionAsset(Tokens.Dexhunter, "DEXHUNTER", -250.80m, 145.60m),
-                    new TransactionAsset(Tokens.Paylkoyn, "PAYLKOYN", -420.30m, 68.45m)
+                    new TransactionAsset(Tokens.Sundae, "SUNDAE", -485.50m, 2.49m),
+                    new TransactionAsset(Tokens.Crawju, "CRAWJU", -1250.80m, 1.93m),
+                    new TransactionAsset(Tokens.Nado, "NADO", -420.30m, 2.95m)
                 ],
                 CollateralAda: 125.00m,
                 TransactionFeeAda: 0.028m
@@ -62,9 +62,9 @@ public static class TransactionHistoryData
                 ToAddress: "addr1q...8r7z4lgcqrqt9uu",
                 Type: TransactionType.Received,
                 Assets: [
-                    new TransactionAsset(Tokens.Hosky, "HOSKY", 25000.00m, 450.75m),
-                    new TransactionAsset(Tokens.Ada, "ADA", 125.80m, 118.25m),
-                    new TransactionAsset(Tokens.Angel, "ANGEL", 95.45m, 38.75m)
+                    new TransactionAsset(Tokens.Wmt, "WMT", 1850.00m, 462.50m),
+                    new TransactionAsset(Tokens.Ada, "ADA", 125.80m, 114.05m),
+                    new TransactionAsset(Tokens.Iusd, "IUSD", 95.45m, 95.61m)
                 ],
                 CollateralAda: 0m,
                 TransactionFeeAda: 0.019m
@@ -77,9 +77,9 @@ public static class TransactionHistoryData
                 ToAddress: "addr1q...3v7x9ygcqrqt4nn",
                 Type: TransactionType.Sent,
                 Assets: [
-                    new TransactionAsset(Tokens.Dexhunter, "DEXHUNTER", -120.75m, 89.45m),
-                    new TransactionAsset(Tokens.Ada, "ADA", -50.00m, 47.50m),
-                    new TransactionAsset(Tokens.Snek, "SNEK", -750.20m, 55.80m)
+                    new TransactionAsset(Tokens.Dexhunter, "DEXHUNTER", -120.75m, 0.14m),
+                    new TransactionAsset(Tokens.Ada, "ADA", -50.00m, 45.33m),
+                    new TransactionAsset(Tokens.Snek, "SNEK", -750.20m, 3.55m)
                 ],
                 CollateralAda: 200.00m,
                 TransactionFeeAda: 0.042m
@@ -92,9 +92,9 @@ public static class TransactionHistoryData
                 ToAddress: "addr1q...8r7z4lgcqrqt9uu", 
                 Type: TransactionType.Received,
                 Assets: [
-                    new TransactionAsset(Tokens.Paylkoyn, "PAYLKOYN", 850.30m, 125.80m),
-                    new TransactionAsset(Tokens.Angel, "ANGEL", 65.75m, 25.90m),
-                    new TransactionAsset(Tokens.Hosky, "HOSKY", 12500.00m, 225.45m)
+                    new TransactionAsset(Tokens.Paylkoyn, "PAYLKOYN", 850.30m, 3.83m),
+                    new TransactionAsset(Tokens.Angel, "ANGEL", 65.75m, 174.49m),
+                    new TransactionAsset(Tokens.Hosky, "HOSKY", 12500000.00m, 79.13m)
                 ],
                 CollateralAda: 0m,
                 TransactionFeeAda: 0.016m

@@ -44,13 +44,13 @@
             Src="@(PricePercentage >= 0 ? Misc.GraphPositive : Misc.GraphNegative)"
         />
     </div>
-    <div class="!mt-1 xl:w-[76px]">
+    <div class="!mt-1 xl:w-[76px] flex flex-col items-end justify-center">
         @if (AssetType == AssetType.Token)
         {
             <MudText Class="!font-semibold !leading-[20px] !w-full !text-end">
                 @AssetAmount
             </MudText>
-            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-full !text-end">
+            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
                ≈ $@UsdConversion
             </MudText>
         }

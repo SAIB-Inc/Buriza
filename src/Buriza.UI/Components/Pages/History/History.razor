@@ -108,7 +108,7 @@
                                                             </MudText>
                                                         </div>
                                                     </div>
-                                                    <div>
+                                                    <div class="flex flex-col items-end justify-center">
                                                         <MudText Class="@($"!text-sm !font-semibold !text-end {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
                                                             @GetAmountDisplay(asset.Amount, transaction.Type)
                                                         </MudText>

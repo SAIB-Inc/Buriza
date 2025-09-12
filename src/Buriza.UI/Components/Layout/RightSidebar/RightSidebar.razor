@@ -184,7 +184,7 @@
                                                         </MudText>
                                                     </div>
                                                 </div>
-                                                <div>
+                                                <div class="flex flex-col items-end justify-center w-full">
                                                     <MudText Class="@($"!text-sm !font-semibold !text-end {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
                                                         @(transaction.Type == TransactionType.Sent ? "-" : "+")@Math.Abs(asset.Amount).ToString("F2")
                                                     </MudText>

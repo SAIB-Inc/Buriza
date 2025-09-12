@@ -1,6 +1,9 @@
 @using Buriza.UI.Components.Common
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
+@using Buriza.UI.Data
+@using Buriza.Data.Models.Common
+@using Buriza.Data.Models.Enums
 
 @namespace Buriza.UI.Components.Layout
 
@@ -8,6 +11,7 @@
     <div class="w-full">
         <BurizaTabs
             Class="!w-full [&_.mud-tab-active]:!bg-transparent !text-[var(--mud-palette-text-primary)] [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+            @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
         >
             <MudTabPanel 
                 Text="Token" 
@@ -24,15 +28,35 @@
         </BurizaTabs>
     </div>
     <div class="!space-y-2 h-full max-h-[calc(100vh-208px)] w-full overflow-y-auto !rounded-[12px]">
-        @for(int i=0; i < 15; i++)
+        @if(AppStateService.SelectedAssetType == AssetType.Token)
         {
-            <BurizaAssetCard
-                AssetIcon="@Tokens.Ada"
-                AssetName="ADA"
-                PricePercentage="12.18f"
-                AssetAmount="123.21f"
-                UsdConversion="152.31f"
-            />
+            @foreach (TokenAsset asset in TokenAssets)
+            {
+                <BurizaAssetCard
+                    AssetIcon="@asset.AssetIcon"
+                    AssetName="@asset.AssetName"
+                    PricePercentage="@asset.PricePercentage"
+                    AssetAmount="@asset.AssetAmount"
+                    UsdConversion="@asset.UsdConversion"
+                    Class="md:[&_.asset-icon]:!w-[44px] md:[&_.asset-icon]:!h-[44px]"
+                />
+            }
+        }
+        else
+        {
+            @foreach (NftAsset nft in NftAssets)
+            {
+                <BurizaAssetCard
+                    AssetIcon="@nft.AssetIcon"
+                    AssetName="@nft.AssetName"
+                    PricePercentage="@nft.PricePercentage"
+                    AssetAmount="@nft.AssetAmount"
+                    UsdConversion="@nft.UsdConversion"
+                    AssetType="AssetType.NFT"
+                    CollectionName="@nft.CollectionName"
+                    Class="md:[&_.asset-icon]:!w-[44px] md:[&_.asset-icon]:!h-[44px]"
+                />
+            }
         }
     </div>
 </div>
