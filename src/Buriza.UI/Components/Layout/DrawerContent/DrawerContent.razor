@@ -1,0 +1,41 @@
+@using Buriza.UI.Services
+@namespace Buriza.UI.Components.Layout
+
+@switch (AppStateService.CurrentDrawerContent)
+{
+    case DrawerContentType.Summary:
+        <SummarySection />
+        break;
+        
+    case DrawerContentType.AuthorizeDapp:
+        <AuthorizeDappSection />
+        break;
+        
+    case DrawerContentType.Receive:
+        <ReceiveSection />
+        break;
+        
+    case DrawerContentType.Send:
+        <SendSection />
+        break;
+        
+    case DrawerContentType.SelectAsset:
+        <SelectAssetSection />
+        break;
+        
+    case DrawerContentType.TransactionStatus:
+        <TransactionStatusSection />
+        break;
+        
+    case DrawerContentType.Settings:
+        @*<SettingsSection />*@
+        break;
+        
+    case DrawerContentType.Manage:
+        @*<ManageSection />*@
+        break;
+        
+    default:
+        <div></div>
+        break;
+}
