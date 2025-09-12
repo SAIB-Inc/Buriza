@@ -137,13 +137,27 @@
         </div>
     }
     <div class="w-full">
-        <BurizaButton
-            Variant="Variant.Filled"
-            Color="Color.Primary"
-            Class="!w-full"
-            Href="/onboard"
-        >
-            @(IsAccountFormVisible ? (IsEditMode ? "Save Changes" : "Create New Account") : "Add Wallet")
-        </BurizaButton>
+        @if (IsAccountFormVisible)
+        {
+            <BurizaButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                Class="!w-full"
+            >
+                @(IsEditMode ? "Save Changes" : "Create New Account")
+            </BurizaButton>
+        }
+        else
+        {
+            <BurizaButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                Class="!w-full"
+                Href="/onboard"
+                OnClick="HandleAddWalletClick"
+            >
+                Add Wallet
+            </BurizaButton>
+        }
     </div>
 </div>

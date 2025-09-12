@@ -59,6 +59,11 @@ public partial class ManageSection : ComponentBase, IDisposable
         OnManageStateChanged?.Invoke();
     }
     
+    protected void HandleAddWalletClick()
+    {
+        AppStateService.IsFilterDrawerOpen = false;
+    }
+    
     private void SyncFromStaticState()
     {
         IsAccountFormVisible = IsManageAccountFormVisible;
