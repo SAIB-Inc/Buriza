@@ -1,0 +1,149 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="!mt-[10px] relative h-full !px-4 !pb-8 flex flex-col justify-between items-center">
+    @if(IsAccountFormVisible)
+    {
+        <div class="w-full !rounded-[12px] !bg-[var(--mud-palette-dark-darken)] !p-4 flex items-center justify-between shadow-[var(--mud-elevation-2)]">
+            <div class="flex items-center !gap-3">
+                <div class="relative">
+                    <div>
+                        <MudImage
+                            Alt="Avatar"
+                            Src="@Misc.Avatar"
+                            Class="!w-[46px] aspect-square !rounded-full"
+                        />
+                    </div>
+                    @if(IsEditMode)
+                    {
+                        <div class="absolute -right-1 -bottom-1 !p-1 rounded-full !bg-[var(--mud-palette-dark-darken)] flex items-center justify-center">
+                            <MudIconButton
+                                Icon="@BurizaIcons.CameraSymbolIcon"
+                                Class="!p-0 !bg-[var(--mud-palette-primary-lighten)] !text-[var(--mud-palette-background)] !rounded-full !size-[16px] [&_.mud-icon-root]:!text-[16px]"
+                                OnClick="ShowEditWallet"
+                            />
+                        </div>
+                    }
+                </div>
+                <div>
+                    <MudText Class="!font-medium !text-[var(--mud-palette-text-primary)]">
+                        WalletName1
+                    </MudText>
+                </div>
+            </div>
+            <div>
+                <MudIconButton
+                    Icon="@Icons.Material.Outlined.Edit"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    OnClick="ShowEditWallet"
+                />
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="!space-y-3 w-full h-[calc(100vh-200px)] overflow-y-auto">
+            @for(int j=0; j < 6; j++)
+            {
+                int walletIndex = j;
+                <div class="@($"w-full !rounded-[12px] {(WalletExpandedStates[walletIndex] ? "!bg-[var(--mud-palette-dark-darken)] shadow-[var(--mud-elevation-2)]" : "!bg-[var(--mud-palette-background-gray)] border border-[var(--mud-palette-table-lines)]")}")">
+                    <div 
+                        class="max-[376px]:!p-[13px] !p-4 cursor-pointer" 
+                        @onclick="() => ToggleWallet(walletIndex)"
+                    >
+                        <div class="w-full flex items-center justify-between">
+                            <div class="flex items-center !gap-3">
+                                <div class="relative">
+                                    <div>
+                                        <MudImage
+                                            Alt="Avatar"
+                                            Src="@Misc.Avatar"
+                                            Class="!w-[46px] aspect-square !rounded-full"
+                                        />
+                                    </div>
+                                    <div class="absolute -right-1 -bottom-1 !p-1 rounded-full !bg-[var(--mud-palette-dark-darken)] flex items-center justify-center">
+                                        <MudIconButton
+                                            Icon="@Icons.Material.Outlined.Edit"
+                                            Class="!p-0 !bg-[var(--mud-palette-primary-lighten)] !text-[var(--mud-palette-background)] !rounded-full !size-[16px] [&_.mud-icon-root]:!text-[10px]"
+                                            OnClick="ShowEditWallet"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <MudText Class="!font-medium !text-[var(--mud-palette-text-primary)]">
+                                        WalletName@(walletIndex + 1)
+                                    </MudText>
+                                </div>
+                            </div>
+                            <div>
+                                <MudIcon
+                                    Icon="@BurizaIcons.ChevronLeftIcon"
+                                    Class="@($"!transition-transform !duration-300 ease-out {(WalletExpandedStates[walletIndex] ? "rotate-90" : "")}")"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="@($"wallet-content {(WalletExpandedStates[walletIndex] ? "expanded" : "collapsed")}")">
+                        <div class="border-t border-[var(--mud-palette-divider)]">
+                            <div class="max-[376px]:!space-y-2 !space-y-3 !px-4 !pt-4 !pb-4">
+                                @for(int i=0; i<3; i++)
+                                {
+                                    int accountIndex = (walletIndex * 3) + i;
+                                    <div class="max-[376px]:!p-[13px] !rounded-[8px] flex items-center justify-between !p-4 bg-[var(--mud-palette-gray-default)]">
+                                        <div class="flex items-center !gap-3">
+                                            <div>
+                                                <MudImage
+                                                    Alt="Avatar"
+                                                    Src="@Misc.Avatar"
+                                                    Class="max-[376px]:!w-[36px] !w-[46px] aspect-square !rounded-full"
+                                                />
+                                            </div>
+                                            <div>
+                                                <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-xs !font-medium">
+                                                    Account0@(i+1)
+                                                </MudText>
+                                                <MudText Class="!font-semibold !text-sm !text-[var(--mud-palette-text-primary)]">
+                                                    m/1852'/1815'/@(i+1)'
+                                                </MudText>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <MudSwitch
+                                                @bind-Value="AccountStates[accountIndex]"
+                                                T="bool"
+                                                Color="Color.Primary"
+                                                Class="@($"!transition-all !duration-150 {(AccountStates[accountIndex] ? "!bg-[var(--mud-palette-primary)] [&_.mud-switch-button]:!text-[var(--mud-palette-white)]" : "!bg-[var(--mud-palette-gray-default)] [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)]")} !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!w-[52px] [&_.mud-switch-span]:!h-[32px] [&_.mud-switch-track]:!bg-transparent")"
+                                            />
+                                        </div>
+                                    </div>
+                                }
+                                <div class="max-[376px]:!mt-3 w-full flex items-center justify-center !mt-5">
+                                    <BurizaButton
+                                        Ripple="false"
+                                        Class="text-[var(--mud-palette-primary-lighten)]! !bg-transparent w-max!"
+                                        OnClick="ShowAddAccount"
+                                    >
+                                        + Add New Account
+                                    </BurizaButton>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    <div class="w-full">
+        <BurizaButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Class="!w-full"
+            Href="/onboard"
+        >
+            @(IsAccountFormVisible ? (IsEditMode ? "Save Changes" : "Create New Account") : "Add Wallet")
+        </BurizaButton>
+    </div>
+</div>
