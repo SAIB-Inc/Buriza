@@ -5,6 +5,14 @@
 @namespace Buriza.UI.Components.Pages
 
 <section class="max-md:h-screen h-[calc(100vh-24px)]">
+    <div class="max-[376px]:fixed max-[376px]:top-[3px] max-[376px]:right-2">
+        <MudIconButton
+            Icon="@BurizaIcons.FullscreenSymbolIcon"
+            Class="max-[376px]:!block !hidden !px-2 [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
+        >
+        </MudIconButton>
+    </div>
+
     <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-3 !gap-20 sm:!gap-26 sm:justify-between">
         <div class="max-lg:!hidden absolute bottom-0 right-0">
             <MudImage
