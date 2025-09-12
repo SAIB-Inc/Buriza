@@ -12,6 +12,7 @@ public enum DrawerContentType
     SelectAsset,    // select asset from send section
     TransactionStatus, // transaction success/status
     Settings,       // button click
+    NodeSettings,   // node settings from settings section
     Manage          // button click
 }
 
