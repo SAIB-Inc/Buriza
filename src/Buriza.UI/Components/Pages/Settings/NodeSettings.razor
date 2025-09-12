@@ -18,7 +18,7 @@
                 <MudText Class="!text-[22px] !font-medium">Custom Node</MudText>
             </div>
             <div>
-                <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px] !mr-4"></MudImage>
+                <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px]"></MudImage>
             </div>
         </div>
 
@@ -28,6 +28,22 @@
                 <MudLink Href="https://utxorpc.org/">https://utxorpc.org/</MudLink>.</MudText>
                 <BurizaTextField Placeholder="Input a URL..." Class="mb-3" />
                 <BurizaTextField Placeholder="Input API Key..." Class="mb-3" />
+
+                <div class="max-[376px]:flex hidden w-full items-center justify-between !mt-6">
+                    <div>
+                        <MudText>
+                            Full Node
+                        </MudText>
+                    </div>
+                    <div>
+                        <MudSwitch
+                            @bind-Value="IsFullNode"
+                            T="bool"
+                            Color="Color.Primary"
+                            Class="@($"!transition-all !duration-150 {(IsFullNode ? "!bg-[var(--mud-palette-primary)] [&_.mud-switch-button]:!text-[var(--mud-palette-white)]" : "!bg-[var(--mud-palette-gray-default)] [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)]")} !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!w-[52px] [&_.mud-switch-span]:!h-[32px] [&_.mud-switch-track]:!bg-transparent")"
+                        />
+                    </div>
+                </div>
             </div>
             <div>
                 <BurizaButton
