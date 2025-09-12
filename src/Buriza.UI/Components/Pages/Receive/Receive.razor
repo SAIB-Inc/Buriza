@@ -1,6 +1,7 @@
 @using Buriza.UI.Components.Common
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
+@using Buriza.Data.Models.Enums
 
 @page "/receive"
 
@@ -139,13 +140,13 @@
                                     <MudIcon Icon="@GetChipIcon(account.Status)" Class="!w-3 !h-3 !mr-1" />
                                     @switch (account.Status)
                                     {
-                                        case AccountStatus.Used:
+                                        case AccountStatusType.Used:
                                             <MudText Class="!text-[8px] !font-semibold">Used</MudText>
                                             break;
-                                        case AccountStatus.Unused:
+                                        case AccountStatusType.Unused:
                                             <MudText Class="!text-[8px] !font-semibold">Unused</MudText>
                                             break;
-                                        case AccountStatus.Balance:
+                                        case AccountStatusType.Balance:
                                             <MudText Class="!text-[8px] !font-semibold">@account.Balance.ToString("")</MudText>
                                             break;
                                     }

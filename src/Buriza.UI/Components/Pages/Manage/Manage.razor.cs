@@ -1,11 +1,20 @@
+using Buriza.UI.Data;
+using Buriza.Data.Models.Common;
+
 namespace Buriza.UI.Components.Pages;
 
 public partial class Manage
 {
     protected bool IsAccountFormVisible { get; set; }
     protected bool IsEditMode { get; set; }
-    protected bool[] AccountStates { get; set; } = new bool[9];
-    protected bool[] WalletExpandedStates { get; set; } = new bool[3];
+    
+    protected List<Wallet> wallets = WalletData.GetDummyWallets();
+    protected bool[] WalletExpandedStates = new bool[3];
+    
+    protected override void OnInitialized()
+    {
+        wallets = WalletData.GetDummyWallets();
+    }
     
     protected void ShowAddAccount()
     {
@@ -28,5 +37,6 @@ public partial class Manage
     protected void ToggleWallet(int walletIndex)
     {
         WalletExpandedStates[walletIndex] = !WalletExpandedStates[walletIndex];
+        StateHasChanged();
     }
 }

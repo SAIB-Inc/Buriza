@@ -1,3 +1,5 @@
+using Buriza.Data.Models.Enums;
+
 namespace Buriza.UI.Services;
 
 //transfer to Buriza.Data
@@ -34,6 +36,20 @@ public class AppStateService
         }
     }
 
+    private AssetType _selectedAssetType = AssetType.Token;
+    public AssetType SelectedAssetType
+    {
+        get => _selectedAssetType;
+        set
+        {
+            if (_selectedAssetType != value)
+            {
+                _selectedAssetType = value;
+                NotifyChanged();
+            }
+        }
+    }
+    
     private bool _isSidebarOpen = false;
     public bool IsSidebarOpen
     {
@@ -48,6 +64,19 @@ public class AppStateService
         }
     }
 
+    public int SelectedAssetTypeIndex
+    {
+        get => (int)_selectedAssetType;
+        set
+        {
+            if ((int)_selectedAssetType != value)
+            {
+                _selectedAssetType = (AssetType)value;
+                NotifyChanged();
+            }
+        }
+    }
+    
     private bool _isFilterDrawerOpen = false;
     public bool IsFilterDrawerOpen
     {
