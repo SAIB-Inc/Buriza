@@ -50,7 +50,7 @@
 
                 @*top*@
                 <MudLink
-                    Href="/dapp" 
+                    Href="/" 
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-1/2 -translate-y-[68px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="CloseSettings"
                 >
@@ -115,5 +115,5 @@
             <span class="@GetSpanClass("/manage")">Manage</span>
         </MudLink>
     </header>
-    <MudOverlay Visible="isSettingsVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="CloseSettings"/>
+    <MudOverlay ZIndex="100" Visible="isSettingsVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="CloseSettings"/>
 </div>
