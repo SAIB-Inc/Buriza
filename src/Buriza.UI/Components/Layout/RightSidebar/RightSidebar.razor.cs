@@ -38,6 +38,11 @@ public partial class RightSidebar : ComponentBase, IDisposable
         AppStateService.SetDrawerContent(Receive);
     }
 
+    protected void OpenManageDrawer()
+    {
+        AppStateService.SetDrawerContent(Manage);
+    }
+
     protected override void OnInitialized()
     {
         Navigation.LocationChanged += OnLocationChanged;

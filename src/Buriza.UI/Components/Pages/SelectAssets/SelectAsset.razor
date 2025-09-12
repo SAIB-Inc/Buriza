@@ -46,7 +46,7 @@
                 />
             </BurizaTabs>
         </div>
-        <div class="!space-y-2 h-full max-h-[calc(100%-140px)] !pb-11 w-full overflow-y-auto !rounded-[12px] !px-4">
+        <div class="max-[376px]:min-h-[calc(100%-200px)] !space-y-2 h-full max-h-[calc(100%-140px)] !pb-9 w-full overflow-y-auto !rounded-[12px]">
             @if (AppStateService.SelectedAssetType == AssetType.Token)
             {
                 @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
