@@ -6,6 +6,5 @@ namespace Buriza.UI.Components.Pages;
 
 public partial class NodeSettings
 {
-    [Inject]
-    public required AppStateService AppStateService { get; set; }
+    protected bool IsFullNode { get; set; }
 }
