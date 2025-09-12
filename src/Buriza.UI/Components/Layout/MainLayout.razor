@@ -114,9 +114,9 @@
                             <MudNavLink 
                                 Match="NavLinkMatch.All" 
                                 Icon="@BurizaIcons.SettingsSymbolIcon" 
-                                Href="/settings"
                                 Class="@($"[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-nav-link-text]:transition-opacity [&_.mud-nav-link-text]:duration-300 [&_.mud-nav-link-text]:whitespace-nowrap [&_.mud-nav-link-text]:{(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
                                 ActiveClass="[&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]! !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)]"
+                                OnClick="@HandleSettingsClick"
                             >
                                 Settings
                             </MudNavLink>
@@ -197,6 +197,12 @@
                         Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                         OnClick="@HandleAddRecipient"
                     />
+                }
+                else if (AppStateService.CurrentDrawerContent == Settings || AppStateService.CurrentDrawerContent == NodeSettings)
+                {
+                    <div>
+                        <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px] !ml-4"></MudImage>
+                    </div>
                 }
                 else if (AppStateService.CurrentDrawerContent == Receive)
                 {

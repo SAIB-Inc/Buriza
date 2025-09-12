@@ -27,6 +27,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         SelectAsset => "Select Assets",
         TransactionStatus => "Transaction Sent",
         Settings => "Settings",
+        NodeSettings => "Node Settings",
         Manage => "Manage",
         _ => "Details"
     };
@@ -49,6 +50,10 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             OnResetSendConfirmation?.Invoke();
         }
+        else if (AppStateService.CurrentDrawerContent == NodeSettings)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
         else if (AppStateService.CurrentDrawerContent == Receive && IsReceiveAdvancedMode)
         {
             SetReceiveAdvancedMode(false);
@@ -64,6 +69,10 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         OnAddRecipient?.Invoke();
     }
 
+    protected void HandleSettingsClick()
+    {
+        AppStateService.SetDrawerContent(Settings);
+    }
     protected void HandleReceiveClick()
     {
         AppStateService.SetDrawerContent(Receive);
