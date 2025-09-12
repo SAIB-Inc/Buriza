@@ -23,7 +23,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         Summary => "Sent",
         AuthorizeDapp => "Authorize App",
         Receive => "Receive",
-        Send => "Send Assets",
+        Send => IsSendConfirmed ? "Summary" : "Send Assets",
         SelectAsset => "Select Assets",
         TransactionStatus => "Transaction Sent",
         Settings => "Settings",
@@ -31,19 +31,46 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         _ => "Details"
     };
 
+    public static bool IsSendConfirmed { get; set; } = false;
+
     protected void ToggleSidebar()
     {
         AppStateService.IsSidebarOpen = !AppStateService.IsSidebarOpen;
     }
 
+    protected void HandleBackNavigation()
+    {
+        if (AppStateService.CurrentDrawerContent == SelectAsset)
+        {
+            AppStateService.SetDrawerContent(Send);
+            OnResetSendConfirmation?.Invoke();
+        }
+        else if (AppStateService.CurrentDrawerContent == Send)
+        {
+            OnResetSendConfirmation?.Invoke();
+        }
+        else
+        {
+            AppStateService.IsFilterDrawerOpen = false;
+        }
+    }
+
     protected void HandleAddRecipient()
     {
-        // Event to communicate with SendSection
         OnAddRecipient?.Invoke();
     }
 
-    // Event to communicate with SendSection
     public static Action? OnAddRecipient { get; set; }
+    public static Action? OnResetSendConfirmation { get; set; }
+    
+    public static void SetSendConfirmed(bool confirmed)
+    {
+        IsSendConfirmed = confirmed;
+        // Trigger UI refresh for all MainLayout instances
+        OnSendConfirmationChanged?.Invoke();
+    }
+    
+    public static Action? OnSendConfirmationChanged { get; set; }
 
     public static MudTheme BurizaTheme => new()
     {
@@ -129,8 +156,8 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         AppStateService.OnChanged += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
+        OnSendConfirmationChanged += StateHasChanged;
         
-        // Set initial drawer content based on current route
         SetDrawerContentForCurrentRoute();
     }
 
@@ -160,5 +187,6 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         AppStateService.OnChanged -= StateHasChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+        OnSendConfirmationChanged -= StateHasChanged;
     }
 }

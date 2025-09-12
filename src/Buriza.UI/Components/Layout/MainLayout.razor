@@ -183,14 +183,14 @@
                 <MudIconButton
                     Icon="@BurizaIcons.ChevronRightIcon"
                     Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                    OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
+                    OnClick="@HandleBackNavigation"
                 />
                 <MudText Class="!text-[22px] !font-medium !text-[var(--mud-palette-text-primary)]">
                     @DrawerTitle
                 </MudText>
             </div>
             <div>
-                @if (AppStateService.CurrentDrawerContent == Send)
+                @if (AppStateService.CurrentDrawerContent == Send && !IsSendConfirmed)
                 {
                     <MudIconButton
                         Icon="@BurizaIcons.AddSymbolIcon"
@@ -198,7 +198,7 @@
                         OnClick="@HandleAddRecipient"
                     />
                 }
-                else
+                else if (AppStateService.CurrentDrawerContent != Send || !IsSendConfirmed)
                 {
                     <MudIconButton
                         Icon="@BurizaIcons.CloseSymbolIcon"
