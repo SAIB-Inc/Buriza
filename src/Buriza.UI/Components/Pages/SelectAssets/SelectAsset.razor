@@ -1,14 +1,17 @@
 @using Buriza.UI.Components.Common
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
+@using Buriza.UI.Data
+@using Buriza.Data.Models.Common
+@using Buriza.Data.Models.Enums
 
 @page "/selectasset"
 
 @namespace Buriza.UI.Components.Pages
 
 <section class="min-h-[600px] h-screen">
-    <div class="max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 container mx-auto h-full w-full flex flex-col items-center !px-4 !pb-8 !pt-16 !gap-3 lg:max-w-[430px]">
-        <div class="w-full flex items-center justify-between">
+    <div class="max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 container mx-auto h-full w-full flex flex-col items-center !pb-8 !pt-16 !gap-3 lg:max-w-[430px]">
+        <div class="w-full flex items-center justify-between !px-4">
             <div class="flex items-center !gap-2">
                 <div>
                     <MudIconButton
@@ -23,16 +26,11 @@
                     </MudText>
                 </div>
             </div>
-            <div class="flex items-center !gap-5">
-                <MudIconButton
-                    Icon="@BurizaIcons.AddSymbolIcon"
-                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                />
-            </div>
         </div>
-        <div class="w-full">
+        <div class="w-full !px-4">
             <BurizaTabs
                 Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+                @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
             >
                 <MudTabPanel 
                     Text="Token" 
@@ -48,16 +46,34 @@
                 />
             </BurizaTabs>
         </div>
-        <div class="!space-y-2 h-full max-h-[calc(100%-140px)] !pb-11 w-full overflow-y-auto !rounded-[12px]">
-            @for(int i=0; i < 15; i++)
+        <div class="max-[376px]:min-h-[calc(100%-200px)] !space-y-2 h-full max-h-[calc(100%-140px)] !pb-9 w-full overflow-y-auto !rounded-[12px]">
+            @if (AppStateService.SelectedAssetType == AssetType.Token)
             {
-                <BurizaAssetCard
-                    AssetIcon="@Tokens.Ada"
-                    AssetName="ADA"
-                    PricePercentage="12.18f"
-                    AssetAmount="123.21f"
-                    UsdConversion="152.31f"
-                />
+                @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
+                {
+                    <BurizaAssetCard
+                        AssetIcon="@tokenAsset.AssetIcon"
+                        AssetName="@tokenAsset.AssetName"
+                        PricePercentage="@tokenAsset.PricePercentage"
+                        AssetAmount="@tokenAsset.AssetAmount"
+                        UsdConversion="@tokenAsset.UsdConversion"
+                    />
+                }
+            }
+            else
+            {
+                @foreach(NftAsset nftAsset in NftAssetData.GetDummyNftAssets())
+                {
+                    <BurizaAssetCard
+                        AssetIcon="@nftAsset.AssetIcon"
+                        AssetName="@nftAsset.AssetName"
+                        PricePercentage="@nftAsset.PricePercentage"
+                        AssetAmount="@nftAsset.AssetAmount"
+                        UsdConversion="@nftAsset.UsdConversion"
+                        AssetType="AssetType.NFT"
+                        CollectionName="@nftAsset.CollectionName"
+                    />
+                }
             }
         </div>
     </div>

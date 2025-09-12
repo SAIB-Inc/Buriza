@@ -1,6 +1,7 @@
 @using Buriza.UI.Components.Common
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
+@using Buriza.Data.Models.Common
 
 @page "/send"
 
@@ -34,8 +35,8 @@
                 </div>
             }
         </div>
-        <div class="!mt-5 w-full overflow-y-auto h-[calc(100%-170px)] !space-y-4 !px-4 !pb-12">
-            @foreach (var recipient in recipients)
+        <div class="max-[376px]:min-h-[calc(100vh-200px)] max-[376px]:!pb-4 !mt-5 w-full overflow-y-auto h-[calc(100%-170px)] !space-y-4 !px-4 !pb-12">
+            @foreach (Recipient recipient in recipients)
             {
                 <MudCard
                     Class="!w-full !bg-[var(--mud-palette-background-gray)] !rounded-[12px] !p-4 !gap-4 !shadow-[var(--mud-elevation-2)]"
@@ -84,7 +85,7 @@
                             />
                             <MudIconButton
                                 Icon="@BurizaIcons.QrScannerIcon"
-                                Class="!p-0"
+                                Class="max-[376px]:!hidden !p-0 block"
                             />
                         </div>
                     </div>
@@ -283,7 +284,7 @@
                 </MudCard>
             }
         </div>
-        <div class="w-[calc(100%-32px)] fixed bottom-30 z-20 lg:max-w-[430px]">
+        <div class="max-[376px]:!bottom-[84px] w-[calc(100%-32px)] fixed bottom-30 z-20 lg:max-w-[430px]">
             <BurizaButton
                 Variant="Variant.Filled"
                 Color="Color.Primary"

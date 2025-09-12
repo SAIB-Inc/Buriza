@@ -2,10 +2,11 @@ using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using MudBlazor;
+using static Buriza.UI.Services.DrawerContentType;
 
 namespace Buriza.UI.Components.Layout;
 
-public partial class MainLayout : IDisposable
+public partial class MainLayout : LayoutComponentBase, IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
@@ -17,18 +18,97 @@ public partial class MainLayout : IDisposable
                                    Navigation.Uri.Contains("/onboard") ||
                                    Navigation.Uri.Contains("/splash");
 
-    protected string SidebarTitle => Navigation.Uri.Contains("/history") ? "Portfolio" : "History";
-    protected bool ShowTabs => Navigation.Uri.Contains("/history");
+    protected string DrawerTitle => AppStateService.CurrentDrawerContent switch
+    {
+        Summary => "Sent",
+        AuthorizeDapp => "Authorize App",
+        Receive => IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
+        Send => IsSendConfirmed ? "Summary" : "Send Assets",
+        SelectAsset => "Select Assets",
+        TransactionStatus => "Transaction Sent",
+        Settings => "Settings",
+        NodeSettings => "Node Settings",
+        Manage => ManageSection.IsManageAccountFormVisible 
+            ? (ManageSection.IsManageEditMode ? "Edit Wallet" : "New Account")
+            : "Manage",
+        _ => "Details"
+    };
+
+    public static bool IsSendConfirmed { get; set; } = false;
 
     protected void ToggleSidebar()
     {
         AppStateService.IsSidebarOpen = !AppStateService.IsSidebarOpen;
     }
 
-    protected void ToggleTheme()
+    protected void HandleBackNavigation()
     {
-        AppStateService.IsDarkMode = !AppStateService.IsDarkMode;
+        if (AppStateService.CurrentDrawerContent == SelectAsset)
+        {
+            AppStateService.SetDrawerContent(Send);
+            OnResetSendConfirmation?.Invoke();
+        }
+        else if (AppStateService.CurrentDrawerContent == Send)
+        {
+            OnResetSendConfirmation?.Invoke();
+        }
+        else if (AppStateService.CurrentDrawerContent == NodeSettings)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == Receive && IsReceiveAdvancedMode)
+        {
+            SetReceiveAdvancedMode(false);
+        }
+        else if (AppStateService.CurrentDrawerContent == Manage && ManageSection.IsManageAccountFormVisible)
+        {
+            ManageSection.HideAccountForm();
+        }
+        else
+        {
+            AppStateService.IsFilterDrawerOpen = false;
+        }
     }
+
+    protected void HandleAddRecipient()
+    {
+        OnAddRecipient?.Invoke();
+    }
+
+    protected void HandleSettingsClick()
+    {
+        AppStateService.SetDrawerContent(Settings);
+    }
+    protected void HandleReceiveClick()
+    {
+        AppStateService.SetDrawerContent(Receive);
+    }
+
+    protected void HandleAdvancedModeToggle()
+    {
+        SetReceiveAdvancedMode(!IsReceiveAdvancedMode);
+    }
+
+    public static bool IsReceiveAdvancedMode { get; private set; } = false;
+    public static Action? OnReceiveAdvancedModeChanged { get; set; }
+    
+    public static void SetReceiveAdvancedMode(bool isAdvanced)
+    {
+        IsReceiveAdvancedMode = isAdvanced;
+        OnReceiveAdvancedModeChanged?.Invoke();
+    }
+
+    public static Action? OnAddRecipient { get; set; }
+    public static Action? OnResetSendConfirmation { get; set; }
+    
+    public static void SetSendConfirmed(bool confirmed)
+    {
+        IsSendConfirmed = confirmed;
+        // Trigger UI refresh for all MainLayout instances
+        OnSendConfirmationChanged?.Invoke();
+    }
+    
+    public static Action? OnSendConfirmationChanged { get; set; }
 
     public static MudTheme BurizaTheme => new()
     {
@@ -44,6 +124,7 @@ public partial class MainLayout : IDisposable
         {
             Background = "#10131B",
             BackgroundGray = "#0B0E15",
+            OverlayDark = "#000000",
             AppbarBackground = "#0E0E0E",
             PrimaryLighten = "#AEC6FF",
             Primary = "#4F8EFF",
@@ -114,16 +195,41 @@ public partial class MainLayout : IDisposable
     {
         AppStateService.OnChanged += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
+        OnSendConfirmationChanged += StateHasChanged;
+        OnReceiveAdvancedModeChanged += StateHasChanged;
+        ManageSection.OnManageStateChanged += StateHasChanged;
+        
+        SetDrawerContentForCurrentRoute();
     }
 
     protected void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+        SetDrawerContentForCurrentRoute();
         StateHasChanged();
+    }
+    
+    private void SetDrawerContentForCurrentRoute()
+    {
+        if (Navigation.Uri.Contains("/history"))
+        {
+            AppStateService.CurrentDrawerContent = Summary;
+        }
+        else if (Navigation.Uri.Contains("/dapp"))
+        {
+            AppStateService.CurrentDrawerContent = AuthorizeDapp;
+        }
+        else
+        {
+            AppStateService.CurrentDrawerContent = None;
+        }
     }
 
     public void Dispose()
     {
         AppStateService.OnChanged -= StateHasChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+        OnSendConfirmationChanged -= StateHasChanged;
+        OnReceiveAdvancedModeChanged -= StateHasChanged;
+        ManageSection.OnManageStateChanged -= StateHasChanged;
     }
 }

@@ -3,13 +3,13 @@
 @namespace Buriza.UI.Components.Controls
 
 <MudCard
-    Class="@($"shadow-none! !w-full !h-full !p-4 !rounded-[12px] !overflow-hidden " + DappClass)"
+    Class="@($"shadow-none! !w-full !h-full !p-4 !rounded-[12px] !overflow-hidden cursor-pointer " + DappThemePrimary + " " + DappClass)"
 >
     <div class="relative flex justify-between h-full">
-        <div class="@($"w-[80px] h-[30px] rounded-b-[40px] absolute -left-9 -top-4 " + DappTheme)"/>
-        <div class="@($"w-[94px] h-[30px] rounded-tl-[40px] absolute -right-9 -bottom-4 " + DappTheme)"/>
-        <div class="@($"w-[44px] h-[41px] rounded-t-[40px] absolute -right-9 bottom-[14px] " + DappTheme)"/>
-        <div class="@($"w-[40px] h-[40px] rounded-full absolute -right-4 bottom-7 " + DappClass)"/>
+        <div class="@($"w-[80px] h-[30px] rounded-b-[40px] absolute -left-9 -top-4 " + DappThemeSecondary)"/>
+        <div class="@($"w-[94px] h-[30px] rounded-tl-[40px] absolute -right-9 -bottom-4 " + DappThemeSecondary)"/>
+        <div class="@($"w-[44px] h-[41px] rounded-t-[40px] absolute -right-9 bottom-[14px] " + DappThemeSecondary)"/>
+        <div class="@($"w-[40px] h-[40px] rounded-full absolute -right-4 bottom-7 " + DappThemePrimary)"/>
         <div class="absolute right-0 top-0 z-20">
             <MudIconButton Icon="@BurizaIcons.FavoriteSymbolIcon" Class="!p-0 [&_.mud-icon-root]:!text-white"/>
         </div>

@@ -14,43 +14,92 @@
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Receive</span>
+            <span class="@GetSpanClass("/receive")">Receive</span>
         </MudLink>
 
         @*Send*@
         <MudLink 
             Href="/send" 
-            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.Send1Icon" 
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Send</span>
+            <span class="@GetSpanClass("/send")">Send</span>
         </MudLink>
 
         @*Buriza*@
-        <div class="flex items-center justify-center">
-            <div class="relative w-12 h-12 flex items-center justify-center">
+        <div class="relative flex items-center justify-center">
+            <div class="relative w-12 h-12 flex items-center justify-center cursor-pointer z-30" @onclick="ToggleSettings">
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="!z-10 !text-[38px] !text-[var(--mud-palette-white)]"/>
+            </div>
+            @*pop up*@
+            <div class="@($"left-1/2 -translate-x-1/2 fixed {(isSettingsVisible ? "bottom-23 opacity-100" : "bottom-4 delay-100 opacity-0")} duration-200") z-10">
+                <div class="z-20">
+                    <MudIconButton
+                        Icon="@BurizaIcons.CloseSymbolIcon"
+                        OnClick="ToggleSettings"
+                        Class="!p-1 !bg-[var(--mud-palette-secondary-lighten)] [&_.mud-icon-root]:!text-xl [&_.mud-icon-root]:!text-[var(--mud-palette-secondary-text)]"
+                    />
+                </div>
+
+                @*top*@
+                <MudLink
+                    Href="/" 
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-1/2 -translate-y-[68px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    @onclick="CloseSettings"
+                >
+                    <MudIcon
+                        Icon="@BurizaIcons.AssetIcon"
+                        Size="Size.Medium" 
+                    />
+                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Assets</span>
+                </MudLink>
+
+                @*left*@
+                <MudLink 
+                    Href="/dapp"
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-[90px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    @onclick="CloseSettings"
+                >
+                    <MudIcon
+                        Icon="@BurizaIcons.DappSymbolIcon"
+                        Size="Size.Medium" 
+                    />
+                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">DApp</span>
+                </MudLink>
+
+                @*right*@
+                <MudLink 
+                    Href="/settings"
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "translate-x-[36px] -translate-y-[12px] opacity-100 delay-250" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    @onclick="CloseSettings"
+                >
+                    <MudIcon
+                        Icon="@BurizaIcons.SettingsSymbolIcon"
+                        Size="Size.Medium" 
+                    />
+                    <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
+                </MudLink>
             </div>
         </div>
 
         @*History*@
         <MudLink 
             Href="/history" 
-            Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
+            Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon 
                 Icon="@BurizaIcons.History2Icon" 
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">History</span>
+            <span class="@GetSpanClass("/history")">History</span>
         </MudLink>
 
         @*Manage*@
@@ -63,7 +112,8 @@
                 Size="Size.Medium" 
                 Class=""
             />
-            <span class="text-[11px] !text-[var(--mud-palette-text-secondary)]">Manage</span>
+            <span class="@GetSpanClass("/manage")">Manage</span>
         </MudLink>
     </header>
+    <MudOverlay ZIndex="100" Visible="isSettingsVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="CloseSettings"/>
 </div>

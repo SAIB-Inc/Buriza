@@ -1,4 +1,22 @@
+using Buriza.Data.Models.Enums;
+
 namespace Buriza.UI.Services;
+
+//transfer to Buriza.Data
+
+public enum DrawerContentType
+{
+    None,
+    Summary,        // for history page
+    AuthorizeDapp,  // for dapp page  
+    Receive,        // button click
+    Send,           // button click
+    SelectAsset,    // select asset from send section
+    TransactionStatus, // transaction success/status
+    Settings,       // button click
+    NodeSettings,   // node settings from settings section
+    Manage          // button click
+}
 
 public class AppStateService
 {
@@ -18,6 +36,20 @@ public class AppStateService
         }
     }
 
+    private AssetType _selectedAssetType = AssetType.Token;
+    public AssetType SelectedAssetType
+    {
+        get => _selectedAssetType;
+        set
+        {
+            if (_selectedAssetType != value)
+            {
+                _selectedAssetType = value;
+                NotifyChanged();
+            }
+        }
+    }
+    
     private bool _isSidebarOpen = false;
     public bool IsSidebarOpen
     {
@@ -32,6 +64,19 @@ public class AppStateService
         }
     }
 
+    public int SelectedAssetTypeIndex
+    {
+        get => (int)_selectedAssetType;
+        set
+        {
+            if ((int)_selectedAssetType != value)
+            {
+                _selectedAssetType = (AssetType)value;
+                NotifyChanged();
+            }
+        }
+    }
+    
     private bool _isFilterDrawerOpen = false;
     public bool IsFilterDrawerOpen
     {
@@ -44,6 +89,30 @@ public class AppStateService
                 NotifyChanged();
             }
         }
+    }
+
+    private DrawerContentType _currentDrawerContent = DrawerContentType.None;
+    public DrawerContentType CurrentDrawerContent
+    {
+        get => _currentDrawerContent;
+        set
+        {
+            if (_currentDrawerContent != value)
+            {
+                _currentDrawerContent = value;
+                NotifyChanged();
+            }
+        }
+    }
+
+    #endregion
+
+    #region methods
+
+    public void SetDrawerContent(DrawerContentType contentType)
+    {
+        CurrentDrawerContent = contentType;
+        IsFilterDrawerOpen = true;
     }
 
     #endregion
