@@ -6,8 +6,8 @@
 <MudCard
     Class="@($"shadow-sm! !gap-4 !flex-row items-center justify-between !px-4 !py-2 !rounded-[12px] !bg-[var(--mud-palette-dark)] md:!bg-[var(--mud-palette-gray-default)] " + Class)"
 >
-    <div class="flex items-center gap-2!">
-        <div class="@($"{(AssetType == AssetType.Token ? "!rounded-full" : "!rounded-[8px]")} aspect-square overflow-hidden w-[48px] h-[48px] sm:w-[56px] sm:h-[56px]")">
+    <div class="flex items-center gap-2! xl:w-[160px]">
+        <div class="@($"{(AssetType == AssetType.Token ? "!rounded-full" : "!rounded-[8px]")} asset-icon flex items-center justify-center aspect-square overflow-hidden w-[48px] h-[48px] sm:w-[56px] sm:h-[56px]")">
             <MudImage
                 Alt="@AssetName"
                 Src="@AssetIcon"
@@ -44,13 +44,13 @@
             Src="@(PricePercentage >= 0 ? Misc.GraphPositive : Misc.GraphNegative)"
         />
     </div>
-    <div class="!mt-1">
+    <div class="!mt-1 xl:w-[76px]">
         @if (AssetType == AssetType.Token)
         {
             <MudText Class="!font-semibold !leading-[20px] !w-full !text-end">
                 @AssetAmount
             </MudText>
-            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
+            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-full !text-end">
                ≈ $@UsdConversion
             </MudText>
         }

@@ -84,10 +84,9 @@
             else
             {
                 <div class="!space-y-3">
-                    @for (int i = 0; i < wallets.Count; i++)
+                    @foreach (Wallet wallet in wallets)
                     {
-                        int walletIndex = i;
-                        var wallet = wallets[walletIndex];
+                        int walletIndex = wallet.Id - 1;
                         <div class="@($"w-full !rounded-[12px] {(WalletExpandedStates[walletIndex] ? "!bg-[var(--mud-palette-dark-darken)] shadow-[var(--mud-elevation-2)]" : "!bg-[var(--mud-palette-background-gray)] border border-[var(--mud-palette-table-lines)]")}")">
                             <div 
                                 class="max-[376px]:!p-[13px] !p-4 cursor-pointer" 
@@ -128,16 +127,14 @@
                             <div class="@($"wallet-content {(WalletExpandedStates[walletIndex] ? "expanded" : "collapsed")}")">
                                 <div class="border-t border-[var(--mud-palette-divider)]">
                                     <div class="max-[376px]:!space-y-2 !space-y-3 !px-4 !pt-4 !pb-4">
-                                        @for(int j=0; j<3; j++)
+                                        @foreach (WalletAccount account in wallet.Accounts)
                                         {
-                                            int accountIndex = (walletIndex * 3) + j;
-                                            var account = wallet.Accounts[j];
                                             <div class="max-[376px]:!p-[13px] !rounded-[8px] flex items-center justify-between !p-4 bg-[var(--mud-palette-gray-default)]">
                                                 <div class="flex items-center !gap-3">
                                                     <div>
                                                         <MudImage
                                                             Alt="Avatar"
-                                                            Src="@Misc.Avatar"
+                                                            Src="@account.Avatar"
                                                             Class="max-[376px]:!w-[36px] !w-[46px] aspect-square !rounded-full"
                                                         />
                                                     </div>

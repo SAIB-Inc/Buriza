@@ -4,7 +4,7 @@ using MudBlazor;
 
 namespace Buriza.UI.Components.Pages;
 
-public partial class Home : IDisposable
+public partial class Home : ComponentBase, IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }

@@ -45,6 +45,7 @@ public class AppStateService
             if (_selectedAssetType != value)
             {
                 _selectedAssetType = value;
+                NotifyChanged();
             }
         }
     }
@@ -71,6 +72,7 @@ public class AppStateService
             if ((int)_selectedAssetType != value)
             {
                 _selectedAssetType = (AssetType)value;
+                NotifyChanged();
             }
         }
     }

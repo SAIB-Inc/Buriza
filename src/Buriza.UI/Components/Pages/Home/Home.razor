@@ -301,6 +301,7 @@
                 <div class="max-md:hidden w-full flex items-center justify-end">
                     <BurizaTabs
                         Class="!max-w-[318px] !w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full [&_.mud-tooltip-root]: [&_.mud-tabs-scroll-button]:hidden"
+                        @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
                     >
                         <MudTabPanel 
                             Text="Token" 
