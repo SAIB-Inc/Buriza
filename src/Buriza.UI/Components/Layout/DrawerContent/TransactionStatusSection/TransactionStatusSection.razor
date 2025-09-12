@@ -1,0 +1,38 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Resources
+@using Buriza.UI.Services
+@using static Buriza.UI.Services.DrawerContentType
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="w-full h-full !px-4 !pb-8 flex flex-col items-center justify-between">
+    <div class="flex flex-col items-center justify-center !gap-4 flex-1">
+        <div>
+            <MudImage
+                Alt="Successful"
+                Src="@Mascots.Mascot6"
+                Class="!max-w-[120px] !w-full"
+            />
+        </div>
+        <div class="!text-center">
+            <MudText Class="!text-[32px] !font-semibold !text-[var(--mud-palette-text-primary)]">
+                Successfully Sent
+            </MudText>
+            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
+                <span>Your transaction has been sent to the </span><br/>
+                <span>network and will be processed </span><br/>
+                <span>in a few seconds.</span>
+            </MudText>
+        </div>
+    </div>
+    <div class="w-full !pt-4">
+        <BurizaButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Class="!w-full"
+            OnClick="HandleDone"
+        >
+            Done
+        </BurizaButton>
+    </div>
+</div>

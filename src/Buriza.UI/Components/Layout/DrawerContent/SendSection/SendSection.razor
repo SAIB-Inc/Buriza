@@ -1,0 +1,263 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="relative h-full !pb-8 flex flex-col justify-between items-center">
+    <div class="!mt-2 w-full h-full max-h-[calc(100vh-170px)] overflow-y-auto !space-y-4 !px-4 !pb-12">
+        @foreach (var recipient in recipients)
+        {
+            <MudCard
+                Class="!w-full !bg-[var(--mud-palette-background-gray)] !rounded-[12px] !p-4 !gap-4 !shadow-[var(--mud-elevation-2)]"
+            >
+                <div class="!mt-2 flex items-center justify-between h-[24px]">
+                    <MudText Class="!text-sm">
+                        Recipient @recipient.Id
+                    </MudText>
+                    @if (recipients.Count > 1 && !IsConfirmed)
+                    {
+                        <MudIconButton
+                            Icon="@BurizaIcons.DeleteSymbolIcon"
+                            Class="!p-0"
+                            OnClick="() => RemoveRecipient(recipient)"
+                        />
+                    }
+                </div>
+            @if(IsConfirmed)
+            {
+                <div class="!space-y-2">
+                    <div class="flex items-center justify-between bg-[var(--mud-palette-background)] !py-2 !px-4 rounded-[8px]">
+                        <MudText Class="!text-sm !font-light">
+                            <span class="!text-[var(--mud-palette-text-secondary)]">From: </span>
+                            <span>addr1q...8r7z4lgcqrqt9uu</span>
+                        </MudText>
+                    </div>
+                    <div class="flex items-center justify-between bg-[var(--mud-palette-background)] !py-2 !px-4 rounded-[8px]">
+                        <MudText Class="!text-sm !font-light">
+                            <span class="!text-[var(--mud-palette-text-secondary)]">To: </span>
+                            <span>addr1q...17xpubmzsrqt9jp</span>
+                        </MudText>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="flex items-center justify-between bg-[var(--mud-palette-dark)] !py-2 !px-4 rounded-[8px]">
+                    <BurizaTextField 
+                        Placeholder="Enter recipient address" 
+                        Class="[&_.mud-input-slot]:!py-[2px] [&_input]:!text-sm [&_.mud-input-slot]:!pl-0 !bg-transparent"
+                    />
+                    <div class="flex items-center justify-end !gap-2">
+                        <MudIconButton
+                            Icon="@BurizaIcons.AddressBookIcon"
+                            Class="!p-0"
+                        />
+                    </div>
+                </div>
+            }
+            @if(IsConfirmed)
+            {
+                <div class="rounded-[8px] !p-3 border border-[var(--mud-palette-table-lines)]">
+                    <div class="w-full flex items-center justify-between">
+                        <div>
+                            <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                                Assets
+                            </MudText>
+                        </div>
+                    </div>
+                        <div class="w-full !space-y-3 !mt-3">
+                        <div class="w-full flex items-center justify-between">
+                            <div class="flex items-center !gap-2">
+                                <div>
+                                    <MudImage
+                                        Alt="ADA"
+                                        Src="@Tokens.Ada"
+                                        Class="!shrink-0 w-8 h-8"
+                                    />
+                                </div>
+                                <div>
+                                    <MudText Class="!text-sm !font-semibold">
+                                        ADA
+                                    </MudText>
+                                </div>
+                            </div>
+                            <div>
+                                <MudText Class="!text-sm !font-semibold !text-end">
+                                    -1,204.05
+                                </MudText>
+                            </div>
+                        </div>
+                        <div class="w-full flex items-center justify-between">
+                            <div class="flex items-center !gap-2">
+                                <div>
+                                    <MudImage
+                                        Alt="ADA"
+                                        Src="@Tokens.Ada"
+                                        Class="!shrink-0 w-8 h-8"
+                                    />
+                                </div>
+                                <div>
+                                    <MudText Class="!text-sm !font-semibold">
+                                        ADA
+                                    </MudText>
+                                </div>
+                            </div>
+                            <div>
+                                <MudText Class="!text-sm !font-semibold !text-end">
+                                    -1,204.05
+                                </MudText>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="!space-y-2">
+                    @foreach (var entry in recipient.TokenEntries)
+                    {
+                        <div class="rounded-[8px] !p-3 border border-[var(--mud-palette-table-lines)] relative">
+                            @if (recipient.TokenEntries.Count > 1)
+                            {
+                                <div class="absolute -top-2 -right-2 ">
+                                    <MudIconButton
+                                        Icon="@Icons.Material.Filled.Remove"
+                                        Class="!p-[5px] !bg-[var(--mud-palette-dark)] [&_.mud-icon-root]:!text-[10px]"
+                                        OnClick="() => RemoveToken(recipient, entry)"
+                                    />
+                                </div>
+                            }
+                            <div class="w-full flex items-center justify-between">
+                                <div>
+                                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                                        Select token
+                                    </MudText>
+                                </div>
+                                <div class="flex items-center !gap-2">
+                                    <BurizaButton 
+                                        Variant="Variant.Outlined"
+                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--mud-palette-table-lines)]! bg-transparent! text-[10px]!"
+                                    >
+                                        HALF
+                                    </BurizaButton>
+                                    <BurizaButton
+                                        Variant="Variant.Outlined"
+                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--mud-palette-table-lines)]! bg-transparent! text-[10px]!"
+                                    >
+                                        MAX
+                                    </BurizaButton>
+                                </div>   
+                            </div>
+                            <div class="w-full flex items-center justify-between !mt-3">
+                                <div>
+                                    <BurizaButton
+                                        Variant="Variant.Outlined"
+                                        OnClick="@HandleSelectAsset"
+                                        Class="!border-[var(--mud-palette-table-lines)] px-1! !h-9 text-[var(--mud-palette-text-primary)]!"
+                                    >
+                                        <div class="flex items-center justify-between !gap-2">
+                                            <div class="flex items-center !gap-1">
+                                                <div class="w-[24px] h-[24px] flex items-center justify-center rounded-full overflow-hidden">
+                                                    <MudImage
+                                                        Alt="@entry.Name"
+                                                        Src="@entry.ImageSrc"
+                                                        Class="object-contain"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <MudText Class="!text-xs !font-semibold">
+                                                        @entry.Name
+                                                    </MudText>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <MudIcon
+                                                    Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                                                />
+                                            </div>
+                                        </div>
+                                    </BurizaButton>
+                                    <MudText Class="!mt-2 !font-light !text-[11px] !w-max !text-[var(--mud-palette-text-secondary)] !font-light">
+                                        Balance: @entry.Balance.ToString("N2")
+                                    </MudText>
+                                </div>
+                                <div class="flex flex-col h-full justify-between items-end">
+                                    <MudNumericField
+                                        T="decimal"
+                                        @bind-Value="entry.Amount"
+                                        HideSpinButtons
+                                        Variant="Variant.Outlined"
+                                        Class="[&_.mud-input-outlined-border]:!border-none [&_.mud-input-control-helper-container]:hidden! [&_input]:!text-[var(--mud-palette-primary-lighten)] [&_input]:!font-black !h-full [&_.mud-input]:!w-full [&_.mud-input-control-input-container]:!h-full [&_.mud-input]:h-full !rounded-[8px] [&_.mud-input-helper-text]:text-[var(--mud-palette-gray-darker)]! [&_input]:text-right [&_input]:!text-[28px] [&_.mud-input-control-input-container]:items-end [mask-image:_linear-gradient(to_right,transparent_0,_black_40px,_black_calc(100%-0px),transparent_100%)] [&_input]:h-10! [&_input]:p-0!"
+                                    />
+                                    <MudText Class="!mt-2 !font-light !text-[11px] !w-max !text-[var(--mud-palette-text-secondary)] !font-light">
+                                        $0.00
+                                    </MudText>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            <div class="w-full flex items-center justify-center !mt-2">
+                @if(IsConfirmed)
+                {
+                    <div class="w-full">
+                        <div>
+                            <MudText Class="!text-xs">
+                                Additional Information
+                            </MudText>
+                        </div>
+                        <div class="!space-y-2 !mt-4">
+                            <div class="w-full flex items-center justify-between">
+                                <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm">
+                                    Collateral
+                                </MudText>
+                                <MudText Class="!text-sm !font-medium">
+                                        ₳433.00
+                                </MudText>
+                            </div>
+                                <div class="w-full flex items-center justify-between">
+                                <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm">
+                                    Expires by
+                                </MudText>
+                                <MudText Class="!text-sm !font-medium">
+                                        No limit
+                                </MudText>
+                            </div>
+                                <div class="w-full flex items-center justify-between">
+                                <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm">
+                                    Transaction fee
+                                </MudText>
+                                <MudText Class="!text-sm !font-medium">
+                                        ₳0.034
+                                </MudText>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <BurizaButton
+                        Ripple="false"
+                        Class="text-[var(--mud-palette-primary-lighten)]! !bg-transparent w-max!"
+                        OnClick="() => AddToken(recipient)"
+                    >
+                        + Add Token
+                    </BurizaButton>
+                }
+            </div>
+            </MudCard>
+        }
+    </div>
+    <div class="w-full absolute bottom-8 !px-4 !pt-4">
+        <BurizaButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Class="!w-full"
+            OnClick="HandleSend"
+        >
+            @(IsConfirmed ? "Send" : "Confirm")
+        </BurizaButton>
+    </div>
+</div>

@@ -1,5 +1,20 @@
 namespace Buriza.UI.Services;
 
+//transfer to Buriza.Data
+
+public enum DrawerContentType
+{
+    None,
+    Summary,        // for history page
+    AuthorizeDapp,  // for dapp page  
+    Receive,        // button click
+    Send,           // button click
+    SelectAsset,    // select asset from send section
+    TransactionStatus, // transaction success/status
+    Settings,       // button click
+    Manage          // button click
+}
+
 public class AppStateService
 {
     #region properties
@@ -44,6 +59,30 @@ public class AppStateService
                 NotifyChanged();
             }
         }
+    }
+
+    private DrawerContentType _currentDrawerContent = DrawerContentType.None;
+    public DrawerContentType CurrentDrawerContent
+    {
+        get => _currentDrawerContent;
+        set
+        {
+            if (_currentDrawerContent != value)
+            {
+                _currentDrawerContent = value;
+                NotifyChanged();
+            }
+        }
+    }
+
+    #endregion
+
+    #region methods
+
+    public void SetDrawerContent(DrawerContentType contentType)
+    {
+        CurrentDrawerContent = contentType;
+        IsFilterDrawerOpen = true;
     }
 
     #endregion
