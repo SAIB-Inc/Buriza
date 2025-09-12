@@ -22,7 +22,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         Summary => "Sent",
         AuthorizeDapp => "Authorize App",
-        Receive => "Receive",
+        Receive => IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
         Send => IsSendConfirmed ? "Summary" : "Send Assets",
         SelectAsset => "Select Assets",
         TransactionStatus => "Transaction Sent",
@@ -54,6 +54,10 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             AppStateService.SetDrawerContent(Settings);
         }
+        else if (AppStateService.CurrentDrawerContent == Receive && IsReceiveAdvancedMode)
+        {
+            SetReceiveAdvancedMode(false);
+        }
         else
         {
             AppStateService.IsFilterDrawerOpen = false;
@@ -68,6 +72,24 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     protected void HandleSettingsClick()
     {
         AppStateService.SetDrawerContent(Settings);
+    }
+    protected void HandleReceiveClick()
+    {
+        AppStateService.SetDrawerContent(Receive);
+    }
+
+    protected void HandleAdvancedModeToggle()
+    {
+        SetReceiveAdvancedMode(!IsReceiveAdvancedMode);
+    }
+
+    public static bool IsReceiveAdvancedMode { get; private set; } = false;
+    public static Action? OnReceiveAdvancedModeChanged { get; set; }
+    
+    public static void SetReceiveAdvancedMode(bool isAdvanced)
+    {
+        IsReceiveAdvancedMode = isAdvanced;
+        OnReceiveAdvancedModeChanged?.Invoke();
     }
 
     public static Action? OnAddRecipient { get; set; }
@@ -167,6 +189,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         AppStateService.OnChanged += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
         OnSendConfirmationChanged += StateHasChanged;
+        OnReceiveAdvancedModeChanged += StateHasChanged;
         
         SetDrawerContentForCurrentRoute();
     }
@@ -198,5 +221,6 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         AppStateService.OnChanged -= StateHasChanged;
         Navigation.LocationChanged -= OnLocationChanged;
         OnSendConfirmationChanged -= StateHasChanged;
+        OnReceiveAdvancedModeChanged -= StateHasChanged;
     }
 }
