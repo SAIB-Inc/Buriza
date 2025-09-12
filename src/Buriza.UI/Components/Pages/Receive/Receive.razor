@@ -7,14 +7,14 @@
 @namespace Buriza.UI.Components.Pages
 
 <section class="h-screen">
-    <div class="max-[376px]:!pt-4 max-[376px]:!pb-8 h-full container !mx-auto !py-16 !overflow-x-visible">
+    <div class="max-[376px]:!pt-5 max-[376px]:!pb-8 h-full container !mx-auto !py-16 !overflow-x-visible">
 
         <MudCarousel TData="object" @ref="_carousel" ShowArrows="false" ShowBullets="false" AutoCycle="false"
             EnableSwipeGesture="false" Class="!h-full">
 
             @* 1st Slide *@
             <MudCarouselItem>
-                <div class="max-[376px]:!mb-12 flex justify-between !mb-[75px] !px-4">
+                <div class="max-[376px]:!mb-13 flex justify-between !mb-[75px] !px-4">
                     <div class="flex align-center !gap-2">
                         <MudIconButton Icon="@BurizaIcons.ChevronRightIcon"
                             Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]" Href="/" />
@@ -27,12 +27,12 @@
                     </div>
                 </div>
 
-                <div class="max-[376px]:!mb-15 w-full !px-4">
+                <div class="max-[376px]:!mb-14 w-full !px-4">
                     <div class="max-[376px]:!mb-8 relative !mb-11">
                         <MudImage 
                             Alt="" 
                             Src="@Misc.DiamondClusterOrange"
-                            Class=" max-[376]:bottom-[-35px] max-[376]:left-[15px] !absolute bottom-[-45px] left-[-4px]" 
+                            Class=" max-[376px]:bottom-[-35px] max-[376px]:left-[15px] !absolute bottom-[-45px] left-[-4px]" 
                         />
                         <MudImage 
                             Alt="QR Code" 
