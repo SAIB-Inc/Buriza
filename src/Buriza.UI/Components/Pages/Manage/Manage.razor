@@ -30,6 +30,7 @@
             <div class="flex items-center !gap-5">
                 @if(!IsAccountFormVisible)
                 {
+                    <div class="max-[376px]:block max-[376px]:fixed max-[376px]:bottom-0 max-[376px]:left-0 max-[376px]:w-screen max-[376px]:h-[136px] max-[376px]:bg-[var(--mud-palette-background)]/80 max-[376px]:backdrop-blur-xs max-[376px]:z-1 hidden"></div> 
                     <MudIconButton
                         Icon="@Icons.Material.Filled.Logout"
                         Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
@@ -42,10 +43,10 @@
                 />
             </div>
         </div>
-        <div class="w-full !space-y-3 !mt-5 flex flex-col justify-between !px-4 overflow-y-auto h-[calc(100%-180px)] !pb-8">
+        <div class="max-[376px]:min-h-[calc(100vh-98px)] max-[376px]:!pb-27 w-full !space-y-3 !mt-5 flex flex-col justify-between !px-4 overflow-y-auto h-[calc(100%-180px)] !pb-8">
             @if(IsAccountFormVisible)
             {
-                <div class="w-full !rounded-[12px] !bg-[var(--mud-palette-dark-darken)] !p-4 flex items-center justify-between shadow-[var(--mud-elevation-2)]">
+                <div class="max-[376px]:!p-[14px] w-full !rounded-[12px] !bg-[var(--mud-palette-dark-darken)] !p-4 flex items-center justify-between shadow-[var(--mud-elevation-2)]">
                     <div class="flex items-center !gap-3">
                         <div class="relative">
                             <div>
@@ -86,11 +87,11 @@
                     @for (int i = 0; i < wallets.Count; i++)
                     {
                         int walletIndex = i;
-                        Wallet wallet = wallets[walletIndex];
-                        <div class="@($"w-full !rounded-[12px] {(walletExpandedStates[walletIndex] ? "!bg-[var(--mud-palette-dark-darken)] shadow-[var(--mud-elevation-2)]" : "!bg-[var(--mud-palette-background-gray)] border border-[var(--mud-palette-table-lines)]")}")">
-                            <BurizaButton 
-                                OnClick="() => ToggleWallet(walletIndex)"
-                                Class="@($"!p-4 cursor-pointer !bg-transparent h-auto! text-[var(--mud-palette-text-primary)]! {(walletExpandedStates[walletIndex] ? "rounded-t-[12px]! rounded-b-none!" : "rounded-[12px]!")}")"
+                        var wallet = wallets[walletIndex];
+                        <div class="@($"w-full !rounded-[12px] {(WalletExpandedStates[walletIndex] ? "!bg-[var(--mud-palette-dark-darken)] shadow-[var(--mud-elevation-2)]" : "!bg-[var(--mud-palette-background-gray)] border border-[var(--mud-palette-table-lines)]")}")">
+                            <div 
+                                class="max-[376px]:!p-[13px] !p-4 cursor-pointer" 
+                                @onclick="() => ToggleWallet(walletIndex)"
                             >
                                 <div class="w-full flex items-center justify-between">
                                     <div class="flex items-center !gap-3">
@@ -119,23 +120,25 @@
                                     <div>
                                         <MudIcon
                                             Icon="@BurizaIcons.ChevronLeftIcon"
-                                            Class="@($"!transition-transform !duration-300 ease-out {(walletExpandedStates[walletIndex] ? "rotate-90" : "")}")"
+                                            Class="@($"!transition-transform !duration-300 ease-out {(WalletExpandedStates[walletIndex] ? "rotate-90" : "")}")"
                                         />
                                     </div>
                                 </div>
-                            </BurizaButton>
-                            <div class="@($"wallet-content {(walletExpandedStates[walletIndex] ? "expanded" : "collapsed")}")">
+                            </div>
+                            <div class="@($"wallet-content {(WalletExpandedStates[walletIndex] ? "expanded" : "collapsed")}")">
                                 <div class="border-t border-[var(--mud-palette-divider)]">
-                                    <div class="!space-y-3 !px-4 !pt-4 !pb-4">
-                                        @foreach (WalletAccount account in wallet.Accounts)
+                                    <div class="max-[376px]:!space-y-2 !space-y-3 !px-4 !pt-4 !pb-4">
+                                        @for(int j=0; j<3; j++)
                                         {
-                                            <div class="!rounded-[8px] flex items-center justify-between !p-4 bg-[var(--mud-palette-gray-default)]">
+                                            int accountIndex = (walletIndex * 3) + j;
+                                            var account = wallet.Accounts[j];
+                                            <div class="max-[376px]:!p-[13px] !rounded-[8px] flex items-center justify-between !p-4 bg-[var(--mud-palette-gray-default)]">
                                                 <div class="flex items-center !gap-3">
                                                     <div>
                                                         <MudImage
                                                             Alt="Avatar"
-                                                            Src="@account.Avatar"
-                                                            Class="!w-[46px] aspect-square !rounded-full"
+                                                            Src="@Misc.Avatar"
+                                                            Class="max-[376px]:!w-[36px] !w-[46px] aspect-square !rounded-full"
                                                         />
                                                     </div>
                                                     <div>
@@ -157,7 +160,7 @@
                                                 </div>
                                             </div>
                                         }
-                                        <div class="w-full flex items-center justify-center !mt-5">
+                                        <div class="max-[376px]:!mt-3 w-full flex items-center justify-center !mt-5">
                                             <BurizaButton
                                                 Ripple="false"
                                                 Class="text-[var(--mud-palette-primary-lighten)]! !bg-transparent w-max!"
@@ -173,7 +176,7 @@
                     }
                 </div>
             }
-            <div class="fixed bottom-30 w-[calc(100%-32px)] lg:max-w-[430px]">
+            <div class="max-[376px]:bottom-21 max-[376px]:z-10 fixed bottom-30 w-[calc(100%-32px)] lg:max-w-[430px]">
                 <BurizaButton
                     Variant="Variant.Filled"
                     Color="Color.Primary"

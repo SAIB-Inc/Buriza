@@ -4,9 +4,9 @@
 
 @namespace Buriza.UI.Components.Pages
 
-<section class="h-screen">
+<section class="max-md:h-screen h-[calc(100vh-24px)]">
     <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-3 !gap-20 sm:!gap-26 sm:justify-between">
-        <div class="max-sm:!hidden absolute bottom-0 right-0">
+        <div class="max-lg:!hidden absolute bottom-0 right-0">
             <MudImage
                 Alt="buriza mascot"
                 Src="@Mascots.Mascot5"
@@ -24,15 +24,15 @@
             SelectedIndexChanged="@OnSlideChanged"
         >
             @*1st slide*@
-            <MudCarouselItem Class="max-[376px]:gap-3! flex flex-col items-center justify-center gap-6!">
-                <div>
+            <MudCarouselItem Class="max-[376px]:gap-3! flex flex-col items-center justify-center gap-6! md:!gap-18">
+                <div class="md:hidden">
                     <MudImage
                         Alt="onboard buriza"
                         Src="@Misc.OnboardLogo"
                         Class="max-[376px]:!w-[280px] !w-[340px]"
                     />
                 </div>
-                <div class="!text-center !space-y-2">
+                <div class="!text-center !space-y-2 md:hidden">
                     <MudText Class="!text-[32px] !font-semibold">
                         Welcome to Buriza
                     </MudText>
@@ -40,6 +40,59 @@
                         <span>To get started, create new wallet or</span><br/>
                         <span>import an existing seed phrase</span>
                     </MudText>
+                </div>
+                <div class="max-md:hidden flex flex-col items-center justify-center">
+                    <div>
+                        <MudText Class="!text-2xl !text-[var(--mud-palette-text-secondary)]">
+                            Welcome to
+                        </MudText>
+                    </div>
+                    <div class="!-mt-6">
+                        <MudImage
+                            Src="@Logos.BurizaOnboard"
+                            ALt="buriza logo"
+                            Class="!w-[450px]"
+                        />
+                    </div>
+                    <div class="!mt-4">
+                        <MudText Class="!text-2xl !text-[var(--mud-palette-text-primary)] !font-medium">
+                            How would you like to add your new wallet?
+                        </MudText>
+                    </div>
+                </div>
+                <div class="max-md:hidden w-full flex items-center justify-center !gap-6">
+                    <BurizaButton 
+                        OnClick="OnNextButtonClicked"
+                        Class="max-w-[255px] !py-9 h-[238px]! [&_.mud-button-label]:h-full [&_.mud-button-label]:!justify-between [&_.mud-button-label]:flex-col! rounded-[16px]!">
+                        <div>
+                            <MudImage
+                                Alt="mascot 8"
+                                Src="@Mascots.Mascot8"
+                                Class="!w-[132px]"
+                            />
+                        </div>
+                        <div>
+                            <MudText Class="!text-xl !font-medium !text-[var(--mud-palette-text-primary)]">
+                                Import from seed
+                            </MudText>
+                        </div>
+                    </BurizaButton>
+                    <BurizaButton 
+                        OnClick="OnNextButtonClicked"
+                        Class="max-w-[255px] !py-9 h-[238px]! [&_.mud-button-label]:h-full [&_.mud-button-label]:!justify-between [&_.mud-button-label]:flex-col! rounded-[16px]!">
+                        <div>
+                            <MudImage
+                                Alt="mascot 8"
+                                Src="@Mascots.Mascot7"
+                                Class="!w-[64px]"
+                            />
+                        </div>
+                        <div>
+                            <MudText Class="!text-xl !font-medium !text-[var(--mud-palette-text-primary)]">
+                                Create new wallet
+                            </MudText>
+                        </div>
+                    </BurizaButton>
                 </div>
             </MudCarouselItem>
             @*2nd slide*@
@@ -283,7 +336,7 @@
                 </div>
             </MudCarouselItem>
         </MudCarousel>
-        <div class="!space-y-3 w-full max-w-[360px] h-[92px] flex flex-col justify-end">
+        <div class="@($"!space-y-3 w-full max-w-[360px] h-[92px] flex flex-col justify-end {(CurrentSlide == 0 ? "md:hidden" : "")}")">
             @if (ShowSecondaryButton)
             {
                 <BurizaButton

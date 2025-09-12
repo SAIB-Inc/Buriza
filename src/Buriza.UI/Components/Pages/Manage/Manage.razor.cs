@@ -8,8 +8,8 @@ public partial class Manage
     protected bool IsAccountFormVisible { get; set; }
     protected bool IsEditMode { get; set; }
     
-    private List<Wallet> wallets = WalletData.GetDummyWallets();
-    private bool[] walletExpandedStates = new bool[3];
+    protected List<Wallet> wallets = WalletData.GetDummyWallets();
+    protected bool[] WalletExpandedStates = new bool[3];
     
     protected override void OnInitialized()
     {
@@ -36,8 +36,7 @@ public partial class Manage
     
     protected void ToggleWallet(int walletIndex)
     {
-        walletExpandedStates[walletIndex] = !walletExpandedStates[walletIndex];
-        Console.WriteLine($"Wallet {walletIndex} IsExpanded: {walletExpandedStates[walletIndex]}");
+        WalletExpandedStates[walletIndex] = !WalletExpandedStates[walletIndex];
         StateHasChanged();
     }
 }

@@ -4,7 +4,7 @@
 @namespace Buriza.UI.Components.Controls
 
 <MudCard
-    Class="shadow-sm! !gap-4 !flex-row items-center justify-between !px-4 !py-2 !rounded-[12px] !bg-[var(--mud-palette-dark)]"
+    Class="@($"shadow-sm! !gap-4 !flex-row items-center justify-between !px-4 !py-2 !rounded-[12px] !bg-[var(--mud-palette-dark)] md:!bg-[var(--mud-palette-gray-default)] " + Class)"
 >
     <div class="flex items-center gap-2!">
         <div class="@($"{(AssetType == AssetType.Token ? "!rounded-full" : "!rounded-[8px]")} aspect-square overflow-hidden w-[48px] h-[48px] sm:w-[56px] sm:h-[56px]")">
@@ -38,7 +38,7 @@
             }
         </div>
     </div>
-    <div class="max-w-[150px] sm:max-w-[267px]">
+    <div class="graph max-w-[150px] sm:max-w-[267px]">
         <MudImage
             Alt="sample graph"
             Src="@(PricePercentage >= 0 ? Misc.GraphPositive : Misc.GraphNegative)"
