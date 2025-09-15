@@ -46,6 +46,9 @@ The browser extension is powered by Blazor WebAssembly and follows Manifest V3 s
 
 With these design and architectural foundations in place, this document outlines the progress and deliverables completed for Milestone 2. It details the evolution of the user interface and system architecture since Milestone 1, explains the project setup and tools used, and documents the front-end implementation methodology. Screenshots, videos, and working examples are provided to demonstrate Buriza’s evolving functionality. The report also highlights the challenges encountered and the solutions developed by the SAIB Inc. team, reflecting its ongoing commitment to building a secure, performant, and user-centered Cardano wallet.
 
+This report has been converted to Word format for Project Catalyst submission. The original version may be found in the Buriza project's GitHub repository:
+#link("https://github.com/SAIB-Inc/Buriza/tree/main/src/Buriza.Docs")[https://github.com/SAIB-Inc/Buriza/tree/main/src/Buriza.Docs]
+
 #pagebreak()
 
 = Buriza Front-End 
@@ -211,6 +214,57 @@ Buriza implements a mobile-first responsive design strategy that adapts to vario
 The responsive approach extends beyond screen size to consider platform-specific interaction patterns. Touch targets are appropriately sized for mobile interfaces, while desktop versions support keyboard navigation and hover states, ensuring consistent functionality regardless of how users access Buriza.
 
 #pagebreak()
+
+= Implementation
+
+This section outlines the 
+implementation progress and highlights challenges encountered by the development team.
+
+Buriza’s unique infrastructure significantly streamlined the development process. Rather than 
+maintaining separate codebases for each platform and operating system, the unified Buriza.UI codebase 
+ensures compatibility across mobile, desktop, and web platforms—spanning Windows, macOS, Linux, Android, 
+and iOS. As a result, platform-specific development primarily focused on using Tailwind’s 
+responsive directives to adapt the user interface across varying screen sizes.
+
+To ensure both code quality and visual fidelity, the development process established had code peer-reviewed prior to being pushed to the repository. The team maintained a strong focus on building a beautiful, high-quality application through continuous collaboration and refinement.
+
+== Mobile
+Development began with a mobile-first approach, with the goal of closely following the design system 
+established by the design team. The focus was on replicating the intended user experience, layout 
+behavior, and visual responsiveness on mobile devices.
+
+During this process, the team encountered a challenge related to how image assets were handled. Since the 
+Buriza.App project (used to compile the mobile application) did not have direct access to image files 
+stored in the shared Buriza.UI library, assets such as icons and illustrations could not be referenced at 
+runtime.
+
+To solve this, the team developed an internal utility that enables asset embedding directly into the 
+application code. This ensured that all necessary visual elements remained accessible regardless of 
+platform-specific limitations—eliminating the need for runtime file system access and enabling smooth, 
+consistent rendering across platforms.
+
+
+== Browser
+Browser extension development leveraged the shared codebase, with only minor layout adjustments 
+needed to fit the extension's popup dimensions. When fully expanded, the extension mirrors the desktop 
+interface.
+
+Similar to the mobile application, the extension faced challenges with accessing shared image assets once 
+deployed in the browser environment. Since browser extensions operate in isolated environments with 
+limited file system access, the same asset management solution used in the mobile app was also applied 
+here. This unified approach allowed the team to maintain consistency in asset rendering without 
+duplicating resources or code.
+
+== Desktop
+The desktop implementation also leveraged Blazor’s flexible layout system. Developers were able to 
+implement the drawer-based interface with minimal overhead, using dynamic layouts that adjusted based on 
+page context.
+
+Additionally, core features such as Send and Receive reused mobile UI patterns within drawers, allowing the team to 
+focus on small adjustments rather than re-implementing entire views.
+
+#pagebreak()
+
 = User Interface
 
 #pagebreak()
