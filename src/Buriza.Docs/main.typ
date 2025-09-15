@@ -264,11 +264,703 @@ focus on small adjustments rather than re-implementing entire views.
 
 = User Interface
 
-== Platform Development Setup
+== Mobile
+
+=== Send Assets
+
+#figure(
+  image("images/screenshots/mobile/send_assets_dark.png"),
+  caption: [Buriza UI - Mobile: Send assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_light.png"),
+  caption: [Buriza UI - Mobile: Send assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_add_recipient_dark.png"),
+  caption: [Buriza UI - Mobile: Send assets with an additional recipient]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_add_recipient_light.png"),
+  caption: [Buriza UI - Mobile: Send assets with an additional recipient]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_add_token_dark.png"),
+  caption: [Buriza UI - Mobile: Send assets with an additional token]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_add_token_light.png"),
+  caption: [Buriza UI - Mobile: Send assets with an additional token]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_transaction_summary_dark.png"),
+  caption: [Buriza UI - Mobile: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_transaction_summary_light.png"),
+  caption: [Buriza UI - Mobile: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_success_screen_dark.png"),
+  caption: [Buriza UI - Mobile: Send assets success screen]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_success_screen_light.png"),
+  caption: [Buriza UI - Mobile: Send assets success screen]
+)
+
+=== Receiving Assets
+
+#v(2em)
+
+#figure(
+  image("images/screenshots/mobile/recieve_assets_qr_code_dark.png",width: 50%),
+  caption: [Buriza UI - Mobile: Receive assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/receive_assets_qr_code_light.png"),
+  caption: [Buriza UI - Mobile: Receive assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/receive_assets_advanced_mode_dark.png"),
+  caption: [Buriza UI - Mobile: Receive assets advanced mode]
+)
+
+#figure(
+  image("images/screenshots/mobile/receive_assets_advanced_mode_light.png"),
+  caption: [Buriza UI - Mobile: Receive assets advanced mode]
+)
+
+=== View Balance and Assets
+
+#v(2em)
+
+#figure(
+  image("images/screenshots/mobile/view_balance_and_assets_dark.png", width:50%),
+  caption: [Buriza UI - Mobile: View balance and assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/view_balance_and_assets_light.png"),
+  caption: [Buriza UI - Mobile: View balance and assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/header_animation_dark.png"),
+  caption: [Buriza UI - Mobile: View balance and assets]
+)
+
+#figure(
+  image("images/screenshots/mobile/header_animation_light.png"),
+  caption: [Buriza UI - Mobile: View balance and assets]
+)
+
+=== Transaction History
+
+#v(2em)
+
+#figure(
+  image("images/screenshots/mobile/transaction_history_dark.jpeg", width: 50%),
+  caption: [Buriza UI - Mobile: Transaction history with NFT]
+)
+
+#figure(
+  image("images/screenshots/mobile/transaction_history_light.png"),
+  caption: [Buriza UI - Mobile: Transaction history with NFT]
+)
+
+#figure(
+  image("images/screenshots/mobile/transaction_summary_dark.png"),
+  caption: [Buriza UI - Mobile: Transaction history with tokens]
+)
+
+#figure(
+  image("images/screenshots/mobile/transaction_summary_light.png"),
+  caption: [Buriza UI - Mobile: Transaction history with tokens]
+)
+
+=== Full Node Setup
+
+#v(2em)
+
+#figure(
+  image("images/screenshots/mobile/node_set_up_dark.png", width:50%),
+  caption: [Buriza UI - Mobile: Node setup]
+)
+
+#figure(
+  image("images/screenshots/mobile/node_set_up_light.png"),
+  caption: [Buriza UI - Mobile: Node setup]
+)
+
+=== dApp Access
+
+#v(2em)
+
+#figure(
+  image("images/screenshots/mobile/dapp_explorer_dark.png", width: 50%),
+  caption: [Buriza UI - Mobile: dApp explorer]
+)
+
+#figure(
+  image("images/screenshots/mobile/dapp_explorer_light.png"),
+  caption: [Buriza UI - Mobile: dApp explorer]
+)
+
+=== Wallet Creation and Account Management
+
+#v(2em)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_dark.png", width: 50%),
+  caption: [Buriza UI - Mobile: Manage wallet]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_light.png"),
+  caption: [Buriza UI - Mobile: Manage wallet]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_drop_down_dark.png"),
+  caption: [Buriza UI - Mobile: Manage wallet]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_drop_down_light.png"),
+  caption: [Buriza UI - Mobile: Manage wallet]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_add_new_account_dark.png"),
+  caption: [Buriza UI - Mobile: Manage wallet - add new account]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_add_account_light.png"),
+  caption: [Buriza UI - Mobile: Manage wallet - add new account]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_edit_account_dark.png"),
+  caption: [Buriza UI - Mobile: Manage wallet - edit account]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_add_new_wallet_dark.png"),
+  caption: [Buriza UI - Mobile: Manage wallet - add new wallet]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_add_new_wallet_light.png"),
+  caption: [Buriza UI - Mobile: Manage wallet - add new wallet]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_save_recovery_phrase_dark.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - save recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_save_recovery_phrrase_light.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - save recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_verify_recovery_phrase_dark.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - verify recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_verify_recovery_phrase_light.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - verify recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_set_up_dark.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - setup]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_setup_light.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - setup]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_authentication_screen_dark.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - authentication]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_authentication_screen_light.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - authentication]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_success_screen_dark.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - success screen]
+)
+
+#figure(
+  image("images/screenshots/mobile/create_wallet_success_screen_light.png"),
+  caption: [Buriza UI - Mobile: Create new wallet - success screen]
+)
+
+#pagebreak()
+
+== Browser
+
+=== Send Assets
+
+#figure(
+  image("images/screenshots/browser/send_assets_dark.png"),
+  caption: [Buriza UI - Browser: Send assets]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_light.png"),
+  caption: [Buriza UI - Browser: Send assets]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_add_recipient_dark.png"),
+  caption: [Buriza UI - Browser: Send assets with an additional recipient]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_add_recipient_light.png"),
+  caption: [Buriza UI - Browser: Send assets with an additional recipient]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_add_token_dark.png"),
+  caption: [Buriza UI - Browser: Send assets with an additional token]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_add_token_light.png"),
+  caption: [Buriza UI - Browser: Send assets with an additional token]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_transaction_summary_dark.png"),
+  caption: [Buriza UI - Browser: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_transaction_summary_light.png"),
+  caption: [Buriza UI - Browser: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_success_screen_dark.png"),
+  caption: [Buriza UI - Browser: Send assets success screen]
+)
+
+#figure(
+  image("images/screenshots/browser/send_assets_success_screen_light.png"),
+  caption: [Buriza UI - Browser: Send assets success screen]
+)
+
+=== Receiving Assets
+
+#figure(
+  image("images/screenshots/browser/receive_assets_dark.png"),
+  caption: [Buriza UI - Browser: Receive assets]
+)
+
+#figure(
+  image("images/screenshots/browser/receive_assets_light.png"),
+  caption: [Buriza UI - Browser: Receive assets]
+)
+
+#figure(
+  image("images/screenshots/browser/receive_assets_advanced_mode_dark.png"),
+  caption: [Buriza UI - Browser: Receive assets advanced mode]
+)
+
+#figure(
+  image("images/screenshots/browser/receive_assets_advanced_mode_light.png"),
+  caption: [Buriza UI - Browser: Receive assets advanced mode]
+)
+
+=== View Balance and Assets
+
+#figure(
+  image("images/screenshots/browser/view_balance_and_assets_dark.png"),
+  caption: [Buriza UI - Browser: View balance and assets]
+)
+
+#figure(
+  image("images/screenshots/browser/view_balance_and_assets_light.png"),
+  caption: [Buriza UI - Browser: View balance and assets]
+)
+
+=== Asset Selection
+
+#figure(
+  image("images/screenshots/browser/asset_selection_dark.png"),
+  caption: [Buriza UI - Browser: Asset selection]
+)
+
+#figure(
+  image("images/screenshots/browser/asset_selection_light.png"),
+  caption: [Buriza UI - Browser: Asset selection]
+)
+
+=== Transaction History
+
+#figure(
+  image("images/screenshots/browser/transaction_history_dark.png"),
+  caption: [Buriza UI - Browser: Transaction history]
+)
+
+#figure(
+  image("images/screenshots/browser/transaction_history_light.png"),
+  caption: [Buriza UI - Browser: Transaction history]
+)
+
+#figure(
+  image("images/screenshots/browser/transaction_summary_dark.png"),
+  caption: [Buriza UI - Browser: Transaction summary]
+)
+
+#figure(
+  image("images/screenshots/browser/transaction_summary_light.png"),
+  caption: [Buriza UI - Browser: Transaction summary]
+)
+
+=== Full Node Setup
+
+#figure(
+  image("images/screenshots/browser/node_setup_checked_dark.png"),
+  caption: [Buriza UI - Browser: Node setup with full node]
+)
+
+#figure(
+  image("images/screenshots/browser/node_setup_checked_light.png"),
+  caption: [Buriza UI - Browser: Node setup with full node]
+)
+
+#figure(
+  image("images/screenshots/browser/node_setup_unchecked_dark.png"),
+  caption: [Buriza UI - Browser: Node setup]
+)
+
+#figure(
+  image("images/screenshots/browser/node_setup_unchecked_light.png"),
+  caption: [Buriza UI - Browser: Node setup]
+)
+
+=== dApp Access
+
+#figure(
+  image("images/screenshots/browser/dapp_explorer_dark.png"),
+  caption: [Buriza UI - Browser: dApp explorer]
+)
+
+#figure(
+  image("images/screenshots/browser/dapp_explorer_light.png"),
+  caption: [Buriza UI - Browser: dApp explorer]
+)
+
+#figure(
+  image("images/screenshots/browser/dapp_explorer_permission_request_dark.png"),
+  caption: [Buriza UI - Browser: dApp authorization request]
+)
+
+#figure(
+  image("images/screenshots/browser/dapp_explorer_permission_request_light.png"),
+  caption: [Buriza UI - Browser: dApp authorization request]
+)
+
+=== Settings
+
+#figure(
+  image("images/screenshots/browser/settings_dark.png"),
+  caption: [Buriza UI - Browser: Settings]
+)
+
+#figure(
+  image("images/screenshots/browser/settings_light.png"),
+  caption: [Buriza UI - Browser: Settings]
+)
+
+#pagebreak()
+
+== Desktop
+
+=== Send Assets
+
+#figure(
+  image("images/screenshots/desktop/send_assets_dark.png"),
+  caption: [Buriza UI - Desktop: Send assets]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_light.png"),
+  caption: [Buriza UI - Desktop: Send assets]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_add_recipient_dark.png"),
+  caption: [Buriza UI - Desktop: Send assets with an additional recipient]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_add_recipient_light.png"),
+  caption: [Buriza UI - Desktop: Send assets with an additional recipient]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_add_token_dark.png"),
+  caption: [Buriza UI - Desktop: Send assets with an additional token]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_add_token_light.png"),
+  caption: [Buriza UI - Desktop: Send assets with an additional token]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_transaction_summary_add_recipient_dark.png"),
+  caption: [Buriza UI - Desktop: Send assets transaction summary with added recipient]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_transaction_summary_add_recipient_light.png"),
+  caption: [Buriza UI - Desktop: Send assets transaction summary with added recipient]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_transaction_summary_dark.png"),
+  caption: [Buriza UI - Desktop: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_transaction_summary_light.png"),
+  caption: [Buriza UI - Desktop: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_success_screen_dark.png"),
+  caption: [Buriza UI - Desktop: Send assets success screen]
+)
+
+#figure(
+  image("images/screenshots/desktop/send_assets_success_screen_light.png"),
+  caption: [Buriza UI - Desktop: Send assets success screen]
+)
+
+=== Receiving Assets
+
+#figure(
+  image("images/screenshots/desktop/receive_assets_dark.png"),
+  caption: [Buriza UI - Desktop: Receive assets]
+)
+
+#figure(
+  image("images/screenshots/desktop/receive_assets_light.png"),
+  caption: [Buriza UI - Desktop: Receive assets]
+)
+
+#figure(
+  image("images/screenshots/desktop/receive_assets_advanced_mode_dark.png"),
+  caption: [Buriza UI - Desktop: Receive assets advanced mode]
+)
+
+#figure(
+  image("images/screenshots/desktop/receive_assets_advanced_mode_light.png"),
+  caption: [Buriza UI - Desktop: Receive assets advanced mode]
+)
+
+=== View Balance and Assets
+
+#figure(
+  image("images/screenshots/desktop/view_balance_and_assets_dark.png"),
+  caption: [Buriza UI - Desktop: View balance and assets]
+)
+
+#figure(
+  image("images/screenshots/desktop/view_balance_and_assets_light.png"),
+  caption: [Buriza UI - Desktop: View balance and assets]
+)
+
+=== Transaction History
+
+#figure(
+  image("images/screenshots/desktop/transaction_history_nft_dark.png"),
+  caption: [Buriza UI - Desktop: Transaction history with NFT]
+)
+
+#figure(
+  image("images/screenshots/desktop/transaction_history_nft_light.png"),
+  caption: [Buriza UI - Desktop: Transaction history with NFT]
+)
+
+#figure(
+  image("images/screenshots/desktop/transaction_history_token_dark.png"),
+  caption: [Buriza UI - Desktop: Transaction history with tokens]
+)
+
+#figure(
+  image("images/screenshots/desktop/transaction_history_token_light.png"),
+  caption: [Buriza UI - Desktop: Transaction history with tokens]
+)
+
+#figure(
+  image("images/screenshots/desktop/transaction_summary_dark.png"),
+  caption: [Buriza UI - Desktop: Transaction summary]
+)
+
+#figure(
+  image("images/screenshots/desktop/transaction_summary_light.png"),
+  caption: [Buriza UI - Desktop: Transaction summary]
+)
+
+=== Full Node Setup
+
+#figure(
+  image("images/screenshots/desktop/node_setup_unchecked_dark.png"),
+  caption: [Buriza UI - Desktop: Node setup]
+)
+
+#figure(
+  image("images/screenshots/desktop/node_setup_unchecked_light.png"),
+  caption: [Buriza UI - Desktop: Node setup]
+)
+
+=== dApp Access
+
+#figure(
+  image("images/screenshots/desktop/dapp_explorer_dark.png"),
+  caption: [Buriza UI - Desktop: dApp explorer]
+)
+
+#figure(
+  image("images/screenshots/desktop/dapp_explorer_light.png"),
+  caption: [Buriza UI - Desktop: dApp explorer]
+)
+
+#figure(
+  image("images/screenshots/desktop/dapp_explorer_permission_request_dark.png"),
+  caption: [Buriza UI - Desktop: dApp authorization request]
+)
+
+#figure(
+  image("images/screenshots/desktop/dapp_explorer_permission_request_light.png"),
+  caption: [Buriza UI - Desktop: dApp authorization request]
+)
+
+=== Wallet Creation and Account Management
+
+#figure(
+  image("images/screenshots/desktop/manage_wallet_dark.png"),
+  caption: [Buriza UI - Desktop: Manage wallet]
+)
+
+#figure(
+  image("images/screenshots/desktop/manage_wallet_light.png"),
+  caption: [Buriza UI - Desktop: Manage wallet]
+)
+
+#figure(
+  image("images/screenshots/desktop/manage_wallet_add_new_account_dark.png"),
+  caption: [Buriza UI - Desktop: Manage wallet - add new account]
+)
+
+#figure(
+  image("images/screenshots/desktop/manage_wallet_add_new_account_light.png"),
+  caption: [Buriza UI - Desktop: Manage wallet - add new account]
+)
+
+#figure(
+  image("images/screenshots/desktop/edit_wallet_dark.png"),
+  caption: [Buriza UI - Desktop: Manage wallet - edit account]
+)
+
+#figure(
+  image("images/screenshots/desktop/edit_wallet_light.png"),
+  caption: [Buriza UI - Desktop: Manage wallet - edit account]
+)
+
+#figure(
+  image("images/screenshots/desktop/add_new_wallet_dark.png"),
+  caption: [Buriza UI - Desktop: Manage wallet - add new wallet]
+)
+
+#figure(
+  image("images/screenshots/desktop/add_new_wallet_light.png"),
+  caption: [Buriza UI - Desktop: Manage wallet - add new wallet]
+)
+
+#figure(
+  image("images/screenshots/desktop/save_recovery_phrase_dark.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - save recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/desktop/save_recovery_phrase_light.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - save recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/desktop/verify_recovery_phrase_dark.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - verify recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/desktop/verify_recovery_phrase_light.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - verify recovery phrase]
+)
+
+#figure(
+  image("images/screenshots/desktop/wallet_setup_dark.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - setup]
+)
+
+#figure(
+  image("images/screenshots/desktop/wallet_setup_light.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - setup]
+)
+
+#figure(
+  image("images/screenshots/desktop/authentication_screen_dark.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - authentication]
+)
+
+#figure(
+  image("images/screenshots/desktop/authentication_screen_light.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - authentication]
+)
+
+#figure(
+  image("images/screenshots/desktop/success_screen_dark.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - success screen]
+)
+
+#figure(
+  image("images/screenshots/desktop/success_screen_light.png"),
+  caption: [Buriza UI - Desktop: Create new wallet - success screen]
+)
+
+
+= Platform Development Setup
 
 This section provides step-by-step instructions for building and running Buriza from source. As an open-source Cardano wallet suite, Buriza supports multiple deployment targets including desktop applications, mobile platforms, browser extensions, and progressive web apps.
 
-=== Prerequisites
+== Prerequisites
 
 *System Requirements:*
 - .NET 9 SDK
@@ -280,7 +972,7 @@ This section provides step-by-step instructions for building and running Buriza 
 - *Android Development:* Android SDK, Android Studio
 - *Browser Extension:* Chrome/Chromium or Firefox developer mode
 
-=== Installation
+== Installation
 
 Clone the repository and install dependencies:
 
@@ -290,9 +982,9 @@ cd Buriza
 dotnet workload restore
 ```
 
-=== Platform Development Instructions
+== Platform Development Instructions
 
-==== Desktop Application (macOS)
+=== Desktop Application (macOS)
 
 ```bash
 # Navigate to app directory
@@ -302,7 +994,7 @@ cd src/Buriza.App
 dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
 ```
 
-==== iOS Simulator
+=== iOS Simulator
 
 ```bash
 # Install required workloads
@@ -319,7 +1011,7 @@ xcrun simctl launch booted com.saibinc.buriza
 
 #pagebreak()
 
-==== Physical iPhone
+=== Physical iPhone
 
 *Prerequisites:*
 1. Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
@@ -336,7 +1028,7 @@ xcrun devicectl list devices
 xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
-==== Android Development
+=== Android Development
 
 ```bash
 # Android Emulator (requires Android SDK)
@@ -346,7 +1038,7 @@ cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 ```
 
-==== Browser Extension
+=== Browser Extension
 
 ```bash
 # Build browser extension
@@ -359,7 +1051,7 @@ dotnet run
 2. Enable "Developer mode"
 3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
 
-==== Progressive Web App
+=== Progressive Web App
 
 ```bash
 # Build and run web application
@@ -398,6 +1090,20 @@ WebAssembly Community Group. (2023). _WebAssembly_. WebAssembly. https://webasse
 #pagebreak()
 
 = Links
+
+This section contains links relevant to the Buriza project.
+
+#link("https://github.com/SAIB-Inc/Buriza")[Buriza GitHub repository]
+
+#link("https://saibph-my.sharepoint.com/:f:/g/personal/accounts_saib_dev/EpK_1IrageVHhtTzjgJrDDUBUkIoIkfHMCJcEodiE7uq-Q?e=ExWrYd")[Screenshots and Videos]
+
+#link("https://saibph-my.sharepoint.com/:b:/g/personal/accounts_saib_dev/Ea17Rbt3BLlFvIbwLlNMhMcB0LgqVCZc94Jx55p-FHo8zw?e=KheTGY")[Buriza Design Report]
+
+#link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[Project Catalyst: Buriza.Browser]
+
+#link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[Project Catalyst: Buriza.Desktop]
+
+#link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[Project Catalyst: Buriza.Mobile]
 
 #pagebreak()
 
