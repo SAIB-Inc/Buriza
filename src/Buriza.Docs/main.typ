@@ -213,6 +213,106 @@ The responsive approach extends beyond screen size to consider platform-specific
 #pagebreak()
 = User Interface
 
+== Platform Development Setup
+
+This section provides step-by-step instructions for building and running Buriza from source. As an open-source Cardano wallet suite, Buriza supports multiple deployment targets including desktop applications, mobile platforms, browser extensions, and progressive web apps.
+
+=== Prerequisites
+
+*System Requirements:*
+- .NET 9 SDK
+- Node.js (for Tailwind CSS compilation)
+- Git
+
+*Platform-Specific Requirements:*
+- *iOS Development:* macOS, Xcode, Apple Developer account
+- *Android Development:* Android SDK, Android Studio
+- *Browser Extension:* Chrome/Chromium or Firefox developer mode
+
+=== Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone git@github.com:SAIB-Inc/Buriza.git
+cd Buriza
+dotnet workload restore
+```
+
+=== Platform Development Instructions
+
+==== Desktop Application (macOS)
+
+```bash
+# Navigate to app directory
+cd src/Buriza.App
+
+# Build and run macOS application
+dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
+```
+
+==== iOS Simulator
+
+```bash
+# Install required workloads
+dotnet workload restore
+
+# Build for iOS simulator
+cd src/Buriza.App && dotnet build . -f net9.0-ios
+
+# Install and launch on simulator (workaround for iOS 18.5/18.6 mismatch)
+xcrun simctl boot "iPhone 16 Pro"  # or any available device
+xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
+xcrun simctl launch booted com.saibinc.buriza
+```
+
+==== Physical iPhone
+
+*Prerequisites:*
+1. Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
+2. Create Xcode project with same bundle ID to generate provisioning profile
+
+```bash
+# Build for physical device
+cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
+
+# Install to connected device
+xcrun devicectl device install app --device [device-id] [app-path]
+```
+
+==== Android Development
+
+```bash
+# Android Emulator (requires Android SDK)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
+
+# Android Device (requires USB debugging enabled)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+```
+
+==== Browser Extension
+
+```bash
+# Build browser extension
+cd src/Buriza.Extension
+dotnet run
+
+# Load unpacked extension in Chrome:
+# 1. Navigate to chrome://extensions/
+# 2. Enable "Developer mode"
+# 3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
+```
+
+==== Progressive Web App
+
+```bash
+# Build and run web application
+cd src/Buriza.Web
+dotnet run
+
+# Access at http://localhost:5292
+```
+
 #pagebreak()
 
 = Conclusion
