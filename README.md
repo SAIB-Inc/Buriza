@@ -71,12 +71,55 @@ Buriza/
 git clone https://github.com/saib-inc/Buriza.git
 cd Buriza
 
+# Install CSS dependencies
+cd src/Buriza.UI && bun install
+
 # Build the entire solution
 dotnet build
 
+# Run CSS watch (in separate terminal)
+cd src/Buriza.UI && bun watch
+
 # Run specific projects
 cd src/Buriza.Web && dotnet run          # Web app
-cd src/Buriza.Extension && dotnet run    # Browser extension
+cd src/Buriza.Extension && dotnet build -c Release  # Browser extension
+
+# Load in Chrome/Edge:
+# 1. Open chrome://extensions/
+# 2. Enable "Developer mode" 
+# 3. Click "Load unpacked"
+# 4. Select: src/Buriza.Extension/bin/Release/net9.0/browserextension/
+
+### Desktop Application
+
+```bash
+# Windows
+cd src/Buriza.App && dotnet build -f net9.0-windows && dotnet run -f net9.0-windows
+
+# macOS
+cd src/Buriza.App && dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
+
+### Phone Simulator
+
+```bash
+# Install required workloads
+dotnet workload restore
+
+# iOS Simulator (requires macOS + Xcode)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-ios
+
+# Android Emulator (requires Android SDK)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
+```
+
+### Physical Device
+
+```bash
+# iOS Device (requires developer provisioning)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
+
+# Android Device (requires USB debugging enabled)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 ```
 
 ## 📱 Platform Support
