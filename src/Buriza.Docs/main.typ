@@ -95,7 +95,7 @@ The component architecture follows a hierarchical structure where complex UI ele
 
 MudBlazor v8.11.0 provides the Material Design 3 foundation for Buriza's visual language, delivering pre-built components with accessibility standards and smooth animations. The theming system integrates seamlessly with CSS custom properties, allowing Buriza to maintain brand identity while leveraging Material Design's proven usability patterns.
 
-Buriza extends this foundation with custom wallet-specific components:
+Buriza extends this foundation with Buriza-styled components:
 
 *Common Components:*
 - *BurizaButton* - Standardized button with consistent styling and interaction states
