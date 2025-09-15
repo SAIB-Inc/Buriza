@@ -71,12 +71,74 @@ Buriza/
 git clone https://github.com/saib-inc/Buriza.git
 cd Buriza
 
+# Install CSS dependencies
+cd src/Buriza.UI && bun install
+
 # Build the entire solution
 dotnet build
 
+# Run CSS watch (in separate terminal)
+cd src/Buriza.UI && bun watch
+
 # Run specific projects
 cd src/Buriza.Web && dotnet run          # Web app
-cd src/Buriza.Extension && dotnet run    # Browser extension
+cd src/Buriza.Extension && dotnet build -c Release  # Browser extension
+
+# Load in browser:
+# 1. Navigate to browser's extension management page
+# 2. Enable "Developer mode"
+# 3. Click "Load unpacked"
+# 4. Select: src/Buriza.Extension/bin/Release/net9.0/browserextension/
+
+### Desktop Application
+
+```bash
+# Windows
+cd src/Buriza.App && dotnet build -f net9.0-windows && dotnet run -f net9.0-windows
+
+# macOS
+cd src/Buriza.App && dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
+
+### iOS Simulator
+
+```bash
+# Install required workloads
+dotnet workload restore
+
+# Build for iOS simulator
+cd src/Buriza.App && dotnet build . -f net9.0-ios
+
+# Install and launch on simulator
+xcrun simctl boot "iPhone 16 Pro"  # or any available device
+xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
+xcrun simctl launch booted com.saibinc.buriza
+```
+
+### Physical iPhone
+
+```bash
+# Prerequisites:
+# 1. Change bundle ID to com.yourname.buriza in Buriza.App.csproj
+# 2. Create Xcode project with same bundle ID to generate provisioning profile
+
+# Build for physical device
+cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
+
+# Get device ID
+xcrun devicectl list devices
+
+# Install to connected device
+xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
+```
+
+### Android Emulator & Device
+
+```bash
+# Android Emulator (requires Android SDK)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
+
+# Android Device
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 ```
 
 ## 📱 Platform Support

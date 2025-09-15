@@ -24,12 +24,9 @@
 Buriza is a comprehensive Cardano wallet software suite spanning mobile, desktop, and browser platforms. The name Buriza is inspired by the Japanese interpretation of "blizzard," symbolizing power, resilience, and control. Reflecting this spirit, Buriza empowers users with full sovereignty over their wallet infrastructure through open-source development and complete decentralization.
 
 Funded under Project Catalyst Fund 13, the initiative is structured across three complementary proposals:
-- #link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[**Buriza.Mobile
-**] — focused on delivering a flexible and responsive mobile application,
-- #link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[**Buriza.Browser
-**] — the browser extension interface, and
-- #link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[**Buriza.Desktop
-**] — a desktop implementation featuring full-node capabilities.
+- #link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[*Buriza.Mobile*] — focused on delivering a flexible and responsive mobile application,
+- #link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[*Buriza.Browser*] — the browser extension interface, and
+- #link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[*Buriza.Desktop*] — a desktop implementation featuring full-node capabilities.
 
 Since Milestone 1, Buriza’s design has undergone significant evolution. The team adopted Material Design 3 (MD3) principles to create a more refined, accessible, and cohesive user experience. A major visual shift includes the introduction of Buriza Frostling, a bold, yeti-inspired mascot that replaces the earlier soft, gem-like designs. Frostling embodies Buriza’s core values—security, trust, and power—and appears throughout the interface to reinforce brand consistency.
 
@@ -266,6 +263,111 @@ focus on small adjustments rather than re-implementing entire views.
 #pagebreak()
 
 = User Interface
+
+== Platform Development Setup
+
+This section provides step-by-step instructions for building and running Buriza from source. As an open-source Cardano wallet suite, Buriza supports multiple deployment targets including desktop applications, mobile platforms, browser extensions, and progressive web apps.
+
+=== Prerequisites
+
+*System Requirements:*
+- .NET 9 SDK
+- Node.js (for Tailwind CSS compilation)
+- Git
+
+*Platform-Specific Requirements:*
+- *iOS Development:* macOS, Xcode, Apple Developer account
+- *Android Development:* Android SDK, Android Studio
+- *Browser Extension:* Chrome/Chromium or Firefox developer mode
+
+=== Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone git@github.com:SAIB-Inc/Buriza.git
+cd Buriza
+dotnet workload restore
+```
+
+=== Platform Development Instructions
+
+==== Desktop Application (macOS)
+
+```bash
+# Navigate to app directory
+cd src/Buriza.App
+
+# Build and run macOS application
+dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
+```
+
+==== iOS Simulator
+
+```bash
+# Install required workloads
+dotnet workload restore
+
+# Build for iOS simulator
+cd src/Buriza.App && dotnet build . -f net9.0-ios
+
+# Install and launch on simulator
+xcrun simctl boot "iPhone 16 Pro"  # or any available device
+xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
+xcrun simctl launch booted com.saibinc.buriza
+```
+
+#pagebreak()
+
+==== Physical iPhone
+
+*Prerequisites:*
+1. Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
+2. Create Xcode project with same bundle ID to generate provisioning profile
+
+```bash
+# Build for physical device
+cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
+
+# Get device ID
+xcrun devicectl list devices
+
+# Install to connected device
+xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
+```
+
+==== Android Development
+
+```bash
+# Android Emulator (requires Android SDK)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
+
+# Android Device (requires USB debugging enabled)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+```
+
+==== Browser Extension
+
+```bash
+# Build browser extension
+cd src/Buriza.Extension
+dotnet run
+
+# Load unpacked extension in browser:
+```
+1. Navigate to browser's extension management page
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
+
+==== Progressive Web App
+
+```bash
+# Build and run web application
+cd src/Buriza.Web
+dotnet run
+
+# Access at http://localhost:5292
+```
 
 #pagebreak()
 
