@@ -146,7 +146,7 @@ The component library provides a comprehensive set of reusable Blazor components
 
 - *Common* - Foundational UI primitives like buttons, text fields, and navigation tabs
 - *Controls* - Advanced interactive elements including asset cards and search functionality
-- *Layout* - Application structure components for sidebars, headers, and main content areas
+- *Layout* - Application structure components for sidebars and main content areas
 - *Pages* - Complete page/screen implementations for wallet operations like assets, transaction history, dapp access, send, and receive
 
 The library leverages MudBlazor's Material Design 3 implementation alongside Tailwind CSS for utility-first styling and responsive design patterns. This combination ensures both visual consistency and flexible customization across all platform implementations.
