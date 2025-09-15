@@ -111,4 +111,4 @@ Buriza's latest design update embodies SAIB's desire to create an impactful appl
 
 = References
 
-Material Design. (2025). Material Design 3. Google. #link("https://m3.material.io/")[https://m3.material.io/]
+Material Design. (2025). _Material Design 3_. Google. #link("https://m3.material.io/")[https://m3.material.io/]
