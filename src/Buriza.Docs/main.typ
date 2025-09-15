@@ -132,7 +132,7 @@ The responsive approach extends beyond screen size to consider platform-specific
 
 = References
 
-Google. (2023). _Material Design 3_. Material Design. https://m3.material.io/
+Google. (2025). _Material Design 3_. Material Design. https://m3.material.io/
 
 Google. (2023). _Manifest V3 - Chrome Extensions_. Chrome Developers. https://developer.chrome.com/docs/extensions/mv3/
 
