@@ -130,6 +130,28 @@ The responsive approach extends beyond screen size to consider platform-specific
 
 #pagebreak()
 
+= References
+
+Google. (2023). _Material Design 3_. Material Design. https://m3.material.io/
+
+Google. (2023). _Manifest V3 - Chrome Extensions_. Chrome Developers. https://developer.chrome.com/docs/extensions/mv3/
+
+Microsoft. (2024). _ASP.NET Core Blazor_. Microsoft Learn. https://learn.microsoft.com/en-us/aspnet/core/blazor/
+
+Microsoft. (2024). _.NET Multi-platform App UI (.NET MAUI)_. Microsoft Learn. https://learn.microsoft.com/en-us/dotnet/maui/
+
+Microsoft. (2024). _BlazorWebView for .NET MAUI_. Microsoft Learn. https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/blazorwebview
+
+Mozilla. (2023). _Progressive web apps (PWAs)_. MDN Web Docs. https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps
+
+MudBlazor Team. (2024). _MudBlazor - Blazor component library_. MudBlazor. https://mudblazor.com/
+
+Tailwind Labs. (2024). _Tailwind CSS - A utility-first CSS framework_. Tailwind CSS. https://tailwindcss.com/
+
+WebAssembly Community Group. (2023). _WebAssembly_. WebAssembly. https://webassembly.org/
+
+#pagebreak()
+
 = Links
 
 #pagebreak()
