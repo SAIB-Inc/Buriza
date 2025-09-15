@@ -21,6 +21,31 @@
 
 = Introduction
 
+Buriza is a comprehensive Cardano wallet software suite spanning mobile, desktop, and browser platforms. The name Buriza is inspired by the Japanese interpretation of "blizzard," symbolizing power, resilience, and control. Reflecting this spirit, Buriza empowers users with full sovereignty over their wallet infrastructure through open-source development and complete decentralization.
+
+Funded under Project Catalyst Fund 13, the initiative is structured across three complementary proposals:
+- #link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[**Buriza.Mobile
+**] — focused on delivering a flexible and responsive mobile application,
+- #link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[**Buriza.Browser
+**] — the browser extension interface, and
+- #link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[**Buriza.Desktop
+**] — a desktop implementation featuring full-node capabilities.
+
+Since Milestone 1, Buriza’s design has undergone significant evolution. The team adopted Material Design 3 (MD3) principles to create a more refined, accessible, and cohesive user experience. A major visual shift includes the introduction of Buriza Frostling, a bold, yeti-inspired mascot that replaces the earlier soft, gem-like designs. Frostling embodies Buriza’s core values—security, trust, and power—and appears throughout the interface to reinforce brand consistency.
+
+The updated design also features enhanced iconography, a standardized color system based on Buriza’s three original core colors, and new accent shades that provide stronger visual contrast. Clean mockups and improved UI patterns further highlight the wallet’s sleek, modern aesthetic.
+
+On the technical side, Buriza is built on a modular .NET 9 architecture, emphasizing shared components and platform independence. At the core of the system is the Buriza.UI shared component library, enabling a single codebase to serve multiple targets—browser extension, progressive web app (PWA), and cross-platform MAUI applications. This approach reduces redundant development and ensures a consistent user experience across all platforms.
+
+The front-end implementation utilizes:
+- Blazor for application logic and rendering,
+- MudBlazor for MD3-compliant UI components, and
+- Tailwind CSS for utility-first styling.
+
+The browser extension is powered by Blazor WebAssembly and follows Manifest V3 standards. The PWA achieves near-native performance through WebAssembly, while the MAUI app leverages BlazorWebView to combine native device capabilities with a unified web-based UI.
+
+With these design and architectural foundations in place, this document outlines the progress and deliverables completed for Milestone 2. It details the evolution of the user interface and system architecture since Milestone 1, explains the project setup and tools used, and documents the front-end implementation methodology. Screenshots, videos, and working examples are provided to demonstrate Buriza’s evolving functionality. The report also highlights the challenges encountered and the solutions developed by the SAIB Inc. team, reflecting its ongoing commitment to building a secure, performant, and user-centered Cardano wallet.
+
 #pagebreak()
 
 = Buriza Front-End 
