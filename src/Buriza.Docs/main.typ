@@ -22,6 +22,7 @@ This section covers the branding and UI/UX design of the Buriza wallet, describi
 Additionally, it tackles the implementation of the design - detailing the project set up and various tools utilized.
 
 == Design
+This section outlines Buriza’s design evolution in alignment with the principles and best practices of Google’s Material Design 3.
 
 Buriza's design has significantly evolved since the submission of Project Catalyst's Milestone 1,
 with the initial branding and UI/UX designs detailed in the following 
