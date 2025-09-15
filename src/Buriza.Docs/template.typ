@@ -63,6 +63,10 @@
   show outline.entry: it => text(size: 12pt, weight: "regular", it)
 
   v(2fr)
+  
+  // SAIB Logo
+  align(center, image("images/saib_logo_dark.png", width: 30%))
+  v(2em)
 
   align(center, text(font: title-font, 3em, weight: 700, title))
   v(5em, weak: true)
