@@ -24,12 +24,9 @@
 Buriza is a comprehensive Cardano wallet software suite spanning mobile, desktop, and browser platforms. The name Buriza is inspired by the Japanese interpretation of "blizzard," symbolizing power, resilience, and control. Reflecting this spirit, Buriza empowers users with full sovereignty over their wallet infrastructure through open-source development and complete decentralization.
 
 Funded under Project Catalyst Fund 13, the initiative is structured across three complementary proposals:
-- #link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[**Buriza.Mobile
-**] — focused on delivering a flexible and responsive mobile application,
-- #link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[**Buriza.Browser
-**] — the browser extension interface, and
-- #link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[**Buriza.Desktop
-**] — a desktop implementation featuring full-node capabilities.
+- #link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[*Buriza.Mobile*] — focused on delivering a flexible and responsive mobile application,
+- #link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[*Buriza.Browser*] — the browser extension interface, and
+- #link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[*Buriza.Desktop*] — a desktop implementation featuring full-node capabilities.
 
 Since Milestone 1, Buriza’s design has undergone significant evolution. The team adopted Material Design 3 (MD3) principles to create a more refined, accessible, and cohesive user experience. A major visual shift includes the introduction of Buriza Frostling, a bold, yeti-inspired mascot that replaces the earlier soft, gem-like designs. Frostling embodies Buriza’s core values—security, trust, and power—and appears throughout the interface to reinforce brand consistency.
 
@@ -45,6 +42,9 @@ The front-end implementation utilizes:
 The browser extension is powered by Blazor WebAssembly and follows Manifest V3 standards. The PWA achieves near-native performance through WebAssembly, while the MAUI app leverages BlazorWebView to combine native device capabilities with a unified web-based UI.
 
 With these design and architectural foundations in place, this document outlines the progress and deliverables completed for Milestone 2. It details the evolution of the user interface and system architecture since Milestone 1, explains the project setup and tools used, and documents the front-end implementation methodology. Screenshots, videos, and working examples are provided to demonstrate Buriza’s evolving functionality. The report also highlights the challenges encountered and the solutions developed by the SAIB Inc. team, reflecting its ongoing commitment to building a secure, performant, and user-centered Cardano wallet.
+
+This report has been converted to Word format for Project Catalyst submission. The original version may be found in the Buriza project's GitHub repository:
+#link("https://github.com/SAIB-Inc/Buriza/tree/main/src/Buriza.Docs")[https://github.com/SAIB-Inc/Buriza/tree/main/src/Buriza.Docs]
 
 #pagebreak()
 
@@ -143,7 +143,7 @@ The component library provides a comprehensive set of reusable Blazor components
 
 - *Common* - Foundational UI primitives like buttons, text fields, and navigation tabs
 - *Controls* - Advanced interactive elements including asset cards and search functionality
-- *Layout* - Application structure components for sidebars, headers, and main content areas
+- *Layout* - Application structure components for sidebars and main content areas
 - *Pages* - Complete page/screen implementations for wallet operations like assets, transaction history, dapp access, send, and receive
 
 The library leverages MudBlazor's Material Design 3 implementation alongside Tailwind CSS for utility-first styling and responsive design patterns. This combination ensures both visual consistency and flexible customization across all platform implementations.
@@ -211,6 +211,57 @@ Buriza implements a mobile-first responsive design strategy that adapts to vario
 The responsive approach extends beyond screen size to consider platform-specific interaction patterns. Touch targets are appropriately sized for mobile interfaces, while desktop versions support keyboard navigation and hover states, ensuring consistent functionality regardless of how users access Buriza.
 
 #pagebreak()
+
+= Implementation
+
+This section outlines the 
+implementation progress and highlights challenges encountered by the development team.
+
+Buriza’s unique infrastructure significantly streamlined the development process. Rather than 
+maintaining separate codebases for each platform and operating system, the unified Buriza.UI codebase 
+ensures compatibility across mobile, desktop, and web platforms—spanning Windows, macOS, Linux, Android, 
+and iOS. As a result, platform-specific development primarily focused on using Tailwind’s 
+responsive directives to adapt the user interface across varying screen sizes.
+
+To ensure both code quality and visual fidelity, the development process established had code peer-reviewed prior to being pushed to the repository. The team maintained a strong focus on building a beautiful, high-quality application through continuous collaboration and refinement.
+
+== Mobile
+Development began with a mobile-first approach, with the goal of closely following the design system 
+established by the design team. The focus was on replicating the intended user experience, layout 
+behavior, and visual responsiveness on mobile devices.
+
+During this process, the team encountered a challenge related to how image assets were handled. Since the 
+Buriza.App project (used to compile the mobile application) did not have direct access to image files 
+stored in the shared Buriza.UI library, assets such as icons and illustrations could not be referenced at 
+runtime.
+
+To solve this, the team developed an internal utility that enables asset embedding directly into the 
+application code. This ensured that all necessary visual elements remained accessible regardless of 
+platform-specific limitations—eliminating the need for runtime file system access and enabling smooth, 
+consistent rendering across platforms.
+
+
+== Browser
+Browser extension development leveraged the shared codebase, with only minor layout adjustments 
+needed to fit the extension's popup dimensions. When fully expanded, the extension mirrors the desktop 
+interface.
+
+Similar to the mobile application, the extension faced challenges with accessing shared image assets once 
+deployed in the browser environment. Since browser extensions operate in isolated environments with 
+limited file system access, the same asset management solution used in the mobile app was also applied 
+here. This unified approach allowed the team to maintain consistency in asset rendering without 
+duplicating resources or code.
+
+== Desktop
+The desktop implementation also leveraged Blazor’s flexible layout system. Developers were able to 
+implement the drawer-based interface with minimal overhead, using dynamic layouts that adjusted based on 
+page context.
+
+Additionally, core features such as Send and Receive reused mobile UI patterns within drawers, allowing the team to 
+focus on small adjustments rather than re-implementing entire views.
+
+#pagebreak()
+
 = User Interface
 
 == Platform Development Setup
@@ -260,11 +311,13 @@ dotnet workload restore
 # Build for iOS simulator
 cd src/Buriza.App && dotnet build . -f net9.0-ios
 
-# Install and launch on simulator (workaround for iOS 18.5/18.6 mismatch)
+# Install and launch on simulator
 xcrun simctl boot "iPhone 16 Pro"  # or any available device
 xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
 xcrun simctl launch booted com.saibinc.buriza
 ```
+
+#pagebreak()
 
 ==== Physical iPhone
 
@@ -276,8 +329,11 @@ xcrun simctl launch booted com.saibinc.buriza
 # Build for physical device
 cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
 
+# Get device ID
+xcrun devicectl list devices
+
 # Install to connected device
-xcrun devicectl device install app --device [device-id] [app-path]
+xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
 ==== Android Development
@@ -297,11 +353,11 @@ cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=
 cd src/Buriza.Extension
 dotnet run
 
-# Load unpacked extension in Chrome:
-# 1. Navigate to chrome://extensions/
-# 2. Enable "Developer mode"
-# 3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
+# Load unpacked extension in browser:
 ```
+1. Navigate to browser's extension management page
+2. Enable "Developer mode"
+3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
 
 ==== Progressive Web App
 

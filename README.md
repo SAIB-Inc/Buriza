@@ -84,9 +84,9 @@ cd src/Buriza.UI && bun watch
 cd src/Buriza.Web && dotnet run          # Web app
 cd src/Buriza.Extension && dotnet build -c Release  # Browser extension
 
-# Load in Chrome/Edge:
-# 1. Open chrome://extensions/
-# 2. Enable "Developer mode" 
+# Load in browser:
+# 1. Navigate to browser's extension management page
+# 2. Enable "Developer mode"
 # 3. Click "Load unpacked"
 # 4. Select: src/Buriza.Extension/bin/Release/net9.0/browserextension/
 
@@ -108,7 +108,7 @@ dotnet workload restore
 # Build for iOS simulator
 cd src/Buriza.App && dotnet build . -f net9.0-ios
 
-# Install and launch on simulator (workaround for iOS 18.5/18.6 mismatch)
+# Install and launch on simulator
 xcrun simctl boot "iPhone 16 Pro"  # or any available device
 xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
 xcrun simctl launch booted com.saibinc.buriza
@@ -124,8 +124,11 @@ xcrun simctl launch booted com.saibinc.buriza
 # Build for physical device
 cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
 
+# Get device ID
+xcrun devicectl list devices
+
 # Install to connected device
-xcrun devicectl device install app --device [device-id] [app-path]
+xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
 ### Android Emulator & Device
