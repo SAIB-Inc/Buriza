@@ -1,7 +1,7 @@
 #import "template.typ": *
 
 #show: template.with(
-  title: "Buriza Wallet Documentation",
+  title: "Buriza Wallet: UI/UX Design and Front-End Development",
   company: "SAIB Inc.",
   date: datetime.today().display(),
   main-color: "#4F8EFF",
@@ -11,14 +11,51 @@
   ),
 )
 
+ #outline(
+    title: [Table of Contents],
+    depth: 3,
+    indent: 2em,
+    fill: repeat[.],
+)
+
+#pagebreak()
+
 = Introduction
 
-= Implementation
+#pagebreak()
 
-= Output
+= Buriza Front-End  
+== Design
+
+=== Material Design 3
+
+== Development
+
+=== Buriza Infrastructure
+
+==== Web View
+
+==== MAUI
+
+==== Blazor
+
+=== Front-End Implementation
+==== Tailwind
+
+==== MudBlazor
+
+#pagebreak()
+= User Interface
+
+#pagebreak()
 
 = Conclusion
 
+#pagebreak()
+
 = Links
 
+#pagebreak()
+
 = References
+
