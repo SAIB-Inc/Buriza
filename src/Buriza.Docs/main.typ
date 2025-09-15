@@ -75,7 +75,7 @@ The PWA architecture enables installation directly from the browser without requ
 
 ==== Cross-Platform App
 
-The MAUI application targets iOS, Android, macOS, and Windows through a hybrid architecture that combines native platform capabilities with web-based UI components. At the core of this implementation is BlazorWebView, a native control that hosts Blazor content within a webview container while providing seamless integration with platform-specific APIs.
+The #link("https://learn.microsoft.com/en-us/dotnet/maui/")[MAUI] application targets iOS, Android, macOS, and Windows through a hybrid architecture that combines native platform capabilities with web-based UI components. At the core of this implementation is BlazorWebView, a native control that hosts Blazor content within a webview container while providing seamless integration with platform-specific APIs.
 
 BlazorWebView acts as a bridge between the native MAUI shell and the Blazor UI layer, allowing the same *`Buriza.UI`* components to render within a native application context. This approach eliminates the need to rebuild the entire user interface using platform-specific controls like XAML, while still providing access to native device features such as secure storage, biometric authentication, and push notifications.
 
@@ -87,13 +87,13 @@ The front-end implementation combines modern web technologies with component-dri
 
 ==== Blazor Components
 
-Blazor serves as the foundational UI framework, enabling C\# development for web interfaces through WebAssembly compilation. This approach allows the entire Buriza application stack to use a single programming language, eliminating context switching between backend and frontend development.
+#link("https://learn.microsoft.com/en-us/aspnet/core/blazor/")[Blazor] is Microsoft's web framework that serves as the foundational UI technology for Buriza, enabling C\# development for web interfaces through WebAssembly compilation. This Microsoft-developed framework allows the entire Buriza application stack to use a single programming language, eliminating context switching between backend and frontend development.
 
 The component architecture follows a hierarchical structure where complex UI elements are composed of smaller, reusable primitives. Blazor's two-way data binding simplifies form interactions and real-time updates, particularly important for wallet operations that require immediate visual feedback on transaction states and balance changes.
 
 ==== MudBlazor Design System
 
-MudBlazor v8.11.0 provides the Material Design 3 foundation for Buriza's visual language, delivering pre-built components with accessibility standards and smooth animations. The theming system integrates seamlessly with CSS custom properties, allowing Buriza to maintain brand identity while leveraging Material Design's proven usability patterns.
+#link("https://mudblazor.com/")[MudBlazor] v8.11.0 provides the Material Design 3 foundation for Buriza's visual language, delivering pre-built components with accessibility standards and smooth animations. The theming system integrates seamlessly with CSS custom properties, allowing Buriza to maintain brand identity while leveraging Material Design's proven usability patterns.
 
 Buriza extends this foundation with Buriza-styled components:
 
@@ -111,7 +111,7 @@ Buriza extends this foundation with Buriza-styled components:
 
 ==== Tailwind CSS Integration
 
-Tailwind CSS v4 complements MudBlazor by providing utility-first styling capabilities for custom layouts and responsive behavior. The integration uses a Bun build pipeline for rapid CSS compilation and automatic purging of unused styles, ensuring optimal bundle sizes.
+#link("https://tailwindcss.com/")[Tailwind CSS] v4 complements MudBlazor by providing utility-first styling capabilities for custom layouts and responsive behavior. The integration uses a Bun build pipeline for rapid CSS compilation and automatic purging of unused styles, ensuring optimal bundle sizes.
 
 The utility-first approach enables precise control over spacing, positioning, and responsive breakpoints, particularly valuable for wallet interfaces that require exact alignment for transaction details and balance displays. Custom CSS variables bridge the gap between Tailwind utilities and MudBlazor's theming system.
 
