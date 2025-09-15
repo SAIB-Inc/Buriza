@@ -99,26 +99,42 @@ cd src/Buriza.App && dotnet build -f net9.0-windows && dotnet run -f net9.0-wind
 # macOS
 cd src/Buriza.App && dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
 
-### Phone Simulator
+### iOS Simulator
 
 ```bash
 # Install required workloads
 dotnet workload restore
 
-# iOS Simulator (requires macOS + Xcode)
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-ios
+# Build for iOS simulator
+cd src/Buriza.App && dotnet build . -f net9.0-ios
 
-# Android Emulator (requires Android SDK)
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
+# Install and launch on simulator (workaround for iOS 18.5/18.6 mismatch)
+xcrun simctl boot "iPhone 16 Pro"  # or any available device
+xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
+xcrun simctl launch booted com.saibinc.buriza
 ```
 
-### Physical Device
+### Physical iPhone
 
 ```bash
-# iOS Device (requires developer provisioning)
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
+# Prerequisites:
+# 1. Change bundle ID to com.yourname.buriza in Buriza.App.csproj
+# 2. Create Xcode project with same bundle ID to generate provisioning profile
 
-# Android Device (requires USB debugging enabled)
+# Build for physical device
+cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
+
+# Install to connected device
+xcrun devicectl device install app --device [device-id] [app-path]
+```
+
+### Android Emulator & Device
+
+```bash
+# Android Emulator (requires Android SDK)
+cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
+
+# Android Device
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 ```
 
