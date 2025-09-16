@@ -35,18 +35,18 @@
                 <MudTabPanel 
                     Text="Token" 
                     Icon="@BurizaIcons.TokenSymbolIcon"
-                    Class="w-full bg-[var(--mud-palette-dark)]"
+                    Class="w-full bg-[var(--mud-palette-drawer-background)]"
                     Style="border-radius: 30px 10px 10px 30px"
                 />
                 <MudTabPanel 
                     Text="NFT" 
                     Icon="@BurizaIcons.NftSymbolIcon"
-                    Class="w-full bg-[var(--mud-palette-dark)]"
+                    Class="w-full bg-[var(--mud-palette-drawer-background)]"
                     Style="border-radius: 10px 30px 30px 10px"
                 />
             </BurizaTabs>
         </div>
-        <div class="max-[376px]:min-h-[calc(100%-200px)] !space-y-2 h-full max-h-[calc(100%-140px)] !pb-9 w-full overflow-y-auto !rounded-[12px]">
+        <div class="max-[376px]:min-h-[calc(100%-200px)] !px-4 !space-y-2 h-full max-h-[calc(100%-140px)] !pb-9 w-full overflow-y-auto !rounded-[12px]">
             @if (AppStateService.SelectedAssetType == AssetType.Token)
             {
                 @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())

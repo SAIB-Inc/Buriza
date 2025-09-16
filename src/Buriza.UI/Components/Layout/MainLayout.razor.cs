@@ -124,7 +124,9 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             Background = "#10131B",
             BackgroundGray = "#0B0E15",
+            Surface = "#0B0E15",
             OverlayDark = "#000000",
+            OverlayLight = "#272A32",
             AppbarBackground = "#0E0E0E",
             PrimaryLighten = "#AEC6FF",
             Primary = "#4F8EFF",
@@ -141,8 +143,8 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             GrayLight = "#2C2C2E",
             GrayDefault = "#272A32",
             GrayDark = "#C1C6D7",
-            GrayDarker = "#363942",
-            DrawerBackground = "#1C1F27",
+            GrayDarker = "#272A32",
+            DrawerBackground = "#181B23",
             DarkLighten = "#8B90A0",
             Dark = "#181B23",
             DarkDarken = "#1C1F27",
@@ -154,12 +156,17 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SuccessDarken = "#002116",
             Error = "#FF5449",
             Info = "#00B286",
-            Warning = "#FF9C39"
+            InfoLighten = "#1C1F27",
+            Warning = "#FF9C39",
+            LinesDefault = "#181B23",
+            LinesInputs = "#1C1F27"
         },
         PaletteLight = new()
         {
             Background = "#FAF9FF",
             BackgroundGray = "#FFFFFF",
+            Surface = "#ECEDF8",
+            OverlayLight = "#FFFFFF",
             AppbarBackground = "#E0E2ED",
             PrimaryLighten = "#0057C0",
             Primary = "#227CFF",
@@ -172,12 +179,12 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             TextSecondary = "#515E7C",
             GrayLighter = "#AFAFAF",
             GrayLight = "#0057C014",
-            GrayDefault = "#FFFFFF",
+            GrayDefault = "#E6E7F3",
             GrayDark = "#181B23",
-            GrayDarker = "#E0E2ED",
-            DrawerBackground = "#FFFFFF",
+            GrayDarker = "#D8D9E4",
+            DrawerBackground = "#ECEDF8",
             DarkLighten = "#C1C6D7",
-            Dark = "#E0E2ED",
+            Dark = "#FFFFFF",
             DarkDarken = "#E8EFFB",
             DarkContrastText = "#ECEDF8",
             Divider = "#C1C6D7",
@@ -187,7 +194,10 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SuccessDarken = "#005AC4",
             Error = "#BA1A1A",
             Info = "#51DDAE",
-            Warning = "#FF9C39"
+            InfoLighten= "#FFFFFF",
+            Warning = "#FF9C39",
+            LinesDefault = "#E6E7F3",
+            LinesInputs = "#ECEDF8"
         }
     };
 

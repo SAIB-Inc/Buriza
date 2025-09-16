@@ -39,7 +39,7 @@
             @foreach (Recipient recipient in recipients)
             {
                 <MudCard
-                    Class="!w-full !bg-[var(--mud-palette-background-gray)] !rounded-[12px] !p-4 !gap-4 !shadow-[var(--mud-elevation-2)]"
+                    Class="!w-full !bg-[var(--mud-palette-surface)] !rounded-[12px] !p-4 !gap-4 !shadow-[var(--mud-elevation-2)]"
                 >
                     <div class="!mt-2 flex items-center justify-between">
                         <MudText Class="!text-sm">
@@ -57,13 +57,13 @@
                 @if(IsConfirmed)
                 {
                     <div class="!space-y-2">
-                        <div class="flex items-center justify-between bg-[var(--mud-palette-background)] !py-2 !px-4 rounded-[8px]">
+                        <div class="flex items-center justify-between bg-[var(--mud-palette-dark)] !py-2 !px-4 rounded-[8px]">
                             <MudText Class="!text-sm !font-light">
                                 <span class="!text-[var(--mud-palette-text-secondary)]">From: </span>
                                 <span>addr1q...8r7z4lgcqrqt9uu</span>
                             </MudText>
                         </div>
-                        <div class="flex items-center justify-between bg-[var(--mud-palette-background)] !py-2 !px-4 rounded-[8px]">
+                        <div class="flex items-center justify-between bg-[var(--mud-palette-dark)] !py-2 !px-4 rounded-[8px]">
                             <MudText Class="!text-sm !font-light">
                                 <span class="!text-[var(--mud-palette-text-secondary)]">To: </span>
                                 <span>addr1q...17xpubmzsrqt9jp</span>

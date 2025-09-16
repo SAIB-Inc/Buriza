@@ -57,6 +57,7 @@
                     <MudIcon
                         Icon="@BurizaIcons.AssetIcon"
                         Size="Size.Medium" 
+                        Class="!text-[var(--mud-palette-white)]"
                     />
                     <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Assets</span>
                 </MudLink>
@@ -64,12 +65,13 @@
                 @*left*@
                 <MudLink 
                     Href="/dapp"
-                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-[90px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-[80px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="CloseSettings"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.DappSymbolIcon"
                         Size="Size.Medium" 
+                        Class="!text-[var(--mud-palette-white)]"
                     />
                     <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">DApp</span>
                 </MudLink>
@@ -83,6 +85,7 @@
                     <MudIcon
                         Icon="@BurizaIcons.SettingsSymbolIcon"
                         Size="Size.Medium" 
+                        Class="!text-[var(--mud-palette-white)]"
                     />
                     <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
                 </MudLink>
