@@ -1077,19 +1077,22 @@ SAIB Inc. is dedicated to maintaining and evolving Buriza as a leading open-sour
 
 = Links
 
-This section contains links relevant to the Buriza project.
+This section contains links relevant to the Buriza project:
 
-#link("https://github.com/SAIB-Inc/Buriza")[Buriza GitHub repository]
+- #link("https://github.com/SAIB-Inc/Buriza")[Buriza GitHub repository]
 
-#link("https://saibph-my.sharepoint.com/:f:/g/personal/accounts_saib_dev/EpK_1IrageVHhtTzjgJrDDUBUkIoIkfHMCJcEodiE7uq-Q?e=ExWrYd")[Screenshots and Videos]
+- #link("https://saibph-my.sharepoint.com/:f:/g/personal/accounts_saib_dev/EpK_1IrageVHhtTzjgJrDDUBUkIoIkfHMCJcEodiE7uq-Q?e=ExWrYd")[Screenshots and Videos]
 
-#link("https://saibph-my.sharepoint.com/:b:/g/personal/accounts_saib_dev/Ea17Rbt3BLlFvIbwLlNMhMcB0LgqVCZc94Jx55p-FHo8zw?e=KheTGY")[Buriza Design Report]
+- #link("https://saibph-my.sharepoint.com/:b:/g/personal/accounts_saib_dev/Ea17Rbt3BLlFvIbwLlNMhMcB0LgqVCZc94Jx55p-FHo8zw?e=KheTGY")[Buriza Design Report]
 
-#link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[Project Catalyst: Buriza.Browser]
+- #link("https://www.figma.com/design/9Bw3Nuh8UF9xYHkURwJeoI/Buriza-with-MD3?node-id=379-125141&t=noBZ3ME2edbCdXht-1")[Buriza Material Design 3]
 
-#link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[Project Catalyst: Buriza.Desktop]
+Project Catalyst:
+- #link("https://milestones.projectcatalyst.io/projects/1300168/milestones/1")[Project Catalyst: Buriza.Browser]
 
-#link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[Project Catalyst: Buriza.Mobile]
+- #link("https://milestones.projectcatalyst.io/projects/1300169/milestones/1")[Project Catalyst: Buriza.Desktop]
+
+- #link("https://milestones.projectcatalyst.io/projects/1300170/milestones/1")[Project Catalyst: Buriza.Mobile]
 
 #pagebreak()
 
