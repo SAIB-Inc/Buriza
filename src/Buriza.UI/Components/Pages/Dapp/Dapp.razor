@@ -6,7 +6,7 @@
 
 @namespace Buriza.UI.Components.Pages
 
-<section class="max-[376px]:overflow-y-auto max-md:h-screen min-h-[600px] md:h-[calc(100vh-59px)] md:bg-[var(--mud-palette-dark)] md:rounded-[16px] md:overflow-hidden lg:!ml-4 xl:!ml-8">      
+<section class="max-[376px]:overflow-y-auto max-md:h-screen min-h-[600px] md:h-[calc(100vh-56px)] md:bg-[var(--mud-palette-drawer-background)] md:rounded-[16px] md:overflow-hidden lg:!ml-4 xl:!ml-8">
     <div class="max-md:hidden !px-5 !py-[18px] w-full flex items-center justify-center !gap-3 bg-[var(--mud-palette-background-gray)]">
         <div class="flex items-center !gap-2">
             <MudIconButton
@@ -108,7 +108,7 @@
                             T="string"
                             @bind-Value="SelectedCategory"
                             Outlined="false"
-                            Class="[&_.mud-button-root]:!py-1 [&_.mud-button-root]:!px-3 !h-[32px] !flex items-center justify-between [&_.mud-toggle-item]:!normal-case [&_.mud-button-label]:!font-medium [&_.mud-button]:!bg-[var(--mud-palette-gray-default)] [&_.mud-button-label]:!text-[var(--mud-palette-text-primary)] [&_.mud-button]:!rounded-full [&_.mud-toggle-item-selected]:!bg-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-tertiary)] [&_.mud-button-root]:!w-max !overflow-x-auto !gap-2 !flex-nowrap [&_.mud-button-root]:!flex-shrink-0 md:[&_.mud-button-label]:!text-base md:[&_.mud-button-root]:!py-2 md:[&_.mud-button-root]:!px-6 md:!h-auto"
+                            Class="[&_.mud-button-root]:!py-1 [&_.mud-button-root]:!px-3 !h-[32px] !flex items-center justify-between [&_.mud-toggle-item]:!normal-case [&_.mud-button-label]:!font-medium [&_.mud-button]:!bg-[var(--mud-palette-gray-darker)] [&_.mud-button-label]:!text-[var(--mud-palette-text-primary)] [&_.mud-button]:!rounded-full [&_.mud-toggle-item-selected]:!bg-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-tertiary)] [&_.mud-button-root]:!w-max !overflow-x-auto !gap-2 !flex-nowrap [&_.mud-button-root]:!flex-shrink-0 md:[&_.mud-button-label]:!text-base md:[&_.mud-button-root]:!py-2 md:[&_.mud-button-root]:!px-6 md:!h-auto"
                         >
                             <MudToggleItem Value="@("All")" Class="!rounded-full"/>
                             <MudToggleItem Value="@("Defi")" Class="!rounded-full"/>

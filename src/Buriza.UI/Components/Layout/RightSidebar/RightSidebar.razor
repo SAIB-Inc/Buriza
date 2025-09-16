@@ -46,7 +46,7 @@
             </div>
         </div>
     </div>
-    <div class="bg-[var(--mud-palette-dark)] !rounded-[16px] !pt-4 !pb-0 h-full">
+    <div class="bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !pt-4 !pb-0 h-full">
         <div class="w-full flex items-center justify-between !px-4">
             <div class="flex items-center !gap-3 h-[38px]">
                 <div>
@@ -166,7 +166,7 @@
                                         @foreach (TransactionAsset asset in transaction.Assets)
                                         {
                                             <BurizaButton 
-                                                Class="@($"py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-drawer-background)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[{GetTransactionTypeColor(transaction.Type)}]! md:bg-[var(--mud-palette-drawer-background)]! md:even:bg-[var(--mud-palette-dark-text)]!")"
+                                                Class="@($"py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-drawer-background)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[{GetTransactionTypeColor(transaction.Type)}]! md:bg-[var(--mud-palette-info-lighten)]! md:even:bg-[var(--mud-palette-dark-text)]!")"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
