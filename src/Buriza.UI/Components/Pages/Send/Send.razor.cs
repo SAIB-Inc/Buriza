@@ -1,6 +1,7 @@
 using Buriza.UI.Resources;
 using Microsoft.AspNetCore.Components;
 using Buriza.Data.Models.Common;
+using Buriza.UI.Services;
 
 namespace Buriza.UI.Components.Pages;
 
@@ -8,8 +9,13 @@ public partial class Send
 {
     [Inject]
     public required NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
+    public required AppStateService AppStateService { get; set; }
     
     protected bool IsConfirmed { get; set; }
+    protected bool IsQrScan { get; set; }
+    protected bool ShowOverlay { get; set; }
     
     protected List<Recipient> recipients = new() { new Recipient { Id = 1, TokenEntries = [new TokenEntry { ImageSrc = Tokens.Ada }] } };
     
@@ -43,11 +49,17 @@ public partial class Send
     {
         if (IsConfirmed)
         {
-            Navigation.NavigateTo("/transaction/success");
+            ShowOverlay = true;
         }
         else
         {
             IsConfirmed = true;
         }
+    }
+
+    protected void HandleOverlayClick()
+    {
+        ShowOverlay = false;
+        Navigation.NavigateTo("/transaction/success");
     }
 }
