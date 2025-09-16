@@ -358,12 +358,12 @@ focus on small adjustments rather than re-implementing entire views.
 
 #figure(
   image("images/screenshots/mobile/header_animation_dark.png"),
-  caption: [Buriza UI - Mobile: View balance and assets]
+  caption: [Buriza UI - Mobile: Header animation]
 )
 
 #figure(
   image("images/screenshots/mobile/header_animation_light.png"),
-  caption: [Buriza UI - Mobile: View balance and assets]
+  caption: [Buriza UI - Mobile: Header animation]
 )
 
 === Transaction History
@@ -372,22 +372,22 @@ focus on small adjustments rather than re-implementing entire views.
 
 #figure(
   image("images/screenshots/mobile/transaction_history_dark.jpeg", width: 50%),
-  caption: [Buriza UI - Mobile: Transaction history with NFT]
+  caption: [Buriza UI - Mobile: Transaction history]
 )
 
 #figure(
   image("images/screenshots/mobile/transaction_history_light.png"),
-  caption: [Buriza UI - Mobile: Transaction history with NFT]
+  caption: [Buriza UI - Mobile: Transaction history]
 )
 
 #figure(
   image("images/screenshots/mobile/transaction_summary_dark.png"),
-  caption: [Buriza UI - Mobile: Transaction history with tokens]
+  caption: [Buriza UI - Mobile: Transaction summary]
 )
 
 #figure(
   image("images/screenshots/mobile/transaction_summary_light.png"),
-  caption: [Buriza UI - Mobile: Transaction history with tokens]
+  caption: [Buriza UI - Mobile: Transaction summary]
 )
 
 === Full Node Setup
@@ -395,7 +395,17 @@ focus on small adjustments rather than re-implementing entire views.
 #v(2em)
 
 #figure(
-  image("images/screenshots/mobile/node_set_up_dark.png", width:50%),
+  image("images/screenshots/mobile/settings_dark.png", width:50%),
+  caption: [Buriza UI - Mobile: Settings]
+)
+
+#figure(
+  image("images/screenshots/mobile/settings_light.png"),
+  caption: [Buriza UI - Mobile: Settings]
+)
+
+#figure(
+  image("images/screenshots/mobile/node_set_up_dark.png"),
   caption: [Buriza UI - Mobile: Node setup]
 )
 
@@ -416,6 +426,16 @@ focus on small adjustments rather than re-implementing entire views.
 #figure(
   image("images/screenshots/mobile/dapp_explorer_light.png"),
   caption: [Buriza UI - Mobile: dApp explorer]
+)
+
+#figure(
+  image("images/screenshots/mobile/dapp_permission_request_dark.png"),
+  caption: [Buriza UI - Mobile: dApp explorer authorization request]
+)
+
+#figure(
+  image("images/screenshots/mobile/dapp_permission_request_light.png"),
+  caption: [Buriza UI - Mobile: dApp explorer authorization request]
 )
 
 === Wallet Creation and Account Management
@@ -454,6 +474,11 @@ focus on small adjustments rather than re-implementing entire views.
 
 #figure(
   image("images/screenshots/mobile/manage_wallet_edit_account_dark.png"),
+  caption: [Buriza UI - Mobile: Manage wallet - edit account]
+)
+
+#figure(
+  image("images/screenshots/mobile/manage_wallet_edit_account_light.png"),
   caption: [Buriza UI - Mobile: Manage wallet - edit account]
 )
 
@@ -644,6 +669,16 @@ focus on small adjustments rather than re-implementing entire views.
 === Full Node Setup
 
 #figure(
+  image("images/screenshots/browser/settings_dark.png"),
+  caption: [Buriza UI - Browser: Settings]
+)
+
+#figure(
+  image("images/screenshots/browser/settings_light.png"),
+  caption: [Buriza UI - Browser: Settings]
+)
+
+#figure(
   image("images/screenshots/browser/node_setup_checked_dark.png"),
   caption: [Buriza UI - Browser: Node setup with full node]
 )
@@ -685,17 +720,6 @@ focus on small adjustments rather than re-implementing entire views.
   caption: [Buriza UI - Browser: dApp authorization request]
 )
 
-=== Settings
-
-#figure(
-  image("images/screenshots/browser/settings_dark.png"),
-  caption: [Buriza UI - Browser: Settings]
-)
-
-#figure(
-  image("images/screenshots/browser/settings_light.png"),
-  caption: [Buriza UI - Browser: Settings]
-)
 
 #pagebreak()
 
@@ -830,6 +854,16 @@ focus on small adjustments rather than re-implementing entire views.
 )
 
 === Full Node Setup
+
+#figure(
+  image("images/screenshots/desktop/settings_dark.png"),
+  caption: [Buriza UI - Desktop: Settings]
+)
+
+#figure(
+  image("images/screenshots/desktop/settings_light.png"),
+  caption: [Buriza UI - Desktop: Settings]
+)
 
 #figure(
   image("images/screenshots/desktop/node_setup_unchecked_dark.png"),
