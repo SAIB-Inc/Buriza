@@ -32,18 +32,18 @@
 
         @*Buriza*@
         <div class="relative flex items-center justify-center">
-            <div class="relative w-12 h-12 flex items-center justify-center cursor-pointer z-30" @onclick="ToggleSettings">
+            <div class="relative w-12 h-12 flex items-center justify-center cursor-pointer z-30" @onclick="TogglePopup">
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <div class="absolute w-12 h-8 bg-[var(--mud-palette-primary)] rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
                 <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="!z-10 !text-[38px] !text-[var(--mud-palette-white)]"/>
             </div>
             @*pop up*@
-            <div class="@($"left-1/2 -translate-x-1/2 fixed {(isSettingsVisible ? "bottom-23 opacity-100" : "bottom-4 delay-100 opacity-0")} duration-200") z-10">
+            <div class="@($"left-1/2 -translate-x-1/2 fixed {(IsPopupVisible ? "bottom-23 opacity-100 duration-200" : "bottom-4 delay-50 opacity-0 duration-100")}") z-10">
                 <div class="z-20">
                     <MudIconButton
                         Icon="@BurizaIcons.CloseSymbolIcon"
-                        OnClick="ToggleSettings"
+                        OnClick="TogglePopup"
                         Class="!p-1 !bg-[var(--mud-palette-secondary-lighten)] [&_.mud-icon-root]:!text-xl [&_.mud-icon-root]:!text-[var(--mud-palette-secondary-text)]"
                     />
                 </div>
@@ -51,8 +51,8 @@
                 @*top*@
                 <MudLink
                     Href="/" 
-                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-1/2 -translate-y-[68px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
-                    @onclick="CloseSettings"
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-1/2 -translate-y-[68px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    @onclick="ClosePopup"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.AssetIcon"
@@ -64,8 +64,8 @@
                 @*left*@
                 <MudLink 
                     Href="/dapp"
-                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "-translate-x-[90px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
-                    @onclick="CloseSettings"
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-[80px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    @onclick="ClosePopup"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.DappSymbolIcon"
@@ -77,8 +77,8 @@
                 @*right*@
                 <MudLink 
                     Href="/settings"
-                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(isSettingsVisible ? "translate-x-[36px] -translate-y-[12px] opacity-100 delay-250" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
-                    @onclick="CloseSettings"
+                    Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "translate-x-[36px] -translate-y-[12px] opacity-100 delay-250" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
+                    @onclick="ClosePopup"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.SettingsSymbolIcon"
@@ -115,5 +115,5 @@
             <span class="@GetSpanClass("/manage")">Manage</span>
         </MudLink>
     </header>
-    <MudOverlay ZIndex="100" Visible="isSettingsVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="CloseSettings"/>
+    <MudOverlay ZIndex="100" Visible="IsPopupVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="ClosePopup"/>
 </div>
