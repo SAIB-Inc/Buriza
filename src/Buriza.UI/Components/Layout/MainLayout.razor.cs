@@ -178,7 +178,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             TextPrimary = "#181B23",
             TextSecondary = "#515E7C",
             GrayLighter = "#AFAFAF",
-            GrayLight = "#0057C014",
+            GrayLight = "#FFFFFFCC",
             GrayDefault = "#E6E7F3",
             GrayDark = "#181B23",
             GrayDarker = "#D8D9E4",
