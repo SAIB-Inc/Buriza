@@ -3,7 +3,6 @@ using Buriza.UI.Data;
 using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace Buriza.UI.Components.Pages;
 
@@ -11,9 +10,9 @@ public partial class History
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
-    
+
     [Inject]
-    public required IJSRuntime JSRuntime { get; set; }
+    public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
     
     protected bool IsSummaryDisplayed { get; set; }
     protected TransactionHistory? SelectedTransaction { get; set; }
@@ -41,7 +40,7 @@ public partial class History
     protected async Task HandleTransactionClick(TransactionHistory transaction)
     {
         SelectedTransaction = transaction;
-        int screenWidth = await JSRuntime.InvokeAsync<int>("getScreenWidth");
+        int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
 
         if (screenWidth >= 1024)
         {

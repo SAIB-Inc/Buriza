@@ -11,6 +11,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddMudServices();
 
 builder.Services.AddScoped<AppStateService>();
+builder.Services.AddScoped<JavaScriptBridgeService>();
 
 builder.UseBrowserExtension(browserExtension =>
 {
