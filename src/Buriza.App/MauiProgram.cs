@@ -25,7 +25,7 @@ public static class MauiProgram
 #endif
 		builder.Services.AddMudServices();
 		builder.Services.AddSingleton<AppStateService>();
-
+		builder.Services.AddScoped<JavaScriptBridgeService>();
 
 		return builder.Build();
 	}

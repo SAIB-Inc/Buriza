@@ -1,6 +1,5 @@
 using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace Buriza.UI.Components.Pages;
 
@@ -8,9 +7,9 @@ public partial class Dapp
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
-    
+
     [Inject]
-    public required IJSRuntime JSRuntime { get; set; }
+    public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
     
     protected int ExpandedCard = 1;
     protected int ExpandedDesktopSlide = 0;
@@ -29,7 +28,7 @@ public partial class Dapp
     
     protected async Task OnDappCardClicked()
     {
-        int screenWidth = await JSRuntime.InvokeAsync<int>("getScreenWidth");
+        int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
         
         if (screenWidth >= 1024)
         {
