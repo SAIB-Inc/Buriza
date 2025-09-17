@@ -269,7 +269,7 @@ focus on small adjustments rather than re-implementing entire views.
 === Send Assets
 
 #figure(
-  image("images/screenshots/mobile/send_assets_dark.png"),
+  image("images/screenshots/mobile/send_assets_dark.png",width:50%),
   caption: [Buriza UI - Mobile: Send assets]
 )
 
@@ -306,6 +306,26 @@ focus on small adjustments rather than re-implementing entire views.
 #figure(
   image("images/screenshots/mobile/send_assets_transaction_summary_light.png"),
   caption: [Buriza UI - Mobile: Send assets transaction summary]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_transaction_summary_add_recipient_dark.png"),
+  caption: [Buriza UI - Mobile: Send assets transaction summary with additional recipient]
+)
+
+#figure(
+  image("images/screenshots/mobile/send_assets_transaction_summary_add_recipient_light.png"),
+  caption: [Buriza UI - Mobile: Send assets transaction summary with additional recipient]
+)
+
+#figure(
+  image("images/screenshots/mobile/face_id_dark.png"),
+  caption: [Buriza UI - Mobile: Face ID]
+)
+
+#figure(
+  image("images/screenshots/mobile/face_id_light.png"),
+  caption: [Buriza UI - Mobile: Face ID]
 )
 
 #figure(
@@ -630,6 +650,16 @@ focus on small adjustments rather than re-implementing entire views.
 #figure(
   image("images/screenshots/browser/view_balance_and_assets_light.png"),
   caption: [Buriza UI - Browser: View balance and assets]
+)
+
+#figure(
+  image("images/screenshots/browser/header_animation_dark.png"),
+  caption: [Buriza UI - Browser: Header animation]
+)
+
+#figure(
+  image("images/screenshots/browser/header_animation_light.png"),
+  caption: [Buriza UI - Browser: Header animation]
 )
 
 === Asset Selection
