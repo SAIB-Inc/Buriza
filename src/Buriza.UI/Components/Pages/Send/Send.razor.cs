@@ -12,6 +12,9 @@ public partial class Send
 
     [Inject]
     public required AppStateService AppStateService { get; set; }
+
+    [Inject]
+    public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
     
     protected bool IsConfirmed { get; set; }
     protected bool IsQrScan { get; set; }
@@ -45,11 +48,19 @@ public partial class Send
         }
     }
     
-    protected void HandleSend()
+    protected async Task HandleSend()
     {
         if (IsConfirmed)
         {
-            ShowOverlay = true;
+            int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
+            if (screenWidth <= 376)
+            {
+                Navigation.NavigateTo("/transaction/success");
+            }
+            else
+            {
+                ShowOverlay = true;
+            }
         }
         else
         {
