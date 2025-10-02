@@ -137,11 +137,35 @@ xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios
 ### Android Emulator & Device
 
 ```bash
-# Android Emulator (requires Android SDK)
+# Prerequisites:
+# 1. Install Android Studio or Android SDK
+# 2. Install OpenJDK 11+ and add to system PATH
+#    - Download: https://learn.microsoft.com/java/openjdk/download
+
+# Start Android emulator
+~/Library/Android/sdk/emulator/emulator -avd <emulator-name> &
+
+# Wait for device to boot
+~/Library/Android/sdk/platform-tools/adb wait-for-device
+
+# Build and deploy to emulator/device
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
 
-# Android Device
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+# Or build for specific device architecture
+dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+
+# Useful commands:
+# List available emulators
+~/Library/Android/sdk/emulator/emulator -list-avds
+
+# Check connected devices
+~/Library/Android/sdk/platform-tools/adb devices
+
+# Uninstall app
+~/Library/Android/sdk/platform-tools/adb uninstall com.saibinc.buriza
+
+# View app logs
+~/Library/Android/sdk/platform-tools/adb logcat | grep -i buriza
 ```
 
 ## 📱 Platform Support
@@ -154,7 +178,7 @@ cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=
 
 ### Mobile & Desktop
 - **iOS** - 15.0+ (Native MAUI app)
-- **Android** - API 21+ (Native MAUI app)
+- **Android** - 6.0+ / API 23+ (Native MAUI app)
 - **Windows** - 10+ (Native MAUI app)
 - **macOS** - 12+ (Native MAUI app)
 
