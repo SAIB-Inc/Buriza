@@ -55,13 +55,13 @@ Buriza/
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (v9.0.0+)
+- [Node.js](https://nodejs.org/) (v22.0.0+ LTS)
+- [Bun](https://bun.sh/) (v1.2.0+)
+- [Git](https://git-scm.com/) (v2.39.0+)
 - For MAUI development:
   ```bash
-  dotnet workload install maui
-  dotnet workload install android
-  dotnet workload install ios
-  dotnet workload install maccatalyst
+  dotnet workload restore
   ```
 
 ### Build & Run
@@ -71,14 +71,17 @@ Buriza/
 git clone https://github.com/saib-inc/Buriza.git
 cd Buriza
 
+# Restore workloads for MAUI development
+dotnet workload restore
+
 # Install CSS dependencies
-cd src/Buriza.UI && bun install
+cd src/Buriza.UI/wwwroot && bun install
 
 # Build the entire solution
 dotnet build
 
 # Run CSS watch (in separate terminal)
-cd src/Buriza.UI && bun watch
+cd src/Buriza.UI/wwwroot && bun watch
 
 # Run specific projects
 cd src/Buriza.Web && dotnet run          # Web app

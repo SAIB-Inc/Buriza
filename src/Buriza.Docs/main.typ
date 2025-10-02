@@ -1027,9 +1027,10 @@ This section provides step-by-step instructions for building and running Buriza 
 == Prerequisites
 
 *System Requirements:*
-- .NET 9 SDK
-- Node.js (for Tailwind CSS compilation)
-- Git
+- .NET 9 SDK (v9.0.0+)
+- Node.js (v22.0.0+ LTS)
+- Bun (v1.2.0+)
+- Git (v2.39.0+)
 
 *Platform-Specific Requirements:*
 - *iOS Development:* macOS, Xcode, Apple Developer account
@@ -1043,7 +1044,15 @@ Clone the repository and install dependencies:
 ```bash
 git clone git@github.com:SAIB-Inc/Buriza.git
 cd Buriza
+
+# Restore workloads for MAUI development
 dotnet workload restore
+
+# Install CSS dependencies
+cd src/Buriza.UI/wwwroot && bun install
+
+# Build the entire solution
+dotnet build
 ```
 
 == Platform Development Instructions
@@ -1107,22 +1116,23 @@ cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=
 ```bash
 # Build browser extension
 cd src/Buriza.Extension
-dotnet run
+dotnet build -c Release
 
 # Load unpacked extension in browser:
 ```
 1. Navigate to browser's extension management page
 2. Enable "Developer mode"
-3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
+3. Click "Load unpacked" and select `src/Buriza.Extension/bin/Release/net9.0/browserextension/`
 
 === Progressive Web App
 
 ```bash
-# Build and run web application
+# Run web application
 cd src/Buriza.Web
 dotnet run
 
-# Access at http://localhost:5292
+# Run CSS watch (in separate terminal)
+cd src/Buriza.UI/wwwroot && bun watch
 ```
 
 #pagebreak()
