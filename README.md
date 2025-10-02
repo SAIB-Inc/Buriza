@@ -56,7 +56,6 @@ Buriza/
 ### Prerequisites
 
 - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (v9.0.0+)
-- [Node.js](https://nodejs.org/) (v22.0.0+ LTS)
 - [Bun](https://bun.sh/) (v1.2.0+)
 - [Git](https://git-scm.com/) (v2.39.0+)
 - For MAUI development:
