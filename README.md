@@ -55,13 +55,12 @@ Buriza/
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) (v9.0.0+)
+- [Bun](https://bun.sh/) (v1.2.0+)
+- [Git](https://git-scm.com/) (v2.39.0+)
 - For MAUI development:
   ```bash
-  dotnet workload install maui
-  dotnet workload install android
-  dotnet workload install ios
-  dotnet workload install maccatalyst
+  dotnet workload restore
   ```
 
 ### Build & Run
@@ -71,14 +70,17 @@ Buriza/
 git clone https://github.com/saib-inc/Buriza.git
 cd Buriza
 
+# Restore workloads for MAUI development
+dotnet workload restore
+
 # Install CSS dependencies
-cd src/Buriza.UI && bun install
+cd src/Buriza.UI/wwwroot && bun install
 
 # Build the entire solution
 dotnet build
 
 # Run CSS watch (in separate terminal)
-cd src/Buriza.UI && bun watch
+cd src/Buriza.UI/wwwroot && bun watch
 
 # Run specific projects
 cd src/Buriza.Web && dotnet run          # Web app
@@ -112,15 +114,20 @@ cd src/Buriza.App && dotnet build . -f net9.0-ios
 xcrun simctl boot "iPhone 16 Pro"  # or any available device
 xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
 xcrun simctl launch booted com.saibinc.buriza
+
+# If the simulator does not appear
+open -a Simulator
 ```
 
 ### Physical iPhone
 
-```bash
-# Prerequisites:
-# 1. Change bundle ID to com.yourname.buriza in Buriza.App.csproj
-# 2. Create Xcode project with same bundle ID to generate provisioning profile
+**Prerequisites:**
+- Connect your iPhone via USB
+- Click on "Trust This Computer" on your iPhone when prompted
+- Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
+- Create an Xcode project with same bundle ID to generate provisioning profile
 
+```bash
 # Build for physical device
 cd src/Buriza.App && dotnet build . -f net9.0-ios -p:RuntimeIdentifier=ios-arm64
 
@@ -131,15 +138,46 @@ xcrun devicectl list devices
 xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
+**Note:**
+- You may need to go to Settings > Privacy & Security > Developer Mode on your iPhone
+- You may need to go to Settings > General > VPN & Device Management on your iPhone to trust the developer certificate
+
 ### Android Emulator & Device
 
 ```bash
-# Android Emulator (requires Android SDK)
+# Prerequisites:
+# 1. Install Android Studio or Android SDK
+# 2. Install OpenJDK 11+ and add to system PATH
+#    - Download: https://learn.microsoft.com/java/openjdk/download
+
+# Start Android emulator
+emulator -avd <emulator-name> &
+
+# Wait for device to boot
+adb wait-for-device
+
+# Build and deploy to emulator/device
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
 
-# Android Device
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+# Or build for specific device architecture
+dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+
+# Useful commands:
+# List available emulators
+emulator -list-avds
+
+# Check connected devices
+adb devices
+
+# Uninstall app
+adb uninstall com.saibinc.buriza
+
+# View app logs
+adb logcat | grep -i buriza
 ```
+
+**Note:**
+- For physical Android devices, you need to enable Developer Options and USB Debugging in Settings > Developer Options
 
 ## 📱 Platform Support
 
@@ -151,7 +189,7 @@ cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=
 
 ### Mobile & Desktop
 - **iOS** - 15.0+ (Native MAUI app)
-- **Android** - API 21+ (Native MAUI app)
+- **Android** - 6.0+ / API 23+ (Native MAUI app)
 - **Windows** - 10+ (Native MAUI app)
 - **macOS** - 12+ (Native MAUI app)
 

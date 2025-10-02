@@ -1027,9 +1027,9 @@ This section provides step-by-step instructions for building and running Buriza 
 == Prerequisites
 
 *System Requirements:*
-- .NET 9 SDK
-- Node.js (for Tailwind CSS compilation)
-- Git
+- #link("https://dotnet.microsoft.com/download/dotnet/9.0")[.NET 9 SDK] (v9.0.0+)
+- #link("https://bun.sh/")[Bun] (v1.2.0+)
+- #link("https://git-scm.com/")[Git] (v2.39.0+)
 
 *Platform-Specific Requirements:*
 - *iOS Development:* macOS, Xcode, Apple Developer account
@@ -1043,7 +1043,15 @@ Clone the repository and install dependencies:
 ```bash
 git clone git@github.com:SAIB-Inc/Buriza.git
 cd Buriza
+
+# Restore workloads for MAUI development
 dotnet workload restore
+
+# Install CSS dependencies
+cd src/Buriza.UI/wwwroot && bun install
+
+# Build the entire solution
+dotnet build
 ```
 
 == Platform Development Instructions
@@ -1071,6 +1079,9 @@ cd src/Buriza.App && dotnet build . -f net9.0-ios
 xcrun simctl boot "iPhone 16 Pro"  # or any available device
 xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
 xcrun simctl launch booted com.saibinc.buriza
+
+# If the simulator does not appear
+open -a Simulator
 ```
 
 #pagebreak()
@@ -1078,8 +1089,10 @@ xcrun simctl launch booted com.saibinc.buriza
 === Physical iPhone
 
 *Prerequisites:*
-1. Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
-2. Create Xcode project with same bundle ID to generate provisioning profile
+- Connect your iPhone via USB
+- Click on "Trust This Computer" on your iPhone when prompted
+- Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
+- Create an Xcode project with same bundle ID to generate provisioning profile
 
 ```bash
 # Build for physical device
@@ -1092,37 +1105,75 @@ xcrun devicectl list devices
 xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
+*Note:*
+- You may need to go to Settings > Privacy & Security > Developer Mode on your iPhone
+- You may need to go to Settings > General > VPN & Device Management on your iPhone to trust the developer certificate
+
 === Android Development
 
+*Prerequisites:*
+1. Install Android Studio or Android SDK
+2. Install OpenJDK 11+ and add to system PATH (#link("https://learn.microsoft.com/java/openjdk/download")[Download])
+
+*Building and Running:*
+
 ```bash
-# Android Emulator (requires Android SDK)
+# Start Android emulator
+emulator -avd <emulator-name> &
+
+# Wait for device to boot
+adb wait-for-device
+
+# Build and deploy to emulator/device
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
 
-# Android Device (requires USB debugging enabled)
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+# Build for specific device architecture
+dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 ```
+
+*Useful Commands:*
+```bash
+# List available emulators
+emulator -list-avds
+
+# Check connected devices
+adb devices
+
+# Uninstall app
+adb uninstall com.saibinc.buriza
+
+# View app logs
+adb logcat | grep -i buriza
+```
+
+*Note:* For physical Android devices, you need to enable Developer Options and USB Debugging in Settings > Developer Options
+
+*System Requirements:*
+- Android 6.0+ / API 23+
+- Minimum 2GB free disk space for emulator
 
 === Browser Extension
 
 ```bash
 # Build browser extension
 cd src/Buriza.Extension
-dotnet run
+dotnet build -c Release
 
 # Load unpacked extension in browser:
 ```
 1. Navigate to browser's extension management page
 2. Enable "Developer mode"
-3. Click "Load unpacked" and select bin/Debug/net9.0/wwwroot/
+3. Click "Load unpacked" and select `src/Buriza.Extension/bin/Release/net9.0/browserextension/`
 
 === Progressive Web App
 
 ```bash
-# Build and run web application
+# Run web application
 cd src/Buriza.Web
 dotnet run
 
-# Access at http://localhost:5292
+# Run CSS watch (in separate terminal)
+cd src/Buriza.UI/wwwroot && bun watch
 ```
 
 #pagebreak()

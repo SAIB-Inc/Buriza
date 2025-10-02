@@ -76,9 +76,15 @@ dotnet run
 
 # Run MAUI app (requires platform-specific setup)
 cd src/Buriza.App
-dotnet build -f net9.0-android    # Android
-dotnet build -f net9.0-ios        # iOS
-dotnet build -f net9.0-maccatalyst # macOS
+dotnet build -t:Run -f net9.0-android    # Android (requires emulator/device)
+dotnet build -f net9.0-ios               # iOS
+dotnet build -f net9.0-maccatalyst       # macOS
+
+# Android-specific commands
+~/Library/Android/sdk/emulator/emulator -list-avds  # List emulators
+~/Library/Android/sdk/emulator/emulator -avd <name> &  # Start emulator
+~/Library/Android/sdk/platform-tools/adb devices    # Check connected devices
+~/Library/Android/sdk/platform-tools/adb uninstall com.saibinc.buriza  # Uninstall app
 ```
 
 ### Development Setup
@@ -90,6 +96,10 @@ dotnet build -f net9.0-maccatalyst # macOS
    dotnet workload install ios
    dotnet workload install maccatalyst
    ```
+3. For Android development:
+   - Install Android Studio or Android SDK
+   - Install OpenJDK 11+ and add to system PATH
+   - Download: https://learn.microsoft.com/java/openjdk/download
 
 ### Test Commands
 ```bash
