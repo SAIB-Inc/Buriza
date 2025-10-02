@@ -1028,7 +1028,6 @@ This section provides step-by-step instructions for building and running Buriza 
 
 *System Requirements:*
 - #link("https://dotnet.microsoft.com/download/dotnet/9.0")[.NET 9 SDK] (v9.0.0+)
-- #link("https://nodejs.org/")[Node.js] (v22.0.0+ LTS)
 - #link("https://bun.sh/")[Bun] (v1.2.0+)
 - #link("https://git-scm.com/")[Git] (v2.39.0+)
 
@@ -1103,13 +1102,44 @@ xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios
 
 === Android Development
 
+*Prerequisites:*
+1. Install Android Studio or Android SDK
+2. Install OpenJDK 11+ and add to system PATH (#link("https://learn.microsoft.com/java/openjdk/download")[Download])
+
+*Building and Running:*
+
 ```bash
-# Android Emulator (requires Android SDK)
+# Start Android emulator
+~/Library/Android/sdk/emulator/emulator -avd <emulator-name> &
+
+# Wait for device to boot
+~/Library/Android/sdk/platform-tools/adb wait-for-device
+
+# Build and deploy to emulator/device
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
 
-# Android Device (requires USB debugging enabled)
-cd src/Buriza.App && dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
+# Build for specific device architecture
+dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 ```
+
+*Useful Commands:*
+```bash
+# List available emulators
+~/Library/Android/sdk/emulator/emulator -list-avds
+
+# Check connected devices
+~/Library/Android/sdk/platform-tools/adb devices
+
+# Uninstall app
+~/Library/Android/sdk/platform-tools/adb uninstall com.saibinc.buriza
+
+# View app logs
+~/Library/Android/sdk/platform-tools/adb logcat | grep -i buriza
+```
+
+*System Requirements:*
+- Android 6.0+ / API 23+
+- Minimum 2GB free disk space for emulator
 
 === Browser Extension
 
