@@ -1079,6 +1079,9 @@ cd src/Buriza.App && dotnet build . -f net9.0-ios
 xcrun simctl boot "iPhone 16 Pro"  # or any available device
 xcrun simctl install booted bin/Debug/net9.0-ios/iossimulator-arm64/Buriza.App.app
 xcrun simctl launch booted com.saibinc.buriza
+
+# If the simulator does not appear
+open -a Simulator
 ```
 
 #pagebreak()
@@ -1086,8 +1089,10 @@ xcrun simctl launch booted com.saibinc.buriza
 === Physical iPhone
 
 *Prerequisites:*
-1. Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
-2. Create Xcode project with same bundle ID to generate provisioning profile
+- Connect your iPhone via USB
+- Click on "Trust This Computer" on your iPhone when prompted
+- Change bundle ID to `com.yourname.buriza` in `Buriza.App.csproj`
+- Create an Xcode project with same bundle ID to generate provisioning profile
 
 ```bash
 # Build for physical device
@@ -1100,6 +1105,10 @@ xcrun devicectl list devices
 xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
+*Note:*
+- You may need to go to Settings > Privacy & Security > Developer Mode on your iPhone
+- You may need to go to Settings > General > VPN & Device Management on your iPhone to trust the developer certificate
+
 === Android Development
 
 *Prerequisites:*
@@ -1110,10 +1119,10 @@ xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios
 
 ```bash
 # Start Android emulator
-~/Library/Android/sdk/emulator/emulator -avd <emulator-name> &
+emulator -avd <emulator-name> &
 
 # Wait for device to boot
-~/Library/Android/sdk/platform-tools/adb wait-for-device
+adb wait-for-device
 
 # Build and deploy to emulator/device
 cd src/Buriza.App && dotnet build -t:Run -f net9.0-android
@@ -1125,17 +1134,19 @@ dotnet build -t:Run -f net9.0-android -p:RuntimeIdentifier=android-arm64
 *Useful Commands:*
 ```bash
 # List available emulators
-~/Library/Android/sdk/emulator/emulator -list-avds
+emulator -list-avds
 
 # Check connected devices
-~/Library/Android/sdk/platform-tools/adb devices
+adb devices
 
 # Uninstall app
-~/Library/Android/sdk/platform-tools/adb uninstall com.saibinc.buriza
+adb uninstall com.saibinc.buriza
 
 # View app logs
-~/Library/Android/sdk/platform-tools/adb logcat | grep -i buriza
+adb logcat | grep -i buriza
 ```
+
+*Note:* For physical Android devices, you need to enable Developer Options and USB Debugging in Settings > Developer Options
 
 *System Requirements:*
 - Android 6.0+ / API 23+
