@@ -1027,10 +1027,10 @@ This section provides step-by-step instructions for building and running Buriza 
 == Prerequisites
 
 *System Requirements:*
-- .NET 9 SDK (v9.0.0+)
-- Node.js (v22.0.0+ LTS)
-- Bun (v1.2.0+)
-- Git (v2.39.0+)
+- #link("https://dotnet.microsoft.com/download/dotnet/9.0")[.NET 9 SDK] (v9.0.0+)
+- #link("https://nodejs.org/")[Node.js] (v22.0.0+ LTS)
+- #link("https://bun.sh/")[Bun] (v1.2.0+)
+- #link("https://git-scm.com/")[Git] (v2.39.0+)
 
 *Platform-Specific Requirements:*
 - *iOS Development:* macOS, Xcode, Apple Developer account
