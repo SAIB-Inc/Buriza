@@ -134,6 +134,10 @@ xcrun devicectl list devices
 xcrun devicectl device install app --device [device-id] bin/Debug/net9.0-ios/ios-arm64/Buriza.App.app
 ```
 
+**Note:**
+- You may need to go to Settings > Privacy & Security > Developer Mode on your iPhone
+- You may need to go to Settings > General > VPN & Device Management on your iPhone to trust the developer certificate
+
 ### Android Emulator & Device
 
 ```bash
