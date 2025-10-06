@@ -1066,6 +1066,13 @@ cd src/Buriza.App
 dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
 ```
 
+=== Desktop Application (Windows)
+
+```bash
+# Build Windows application
+cd src/Buriza.App && dotnet dotnet build -f net9.0-windows10.0.19041.0 && dotnet build -f net9.0-windows10.0.19041.0
+```
+
 === iOS Simulator
 
 ```bash
