@@ -96,7 +96,7 @@ cd src/Buriza.Extension && dotnet build -c Release  # Browser extension
 
 ```bash
 # Windows
-cd src/Buriza.App && dotnet build -f net9.0-windows && dotnet run -f net9.0-windows
+cd src/Buriza.App && dotnet dotnet build -f net9.0-windows10.0.19041.0 && dotnet build -f net9.0-windows10.0.19041.0
 
 # macOS
 cd src/Buriza.App && dotnet build -f net9.0-maccatalyst && dotnet run -f net9.0-maccatalyst
