@@ -149,7 +149,7 @@
                                     <div class="w-full flex items-center justify-between !mb-2">
                                         <div>
                                             <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
-                                                @GetRelativeTime(transaction.Timestamp)
+                                                @Utils.GetRelativeTime(transaction.Timestamp)
                                             </MudText>
                                         </div>
                                         <div class="flex items-center justify-end !gap-2">
@@ -166,7 +166,7 @@
                                         @foreach (TransactionAsset asset in transaction.Assets)
                                         {
                                             <BurizaButton 
-                                                Class="@($"py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-drawer-background)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[{GetTransactionTypeColor(transaction.Type)}]! md:bg-[var(--mud-palette-info-lighten)]! md:even:bg-[var(--mud-palette-dark-text)]!")"
+                                                Class="@($"py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-drawer-background)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! border-[{Utils.GetTransactionTypeColor(transaction.Type)}]! md:bg-[var(--mud-palette-info-lighten)]! md:even:bg-[var(--mud-palette-dark-text)]!")"
                                             >
                                                 <div class="flex items-center gap-4!">
                                                     <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
@@ -177,7 +177,7 @@
                                                     </div>
                                                     <div class="!mt-1">
                                                         <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
-                                                            @GetTransactionTypeText(transaction.Type)
+                                                            @Utils.GetTransactionTypeText(transaction.Type)
                                                         </MudText>
                                                         <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
                                                             @asset.AssetName

@@ -1,7 +1,6 @@
 using Buriza.UI.Services;
 using Buriza.UI.Data;
 using Buriza.Data.Models.Common;
-using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using static Buriza.UI.Services.DrawerContentType;
@@ -56,30 +55,6 @@ public partial class RightSidebar : ComponentBase, IDisposable
         StateHasChanged();
     }
     
-    protected string GetRelativeTime(DateTime timestamp)
-    {
-        TimeSpan diff = DateTime.Now - timestamp;
-
-        if (diff.TotalMinutes < 60)
-            return $"{(int)diff.TotalMinutes} minutes ago";
-        if (diff.TotalHours < 24)
-            return $"{(int)diff.TotalHours} hours ago";
-        if (diff.TotalDays < 30)
-            return $"{(int)diff.TotalDays} days ago";
-
-        return timestamp.ToString("MMM dd, yyyy");
-    }
-    
-    protected string GetTransactionTypeText(TransactionType type)
-    {
-        return type == TransactionType.Sent ? "Sent:" : "Received:";
-    }
-    
-    protected string GetTransactionTypeColor(TransactionType type)
-    {
-        return type == TransactionType.Sent ? "var(--mud-palette-error)" : "var(--mud-palette-success)";
-    }
-
     public void Dispose()
     {
         Navigation.LocationChanged -= OnLocationChanged;
