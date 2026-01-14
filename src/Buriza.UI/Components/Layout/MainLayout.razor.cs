@@ -120,7 +120,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             }
         },
 
-        PaletteDark = new()
+        PaletteDark = new PaletteDark()
         {
             Background = "#10131B",
             BackgroundGray = "#0B0E15",
@@ -161,7 +161,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             LinesDefault = "#181B23",
             LinesInputs = "#1C1F27"
         },
-        PaletteLight = new()
+        PaletteLight = new PaletteLight()
         {
             Background = "#FAF9FF",
             BackgroundGray = "#FFFFFF",
