@@ -35,15 +35,15 @@ public partial class SendSection : IDisposable
 
     protected override void OnInitialized()
     {
-        MainLayout.OnAddRecipient += AddRecipient;
-        MainLayout.OnResetSendConfirmation += ResetConfirmation;
+        AppStateService.OnAddRecipientRequested += AddRecipient;
+        AppStateService.OnResetSendConfirmationRequested += ResetConfirmation;
         AppStateService.OnChanged += OnAppStateChanged;
     }
 
     public void Dispose()
     {
-        MainLayout.OnAddRecipient -= AddRecipient;
-        MainLayout.OnResetSendConfirmation -= ResetConfirmation;
+        AppStateService.OnAddRecipientRequested -= AddRecipient;
+        AppStateService.OnResetSendConfirmationRequested -= ResetConfirmation;
         AppStateService.OnChanged -= OnAppStateChanged;
     }
 
@@ -52,11 +52,11 @@ public partial class SendSection : IDisposable
         if (!AppStateService.IsFilterDrawerOpen && IsConfirmed)
         {
             IsConfirmed = false;
-            MainLayout.SetSendConfirmed(false);
+            AppStateService.IsSendConfirmed = false;
             StateHasChanged();
         }
     }
-    
+
     private void AddRecipient()
     {
         recipients.Add(new Recipient { Id = recipients.Count + 1 });
@@ -66,7 +66,7 @@ public partial class SendSection : IDisposable
     private void ResetConfirmation()
     {
         IsConfirmed = false;
-        MainLayout.SetSendConfirmed(false);
+        AppStateService.IsSendConfirmed = false;
         StateHasChanged();
     }
     
@@ -101,7 +101,7 @@ public partial class SendSection : IDisposable
         else
         {
             IsConfirmed = true;
-            MainLayout.SetSendConfirmed(true);
+            AppStateService.IsSendConfirmed = true;
             StateHasChanged();
         }
     }

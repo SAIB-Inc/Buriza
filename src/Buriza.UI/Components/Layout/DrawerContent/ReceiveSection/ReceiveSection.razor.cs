@@ -11,21 +11,21 @@ public partial class ReceiveSection : ComponentBase, IDisposable
     [Inject]
     public required AppStateService AppStateService { get; set; }
 
-    protected bool IsAdvancedMode => MainLayout.IsReceiveAdvancedMode;
+    protected bool IsAdvancedMode => AppStateService.IsReceiveAdvancedMode;
     protected int _selectedAccountIndex = 0;
     protected ReceiveAccount SelectedAccount => Accounts[_selectedAccountIndex];
     protected List<ReceiveAccount> Accounts { get; set; } = [];
 
     protected override void OnInitialized()
     {
-        MainLayout.OnReceiveAdvancedModeChanged += StateHasChanged;
+        AppStateService.OnChanged += StateHasChanged;
         Accounts = ReceiveAccountData.GetDummyReceiveAccounts();
     }
 
     protected void OnAccountCardClicked(int accountIndex)
     {
         _selectedAccountIndex = accountIndex;
-        MainLayout.SetReceiveAdvancedMode(false);
+        AppStateService.IsReceiveAdvancedMode = false;
     }
 
     protected static string GetChipColor(AccountStatusType status)
@@ -40,6 +40,6 @@ public partial class ReceiveSection : ComponentBase, IDisposable
 
     public void Dispose()
     {
-        MainLayout.OnReceiveAdvancedModeChanged -= StateHasChanged;
+        AppStateService.OnChanged -= StateHasChanged;
     }
 }

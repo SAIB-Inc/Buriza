@@ -105,6 +105,34 @@ public class AppStateService
         }
     }
 
+    private bool _isSendConfirmed = false;
+    public bool IsSendConfirmed
+    {
+        get => _isSendConfirmed;
+        set
+        {
+            if (_isSendConfirmed != value)
+            {
+                _isSendConfirmed = value;
+                NotifyChanged();
+            }
+        }
+    }
+
+    private bool _isReceiveAdvancedMode = false;
+    public bool IsReceiveAdvancedMode
+    {
+        get => _isReceiveAdvancedMode;
+        set
+        {
+            if (_isReceiveAdvancedMode != value)
+            {
+                _isReceiveAdvancedMode = value;
+                NotifyChanged();
+            }
+        }
+    }
+
     #endregion
 
     #region methods
@@ -114,6 +142,23 @@ public class AppStateService
         CurrentDrawerContent = contentType;
         IsFilterDrawerOpen = true;
     }
+
+    public void RequestAddRecipient()
+    {
+        OnAddRecipientRequested?.Invoke();
+    }
+
+    public void RequestResetSendConfirmation()
+    {
+        OnResetSendConfirmationRequested?.Invoke();
+    }
+
+    #endregion
+
+    #region callback events
+
+    public event Action? OnAddRecipientRequested;
+    public event Action? OnResetSendConfirmationRequested;
 
     #endregion
 
