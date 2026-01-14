@@ -1,3 +1,4 @@
+using Buriza.Data.Models.Common;
 using Buriza.UI.Resources;
 using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
@@ -9,29 +10,13 @@ public partial class SendSection : IDisposable
 {
     [Inject]
     public required NavigationManager Navigation { get; set; }
-    
+
     [Inject]
     public required AppStateService AppStateService { get; set; }
-    
+
     protected bool IsConfirmed { get; set; }
 
-    // Transfer to .Data Project - another PR
-    public class TokenEntry
-    {
-        public string Name { get; set; } = "ADA";
-        public string ImageSrc { get; set; } = "";
-        public decimal Amount { get; set; }
-        public decimal Balance { get; set; } = 5304.01m;
-    }
-    
-    public class Recipient
-    {
-        public int Id { get; set; }
-        public string Address { get; set; } = "";
-        public List<TokenEntry> TokenEntries { get; set; } = new() { new TokenEntry { ImageSrc = Tokens.Ada } };
-    }
-    
-    private List<Recipient> recipients = new() { new Recipient { Id = 1 } };
+    private List<Recipient> recipients = [new Recipient { Id = 1, TokenEntries = [new TokenEntry { ImageSrc = Tokens.Ada }] }];
 
     protected override void OnInitialized()
     {
