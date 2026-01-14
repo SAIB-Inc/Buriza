@@ -36,8 +36,8 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         TransactionStatus => "Transaction Sent",
         Settings => "Settings",
         NodeSettings => "Node Settings",
-        Manage => ManageSection.IsManageAccountFormVisible
-            ? (ManageSection.IsManageEditMode ? "Edit Wallet" : "New Account")
+        Manage => AppStateService.IsManageAccountFormVisible
+            ? (AppStateService.IsManageEditMode ? "Edit Wallet" : "New Account")
             : "Manage",
         _ => "Details"
     };
@@ -66,9 +66,9 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             AppStateService.IsReceiveAdvancedMode = false;
         }
-        else if (AppStateService.CurrentDrawerContent == Manage && ManageSection.IsManageAccountFormVisible)
+        else if (AppStateService.CurrentDrawerContent == Manage && AppStateService.IsManageAccountFormVisible)
         {
-            ManageSection.HideAccountForm();
+            AppStateService.HideManageAccountForm();
         }
         else
         {
@@ -100,7 +100,6 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         AppStateService.OnChanged += StateHasChanged;
         Navigation.LocationChanged += OnLocationChanged;
-        ManageSection.OnManageStateChanged += StateHasChanged;
 
         SetDrawerContentForCurrentRoute();
     }
@@ -131,6 +130,5 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         AppStateService.OnChanged -= StateHasChanged;
         Navigation.LocationChanged -= OnLocationChanged;
-        ManageSection.OnManageStateChanged -= StateHasChanged;
     }
 }

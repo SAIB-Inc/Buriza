@@ -133,6 +133,34 @@ public class AppStateService
         }
     }
 
+    private bool _isManageAccountFormVisible = false;
+    public bool IsManageAccountFormVisible
+    {
+        get => _isManageAccountFormVisible;
+        set
+        {
+            if (_isManageAccountFormVisible != value)
+            {
+                _isManageAccountFormVisible = value;
+                NotifyChanged();
+            }
+        }
+    }
+
+    private bool _isManageEditMode = false;
+    public bool IsManageEditMode
+    {
+        get => _isManageEditMode;
+        set
+        {
+            if (_isManageEditMode != value)
+            {
+                _isManageEditMode = value;
+                NotifyChanged();
+            }
+        }
+    }
+
     #endregion
 
     #region methods
@@ -151,6 +179,12 @@ public class AppStateService
     public void RequestResetSendConfirmation()
     {
         OnResetSendConfirmationRequested?.Invoke();
+    }
+
+    public void HideManageAccountForm()
+    {
+        IsManageAccountFormVisible = false;
+        IsManageEditMode = false;
     }
 
     #endregion
