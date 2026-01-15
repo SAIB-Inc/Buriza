@@ -3,7 +3,7 @@ using Buriza.Data.Models.Enums;
 using Buriza.UI.Resources;
 using MudBlazor;
 
-namespace Buriza.UI.Data;
+namespace Buriza.UI.Data.Dummy;
 
 public static class ReceiveAccountData
 {

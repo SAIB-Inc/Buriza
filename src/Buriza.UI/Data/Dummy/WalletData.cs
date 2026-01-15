@@ -1,7 +1,7 @@
 using Buriza.Data.Models.Common;
 using Buriza.UI.Resources;
 
-namespace Buriza.UI.Data;
+namespace Buriza.UI.Data.Dummy;
 
 public static class WalletData
 {
