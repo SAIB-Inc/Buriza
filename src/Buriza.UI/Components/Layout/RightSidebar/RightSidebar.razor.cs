@@ -3,7 +3,7 @@ using Buriza.UI.Data;
 using Buriza.Data.Models.Common;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using static Buriza.UI.Services.DrawerContentType;
+using static Buriza.Data.Models.Enums.DrawerContentType;
 
 namespace Buriza.UI.Components.Layout;
 

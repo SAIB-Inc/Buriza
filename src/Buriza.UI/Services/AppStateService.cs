@@ -2,22 +2,6 @@ using Buriza.Data.Models.Enums;
 
 namespace Buriza.UI.Services;
 
-//transfer to Buriza.Data
-
-public enum DrawerContentType
-{
-    None,
-    Summary,        // for history page
-    AuthorizeDapp,  // for dapp page  
-    Receive,        // button click
-    Send,           // button click
-    SelectAsset,    // select asset from send section
-    TransactionStatus, // transaction success/status
-    Settings,       // button click
-    NodeSettings,   // node settings from settings section
-    Manage          // button click
-}
-
 public class AppStateService
 {
     #region properties
