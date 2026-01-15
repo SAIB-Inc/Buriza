@@ -1,6 +1,6 @@
 using Buriza.UI.Resources;
 using Buriza.UI.Services;
-using Buriza.UI.Data;
+using Buriza.UI.Data.Dummy;
 using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;

@@ -1,5 +1,5 @@
 using Buriza.UI.Services;
-using Buriza.UI.Data;
+using Buriza.UI.Data.Dummy;
 using Buriza.Data.Models.Common;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;

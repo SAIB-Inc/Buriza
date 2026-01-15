@@ -1,4 +1,4 @@
-using Buriza.UI.Data;
+using Buriza.UI.Data.Dummy;
 using Buriza.Data.Models.Common;
 
 namespace Buriza.UI.Components.Pages;
