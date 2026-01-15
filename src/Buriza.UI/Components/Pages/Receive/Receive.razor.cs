@@ -15,8 +15,11 @@ public partial class Receive : ComponentBase
 
     protected MudCarousel<object>? _carousel;
     protected int _selectedAccountIndex = 0;
-    protected ReceiveAccount SelectedAccount => Accounts[_selectedAccountIndex];
-    protected List<ReceiveAccount> Accounts { get; set; } = new();
+    protected ReceiveAccount? SelectedAccount =>
+        Accounts.Count > 0 && _selectedAccountIndex < Accounts.Count
+            ? Accounts[_selectedAccountIndex]
+            : null;
+    protected List<ReceiveAccount> Accounts { get; set; } = [];
 
     protected override void OnInitialized()
     {
