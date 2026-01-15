@@ -84,7 +84,7 @@
             else
             {
                 <div class="!space-y-3">
-                    @foreach (Wallet wallet in wallets)
+                    @foreach (Wallet wallet in Wallets)
                     {
                         int walletIndex = wallet.Id - 1;
                         <div class="@($"w-full !rounded-[12px] {(WalletExpandedStates[walletIndex] ? "shadow-[var(--mud-elevation-2)] !bg-[var(--mud-palette-lines-inputs)] md:!bg-[var(--mud-palette-dark-darken)]" : "!bg-[var(--mud-palette-background-gray)] border border-[var(--mud-palette-table-lines)]")}")">
