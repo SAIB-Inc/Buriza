@@ -1,33 +1,34 @@
 @using Buriza.UI.Resources
+@using Buriza.UI.Services
 
 @namespace Buriza.UI.Components.Common
 
 <div>
     <header class="max-[376px]:bottom-3 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 max-w-[738px] lg:hidden">
         @*Receive*@
-        <MudLink 
-            Href="/receive" 
+        <MudLink
+            Href="@Routes.Receive"
             Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
-            <MudIcon 
-                Icon="@BurizaIcons.ReceiveSymbolIcon" 
-                Size="Size.Medium" 
+            <MudIcon
+                Icon="@BurizaIcons.ReceiveSymbolIcon"
+                Size="Size.Medium"
                 Class=""
             />
-            <span class="@GetSpanClass("/receive")">Receive</span>
+            <span class="@GetSpanClass(Routes.Receive)">Receive</span>
         </MudLink>
 
         @*Send*@
-        <MudLink 
-            Href="/send" 
+        <MudLink
+            Href="@Routes.Send"
             Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
-            <MudIcon 
-                Icon="@BurizaIcons.Send1Icon" 
-                Size="Size.Medium" 
+            <MudIcon
+                Icon="@BurizaIcons.Send1Icon"
+                Size="Size.Medium"
                 Class=""
             />
-            <span class="@GetSpanClass("/send")">Send</span>
+            <span class="@GetSpanClass(Routes.Send)">Send</span>
         </MudLink>
 
         @*Buriza*@
@@ -50,41 +51,41 @@
 
                 @*top*@
                 <MudLink
-                    Href="/" 
+                    Href="@Routes.Home"
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-1/2 -translate-y-[68px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.AssetIcon"
-                        Size="Size.Medium" 
+                        Size="Size.Medium"
                         Class="!text-[var(--mud-palette-white)]"
                     />
                     <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Assets</span>
                 </MudLink>
 
                 @*left*@
-                <MudLink 
-                    Href="/dapp"
+                <MudLink
+                    Href="@Routes.Dapp"
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-[80px] -translate-y-[12px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.DappSymbolIcon"
-                        Size="Size.Medium" 
+                        Size="Size.Medium"
                         Class="!text-[var(--mud-palette-white)]"
                     />
                     <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">DApp</span>
                 </MudLink>
 
                 @*right*@
-                <MudLink 
-                    Href="/settings"
+                <MudLink
+                    Href="@Routes.Settings"
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "translate-x-[36px] -translate-y-[12px] opacity-100 delay-250" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
                     <MudIcon
                         Icon="@BurizaIcons.SettingsSymbolIcon"
-                        Size="Size.Medium" 
+                        Size="Size.Medium"
                         Class="!text-[var(--mud-palette-white)]"
                     />
                     <span class="text-[11px] !text-[var(--mud-palette-primary-text)] !bg-[var(--mud-palette-primary-lighten)] !rounded-full !px-1 !py-[2px]">Settings</span>
@@ -93,29 +94,29 @@
         </div>
 
         @*History*@
-        <MudLink 
-            Href="/history" 
+        <MudLink
+            Href="@Routes.History"
             Class="flex flex-col items-center justify-center gap-[2px] !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
-            <MudIcon 
-                Icon="@BurizaIcons.History2Icon" 
-                Size="Size.Medium" 
+            <MudIcon
+                Icon="@BurizaIcons.History2Icon"
+                Size="Size.Medium"
                 Class=""
             />
-            <span class="@GetSpanClass("/history")">History</span>
+            <span class="@GetSpanClass(Routes.History)">History</span>
         </MudLink>
 
         @*Manage*@
-        <MudLink 
-            Href="/manage"
+        <MudLink
+            Href="@Routes.Manage"
             Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
-            <MudIcon 
-                Icon="@BurizaIcons.StakingSymbolIcon" 
-                Size="Size.Medium" 
+            <MudIcon
+                Icon="@BurizaIcons.StakingSymbolIcon"
+                Size="Size.Medium"
                 Class=""
             />
-            <span class="@GetSpanClass("/manage")">Manage</span>
+            <span class="@GetSpanClass(Routes.Manage)">Manage</span>
         </MudLink>
     </header>
     <MudOverlay ZIndex="100" Visible="IsPopupVisible" DarkBackground="true" AutoClose="true" Class="!transition-all !duration-150 !opacity-80" @onclick="ClosePopup"/>
