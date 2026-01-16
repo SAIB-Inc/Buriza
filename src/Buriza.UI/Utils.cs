@@ -25,6 +25,6 @@ public static class Utils
 
     public static string GetTransactionTypeColor(TransactionType type)
     {
-        return type == TransactionType.Sent ? "var(--mud-palette-error)" : "var(--mud-palette-success)";
+        return type == TransactionType.Sent ? "border-[var(--mud-palette-error)]!" : "border-[var(--mud-palette-success)]!";
     }
 }
