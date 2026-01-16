@@ -12,4 +12,8 @@ public static class Routes
     public const string Onboard = "/onboard";
     public const string Splash = "/splash";
     public const string TransactionSuccess = "/transaction/success";
+    public const string Receive = "/receive";
+    public const string Send = "/send";
+    public const string Settings = "/settings";
+    public const string Manage = "/manage";
 }
