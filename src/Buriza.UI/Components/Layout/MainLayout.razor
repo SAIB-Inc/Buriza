@@ -2,6 +2,7 @@
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
 @using Buriza.UI.Services
+@using Buriza.Data.Models.Enums
 @using static Buriza.Data.Models.Enums.DrawerContentType
 
 @inherits LayoutComponentBase
@@ -98,9 +99,9 @@
         </div>
 
         @*right sidebar*@
-        @if (!IsOnRoute(Routes.Dapp, Routes.Onboard, Routes.Splash))
+        @if (AppStateService.CurrentSidebarContent != SidebarContentType.None)
         {
-            <RightSidebar />
+            <RightSidebar @key="AppStateService.CurrentSidebarContent" />
         }
     </div>
 </main>

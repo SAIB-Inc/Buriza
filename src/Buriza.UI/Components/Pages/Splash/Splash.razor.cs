@@ -1,4 +1,5 @@
 using Buriza.UI.Services;
+using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -12,6 +13,11 @@ public partial class Splash
     private MudCarousel<object>? _carousel;
     private bool showCarousel = true;
     private bool IsLastSlide => _carousel != null && _carousel.SelectedIndex == _carousel.Items.Count - 1;
+
+    protected override void OnInitialized()
+    {
+        AppStateService.CurrentSidebarContent = SidebarContentType.None;
+    }
 
     private void OnNextButtonClicked()
     {

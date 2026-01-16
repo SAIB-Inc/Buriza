@@ -2,7 +2,6 @@
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
 @using Buriza.UI.Data.Dummy
-@using Buriza.Data.Models.Common
 @using Buriza.Data.Models.Enums
 
 @namespace Buriza.UI.Components.Layout
@@ -46,163 +45,17 @@
             </div>
         </div>
     </div>
-    <div class="bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !pt-4 !pb-0 h-full">
-        <div class="w-full flex items-center justify-between !px-4">
-            <div class="flex items-center !gap-3 h-[38px]">
-                <div>
-                    <MudText Class="!font-medium !text-[22px]">
-                        @SidebarTitle
-                    </MudText>
-                </div>
-                @if (ShowTabs)
-                {
-                    <div>
-                        <MudIconButton
-                            Icon="@BurizaIcons.FilterSymbolIcon"
-                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
-                        />
-                    </div>
-                }
-            </div>
-            @if (ShowTabs)
-            {
-                <div>
-                    <BurizaTabs
-                        Class="!w-full [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full max-h-[38px]! [&_.mud-tab-slider.mud-tab-slider-horizontal]:h-[32px]! [&_.mud-tab-slider.mud-tab-slider-horizontal]:bottom-[10px]! [&_.mud-tab]:min-h-8! [&_.mud-icon-root]:!text-xl [&_.mud-tabs-tabbar-wrapper]:!w-full [&_.mud-tabs-scroll-button]:hidden"
-                        @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
-                    >
-                        <MudTabPanel 
-                            Icon="@BurizaIcons.TokenSymbolIcon"
-                            Class="w-full bg-[var(--mud-palette-gray-default)] !min-w-[50px] max-xl:!gap-0"
-                            Style="border-radius: 30px 10px 10px 30px"
-                        />
-                        <MudTabPanel 
-                            Icon="@BurizaIcons.NftSymbolIcon"
-                            Class="w-full bg-[var(--mud-palette-gray-default)] !min-w-[50px] max-xl:!gap-0"
-                            Style="border-radius: 10px 30px 30px 10px"
-                        />
-                    </BurizaTabs>
-                </div>
-            }
-            else
-            {
-                <div>
-                    <MudIconButton
-                        Icon="@BurizaIcons.FilterSymbolIcon"
-                        Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
-                    />
-                </div>
-            }
-        </div>
-        @if (ShowTabs)
-        {
-            @* Portfolio *@
-            <div class="w-full !space-y-2 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-278px)]">
-                @if(AppStateService.SelectedAssetType == AssetType.Token)
-                {
-                    @foreach (TokenAsset asset in TokenAssets)
-                    {
-                        <BurizaAssetCard
-                            AssetIcon="@asset.AssetIcon"
-                            AssetName="@asset.AssetName"
-                            PricePercentage="@asset.PricePercentage"
-                            AssetAmount="@asset.AssetAmount"
-                            UsdConversion="@asset.UsdConversion"
-                            Class="[&_.graph]:hidden md:[&_.asset-icon]:!w-[44px] md:[&_.asset-icon]:!h-[44px]"
-                        />
-                    }
-                }
-                else
-                {
-                    @foreach (NftAsset nft in NftAssets)
-                    {
-                        <BurizaAssetCard
-                            AssetIcon="@nft.AssetIcon"
-                            AssetName="@nft.AssetName"
-                            PricePercentage="@nft.PricePercentage"
-                            AssetAmount="@nft.AssetAmount"
-                            UsdConversion="@nft.UsdConversion"
-                            AssetType="AssetType.NFT"
-                            CollectionName="@nft.CollectionName"
-                            Class="[&_.graph]:hidden md:[&_.asset-icon]:!w-[44px] md:[&_.asset-icon]:!h-[44px]"
-                        />
-                    }
-                }
-            </div>
-        }
-        else
-        {
-            @* History *@
-            <div class="w-full !space-y-6 !mt-4 !px-4 !pb-4 overflow-y-auto max-h-[calc(100vh-278px)]">
-                @foreach (KeyValuePair<string, List<TransactionHistory>> dateGroup in TransactionsByDate)
-                {
-                    <div>
-                        <div class="w-full !mb-3">
-                            <MudText Class="!text-center !font-medium !text-sm">
-                                @dateGroup.Key
-                            </MudText>
-                        </div>
-                        <div class="!space-y-4">
-                            @foreach (TransactionHistory transaction in dateGroup.Value)
-                            {
-                                <div>
-                                    <div class="w-full flex items-center justify-between !mb-2">
-                                        <div>
-                                            <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
-                                                @Utils.GetRelativeTime(transaction.Timestamp)
-                                            </MudText>
-                                        </div>
-                                        <div class="flex items-center justify-end !gap-2">
-                                            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
-                                                @transaction.TransactionId
-                                            </MudText>
-                                            <MudIconButton
-                                                Icon="@BurizaIcons.CopySymbolIcon"
-                                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div class="rounded-r-[12px] overflow-hidden !shadow-sm">
-                                        @foreach (TransactionAsset asset in transaction.Assets)
-                                        {
-                                            <BurizaButton
-                                                Class="@($"py-2! px-4! h-max! bg-[var(--mud-palette-dark)]! even:bg-[var(--mud-palette-drawer-background)]! rounded-none! w-full !flex !items-center !justify-between border-l-2! {Utils.GetTransactionTypeColor(transaction.Type)} md:bg-[var(--mud-palette-info-lighten)]! md:even:bg-[var(--mud-palette-dark-text)]!")"
-                                            >
-                                                <div class="flex items-center gap-4!">
-                                                    <div class="aspect-square rounded-full overflow-hidden w-10 h-10 ">
-                                                        <MudImage
-                                                            Alt="@asset.AssetName"
-                                                            Src="@asset.AssetIcon"
-                                                        />
-                                                    </div>
-                                                    <div class="!mt-1">
-                                                        <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold !text-sm !text-start">
-                                                            @Utils.GetTransactionTypeText(transaction.Type)
-                                                        </MudText>
-                                                        <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !text-start">
-                                                            @asset.AssetName
-                                                        </MudText>
-                                                    </div>
-                                                </div>
-                                                <div class="flex flex-col items-end justify-center w-full">
-                                                    <MudText Class="@($"!text-sm !font-semibold !text-end {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
-                                                        @(transaction.Type == TransactionType.Sent ? "-" : "+")@Math.Abs(asset.Amount).ToString("F2")
-                                                    </MudText>
-                                                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !w-max !text-end">
-                                                        ≈ $@asset.UsdValue.ToString("F2")
-                                                    </MudText>
-                                                </div>
-                                            </BurizaButton>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-    </div>
+
+    @switch (AppStateService.CurrentSidebarContent)
+    {
+        case SidebarContentType.Portfolio:
+            <PortfolioSidebarContent />
+            break;
+        case SidebarContentType.History:
+            <HistorySidebarContent />
+            break;
+    }
+
     <div class="flex items-center !gap-4 !mt-4">
         <BurizaButton
             Variant="Variant.Filled"

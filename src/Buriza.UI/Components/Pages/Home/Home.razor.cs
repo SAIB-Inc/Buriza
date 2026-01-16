@@ -1,4 +1,5 @@
 using Buriza.UI.Services;
+using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -8,9 +9,9 @@ public partial class Home : ComponentBase, IDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
-    
+
     private bool IsCard2Expanded { get; set; } = false;
-    
+
     private void ToggleCardExpansion()
     {
         IsCard2Expanded = !IsCard2Expanded;
@@ -18,6 +19,7 @@ public partial class Home : ComponentBase, IDisposable
 
     protected override void OnInitialized()
     {
+        AppStateService.CurrentSidebarContent = SidebarContentType.History;
         AppStateService.OnChanged += StateHasChanged;
     }
 
