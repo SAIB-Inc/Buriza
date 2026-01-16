@@ -145,6 +145,20 @@ public class AppStateService
         }
     }
 
+    private SidebarContentType _currentSidebarContent = SidebarContentType.None;
+    public SidebarContentType CurrentSidebarContent
+    {
+        get => _currentSidebarContent;
+        set
+        {
+            if (_currentSidebarContent != value)
+            {
+                _currentSidebarContent = value;
+                NotifyChanged();
+            }
+        }
+    }
+
     #endregion
 
     #region methods

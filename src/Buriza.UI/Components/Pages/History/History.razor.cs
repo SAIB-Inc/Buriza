@@ -20,6 +20,7 @@ public partial class History
     
     protected override void OnInitialized()
     {
+        AppStateService.CurrentSidebarContent = SidebarContentType.Portfolio;
         TransactionsByDate = TransactionHistoryData.GetTransactionsByDate();
     }
 

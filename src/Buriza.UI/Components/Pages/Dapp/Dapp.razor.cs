@@ -1,4 +1,5 @@
 using Buriza.UI.Services;
+using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 
 namespace Buriza.UI.Components.Pages;
@@ -10,12 +11,17 @@ public partial class Dapp
 
     [Inject]
     public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
-    
+
     protected int ExpandedCard = 1;
     protected int ExpandedDesktopSlide = 0;
     protected bool ShowAuthorization = false;
     protected string SelectedCategory = "All";
-    
+
+    protected override void OnInitialized()
+    {
+        AppStateService.CurrentSidebarContent = SidebarContentType.None;
+    }
+
     protected void ExpandCard(int cardIndex)
     {
         ExpandedCard = cardIndex;

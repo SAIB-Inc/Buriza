@@ -1,4 +1,6 @@
 using MudBlazor;
+using Buriza.UI.Services;
+using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 
 namespace Buriza.UI.Components.Pages;
@@ -7,7 +9,10 @@ public partial class OnBoard
 {
     [Inject]
     public required NavigationManager Navigation { get; set; }
-    
+
+    [Inject]
+    public required AppStateService AppStateService { get; set; }
+
     protected int PhraseLength { get; set; } = 24;
     protected MudCarousel<object>? _carousel;
     protected bool IsLastSlide => _carousel != null && _carousel.SelectedIndex == _carousel.Items.Count - 1;
@@ -47,6 +52,11 @@ public partial class OnBoard
     };
 
     protected bool ShowSecondaryButton => CurrentSlide <= 2;
+
+    protected override void OnInitialized()
+    {
+        AppStateService.CurrentSidebarContent = SidebarContentType.None;
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {

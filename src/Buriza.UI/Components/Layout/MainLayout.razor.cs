@@ -1,4 +1,5 @@
 using Buriza.UI.Services;
+using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using static Buriza.Data.Models.Enums.DrawerContentType;
@@ -17,10 +18,12 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
 
     private bool IsOnRoute(params string[] routes)
     {
-        var uri = Navigation.Uri;
+        var path = new Uri(Navigation.Uri).AbsolutePath;
         foreach (var route in routes)
         {
-            if (uri.Contains(route))
+            if (route == "/" && path == "/")
+                return true;
+            if (route != "/" && path.Contains(route))
                 return true;
         }
         return false;
@@ -98,20 +101,26 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
 
     protected override void OnInitialized()
     {
-        AppStateService.OnChanged += StateHasChanged;
+        AppStateService.OnChanged += HandleStateChanged;
         Navigation.LocationChanged += OnLocationChanged;
 
-        SetDrawerContentForCurrentRoute();
+        SetContentForCurrentRoute();
     }
 
-    protected void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private async void HandleStateChanged()
     {
-        SetDrawerContentForCurrentRoute();
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
-    
-    private void SetDrawerContentForCurrentRoute()
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+        SetContentForCurrentRoute();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void SetContentForCurrentRoute()
+    {
+        // Set drawer content
         if (IsOnRoute(Routes.History))
         {
             AppStateService.CurrentDrawerContent = Summary;
@@ -124,11 +133,25 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         {
             AppStateService.CurrentDrawerContent = None;
         }
+
+        // Set sidebar content
+        if (IsOnRoute(Routes.Home))
+        {
+            AppStateService.CurrentSidebarContent = SidebarContentType.History;
+        }
+        else if (IsOnRoute(Routes.History))
+        {
+            AppStateService.CurrentSidebarContent = SidebarContentType.Portfolio;
+        }
+        else
+        {
+            AppStateService.CurrentSidebarContent = SidebarContentType.None;
+        }
     }
 
     public void Dispose()
     {
-        AppStateService.OnChanged -= StateHasChanged;
+        AppStateService.OnChanged -= HandleStateChanged;
         Navigation.LocationChanged -= OnLocationChanged;
     }
 }
