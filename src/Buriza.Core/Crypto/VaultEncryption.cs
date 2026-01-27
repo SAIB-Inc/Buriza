@@ -4,7 +4,7 @@ using Buriza.Core.Models;
 
 namespace Buriza.Core.Crypto;
 
-public static class AesGcmEncryption
+public static class VaultEncryption
 {
     public static EncryptedVault Encrypt(int walletId, string plaintext, string password)
     {

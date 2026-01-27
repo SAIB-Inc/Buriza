@@ -16,7 +16,7 @@ public class SecureStorage : ISecureStorage
 
     public async Task CreateVaultAsync(int walletId, string mnemonic, string password, CancellationToken ct = default)
     {
-        EncryptedVault vault = AesGcmEncryption.Encrypt(walletId, mnemonic, password);
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic, password);
         string json = JsonSerializer.Serialize(vault);
         await MauiSecureStorage.Default.SetAsync(GetVaultKey(walletId), json);
     }
@@ -35,7 +35,7 @@ public class SecureStorage : ISecureStorage
             throw new InvalidOperationException($"Failed to deserialize vault for wallet {walletId}");
         }
 
-        return AesGcmEncryption.Decrypt(vault, password);
+        return VaultEncryption.Decrypt(vault, password);
     }
 
     public Task DeleteVaultAsync(int walletId, CancellationToken ct = default)
@@ -58,7 +58,7 @@ public class SecureStorage : ISecureStorage
             return false;
         }
 
-        return AesGcmEncryption.VerifyPassword(vault, password);
+        return VaultEncryption.VerifyPassword(vault, password);
     }
 
     public async Task ChangePasswordAsync(int walletId, string oldPassword, string newPassword, CancellationToken ct = default)
