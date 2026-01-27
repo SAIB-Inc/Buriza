@@ -1,4 +1,4 @@
-namespace Buriza.UI.Routes;
+namespace Buriza.UI.Routing;
 
 public static class Routes
 {
