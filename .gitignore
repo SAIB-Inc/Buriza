@@ -382,3 +382,7 @@ ehthumbs_vista.db
 **/wwwroot/dist/
 **/wwwroot/css/app.css
 **/wwwroot/js/app.js
+
+# App settings (may contain API keys)
+**/appsettings.json
+**/appsettings.*.json
