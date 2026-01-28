@@ -10,6 +10,7 @@ using Chrysalis.Tx.Extensions;
 using Chrysalis.Tx.Models;
 using Chrysalis.Wallet.Models.Keys;
 using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
+using Metadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 
 namespace Buriza.Core.Providers.Cardano;
 
@@ -35,11 +36,14 @@ public class TransactionService(QueryService queryService) : ITransactionService
                 options.Amount = BuildOutputValue(req.Recipients[i]);
             }));
 
+        // Add metadata if provided
+        if (request.Metadata is { Count: > 0 })
+        {
+            builder = builder.AddMetadata(req => BuildMetadata(req.Metadata!));
+        }
+
         TransactionTemplate<TransactionRequest> template = builder.Build();
         Transaction tx = await template(request);
-
-        byte[] txBytes = CborSerializer.Serialize(tx);
-        string txHex = Convert.ToHexStringLower(txBytes);
 
         ulong fee = GetFee(tx);
         ulong totalOutput = request.Recipients.Aggregate(0UL, (sum, r) => sum + r.Amount);
@@ -47,9 +51,8 @@ public class TransactionService(QueryService queryService) : ITransactionService
         return new UnsignedTransaction
         {
             ChainType = ChainType.Cardano,
-            TxHex = txHex,
+            TxRaw = CborSerializer.Serialize(tx),
             Fee = fee,
-            Transaction = tx,
             Summary = new TransactionSummary
             {
                 Type = "Send",
@@ -65,13 +68,10 @@ public class TransactionService(QueryService queryService) : ITransactionService
         };
     }
 
-    public async Task<string> SubmitAsync(string signedTxHex, CancellationToken ct = default)
+    public async Task<string> SubmitAsync(byte[] signedTxRaw, CancellationToken ct = default)
     {
-        byte[] txBytes = Convert.FromHexString(signedTxHex);
-        Transaction tx = CborSerializer.Deserialize<Transaction>(txBytes);
-
-        string txHash = await _queryService.SubmitTransactionAsync(tx);
-        return txHash;
+        Transaction tx = Transaction.Read(signedTxRaw);
+        return await _queryService.SubmitTransactionAsync(tx);
     }
 
     private static ulong GetFee(Transaction tx)
@@ -102,14 +102,48 @@ public class TransactionService(QueryService queryService) : ITransactionService
         return new LovelaceWithMultiAsset(lovelace, new MultiAssetOutput(multiAssets));
     }
 
-    public Task<string> SignAsync(UnsignedTransaction tx, PrivateKey privateKey, CancellationToken ct = default)
+    private static Metadata BuildMetadata(Dictionary<ulong, object> metadata)
     {
-        // Use the Transaction object directly to avoid serialization roundtrip issues
-        Transaction transaction = tx.Transaction
-            ?? CborSerializer.Deserialize<Transaction>(Convert.FromHexString(tx.TxHex));
+        Dictionary<ulong, TransactionMetadatum> metadatum = metadata
+            .ToDictionary(kv => kv.Key, kv => ConvertToMetadatumValue(kv.Value));
 
-        Transaction signedTx = transaction.Sign(privateKey);
-        byte[] signedTxBytes = CborSerializer.Serialize(signedTx);
-        return Task.FromResult(Convert.ToHexStringLower(signedTxBytes));
+        return new Metadata(metadatum);
+    }
+
+    private static TransactionMetadatum ConvertToMetadatumValue(object value)
+    {
+        return value switch
+        {
+            string s => new MetadataText(s),
+            long l => new MetadatumIntLong(l),
+            int i => new MetadatumIntLong(i),
+            ulong u => new MetadatumIntUlong(u),
+            byte[] b => new MetadatumBytes(b),
+            Dictionary<object, object> dict => new MetadatumMap(
+                dict.ToDictionary(
+                    kv => ConvertToMetadatumValue(kv.Key),
+                    kv => ConvertToMetadatumValue(kv.Value))),
+            IEnumerable<object> list => new MetadatumList(
+                [.. list.Select(ConvertToMetadatumValue)]),
+            _ => new MetadataText(value.ToString() ?? string.Empty)
+        };
+    }
+
+    public Task<byte[]> SignAsync(UnsignedTransaction tx, PrivateKey privateKey, CancellationToken ct = default)
+    {
+        Transaction transaction = Transaction.Read(tx.TxRaw);
+        Transaction signedTx = transaction.Sign(privateKey) with { Raw = null };
+
+        // Clear Raw cache on witness set
+        if (signedTx is PostMaryTransaction pmt)
+        {
+            signedTx = pmt with
+            {
+                Raw = null,
+                TransactionWitnessSet = pmt.TransactionWitnessSet with { Raw = null }
+            };
+        }
+
+        return Task.FromResult(CborSerializer.Serialize(signedTx));
     }
 }

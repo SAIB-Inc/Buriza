@@ -23,7 +23,7 @@ public class WebSecureStorage(IJSRuntime jsRuntime) : ISecureStorage
         await _js.InvokeVoidAsync("localStorage.setItem", ct, GetVaultKey(walletId), json);
     }
 
-    public async Task<string> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default)
+    public async Task<byte[]> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default)
     {
         string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetVaultKey(walletId));
         if (string.IsNullOrEmpty(json))
@@ -37,7 +37,7 @@ public class WebSecureStorage(IJSRuntime jsRuntime) : ISecureStorage
             throw new InvalidOperationException($"Failed to deserialize vault for wallet {walletId}");
         }
 
-        return VaultEncryption.Decrypt(vault, password);
+        return VaultEncryption.DecryptToBytes(vault, password);
     }
 
     public async Task DeleteVaultAsync(int walletId, CancellationToken ct = default)

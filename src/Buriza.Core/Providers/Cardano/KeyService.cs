@@ -13,13 +13,13 @@ public class KeyService(Configuration config) : IKeyService
         ? ChrysalisNetworkType.Testnet
         : ChrysalisNetworkType.Mainnet;
 
-    public Task<string> GenerateMnemonicAsync(int wordCount = 24)
+    public Task<string> GenerateMnemonicAsync(int wordCount = 24, CancellationToken ct = default)
     {
         Mnemonic mnemonic = Mnemonic.Generate(English.Words, wordCount);
         return Task.FromResult(string.Join(" ", mnemonic.Words));
     }
 
-    public Task<bool> ValidateMnemonicAsync(string mnemonic)
+    public Task<bool> ValidateMnemonicAsync(string mnemonic, CancellationToken ct = default)
     {
         try
         {
@@ -32,7 +32,7 @@ public class KeyService(Configuration config) : IKeyService
         }
     }
 
-    public Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false)
+    public Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
@@ -64,7 +64,7 @@ public class KeyService(Configuration config) : IKeyService
         return Task.FromResult(address.ToBech32());
     }
 
-    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false)
+    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
@@ -80,7 +80,7 @@ public class KeyService(Configuration config) : IKeyService
         return Task.FromResult(key);
     }
 
-    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false)
+    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;

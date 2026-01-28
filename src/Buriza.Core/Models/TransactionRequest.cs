@@ -8,6 +8,7 @@ public record TransactionRequest : ITransactionParameters
     public required string FromAddress { get; init; }
     public required List<TransactionRecipient> Recipients { get; init; }
     public string? Message { get; init; }
+    public Dictionary<ulong, object>? Metadata { get; init; }
 
     public Dictionary<string, (string address, bool isChange)> Parties
     {
@@ -34,5 +35,5 @@ public record TransactionRecipient
 {
     public required string Address { get; init; }
     public required ulong Amount { get; init; }
-    public List<ChainAsset>? Assets { get; init; }
+    public List<Asset>? Assets { get; init; }
 }

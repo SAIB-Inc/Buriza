@@ -66,14 +66,14 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
 
     public async Task<IReadOnlyList<Utxo>> GetUtxosAsync(string address, CancellationToken ct = default)
     {
-        UtxorpcQuery.SearchUtxosResponse response = await SearchUtxosByAddressAsync(address, ct);
+        UtxorpcQuery.SearchUtxosResponse response = await SearchUtxosByAddressAsync(address, ct: ct);
 
         return [.. response.Items
             .Where(item => item.Cardano != null || !item.NativeBytes.IsEmpty)
             .Select(item => MapToUtxo(item, item.TxoRef))];
     }
 
-    public async Task<IReadOnlyList<ChainAsset>> GetAssetsAsync(string address, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(string address, CancellationToken ct = default)
     {
         IReadOnlyList<Utxo> utxos = await GetUtxosAsync(address, ct);
 
@@ -82,8 +82,8 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
             .GroupBy(asset => asset.Subject)
             .Select(group =>
             {
-                ChainAsset first = group.First();
-                return new ChainAsset
+                Asset first = group.First();
+                return new Asset
                 {
                     PolicyId = first.PolicyId,
                     AssetName = first.AssetName,
@@ -220,7 +220,11 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
 
     #region Private Helpers
 
-    private async Task<UtxorpcQuery.SearchUtxosResponse> SearchUtxosByAddressAsync(string address, CancellationToken ct = default)
+    private async Task<UtxorpcQuery.SearchUtxosResponse> SearchUtxosByAddressAsync(
+        string address,
+        int maxItems = 100,
+        string? startToken = null,
+        CancellationToken ct = default)
     {
         byte[] addressBytes = ChrysalisAddress.FromBech32(address).ToBytes();
 
@@ -238,8 +242,14 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
                         }
                     }
                 }
-            }
+            },
+            MaxItems = maxItems
         };
+
+        if (!string.IsNullOrEmpty(startToken))
+        {
+            request.StartToken = startToken;
+        }
 
         return await _queryClient.SearchUtxosAsync(
             request,
@@ -281,7 +291,7 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
                     string hexName = Convert.ToHexStringLower(nameBytes);
                     string assetName = TryDecodeUtf8(nameBytes) ?? hexName;
 
-                    return new ChainAsset
+                    return new Asset
                     {
                         PolicyId = Convert.ToHexStringLower(ma.PolicyId.ToByteArray()),
                         AssetName = assetName,
@@ -320,7 +330,7 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
             multiAsset = (postMary.Amount as LovelaceWithMultiAsset)?.MultiAsset;
         }
 
-        List<ChainAsset> assets = [];
+        List<Asset> assets = [];
         if (multiAsset != null)
         {
             foreach (var (policyId, tokenBundle) in multiAsset.Value)
@@ -330,7 +340,7 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
                 {
                     string hexName = Convert.ToHexStringLower(assetName);
                     string displayName = TryDecodeUtf8(assetName) ?? hexName;
-                    assets.Add(new ChainAsset
+                    assets.Add(new Asset
                     {
                         PolicyId = policyIdHex,
                         AssetName = displayName,
@@ -455,9 +465,6 @@ public class QueryService : IQueryService, ICardanoDataProvider, IDisposable
         Array.Reverse(padded);
         return BitConverter.ToUInt64(padded);
     }
-
-    private static ulong? ToUlongNullable(CardanoSpec.BigInt? bigInt) =>
-        bigInt is null ? null : ToUlong(bigInt);
 
     // TODO: Remove WithDefault helpers once UTxO RPC returns complete parameters
     private static T WithDefault<T>(T value, T defaultValue) where T : struct, IComparable<T> =>

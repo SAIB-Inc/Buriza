@@ -10,5 +10,4 @@ public record DerivedAddress
     public required int AddressIndex { get; init; }
     public required string DerivationPath { get; init; }
     public bool IsUsed { get; init; } = false;
-    public decimal Balance { get; init; } = 0;
 }

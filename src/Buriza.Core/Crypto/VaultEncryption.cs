@@ -41,7 +41,11 @@ public static class VaultEncryption
         }
     }
 
-    public static string Decrypt(EncryptedVault vault, string password)
+    /// <summary>
+    /// Decrypts the vault and returns the plaintext as bytes.
+    /// IMPORTANT: Caller MUST zero the returned bytes after use with CryptographicOperations.ZeroMemory()
+    /// </summary>
+    public static byte[] DecryptToBytes(EncryptedVault vault, string password)
     {
         byte[] salt = Convert.FromBase64String(vault.Salt);
         byte[] iv = Convert.FromBase64String(vault.Iv);
@@ -69,11 +73,28 @@ public static class VaultEncryption
             using AesGcm aes = new(key, tagSize);
             aes.Decrypt(iv, ciphertext, tag, plaintext);
 
-            return Encoding.UTF8.GetString(plaintext);
+            // Return bytes - caller is responsible for zeroing
+            return plaintext;
         }
         finally
         {
             CryptographicOperations.ZeroMemory(key);
+        }
+    }
+
+    /// <summary>
+    /// Decrypts the vault and returns plaintext as string.
+    /// WARNING: String cannot be zeroed. Use DecryptToBytes for sensitive data.
+    /// </summary>
+    public static string Decrypt(EncryptedVault vault, string password)
+    {
+        byte[] plaintext = DecryptToBytes(vault, password);
+        try
+        {
+            return Encoding.UTF8.GetString(plaintext);
+        }
+        finally
+        {
             CryptographicOperations.ZeroMemory(plaintext);
         }
     }

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Buriza.Core.Crypto;
 using Buriza.Core.Models;
@@ -21,7 +22,7 @@ public class SecureStorage : ISecureStorage
         await MauiSecureStorage.Default.SetAsync(GetVaultKey(walletId), json);
     }
 
-    public async Task<string> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default)
+    public async Task<byte[]> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default)
     {
         string? json = await MauiSecureStorage.Default.GetAsync(GetVaultKey(walletId));
         if (string.IsNullOrEmpty(json))
@@ -35,7 +36,7 @@ public class SecureStorage : ISecureStorage
             throw new InvalidOperationException($"Failed to deserialize vault for wallet {walletId}");
         }
 
-        return VaultEncryption.Decrypt(vault, password);
+        return VaultEncryption.DecryptToBytes(vault, password);
     }
 
     public Task DeleteVaultAsync(int walletId, CancellationToken ct = default)
@@ -63,8 +64,16 @@ public class SecureStorage : ISecureStorage
 
     public async Task ChangePasswordAsync(int walletId, string oldPassword, string newPassword, CancellationToken ct = default)
     {
-        string mnemonic = await UnlockVaultAsync(walletId, oldPassword, ct);
-        await CreateVaultAsync(walletId, mnemonic, newPassword, ct);
+        byte[] mnemonicBytes = await UnlockVaultAsync(walletId, oldPassword, ct);
+        try
+        {
+            string mnemonic = System.Text.Encoding.UTF8.GetString(mnemonicBytes);
+            await CreateVaultAsync(walletId, mnemonic, newPassword, ct);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(mnemonicBytes);
+        }
     }
 
     private static string GetVaultKey(int walletId) => $"buriza_vault_{walletId}";
