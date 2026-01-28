@@ -1,0 +1,19 @@
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Controls
+
+<div class="@GetContainerClass()">
+    <div class="absolute top-0 left-0 right-0 h-[3px] overflow-hidden rounded-t-[4px] bg-[var(--mud-palette-text-primary)]">
+        <div class="@GetProgressBarClass()" style="@GetProgressBarStyle()"></div>
+    </div>
+    <div class="flex items-center gap-3 pt-1">
+        <MudIcon Icon="@GetIcon()" Class="@GetIconClass()" />
+        <MudText Class="flex-1 font-semibold text-[var(--mud-palette-text-primary)]!">@Message</MudText>
+        <MudIconButton
+            Icon="@BurizaIcons.CloseSymbolIcon"
+            Size="Size.Small"
+            OnClick="Close"
+            Class="!p-0 !min-w-0"
+        />
+    </div>
+</div>
