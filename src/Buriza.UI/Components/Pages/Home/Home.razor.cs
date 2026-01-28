@@ -17,6 +17,18 @@ public partial class Home : ComponentBase, IDisposable
         IsCard2Expanded = !IsCard2Expanded;
     }
 
+    private void OpenReceiveDrawer()
+    {
+        AppStateService.CurrentDrawerContent = DrawerContentType.Receive;
+        AppStateService.IsFilterDrawerOpen = true;
+    }
+
+    private void OpenSendDrawer()
+    {
+        AppStateService.CurrentDrawerContent = DrawerContentType.Send;
+        AppStateService.IsFilterDrawerOpen = true;
+    }
+
     protected override void OnInitialized()
     {
         AppStateService.CurrentSidebarContent = SidebarContentType.History;
