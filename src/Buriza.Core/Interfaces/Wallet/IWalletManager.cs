@@ -66,11 +66,11 @@ public interface IWalletManager
 
     #region Balance & Assets (No Password - Uses Cached)
 
-    /// <summary>Gets total balance in lovelace.</summary>
-    Task<ulong> GetBalanceAsync(int walletId, int accountIndex, CancellationToken ct = default);
+    /// <summary>Gets total balance in lovelace. Set allAddresses=true to scan all derived addresses.</summary>
+    Task<ulong> GetBalanceAsync(int walletId, int accountIndex, bool allAddresses = false, CancellationToken ct = default);
 
-    /// <summary>Gets all native assets (tokens/NFTs).</summary>
-    Task<IReadOnlyList<Asset>> GetAssetsAsync(int walletId, int accountIndex, CancellationToken ct = default);
+    /// <summary>Gets all native assets (tokens/NFTs). Set allAddresses=true to scan all derived addresses.</summary>
+    Task<IReadOnlyList<Asset>> GetAssetsAsync(int walletId, int accountIndex, bool allAddresses = false, CancellationToken ct = default);
 
     #endregion
 

@@ -345,53 +345,50 @@ public class WalletManagerService(
 
     #region Balance & Assets
 
-    public async Task<ulong> GetBalanceAsync(int walletId, int accountIndex, CancellationToken ct = default)
+    public async Task<ulong> GetBalanceAsync(int walletId, int accountIndex, bool allAddresses = false, CancellationToken ct = default)
     {
         Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         IChainProvider provider = _providerRegistry.GetProvider(wallet.ChainType);
         EnsureAccountUnlocked(walletId, accountIndex);
 
-        IReadOnlyList<DerivedAddress> addresses = await GetAddressesAsync(walletId, accountIndex, GapLimit, true, ct);
-
-        ulong totalBalance = 0;
-        foreach (DerivedAddress addr in addresses)
+        if (!allAddresses)
         {
-            ulong balance = await provider.QueryService.GetBalanceAsync(addr.Address, ct);
-            totalBalance += balance;
+            // Fast path: query only the first receive address
+            string? address = _sessionService.GetCachedAddress(walletId, accountIndex, 0, false);
+            return address != null ? await provider.QueryService.GetBalanceAsync(address, ct) : 0;
         }
 
-        return totalBalance;
+        // Full scan: query all addresses in parallel
+        IReadOnlyList<DerivedAddress> addresses = await GetAddressesAsync(walletId, accountIndex, GapLimit, true, ct);
+        IEnumerable<Task<ulong>> tasks = addresses.Select(a => provider.QueryService.GetBalanceAsync(a.Address, ct));
+        ulong[] balances = await Task.WhenAll(tasks);
+
+        return balances.Aggregate(0UL, (total, b) => total + b);
     }
 
-    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int walletId, int accountIndex, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int walletId, int accountIndex, bool allAddresses = false, CancellationToken ct = default)
     {
         Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         IChainProvider provider = _providerRegistry.GetProvider(wallet.ChainType);
         EnsureAccountUnlocked(walletId, accountIndex);
 
-        IReadOnlyList<DerivedAddress> addresses = await GetAddressesAsync(walletId, accountIndex, GapLimit, true, ct);
-
-        // Aggregate assets from all addresses
-        Dictionary<string, Asset> assetMap = [];
-
-        foreach (DerivedAddress addr in addresses)
+        if (!allAddresses)
         {
-            IReadOnlyList<Asset> assets = await provider.QueryService.GetAssetsAsync(addr.Address, ct);
-            foreach (Asset asset in assets)
-            {
-                if (assetMap.TryGetValue(asset.Subject, out Asset? existing))
-                {
-                    // Combine quantities for same asset
-                    assetMap[asset.Subject] = existing with { Quantity = existing.Quantity + asset.Quantity };
-                }
-                else
-                {
-                    assetMap[asset.Subject] = asset;
-                }
-            }
+            // Fast path: query only the first receive address
+            string? address = _sessionService.GetCachedAddress(walletId, accountIndex, 0, false);
+            return address != null ? await provider.QueryService.GetAssetsAsync(address, ct) : [];
         }
 
-        return assetMap.Values.ToList();
+        // Full scan: query all addresses in parallel
+        IReadOnlyList<DerivedAddress> addresses = await GetAddressesAsync(walletId, accountIndex, GapLimit, true, ct);
+        IEnumerable<Task<IReadOnlyList<Asset>>> tasks = addresses.Select(a => provider.QueryService.GetAssetsAsync(a.Address, ct));
+        IReadOnlyList<Asset>[] results = await Task.WhenAll(tasks);
+
+        // Aggregate assets from all addresses
+        return [.. results
+            .SelectMany(assets => assets)
+            .GroupBy(a => a.Subject)
+            .Select(g => g.First() with { Quantity = g.Aggregate(0UL, (sum, a) => sum + a.Quantity) })];
     }
 
     #endregion
