@@ -3,15 +3,27 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Blazor.BrowserExtension;
 using Buriza.Extension;
 using Buriza.UI.Components;
+using MudBlazor;
 using MudBlazor.Services;
 using Buriza.UI.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+    config.SnackbarConfiguration.PreventDuplicates = false;
+    config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 5000;
+    config.SnackbarConfiguration.HideTransitionDuration = 300;
+    config.SnackbarConfiguration.ShowTransitionDuration = 300;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 
 builder.Services.AddScoped<AppStateService>();
 builder.Services.AddScoped<JavaScriptBridgeService>();
+builder.Services.AddScoped<BurizaSnackbarService>();
 
 builder.UseBrowserExtension(browserExtension =>
 {
