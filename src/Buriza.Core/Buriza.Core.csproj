@@ -7,11 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Chrysalis" Version="0.7.21" />
+    <PackageReference Include="Chrysalis" Version="1.0.5-alpha" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
     <PackageReference Include="Microsoft.JSInterop" Version="10.0.0" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
-    <PackageReference Include="Utxorpc.Spec" Version="0.16.0-alpha" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
+    <PackageReference Include="Utxorpc.Sdk" Version="1.7.0-alpha" />
+    <PackageReference Include="Utxorpc.Spec" Version="0.18.1-alpha" />
   </ItemGroup>
 
   <ItemGroup>

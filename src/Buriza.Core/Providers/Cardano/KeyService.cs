@@ -1,14 +1,18 @@
-using Buriza.Core.Interfaces.Wallet;
-using Chrysalis.Wallet;
+using Buriza.Core.Interfaces.Chain;
 using Chrysalis.Wallet.Models.Addresses;
 using Chrysalis.Wallet.Models.Enums;
 using Chrysalis.Wallet.Models.Keys;
 using Chrysalis.Wallet.Words;
+using ChrysalisNetworkType = Chrysalis.Wallet.Models.Enums.NetworkType;
 
 namespace Buriza.Core.Providers.Cardano;
 
-public class KeyManager : IKeyManager
+public class KeyService(Configuration config) : IKeyService
 {
+    private readonly ChrysalisNetworkType _networkType = config.IsTestnet
+        ? ChrysalisNetworkType.Testnet
+        : ChrysalisNetworkType.Mainnet;
+
     public Task<string> GenerateMnemonicAsync(int wordCount = 24)
     {
         Mnemonic mnemonic = Mnemonic.Generate(English.Words, wordCount);
@@ -26,30 +30,6 @@ public class KeyManager : IKeyManager
         {
             return Task.FromResult(false);
         }
-    }
-
-    public Task<byte[]> DerivePrivateKeyAsync(string mnemonic, string derivationPath)
-    {
-        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
-        List<(int Index, bool Hardened)> parts = ParseDerivationPath(derivationPath);
-
-        PrivateKey key = parts.Aggregate(
-            restored.GetRootKey(),
-            (current, part) => current.Derive(part.Index, part.Hardened ? DerivationType.HARD : DerivationType.SOFT));
-
-        return Task.FromResult(key.Key);
-    }
-
-    public Task<byte[]> DerivePublicKeyAsync(string mnemonic, string derivationPath)
-    {
-        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
-        List<(int Index, bool Hardened)> parts = ParseDerivationPath(derivationPath);
-
-        PrivateKey key = parts.Aggregate(
-            restored.GetRootKey(),
-            (current, part) => current.Derive(part.Index, part.Hardened ? DerivationType.HARD : DerivationType.SOFT));
-
-        return Task.FromResult(key.GetPublicKey().Key);
     }
 
     public Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false)
@@ -76,7 +56,7 @@ public class KeyManager : IKeyManager
             .GetPublicKey();
 
         Address address = Address.FromPublicKeys(
-            NetworkType.Mainnet,
+            _networkType,
             AddressType.Base,
             paymentKey,
             stakingKey);
@@ -84,17 +64,36 @@ public class KeyManager : IKeyManager
         return Task.FromResult(address.ToBech32());
     }
 
-    private static List<(int Index, bool Hardened)> ParseDerivationPath(string path)
+    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false)
     {
-        return [.. path
-            .TrimStart('m', '/')
-            .Split('/')
-            .Select(static segment =>
-            {
-                bool hardened = segment.EndsWith("'");
-                string indexStr = hardened ? segment[..^1] : segment;
-                return int.TryParse(indexStr, out int index) ? (Index: index, Hardened: hardened) : (Index: -1, Hardened: false);
-            })
-            .Where(x => x.Index >= 0)];
+        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+        RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
+
+        PrivateKey key = restored
+            .GetRootKey()
+            .Derive(PurposeType.Shelley, DerivationType.HARD)
+            .Derive(CoinType.Ada, DerivationType.HARD)
+            .Derive(accountIndex, DerivationType.HARD)
+            .Derive(role)
+            .Derive(addressIndex);
+
+        return Task.FromResult(key);
+    }
+
+    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false)
+    {
+        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+        RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
+
+        PublicKey key = restored
+            .GetRootKey()
+            .Derive(PurposeType.Shelley, DerivationType.HARD)
+            .Derive(CoinType.Ada, DerivationType.HARD)
+            .Derive(accountIndex, DerivationType.HARD)
+            .Derive(role)
+            .Derive(addressIndex)
+            .GetPublicKey();
+
+        return Task.FromResult(key);
     }
 }

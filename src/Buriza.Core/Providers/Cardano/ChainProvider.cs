@@ -7,26 +7,28 @@ namespace Buriza.Core.Providers.Cardano;
 public class ChainProvider : IChainProvider, IDisposable
 {
     public ChainInfo ChainInfo { get; }
+    public IKeyService KeyService { get; }
     public IQueryService QueryService { get; }
     public ITransactionService TransactionService { get; }
 
-    private readonly UtxoRpcProvider _utxoRpcProvider;
+    private readonly QueryService _queryService;
     private bool _disposed;
 
     public ChainProvider(Configuration config)
     {
         ChainInfo = ChainRegistry.Get(ChainType.Cardano, config.Network);
 
-        _utxoRpcProvider = new UtxoRpcProvider(config);
-        QueryService = new QueryService(config);
-        TransactionService = new TransactionService(_utxoRpcProvider);
+        _queryService = new QueryService(config);
+        KeyService = new KeyService(config);
+        QueryService = _queryService;
+        TransactionService = new TransactionService(_queryService);
     }
 
     public async Task<bool> ValidateConnectionAsync(CancellationToken ct = default)
     {
         try
         {
-            _ = await _utxoRpcProvider.GetParametersAsync();
+            _ = await _queryService.GetParametersAsync();
             return true;
         }
         catch
@@ -40,12 +42,7 @@ public class ChainProvider : IChainProvider, IDisposable
         if (_disposed) return;
         _disposed = true;
 
-        _utxoRpcProvider.Dispose();
-        if (QueryService is IDisposable queryDisposable)
-        {
-            queryDisposable.Dispose();
-        }
-
+        _queryService.Dispose();
         GC.SuppressFinalize(this);
     }
 }

@@ -6,6 +6,7 @@ public interface IChainProvider
 {
     ChainInfo ChainInfo { get; }
 
+    IKeyService KeyService { get; }
     IQueryService QueryService { get; }
     ITransactionService TransactionService { get; }
 
