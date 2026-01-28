@@ -1,12 +1,17 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Buriza.Core.Crypto;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models;
 using Microsoft.JSInterop;
 
-namespace Buriza.Core.Storage.Web;
+namespace Buriza.Core.Storage.Extension;
 
-public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
+/// <summary>
+/// Wallet storage implementation for browser extensions using chrome.storage.local.
+/// More secure than localStorage as it's only accessible to the extension itself.
+/// </summary>
+public class ExtensionWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 {
     private readonly IJSRuntime _js = jsRuntime;
 
@@ -26,7 +31,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
             wallets.Add(wallet);
 
         string json = JsonSerializer.Serialize(wallets);
-        await _js.InvokeVoidAsync("localStorage.setItem", ct, WalletsKey, json);
+        await _js.InvokeVoidAsync("buriza.storage.set", ct, WalletsKey, json);
     }
 
     public async Task<BurizaWallet?> LoadAsync(int walletId, CancellationToken ct = default)
@@ -37,7 +42,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     public async Task<IReadOnlyList<BurizaWallet>> LoadAllAsync(CancellationToken ct = default)
     {
-        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, WalletsKey);
+        string? json = await _js.InvokeAsync<string?>("buriza.storage.get", ct, WalletsKey);
         if (string.IsNullOrEmpty(json))
             return [];
 
@@ -50,12 +55,12 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
         wallets.RemoveAll(w => w.Id == walletId);
 
         string json = JsonSerializer.Serialize(wallets);
-        await _js.InvokeVoidAsync("localStorage.setItem", ct, WalletsKey, json);
+        await _js.InvokeVoidAsync("buriza.storage.set", ct, WalletsKey, json);
     }
 
     public async Task<int?> GetActiveWalletIdAsync(CancellationToken ct = default)
     {
-        string? value = await _js.InvokeAsync<string?>("localStorage.getItem", ct, ActiveWalletKey);
+        string? value = await _js.InvokeAsync<string?>("buriza.storage.get", ct, ActiveWalletKey);
         if (string.IsNullOrEmpty(value))
             return null;
 
@@ -64,7 +69,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     public async Task SetActiveWalletIdAsync(int walletId, CancellationToken ct = default)
     {
-        await _js.InvokeVoidAsync("localStorage.setItem", ct, ActiveWalletKey, walletId.ToString());
+        await _js.InvokeVoidAsync("buriza.storage.set", ct, ActiveWalletKey, walletId.ToString());
     }
 
     #endregion
@@ -73,7 +78,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     public async Task<bool> HasVaultAsync(int walletId, CancellationToken ct = default)
     {
-        string? data = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetVaultKey(walletId));
+        string? data = await _js.InvokeAsync<string?>("buriza.storage.get", ct, GetVaultKey(walletId));
         return !string.IsNullOrEmpty(data);
     }
 
@@ -81,12 +86,12 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
     {
         EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic, password);
         string json = JsonSerializer.Serialize(vault);
-        await _js.InvokeVoidAsync("localStorage.setItem", ct, GetVaultKey(walletId), json);
+        await _js.InvokeVoidAsync("buriza.storage.set", ct, GetVaultKey(walletId), json);
     }
 
     public async Task<byte[]> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default)
     {
-        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetVaultKey(walletId));
+        string? json = await _js.InvokeAsync<string?>("buriza.storage.get", ct, GetVaultKey(walletId));
         if (string.IsNullOrEmpty(json))
             throw new InvalidOperationException($"Vault for wallet {walletId} not found");
 
@@ -99,12 +104,12 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     public async Task DeleteVaultAsync(int walletId, CancellationToken ct = default)
     {
-        await _js.InvokeVoidAsync("localStorage.removeItem", ct, GetVaultKey(walletId));
+        await _js.InvokeVoidAsync("buriza.storage.remove", ct, GetVaultKey(walletId));
     }
 
     public async Task<bool> VerifyPasswordAsync(int walletId, string password, CancellationToken ct = default)
     {
-        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetVaultKey(walletId));
+        string? json = await _js.InvokeAsync<string?>("buriza.storage.get", ct, GetVaultKey(walletId));
         if (string.IsNullOrEmpty(json))
             return false;
 
@@ -117,16 +122,16 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     public async Task ChangePasswordAsync(int walletId, string oldPassword, string newPassword, CancellationToken ct = default)
     {
-        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetVaultKey(walletId));
-        if (string.IsNullOrEmpty(json))
-            throw new InvalidOperationException($"Vault for wallet {walletId} not found");
-
-        EncryptedVault? existingVault = JsonSerializer.Deserialize<EncryptedVault>(json);
-        if (existingVault == null)
-            throw new InvalidOperationException($"Failed to deserialize vault for wallet {walletId}");
-
-        string mnemonic = VaultEncryption.Decrypt(existingVault, oldPassword);
-        await CreateVaultAsync(walletId, mnemonic, newPassword, ct);
+        byte[] mnemonicBytes = await UnlockVaultAsync(walletId, oldPassword, ct);
+        try
+        {
+            string mnemonic = System.Text.Encoding.UTF8.GetString(mnemonicBytes);
+            await CreateVaultAsync(walletId, mnemonic, newPassword, ct);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(mnemonicBytes);
+        }
     }
 
     private static string GetVaultKey(int walletId) => $"buriza_vault_{walletId}";

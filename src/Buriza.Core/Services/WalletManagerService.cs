@@ -6,105 +6,121 @@ using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models;
-using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
+using Chrysalis.Wallet.Models.Keys;
+using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 
 namespace Buriza.Core.Services;
 
 public class WalletManagerService(
-    IWalletStorage walletStorage,
-    ISecureStorage secureStorage,
+    IWalletStorage storage,
     ChainProviderRegistry providerRegistry,
     ISessionService sessionService) : IWalletManager
 {
-    private readonly IWalletStorage _walletStorage = walletStorage;
-    private readonly ISecureStorage _secureStorage = secureStorage;
+    private readonly IWalletStorage _storage = storage;
     private readonly ChainProviderRegistry _providerRegistry = providerRegistry;
     private readonly ISessionService _sessionService = sessionService;
 
     private const int GapLimit = 20;
 
-    #region Wallet Operations
+    #region Wallet Lifecycle
 
-    public async Task<Wallet> CreateAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default)
+    public async Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, int mnemonicWordCount = 24, CancellationToken ct = default)
+    {
+        IChainProvider provider = _providerRegistry.GetProvider(initialChain);
+        string mnemonic = await provider.KeyService.GenerateMnemonicAsync(mnemonicWordCount, ct);
+        return await ImportAsync(name, mnemonic, password, initialChain, ct);
+    }
+
+    public async Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default)
     {
         IChainProvider provider = _providerRegistry.GetProvider(initialChain);
 
-        bool isValid = await provider.KeyService.ValidateMnemonicAsync(mnemonic);
+        bool isValid = await provider.KeyService.ValidateMnemonicAsync(mnemonic, ct);
         if (!isValid)
-        {
             throw new ArgumentException("Invalid mnemonic", nameof(mnemonic));
-        }
 
-        IReadOnlyList<Wallet> existingWallets = await _walletStorage.LoadAllAsync(ct);
+        IReadOnlyList<BurizaWallet> existingWallets = await _storage.LoadAllAsync(ct);
         int newId = existingWallets.Count > 0 ? existingWallets.Max(w => w.Id) + 1 : 1;
 
-        string derivationPath = GetDerivationPath(initialChain, 0, 0, 0);
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, 0, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, 0, i, true, ct))];
 
-        Wallet wallet = new()
+        await Task.WhenAll(externalTasks.Concat(internalTasks));
+
+        List<AddressInfo> externalAddresses = [.. externalTasks.Select((t, i) => new AddressInfo { Index = i, Address = t.Result })];
+        List<AddressInfo> internalAddresses = [.. internalTasks.Select((t, i) => new AddressInfo { Index = i, Address = t.Result })];
+
+        // Cache addresses
+        for (int i = 0; i < GapLimit; i++)
+        {
+            _sessionService.CacheAddress(newId, initialChain, 0, i, false, externalAddresses[i].Address);
+            _sessionService.CacheAddress(newId, initialChain, 0, i, true, internalAddresses[i].Address);
+        }
+
+        ChainAddressData chainData = new()
+        {
+            Chain = initialChain,
+            BasePath = GetBasePath(initialChain, 0),
+            ExternalAddresses = externalAddresses,
+            InternalAddresses = internalAddresses,
+            LastSyncedAt = DateTime.UtcNow
+        };
+
+        BurizaWallet wallet = new()
         {
             Id = newId,
             Name = name,
             ActiveChain = initialChain,
-            CreatedAt = DateTime.UtcNow,
+            ActiveAccountIndex = 0,
             Accounts =
             [
                 new WalletAccount
                 {
                     Index = 0,
                     Name = "Account 1",
-                    DerivationPath = derivationPath,
-                    IsActive = true
+                    ChainData = new Dictionary<ChainType, ChainAddressData> { [initialChain] = chainData }
                 }
             ]
         };
 
-        await _secureStorage.CreateVaultAsync(wallet.Id, mnemonic, password, ct);
-        await _walletStorage.SaveAsync(wallet, ct);
-        await _walletStorage.SetActiveWalletIdAsync(wallet.Id, ct);
+        await _storage.CreateVaultAsync(wallet.Id, mnemonic, password, ct);
+        await _storage.SaveAsync(wallet, ct);
+        await _storage.SetActiveWalletIdAsync(wallet.Id, ct);
 
-        // Derive and cache addresses for account 0 on the initial chain
-        await DeriveAndCacheAddressesAsync(wallet.Id, initialChain, provider, 0, mnemonic, ct);
-
+        AttachProvider(wallet);
         return wallet;
     }
 
-    public async Task<Wallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default)
+    public async Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default)
     {
-        return await CreateAsync(name, mnemonic, password, initialChain, ct);
+        IReadOnlyList<BurizaWallet> wallets = await _storage.LoadAllAsync(ct);
+        foreach (BurizaWallet wallet in wallets)
+            AttachProvider(wallet);
+        return wallets;
     }
 
-    public async Task<IReadOnlyList<Wallet>> GetAllAsync(CancellationToken ct = default)
+    public async Task<BurizaWallet?> GetActiveAsync(CancellationToken ct = default)
     {
-        return await _walletStorage.LoadAllAsync(ct);
-    }
+        int? activeId = await _storage.GetActiveWalletIdAsync(ct);
+        if (!activeId.HasValue) return null;
 
-    public async Task<Wallet?> GetActiveAsync(CancellationToken ct = default)
-    {
-        int? activeId = await _walletStorage.GetActiveWalletIdAsync(ct);
-        if (activeId == null)
-        {
-            return null;
-        }
-
-        return await _walletStorage.LoadAsync(activeId.Value, ct);
+        BurizaWallet? wallet = await _storage.LoadAsync(activeId.Value, ct);
+        if (wallet != null)
+            AttachProvider(wallet);
+        return wallet;
     }
 
     public async Task SetActiveAsync(int walletId, CancellationToken ct = default)
     {
-        Wallet? wallet = await _walletStorage.LoadAsync(walletId, ct);
-        if (wallet == null)
-        {
-            throw new ArgumentException($"Wallet {walletId} not found", nameof(walletId));
-        }
-
-        await _walletStorage.SetActiveWalletIdAsync(walletId, ct);
+        _ = await GetWalletOrThrowAsync(walletId, ct);
+        await _storage.SetActiveWalletIdAsync(walletId, ct);
     }
 
     public async Task DeleteAsync(int walletId, CancellationToken ct = default)
     {
-        await _secureStorage.DeleteVaultAsync(walletId, ct);
-        await _walletStorage.DeleteAsync(walletId, ct);
+        await _storage.DeleteVaultAsync(walletId, ct);
+        await _storage.DeleteAsync(walletId, ct);
     }
 
     #endregion
@@ -113,111 +129,96 @@ public class WalletManagerService(
 
     public async Task SetActiveChainAsync(int walletId, ChainType chain, string password, CancellationToken ct = default)
     {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
+        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         IChainProvider provider = _providerRegistry.GetProvider(chain);
 
-        // Update active chain
-        wallet.ActiveChain = chain;
-        await _walletStorage.SaveAsync(wallet, ct);
+        WalletAccount? account = wallet.GetActiveAccount()
+            ?? throw new InvalidOperationException("No active account");
 
-        // Check if account 0 needs to be unlocked for this chain
-        WalletAccount? activeAccount = wallet.Accounts.FirstOrDefault(a => a.IsActive);
-        int accountIndex = activeAccount?.Index ?? 0;
-
-        if (!_sessionService.HasCachedAddresses(walletId, chain, accountIndex))
+        // Derive addresses for this chain if needed
+        if (account.GetChainData(chain) == null)
         {
-            // Derive and cache addresses for the new chain
-            byte[] mnemonicBytes = await _secureStorage.UnlockVaultAsync(walletId, password, ct);
+            byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
             try
             {
                 string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-                await DeriveAndCacheAddressesAsync(walletId, chain, provider, accountIndex, mnemonic, ct);
+                await DeriveAndSaveChainDataAsync(wallet, account.Index, chain, provider, mnemonic, ct);
             }
             finally
             {
                 CryptographicOperations.ZeroMemory(mnemonicBytes);
             }
         }
+
+        wallet.ActiveChain = chain;
+        wallet.LastAccessedAt = DateTime.UtcNow;
+        await _storage.SaveAsync(wallet, ct);
+
+        // Update provider reference
+        AttachProvider(wallet);
     }
 
     public IReadOnlyList<ChainType> GetAvailableChains()
-    {
-        return _providerRegistry.GetAllProviders()
-            .Select(p => p.ChainInfo.Chain)
-            .ToList();
-    }
+        => _providerRegistry.GetAllProviders().Select(p => p.ChainInfo.Chain).ToList();
 
     #endregion
 
-    #region Account Operations
+    #region Account Management
 
     public async Task<WalletAccount> CreateAccountAsync(int walletId, string name, CancellationToken ct = default)
     {
-        Wallet? wallet = await _walletStorage.LoadAsync(walletId, ct);
-        if (wallet == null)
-        {
-            throw new ArgumentException($"Wallet {walletId} not found", nameof(walletId));
-        }
+        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
 
         int newIndex = wallet.Accounts.Count > 0 ? wallet.Accounts.Max(a => a.Index) + 1 : 0;
 
         WalletAccount account = new()
         {
             Index = newIndex,
-            Name = name,
-            DerivationPath = GetDerivationPath(wallet.ActiveChain, newIndex, 0, 0),
-            IsActive = false
+            Name = name
         };
 
         wallet.Accounts.Add(account);
-        await _walletStorage.SaveAsync(wallet, ct);
+        await _storage.SaveAsync(wallet, ct);
 
         return account;
     }
 
     public async Task<WalletAccount?> GetActiveAccountAsync(CancellationToken ct = default)
     {
-        Wallet? wallet = await GetActiveAsync(ct);
-        return wallet?.Accounts.FirstOrDefault(a => a.IsActive);
+        BurizaWallet? wallet = await GetActiveAsync(ct);
+        return wallet?.GetActiveAccount();
     }
 
     public async Task SetActiveAccountAsync(int walletId, int accountIndex, CancellationToken ct = default)
     {
-        Wallet? wallet = await _walletStorage.LoadAsync(walletId, ct);
-        if (wallet == null)
-        {
-            throw new ArgumentException($"Wallet {walletId} not found", nameof(walletId));
-        }
+        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
 
-        foreach (WalletAccount account in wallet.Accounts)
-        {
-            account.IsActive = account.Index == accountIndex;
-        }
+        if (!wallet.Accounts.Any(a => a.Index == accountIndex))
+            throw new ArgumentException($"Account {accountIndex} not found", nameof(accountIndex));
 
-        await _walletStorage.SaveAsync(wallet, ct);
+        wallet.ActiveAccountIndex = accountIndex;
+        wallet.LastAccessedAt = DateTime.UtcNow;
+        await _storage.SaveAsync(wallet, ct);
     }
-
-    #endregion
-
-    #region Unlock Operations
 
     public async Task UnlockAccountAsync(int walletId, int accountIndex, string password, CancellationToken ct = default)
     {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        IChainProvider provider = _providerRegistry.GetProvider(wallet.ActiveChain);
+        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
+        WalletAccount? account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex)
+            ?? throw new ArgumentException($"Account {accountIndex} not found", nameof(accountIndex));
 
-        // Verify account exists
-        if (!wallet.Accounts.Any(a => a.Index == accountIndex))
-        {
-            throw new ArgumentException($"Account {accountIndex} not found in wallet {walletId}", nameof(accountIndex));
-        }
+        ChainType chain = wallet.ActiveChain;
+        IChainProvider provider = _providerRegistry.GetProvider(chain);
 
-        // Derive and cache addresses for the active chain
-        byte[] mnemonicBytes = await _secureStorage.UnlockVaultAsync(walletId, password, ct);
+        // Skip if already unlocked
+        if (account.GetChainData(chain) != null && _sessionService.HasCachedAddresses(walletId, chain, accountIndex))
+            return;
+
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
             string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            await DeriveAndCacheAddressesAsync(walletId, wallet.ActiveChain, provider, accountIndex, mnemonic, ct);
+            await DeriveAndSaveChainDataAsync(wallet, accountIndex, chain, provider, mnemonic, ct);
         }
         finally
         {
@@ -227,234 +228,19 @@ public class WalletManagerService(
 
     #endregion
 
-    #region Address Operations
+    #region Sensitive Operations (Requires Password)
 
-    public async Task<IReadOnlyList<DerivedAddress>> GetAddressesAsync(int walletId, int accountIndex, int count = 20, bool includeChange = false, CancellationToken ct = default)
+    public async Task<Transaction> SignTransactionAsync(int walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default)
     {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainType chain = wallet.ActiveChain;
-        EnsureAccountUnlocked(walletId, chain, accountIndex);
-
-        List<DerivedAddress> addresses = [];
-
-        // External addresses (receive)
-        for (int i = 0; i < count; i++)
-        {
-            string? address = _sessionService.GetCachedAddress(walletId, chain, accountIndex, i, false);
-            if (address != null)
-            {
-                addresses.Add(new DerivedAddress
-                {
-                    Address = address,
-                    AccountIndex = accountIndex,
-                    Role = AddressRole.External,
-                    AddressIndex = i,
-                    DerivationPath = GetDerivationPath(chain, accountIndex, 0, i)
-                });
-            }
-        }
-
-        // Internal addresses (change)
-        if (includeChange)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                string? address = _sessionService.GetCachedAddress(walletId, chain, accountIndex, i, true);
-                if (address != null)
-                {
-                    addresses.Add(new DerivedAddress
-                    {
-                        Address = address,
-                        AccountIndex = accountIndex,
-                        Role = AddressRole.Internal,
-                        AddressIndex = i,
-                        DerivationPath = GetDerivationPath(chain, accountIndex, 1, i)
-                    });
-                }
-            }
-        }
-
-        return addresses;
-    }
-
-    public async Task<DerivedAddress> GetNextReceiveAddressAsync(int walletId, int accountIndex, CancellationToken ct = default)
-    {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainType chain = wallet.ActiveChain;
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
-        EnsureAccountUnlocked(walletId, chain, accountIndex);
-
-        int? firstUnusedIndex = null;
-        int consecutiveUnused = 0;
-
-        for (int index = 0; consecutiveUnused < GapLimit; index++)
-        {
-            string? address = _sessionService.GetCachedAddress(walletId, chain, accountIndex, index, false);
-            if (address == null) break;
-
-            bool isUsed = await provider.QueryService.IsAddressUsedAsync(address, ct);
-
-            if (isUsed)
-            {
-                consecutiveUnused = 0;
-            }
-            else
-            {
-                firstUnusedIndex ??= index;
-                consecutiveUnused++;
-            }
-        }
-
-        int resultIndex = firstUnusedIndex ?? 0;
-        string? resultAddress = _sessionService.GetCachedAddress(walletId, chain, accountIndex, resultIndex, false);
-
-        return new DerivedAddress
-        {
-            Address = resultAddress!,
-            AccountIndex = accountIndex,
-            Role = AddressRole.External,
-            AddressIndex = resultIndex,
-            DerivationPath = GetDerivationPath(chain, accountIndex, 0, resultIndex),
-            IsUsed = false
-        };
-    }
-
-    public async Task<DerivedAddress> GetChangeAddressAsync(int walletId, int accountIndex, CancellationToken ct = default)
-    {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainType chain = wallet.ActiveChain;
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
-        EnsureAccountUnlocked(walletId, chain, accountIndex);
-
-        // Find first unused change address
-        for (int index = 0; index < GapLimit; index++)
-        {
-            string? address = _sessionService.GetCachedAddress(walletId, chain, accountIndex, index, true);
-            if (address == null) break;
-
-            bool isUsed = await provider.QueryService.IsAddressUsedAsync(address, ct);
-
-            if (!isUsed)
-            {
-                return new DerivedAddress
-                {
-                    Address = address,
-                    AccountIndex = accountIndex,
-                    Role = AddressRole.Internal,
-                    AddressIndex = index,
-                    DerivationPath = GetDerivationPath(chain, accountIndex, 1, index),
-                    IsUsed = false
-                };
-            }
-        }
-
-        // Fallback to index 0 if all within gap limit are used
-        string? fallbackAddress = _sessionService.GetCachedAddress(walletId, chain, accountIndex, 0, true);
-        return new DerivedAddress
-        {
-            Address = fallbackAddress!,
-            AccountIndex = accountIndex,
-            Role = AddressRole.Internal,
-            AddressIndex = 0,
-            DerivationPath = GetDerivationPath(chain, accountIndex, 1, 0),
-            IsUsed = true
-        };
-    }
-
-    public async Task<bool> IsOwnAddressAsync(int walletId, string address, CancellationToken ct = default)
-    {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-
-        // Check across all chains and accounts that are cached
-        foreach (ChainType chain in GetAvailableChains())
-        {
-            foreach (WalletAccount account in wallet.Accounts)
-            {
-                // Skip accounts that aren't unlocked for this chain
-                if (!_sessionService.HasCachedAddresses(walletId, chain, account.Index))
-                    continue;
-
-                for (int i = 0; i < GapLimit; i++)
-                {
-                    string? derivedExternal = _sessionService.GetCachedAddress(walletId, chain, account.Index, i, false);
-                    if (derivedExternal == address) return true;
-
-                    string? derivedInternal = _sessionService.GetCachedAddress(walletId, chain, account.Index, i, true);
-                    if (derivedInternal == address) return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    #endregion
-
-    #region Balance & Assets
-
-    public async Task<ulong> GetBalanceAsync(int walletId, int accountIndex, bool allAddresses = false, CancellationToken ct = default)
-    {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainType chain = wallet.ActiveChain;
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
-        EnsureAccountUnlocked(walletId, chain, accountIndex);
-
-        if (!allAddresses)
-        {
-            // Fast path: query only the first receive address
-            string? address = _sessionService.GetCachedAddress(walletId, chain, accountIndex, 0, false);
-            return address != null ? await provider.QueryService.GetBalanceAsync(address, ct) : 0;
-        }
-
-        // Full scan: query all addresses in parallel
-        IReadOnlyList<DerivedAddress> addresses = await GetAddressesAsync(walletId, accountIndex, GapLimit, true, ct);
-        IEnumerable<Task<ulong>> tasks = addresses.Select(a => provider.QueryService.GetBalanceAsync(a.Address, ct));
-        ulong[] balances = await Task.WhenAll(tasks);
-
-        return balances.Aggregate(0UL, (total, b) => total + b);
-    }
-
-    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int walletId, int accountIndex, bool allAddresses = false, CancellationToken ct = default)
-    {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainType chain = wallet.ActiveChain;
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
-        EnsureAccountUnlocked(walletId, chain, accountIndex);
-
-        if (!allAddresses)
-        {
-            // Fast path: query only the first receive address
-            string? address = _sessionService.GetCachedAddress(walletId, chain, accountIndex, 0, false);
-            return address != null ? await provider.QueryService.GetAssetsAsync(address, ct) : [];
-        }
-
-        // Full scan: query all addresses in parallel
-        IReadOnlyList<DerivedAddress> addresses = await GetAddressesAsync(walletId, accountIndex, GapLimit, true, ct);
-        IEnumerable<Task<IReadOnlyList<Asset>>> tasks = addresses.Select(a => provider.QueryService.GetAssetsAsync(a.Address, ct));
-        IReadOnlyList<Asset>[] results = await Task.WhenAll(tasks);
-
-        // Aggregate assets from all addresses
-        return [.. results
-            .SelectMany(assets => assets)
-            .GroupBy(a => a.Subject)
-            .Select(g => g.First() with { Quantity = g.Aggregate(0UL, (sum, a) => sum + a.Quantity) })];
-    }
-
-    #endregion
-
-    #region Sensitive Operations (Require Password)
-
-    public async Task<byte[]> SignTransactionAsync(int walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default)
-    {
-        Wallet wallet = await GetWalletOrThrowAsync(walletId, ct);
+        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         IChainProvider provider = _providerRegistry.GetProvider(wallet.ActiveChain);
 
-        byte[] mnemonicBytes = await _secureStorage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
             string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            var privateKey = await provider.KeyService.DerivePrivateKeyAsync(mnemonic, accountIndex, addressIndex);
-            return await provider.TransactionService.SignAsync(unsignedTx, privateKey);
+            PrivateKey privateKey = await provider.KeyService.DerivePrivateKeyAsync(mnemonic, accountIndex, addressIndex, ct: ct);
+            return await provider.TransactionService.SignAsync(unsignedTx, privateKey, ct);
         }
         finally
         {
@@ -466,7 +252,7 @@ public class WalletManagerService(
     {
         await GetWalletOrThrowAsync(walletId, ct);
 
-        byte[] mnemonicBytes = await _secureStorage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
             return Encoding.UTF8.GetString(mnemonicBytes);
@@ -481,45 +267,58 @@ public class WalletManagerService(
 
     #region Private Helpers
 
-    private async Task<Wallet> GetWalletOrThrowAsync(int walletId, CancellationToken ct)
+    private async Task<BurizaWallet> GetWalletOrThrowAsync(int walletId, CancellationToken ct)
     {
-        return await _walletStorage.LoadAsync(walletId, ct)
+        BurizaWallet wallet = await _storage.LoadAsync(walletId, ct)
             ?? throw new ArgumentException($"Wallet {walletId} not found", nameof(walletId));
+        AttachProvider(wallet);
+        return wallet;
     }
 
-    private void EnsureAccountUnlocked(int walletId, ChainType chain, int accountIndex)
+    private void AttachProvider(BurizaWallet wallet)
     {
-        if (!_sessionService.HasCachedAddresses(walletId, chain, accountIndex))
-        {
-            throw new InvalidOperationException($"Account {accountIndex} is not unlocked for {chain}. Call UnlockAccountAsync or SetActiveChainAsync first.");
-        }
+        wallet.Provider = _providerRegistry.GetProvider(wallet.ActiveChain);
     }
 
-    private async Task DeriveAndCacheAddressesAsync(int walletId, ChainType chain, IChainProvider provider, int accountIndex, string mnemonic, CancellationToken ct)
+    private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, IChainProvider provider, string mnemonic, CancellationToken ct)
     {
-        // Derive and cache external addresses (receive)
+        // Derive all addresses in parallel
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, accountIndex, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, accountIndex, i, true, ct))];
+
+        await Task.WhenAll(externalTasks.Concat(internalTasks));
+
+        List<AddressInfo> externalAddresses = [.. externalTasks.Select((t, i) => new AddressInfo { Index = i, Address = t.Result })];
+        List<AddressInfo> internalAddresses = [.. internalTasks.Select((t, i) => new AddressInfo { Index = i, Address = t.Result })];
+
+        // Cache addresses
         for (int i = 0; i < GapLimit; i++)
         {
-            string address = await provider.KeyService.DeriveAddressAsync(mnemonic, accountIndex, i, false);
-            _sessionService.CacheAddress(walletId, chain, accountIndex, i, false, address);
+            _sessionService.CacheAddress(wallet.Id, chain, accountIndex, i, false, externalAddresses[i].Address);
+            _sessionService.CacheAddress(wallet.Id, chain, accountIndex, i, true, internalAddresses[i].Address);
         }
 
-        // Derive and cache internal addresses (change)
-        for (int i = 0; i < GapLimit; i++)
+        ChainAddressData chainData = new()
         {
-            string address = await provider.KeyService.DeriveAddressAsync(mnemonic, accountIndex, i, true);
-            _sessionService.CacheAddress(walletId, chain, accountIndex, i, true, address);
-        }
-    }
-
-    private static string GetDerivationPath(ChainType chain, int account, int role, int index)
-    {
-        return chain switch
-        {
-            ChainType.Cardano => CardanoDerivation.GetPath(account, role, index),
-            _ => throw new NotSupportedException($"Chain {chain} is not supported")
+            Chain = chain,
+            BasePath = GetBasePath(chain, accountIndex),
+            ExternalAddresses = externalAddresses,
+            InternalAddresses = internalAddresses,
+            LastSyncedAt = DateTime.UtcNow
         };
+
+        WalletAccount? account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex);
+        if (account != null)
+            account.ChainData[chain] = chainData;
+
+        await _storage.SaveAsync(wallet, ct);
     }
+
+    private static string GetBasePath(ChainType chain, int account) => chain switch
+    {
+        ChainType.Cardano => DerivationPaths.Cardano.GetBasePath(account),
+        _ => throw new NotSupportedException($"Chain {chain} is not supported")
+    };
 
     #endregion
 }
