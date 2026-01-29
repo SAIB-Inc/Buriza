@@ -19,8 +19,8 @@
     {
         <BurizaHeader />
     }
-    <div class="items-between justify-between w-full md:!gap-4 md:h-[calc(100vh-94px)] md:flex mx-auto md:!pb-8 xl:!gap-8">
-        <div class="flex-1 min-w-0 relative md:!pt-6">
+    <div class="items-between justify-between w-full md:!gap-4 md:h-[calc(100vh-94px)] md:flex mx-auto md:!pb-4 xl:!gap-3">
+        <div class="flex-1 min-w-0 relative md:!pt-4">
             <MudDrawerContainer Class="@($"relative {(IsOnRoute(Routes.Onboard, Routes.Splash) ? "hidden" : "max-lg:hidden")}")">
                 <MudDrawer 
                     @bind-Open="@AppStateService.IsSidebarOpen" 

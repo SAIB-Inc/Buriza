@@ -14,7 +14,7 @@
 
 <PageTitle>Buriza</PageTitle>
 
-<section class="max-md:h-screen min-h-[600px] lg:!ml-4 xl:!ml-8">
+<section class="max-md:h-screen min-h-[600px] lg:!ml-4">
     <div class="max-md:!px-4 max-md:!pb-8 max-md:!mx-auto max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 h-full w-full flex flex-col items-center !pt-16 !gap-3 md:!pt-0">
         <div class="w-full flex items-center justify-between lg:hidden">
             <div>
@@ -110,13 +110,13 @@
                                 Account01
                             </MudText>
                         </div>
-                        <div class="flex items-center !gap-2">
-                            <MudText Class="text-[var(--mud-palette-primary-text)]!">
-                                <span class="text-[#005BFF]!">addr1q</span>9rvp...az1384<span class="text-[#005BFF]!">41s15a</span>
+                        <div class="flex items-center !gap-1 bg-[var(--mud-palette-secondary)] rounded-full px-3 py-2">
+                            <MudText Class="text-[var(--mud-palette-primary-lighten)]! !text-[11px] !font-medium">
+                                <span class="text-[var(--mud-palette-primary)]!">addr1q</span>9rvp...az1384<span class="text-[var(--mud-palette-primary)]!">41s15a</span>
                             </MudText>
                             <MudIconButton
                                 Icon="@BurizaIcons.CopySymbolIcon"
-                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:text-[var(--mud-palette-primary-text)]/60!"
+                                Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:text-[var(--mud-palette-primary)]!"
                             />
                         </div>
                     </div>
@@ -126,6 +126,7 @@
                             Color="Color.Primary"
                             StartIcon="@BurizaIcons.ReceiveSymbolIcon"
                             OnClick="@OpenReceiveDrawer"
+                            Class="!h-12 [&_.mud-button-label]:!text-base"
                         >
                             Receive
                         </BurizaButton>
@@ -134,6 +135,7 @@
                             Color="Color.Primary"
                             StartIcon="@BurizaIcons.Send1Icon"
                             OnClick="@OpenSendDrawer"
+                            Class="!h-12 [&_.mud-button-label]:!text-base"
                         >
                             Send
                         </BurizaButton>
@@ -227,39 +229,46 @@
             </BurizaTabs>
        </div>
         <div class="w-full md:bg-[var(--mud-palette-drawer-background)] md:!shadow-sm md:!pt-4 md:!rounded-[16px] ">
-            <div class="flex items-center justify-between !mb-2 md:!mb-5 md:!px-4 xl:!px-6">
-                <div class="max-md:justify-between w-full flex items-center !gap-3">
+            <div class="!mb-2 md:!mb-5 md:!px-4 xl:!px-6">
+                <div class="!mb-3 w-full flex items-center justify-between">
                     <div>
                         <MudText Class="!font-semibold !text-[22px]">
                             Portfolio
                         </MudText>
                     </div>
+                    <div class="max-md:hidden w-full flex items-center justify-end">
+                        <BurizaTabs
+                            Class="!max-w-[258px] !w-full [&_.mud-tab]:!text-[14px] [&_.mud-tab_.mud-icon-root]:!text-[20px] [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full max-h-[48px]! [&_.mud-tabs-tabbar-inner]:min-h-[44px]! [&_.mud-tabs-scroll-button]:hidden xl:[&_.mud-tab-icon-text]:!mr-0"
+                            @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
+                        >
+                            <MudTabPanel 
+                                Text="Token" 
+                                Icon="@BurizaIcons.TokenSymbolIcon"
+                                Class="w-full !min-w-[100px] max-xl:!gap-0"
+                            />
+                            <MudTabPanel 
+                                Text="NFT" 
+                                Icon="@BurizaIcons.NftSymbolIcon"
+                                Class="w-full !min-w-[100px] max-xl:!gap-0"
+                            />
+                        </BurizaTabs>
+                    </div>
+                </div>
+                <div class="w-full flex items-center justify-between gap-[10px]">
+                    <div class="w-full flex items-center [&_.mud-input-control]:!mb-0">
+                        <BurizaSearchBar
+                            Class="!bg-[var(--mud-palette-overlay-light)] !h-12 [&_input]:!py-[14.5px]"
+                        />
+                    </div>
                     <div>
                         <MudIconButton
                             Icon="@BurizaIcons.FilterSymbolIcon"
-                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
+                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-12 !h-12"
                         />
                     </div>
                 </div>
-                <div class="max-md:hidden w-full flex items-center justify-end">
-                    <BurizaTabs
-                        Class="!max-w-[258px] !w-full [&_.mud-tab]:!text-[14px] [&_.mud-tab_.mud-icon-root]:!text-[20px] [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full max-h-[48px]! [&_.mud-tabs-tabbar-inner]:min-h-[44px]! [&_.mud-tabs-scroll-button]:hidden xl:[&_.mud-tab-icon-text]:!mr-0"
-                        @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
-                    >
-                        <MudTabPanel 
-                            Text="Token" 
-                            Icon="@BurizaIcons.TokenSymbolIcon"
-                            Class="w-full !min-w-[100px] max-xl:!gap-0"
-                        />
-                        <MudTabPanel 
-                            Text="NFT" 
-                            Icon="@BurizaIcons.NftSymbolIcon"
-                            Class="w-full !min-w-[100px] max-xl:!gap-0"
-                        />
-                    </BurizaTabs>
-                </div>
             </div>
-            <div class="max-[376px]:!max-h-[calc(100vh-390px)] max-[376px]:!pb-12 max-md:!min-h-[calc(100vh-470px)] !pb-11 !space-y-2 overflow-y-auto !max-h-[calc(100vh-552px)] !rounded-[12px] md:!max-h-[calc(100vh-604px)] md:!pb-13 lg:max-h-[calc(100vh-426px)] lg:!pb-4 lg:!max-h-[calc(100vh-517px)] md:!px-4 xl:!px-6">
+            <div class="max-[376px]:!max-h-[calc(100vh-390px)] max-[376px]:!pb-12 max-md:!min-h-[calc(100vh-470px)] !pb-11 !space-y-2 overflow-y-auto !max-h-[calc(100vh-552px)] !rounded-[12px] md:!max-h-[calc(100vh-604px)] md:!pb-13 lg:max-h-[calc(100vh-426px)] lg:!pb-4 lg:!max-h-[calc(100vh-548px)] md:!px-4 xl:!px-6">
                 @if (AppStateService.SelectedAssetType == AssetType.Token)
                 {                                    
                     @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
