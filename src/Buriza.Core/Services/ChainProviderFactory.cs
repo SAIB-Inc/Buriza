@@ -50,12 +50,15 @@ public class ChainProviderFactory(ChainProviderSettings settings) : IChainProvid
             _ => _settings.Cardano?.MainnetApiKey
         };
 
+        if (string.IsNullOrEmpty(apiKey))
+            throw new InvalidOperationException($"API key for Cardano {network} not configured in ChainProviderSettings");
+
         return network switch
         {
-            NetworkType.Mainnet => ProviderPresets.Cardano.DemeterMainnet(apiKey ?? ""),
-            NetworkType.Preprod => ProviderPresets.Cardano.DemeterPreprod(apiKey ?? ""),
-            NetworkType.Preview => ProviderPresets.Cardano.DemeterPreview(apiKey ?? ""),
-            _ => ProviderPresets.Cardano.DemeterMainnet(apiKey ?? "")
+            NetworkType.Mainnet => ProviderPresets.Cardano.DemeterMainnet(apiKey),
+            NetworkType.Preprod => ProviderPresets.Cardano.DemeterPreprod(apiKey),
+            NetworkType.Preview => ProviderPresets.Cardano.DemeterPreview(apiKey),
+            _ => ProviderPresets.Cardano.DemeterMainnet(apiKey)
         };
     }
 

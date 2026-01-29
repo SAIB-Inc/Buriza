@@ -35,21 +35,21 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     #region Wallet Lifecycle
 
-    public async Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, int mnemonicWordCount = 24, CancellationToken ct = default)
+    public async Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, NetworkType network = NetworkType.Mainnet, int mnemonicWordCount = 24, CancellationToken ct = default)
     {
         string mnemonic = _keyService.GenerateMnemonic(mnemonicWordCount);
-        return await ImportAsync(name, mnemonic, password, initialChain, ct);
+        return await ImportAsync(name, mnemonic, password, initialChain, network, ct);
     }
 
-    public async Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default)
+    public async Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, NetworkType network = NetworkType.Mainnet, CancellationToken ct = default)
     {
         if (!_keyService.ValidateMnemonic(mnemonic))
             throw new ArgumentException("Invalid mnemonic", nameof(mnemonic));
 
         int newId = await _storage.GenerateNextIdAsync(ct);
 
-        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, initialChain, 0, i, false, ct))];
-        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, initialChain, 0, i, true, ct))];
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, initialChain, network, 0, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, initialChain, network, 0, i, true, ct))];
 
         await Task.WhenAll(externalTasks.Concat(internalTasks));
 
@@ -70,7 +70,7 @@ public class WalletManagerService : IWalletManager, IDisposable
             LastSyncedAt = DateTime.UtcNow
         };
 
-        ProviderConfig defaultConfig = _providerFactory.GetDefaultConfig(initialChain);
+        ProviderConfig defaultConfig = _providerFactory.GetDefaultConfig(initialChain, network);
 
         BurizaWallet wallet = new()
         {
@@ -170,7 +170,11 @@ public class WalletManagerService : IWalletManager, IDisposable
         // Ensure provider config exists for this chain
         if (!wallet.ProviderConfigs.ContainsKey(chain))
         {
-            wallet.ProviderConfigs[chain] = _providerFactory.GetDefaultConfig(chain);
+            // Infer network from existing wallet config (use same network as current active chain)
+            NetworkType network = wallet.ProviderConfigs.TryGetValue(wallet.ActiveChain, out ProviderConfig? activeConfig)
+                ? activeConfig.Network
+                : NetworkType.Mainnet;
+            wallet.ProviderConfigs[chain] = _providerFactory.GetDefaultConfig(chain, network);
         }
 
         // Derive addresses for this chain if needed
@@ -228,9 +232,6 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     public Task<bool> ValidateProviderConfigAsync(ProviderConfig config, CancellationToken ct = default)
         => _providerFactory.ValidateConfigAsync(config, ct);
-
-    public IReadOnlyList<ProviderConfig> GetProviderPresets(ChainType chain)
-        => _providerFactory.GetPresets(chain);
 
     #endregion
 
@@ -320,7 +321,8 @@ public class WalletManagerService : IWalletManager, IDisposable
         try
         {
             string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            privateKey = await _keyService.DerivePrivateKeyAsync(mnemonic, wallet.ActiveChain, accountIndex, addressIndex, ct: ct);
+            NetworkType network = wallet.ProviderConfigs[wallet.ActiveChain].Network;
+            privateKey = await _keyService.DerivePrivateKeyAsync(mnemonic, wallet.ActiveChain, network, accountIndex, addressIndex, ct: ct);
             return await provider.TransactionService.SignAsync(unsignedTx, privateKey, ct);
         }
         finally
@@ -363,8 +365,9 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, string mnemonic, CancellationToken ct)
     {
-        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, accountIndex, i, false, ct))];
-        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, accountIndex, i, true, ct))];
+        NetworkType network = wallet.ProviderConfigs[chain].Network;
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, network, accountIndex, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, network, accountIndex, i, true, ct))];
 
         await Task.WhenAll(externalTasks.Concat(internalTasks));
 
@@ -386,8 +389,7 @@ public class WalletManagerService : IWalletManager, IDisposable
         };
 
         WalletAccount? account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex);
-        if (account != null)
-            account.ChainData[chain] = chainData;
+        account?.ChainData[chain] = chainData;
 
         await _storage.SaveAsync(wallet, ct);
     }
