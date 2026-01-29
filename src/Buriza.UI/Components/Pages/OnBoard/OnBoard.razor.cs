@@ -93,8 +93,8 @@ public partial class OnBoard
         0 => "Create New Wallet",
         1 => "Next",
         2 => "Next",
-        3 => "Save Wallet",
-        4 => "Continue",
+        3 => "Next",
+        4 => "Next",
         5 => "Continue",
         _ => "Next"
     };

@@ -13,7 +13,7 @@
         </MudIconButton>
     </div>
 
-    <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 max-[376px]:!gap-3 !gap-3 sm:!gap-10 sm:justify-between">
+    <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 !gap-3 sm:!gap-10 sm:justify-between">
         @* Mobile App Bar - only on slide 1 (second slide) *@
         @if (CurrentSlide >= 1)
         {
@@ -22,7 +22,8 @@
                     Variant="Variant.Filled"
                     Color="Color.Secondary"
                     OnClick="OnGoBackClicked"
-                    Class="!w-max !bg-transparent !min-w-max hover:!bg-transparent !px-0 !py-0 h-8! [&_.mud-button-label]:!gap-1"
+                    Ripple="false"
+                    Class="!w-max !bg-transparent !min-w-max hover:!bg-transparent active:!bg-transparent focus:!bg-transparent !px-0 !py-0 h-8! [&_.mud-button-label]:!gap-1"
                 >
                     <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                     Go back
@@ -37,21 +38,44 @@
             />
         </div>
         @* Progress Stepper - visible only on slides 1-5 *@
-        <div class="@($"w-full gap-1 flex items-center max-w-[420px]! transition-all duration-300 {(CurrentSlide >= 1 && CurrentSlide <= 4 ? "max-[430px]:!mt-[82px] opacity-100 h-[32px]!" : "opacity-0 h-0! pointer-events-none")}")">
-            @for (int i = 1; i <= 4; i++)
-            {
-                int step = i;
-                bool isCompleted = CurrentSlide > step;
-                bool isActive = CurrentSlide == step;
-                <div class="w-full h-[6px] rounded-full bg-white/10 overflow-hidden">
-                    <div class="@($"h-full rounded-full bg-[var(--mud-palette-primary)] transition-all duration-500 ease-out {(isCompleted ? "w-full" : isActive ? "animate-progress-fill" : "w-0")}")"></div>
-                </div>
+        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-300 {(CurrentSlide >= 1 && CurrentSlide <= 4 ? "max-sm:!mt-[92px] !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
+            @* Step Label - pops up from bottom *@
+            @{
+                string[] stepLabels = ["Save", "Recovery", "Name", "Password"];
+                int activeStep = Math.Clamp(CurrentSlide, 1, 4);
+                double leftPercent = (activeStep - 1) * 25 + 12.5;
             }
+            <div class="w-full relative h-5 mb-1">
+                <div class="absolute" style="left: @(leftPercent)%;">
+                    <div @key="activeStep" class="relative animate-step-label">
+                        <MudImage
+                            Alt="step pointer"
+                            Src="@Misc.DiamondBlue"
+                            Class="absolute -top-4 left-1/2 -translate-x-1/2 w-4"
+                        />
+                        <MudText Class="!text-xs !text-[var(--mud-palette-primary-lighten)] !font-semibold">
+                            @stepLabels[activeStep - 1]
+                        </MudText>
+                    </div>
+                </div>
+            </div>
+            @* Progress Bars *@
+            <div class="w-full gap-1 flex items-center">
+                @for (int i = 1; i <= 4; i++)
+                {
+                    int step = i;
+                    bool isCompleted = CurrentSlide > step;
+                    bool isActive = CurrentSlide == step;
+                    <div class="w-full h-[6px] rounded-full bg-white/10 overflow-hidden">
+                        <div class="@($"h-full rounded-full bg-[var(--mud-palette-primary)] transition-all duration-500 ease-out {(isCompleted ? "w-full" : isActive ? "animate-progress-fill" : "w-0")}")" />
+                    </div>
+                }
+            </div>
         </div>
         <MudCarousel
                 @ref="_carousel"
                 TData="object"
-                Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px] max-h-[578px] sm:max-h-[720px]"
+                Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px] sm:max-h-[720px]"
                 ShowArrows="false"
                 ShowBullets="false"
                 AutoCycle="false"
@@ -135,7 +159,7 @@
                 </div>
             </MudCarouselItem>
             @*2nd slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
                  <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -175,12 +199,12 @@
                         </MudText>
                     </div>
                 </div>
-                <div class="max-[376px]:p-3! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[376px]! sm:h-[388px]! p-4! md:p-6!">
-                    <div class="@($"max-[430px]:!gap-x-2 w-full grid grid-cols-3 place-items-center !gap-x-3 !gap-y-2  transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
+                <div class="max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
+                    <div class="@($"max-[430px]:!gap-x-2 w-full grid grid-cols-3 place-items-center !gap-x-2 !gap-y-2  transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
                         @foreach (var pair in (RecoveryPhrase ?? Enumerable.Empty<string>())
                             .Select((item, index) => new { item, index }))
                             {
-                                <div class="max-[430px]:!px-2 max-[376px]:h-auto w-full !py-2 h-[36px] bg-[var(--mud-palette-gray-default)] rounded-full !px-3 sm:!px-4">
+                                <div class="max-sm:!px-3 max-sm:!py-[6px] max-[376px]:h-auto w-full !py-2 h-[32px] sm:h-[36px] bg-[var(--mud-palette-gray-default)] rounded-full !px-3 sm:!px-4">
                                     <MudText Class="max-[376px]:!text-xs !text-sm">
                                         <span>@(pair.index + 1).</span>
                                         <span>@pair.item</span>
@@ -214,7 +238,8 @@
                             Variant="Variant.Filled"
                             Color="Color.Secondary"
                             OnClick="OnGoBackClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent !px-0 [&_.mud-icon-root]:!text-xl [&_.mud-button-label]:!gap-1"
+                            Ripple="false"
+                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent active:!bg-transparent focus:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
                         >
                             <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                             Go back
@@ -238,7 +263,7 @@
                 </div>
             </MudCarouselItem>
             @*3rd slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -276,13 +301,13 @@
                         </MudText>
                     </div>
                 </div>
-                <div class="max-[376px]:p-3! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[376px]! sm:h-[388px]! p-4! md:p-6!">
-                    <div class="@($"max-[376px]:!gap-1 w-full grid grid-cols-3 place-items-center !gap-x-3 !gap-y-2 transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
+                <div class="max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
+                    <div class="@($"max-[430px]:!gap-x-2 w-full grid grid-cols-3 place-items-center !gap-x-2 !gap-y-2 transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
                         @for (int i = 1; i <= PhraseLength; i++)
                         {
                             int index = i;
                             string wordValue = index <= ImportedPhraseWords.Count ? ImportedPhraseWords[index - 1] : "";
-                            <div class="max-[430px]:!pl-2 flex items-center w-full h-[36px] bg-[var(--mud-palette-gray-default)] rounded-full !pl-4">
+                            <div class="max-sm:!px-3 max-sm:!py-[6px] max-[376px]:h-auto flex items-center w-full !py-2 h-[32px] sm:h-[36px] bg-[var(--mud-palette-gray-default)] rounded-full !px-3 sm:!px-4">
                                 <MudText Class="max-[376px]:!text-xs !text-sm">@index.</MudText>
                                 <BurizaTextField
                                     Value="@wordValue"
@@ -317,7 +342,8 @@
                             Variant="Variant.Filled"
                             Color="Color.Secondary"
                             OnClick="OnGoBackClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
+                            Ripple="false"
+                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent active:!bg-transparent focus:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
                         >
                             <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                             Go back
@@ -341,7 +367,7 @@
                 </div>
             </MudCarouselItem>
             @*4th slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -398,7 +424,8 @@
                             Variant="Variant.Filled"
                             Color="Color.Secondary"
                             OnClick="OnGoBackClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
+                            Ripple="false"
+                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent active:!bg-transparent focus:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
                         >
                             <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                             Go back
@@ -417,7 +444,7 @@
                 </div>
             </MudCarouselItem>
             @*5th slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -493,7 +520,8 @@
                             Variant="Variant.Filled"
                             Color="Color.Secondary"
                             OnClick="OnGoBackClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
+                            Ripple="false"
+                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent active:!bg-transparent focus:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
                         >
                             <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                             Go back
@@ -512,7 +540,7 @@
                 </div>
             </MudCarouselItem>
             @*6th slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="flex flex-col items-center justify-center gap-6!">
+            <MudCarouselItem Transition="Transition.Fade" Class="flex flex-col items-center justify-center gap-5! sm:gap-6!">
                 <div class="flex flex-col items-center justify-center gap-6! h-[510px]">
                     <div class="relative">
                         <MudImage
@@ -545,7 +573,7 @@
                         <MudText Class="max-[376px]:!text-sm !text-[var(--mud-palette-text-secondary)]">
                             Way to go!
                         </MudText>
-                        <MudText Class="max-[376px]:max-w-[200px] max-[376px]:!text-xl !text-2xl !font-medium max-w-[250px] !text-[#0271F4] lg:!text-[40px] lg:max-w-[430px]">
+                        <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium max-w-full !text-center !text-[#0271F4] lg:!text-[40px] lg:max-w-[430px]">
                             Congratulations!
                         </MudText>
                         <MudText Class="!text-2xl !font-medium !text-center max-w-[336px]">
@@ -560,7 +588,7 @@
                         OnClick="OnFinishClicked"
                         Class="!w-full"
                     >
-                        Get Started
+                        Save Wallet
                     </BurizaButton>
                 </div>
             </MudCarouselItem>
