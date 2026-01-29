@@ -1,11 +1,11 @@
-namespace Buriza.Core.Providers.Cardano;
+namespace Buriza.Core.Providers;
 
 /// <summary>
 /// Hardcoded protocol parameter defaults for Cardano networks.
 /// Used as fallback when UTxO RPC returns null for BigInt fields (proto mismatch issue).
 /// Values from preprod as of Jan 2025.
 /// </summary>
-public static class ProtocolParamsDefaults
+public static class CardanoProtocolDefaults
 {
     // Fee parameters
     public const ulong MinFeeCoefficient = 44;

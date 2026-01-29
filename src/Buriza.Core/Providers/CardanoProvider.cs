@@ -32,8 +32,9 @@ using TransactionOutput = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transact
 using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using UtxorpcQuery = Utxorpc.V1alpha.Query;
 using UtxorpcSync = Utxorpc.V1alpha.Sync;
+using System.Threading.Channels;
 
-namespace Buriza.Core.Providers.Cardano;
+namespace Buriza.Core.Providers;
 
 public class CardanoProvider : IChainProvider, IKeyService, IQueryService, ITransactionService, ICardanoDataProvider, IDisposable
 {
@@ -206,6 +207,7 @@ public class CardanoProvider : IChainProvider, IKeyService, IQueryService, ITran
             })];
     }
 
+    // TODO: implement transaction history retrieval
     public Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(string address, int limit = 50, CancellationToken ct = default)
     {
         return Task.FromResult<IReadOnlyList<TransactionHistory>>([]);
@@ -219,7 +221,7 @@ public class CardanoProvider : IChainProvider, IKeyService, IQueryService, ITran
 
     public IAsyncEnumerable<TipEvent> FollowTipAsync(CancellationToken ct = default)
     {
-        var channel = System.Threading.Channels.Channel.CreateUnbounded<TipEvent>();
+        Channel<TipEvent> channel = Channel.CreateUnbounded<TipEvent>();
 
         _ = Task.Run(async () =>
         {
@@ -382,47 +384,47 @@ public class CardanoProvider : IChainProvider, IKeyService, IQueryService, ITran
         // return null due to proto mismatch between Utxorpc.Spec and server response.
         // Using hardcoded defaults as fallback until the proto issue is resolved.
         return new ProtocolParams(
-            MinFeeA: ToUlongOrDefault(p.MinFeeCoefficient, ProtocolParamsDefaults.MinFeeCoefficient),
-            MinFeeB: ToUlongOrDefault(p.MinFeeConstant, ProtocolParamsDefaults.MinFeeConstant),
-            MaxBlockBodySize: p.MaxBlockBodySize > 0 ? p.MaxBlockBodySize : ProtocolParamsDefaults.MaxBlockBodySize,
-            MaxTransactionSize: p.MaxTxSize > 0 ? p.MaxTxSize : ProtocolParamsDefaults.MaxTxSize,
-            MaxBlockHeaderSize: p.MaxBlockHeaderSize > 0 ? p.MaxBlockHeaderSize : ProtocolParamsDefaults.MaxBlockHeaderSize,
-            KeyDeposit: ToUlongOrDefault(p.StakeKeyDeposit, ProtocolParamsDefaults.StakeKeyDeposit),
-            PoolDeposit: ToUlongOrDefault(p.PoolDeposit, ProtocolParamsDefaults.PoolDeposit),
+            MinFeeA: ToUlongOrDefault(p.MinFeeCoefficient, CardanoProtocolDefaults.MinFeeCoefficient),
+            MinFeeB: ToUlongOrDefault(p.MinFeeConstant, CardanoProtocolDefaults.MinFeeConstant),
+            MaxBlockBodySize: p.MaxBlockBodySize > 0 ? p.MaxBlockBodySize : CardanoProtocolDefaults.MaxBlockBodySize,
+            MaxTransactionSize: p.MaxTxSize > 0 ? p.MaxTxSize : CardanoProtocolDefaults.MaxTxSize,
+            MaxBlockHeaderSize: p.MaxBlockHeaderSize > 0 ? p.MaxBlockHeaderSize : CardanoProtocolDefaults.MaxBlockHeaderSize,
+            KeyDeposit: ToUlongOrDefault(p.StakeKeyDeposit, CardanoProtocolDefaults.StakeKeyDeposit),
+            PoolDeposit: ToUlongOrDefault(p.PoolDeposit, CardanoProtocolDefaults.PoolDeposit),
             MaximumEpoch: p.PoolRetirementEpochBound,
-            DesiredNumberOfStakePools: p.DesiredNumberOfPools > 0 ? p.DesiredNumberOfPools : ProtocolParamsDefaults.DesiredNumberOfPools,
+            DesiredNumberOfStakePools: p.DesiredNumberOfPools > 0 ? p.DesiredNumberOfPools : CardanoProtocolDefaults.DesiredNumberOfPools,
             PoolPledgeInfluence: ToRational(p.PoolInfluence),
             ExpansionRate: ToRational(p.MonetaryExpansion),
             TreasuryGrowthRate: ToRational(p.TreasuryExpansion),
             ProtocolVersion: p.ProtocolVersion != null
                 ? new ProtocolVersion((int)p.ProtocolVersion.Major, p.ProtocolVersion.Minor)
-                : new ProtocolVersion(ProtocolParamsDefaults.ProtocolVersionMajor, ProtocolParamsDefaults.ProtocolVersionMinor),
-            MinPoolCost: ToUlongOrDefault(p.MinPoolCost, ProtocolParamsDefaults.MinPoolCost),
-            AdaPerUTxOByte: ToUlongOrDefault(p.CoinsPerUtxoByte, ProtocolParamsDefaults.CoinsPerUtxoByte),
+                : new ProtocolVersion(CardanoProtocolDefaults.ProtocolVersionMajor, CardanoProtocolDefaults.ProtocolVersionMinor),
+            MinPoolCost: ToUlongOrDefault(p.MinPoolCost, CardanoProtocolDefaults.MinPoolCost),
+            AdaPerUTxOByte: ToUlongOrDefault(p.CoinsPerUtxoByte, CardanoProtocolDefaults.CoinsPerUtxoByte),
             CostModelsForScriptLanguage: ToCostMdls(p.CostModels),
             ExecutionCosts: ToExPrices(p.Prices) ?? new ExUnitPrices(
-                new CborRationalNumber(ProtocolParamsDefaults.ExPricesMemoryNumerator, ProtocolParamsDefaults.ExPricesMemoryDenominator),
-                new CborRationalNumber(ProtocolParamsDefaults.ExPricesStepsNumerator, ProtocolParamsDefaults.ExPricesStepsDenominator)),
+                new CborRationalNumber(CardanoProtocolDefaults.ExPricesMemoryNumerator, CardanoProtocolDefaults.ExPricesMemoryDenominator),
+                new CborRationalNumber(CardanoProtocolDefaults.ExPricesStepsNumerator, CardanoProtocolDefaults.ExPricesStepsDenominator)),
             MaxTxExUnits: p.MaxExecutionUnitsPerTransaction != null
                 ? new ExUnits(p.MaxExecutionUnitsPerTransaction.Memory, p.MaxExecutionUnitsPerTransaction.Steps)
-                : new ExUnits(ProtocolParamsDefaults.MaxTxExUnitsMemory, ProtocolParamsDefaults.MaxTxExUnitsSteps),
+                : new ExUnits(CardanoProtocolDefaults.MaxTxExUnitsMemory, CardanoProtocolDefaults.MaxTxExUnitsSteps),
             MaxBlockExUnits: p.MaxExecutionUnitsPerBlock != null
                 ? new ExUnits(p.MaxExecutionUnitsPerBlock.Memory, p.MaxExecutionUnitsPerBlock.Steps)
-                : new ExUnits(ProtocolParamsDefaults.MaxBlockExUnitsMemory, ProtocolParamsDefaults.MaxBlockExUnitsSteps),
-            MaxValueSize: p.MaxValueSize > 0 ? p.MaxValueSize : ProtocolParamsDefaults.MaxValueSize,
-            CollateralPercentage: p.CollateralPercentage > 0 ? p.CollateralPercentage : ProtocolParamsDefaults.CollateralPercentage,
-            MaxCollateralInputs: p.MaxCollateralInputs > 0 ? p.MaxCollateralInputs : ProtocolParamsDefaults.MaxCollateralInputs,
+                : new ExUnits(CardanoProtocolDefaults.MaxBlockExUnitsMemory, CardanoProtocolDefaults.MaxBlockExUnitsSteps),
+            MaxValueSize: p.MaxValueSize > 0 ? p.MaxValueSize : CardanoProtocolDefaults.MaxValueSize,
+            CollateralPercentage: p.CollateralPercentage > 0 ? p.CollateralPercentage : CardanoProtocolDefaults.CollateralPercentage,
+            MaxCollateralInputs: p.MaxCollateralInputs > 0 ? p.MaxCollateralInputs : CardanoProtocolDefaults.MaxCollateralInputs,
             PoolVotingThresholds: ToPoolVotingThresholds(p.PoolVotingThresholds),
             DRepVotingThresholds: ToDRepVotingThresholds(p.DrepVotingThresholds),
-            MinCommitteeSize: p.MinCommitteeSize > 0 ? p.MinCommitteeSize : ProtocolParamsDefaults.MinCommitteeSize,
-            CommitteeTermLimit: p.CommitteeTermLimit > 0 ? p.CommitteeTermLimit : ProtocolParamsDefaults.CommitteeTermLimit,
-            GovernanceActionValidityPeriod: p.GovernanceActionValidityPeriod > 0 ? p.GovernanceActionValidityPeriod : ProtocolParamsDefaults.GovernanceActionValidityPeriod,
-            GovernanceActionDeposit: ToUlongOrDefault(p.GovernanceActionDeposit, ProtocolParamsDefaults.GovernanceActionDeposit),
-            DRepDeposit: ToUlongOrDefault(p.DrepDeposit, ProtocolParamsDefaults.DRepDeposit),
-            DRepInactivityPeriod: p.DrepInactivityPeriod > 0 ? p.DrepInactivityPeriod : ProtocolParamsDefaults.DRepInactivityPeriod,
+            MinCommitteeSize: p.MinCommitteeSize > 0 ? p.MinCommitteeSize : CardanoProtocolDefaults.MinCommitteeSize,
+            CommitteeTermLimit: p.CommitteeTermLimit > 0 ? p.CommitteeTermLimit : CardanoProtocolDefaults.CommitteeTermLimit,
+            GovernanceActionValidityPeriod: p.GovernanceActionValidityPeriod > 0 ? p.GovernanceActionValidityPeriod : CardanoProtocolDefaults.GovernanceActionValidityPeriod,
+            GovernanceActionDeposit: ToUlongOrDefault(p.GovernanceActionDeposit, CardanoProtocolDefaults.GovernanceActionDeposit),
+            DRepDeposit: ToUlongOrDefault(p.DrepDeposit, CardanoProtocolDefaults.DRepDeposit),
+            DRepInactivityPeriod: p.DrepInactivityPeriod > 0 ? p.DrepInactivityPeriod : CardanoProtocolDefaults.DRepInactivityPeriod,
             MinFeeRefScriptCostPerByte: ToRational(p.MinFeeScriptRefCostPerByte) ?? new CborRationalNumber(
-                ProtocolParamsDefaults.MinFeeRefScriptCostPerByteNumerator,
-                ProtocolParamsDefaults.MinFeeRefScriptCostPerByteDenominator)
+                CardanoProtocolDefaults.MinFeeRefScriptCostPerByteNumerator,
+                CardanoProtocolDefaults.MinFeeRefScriptCostPerByteDenominator)
         );
     }
 

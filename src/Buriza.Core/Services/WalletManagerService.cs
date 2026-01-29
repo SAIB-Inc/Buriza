@@ -276,9 +276,7 @@ public class WalletManagerService(
     }
 
     private void AttachProvider(BurizaWallet wallet)
-    {
-        wallet.Provider = _providerRegistry.GetProvider(wallet.ActiveChain);
-    }
+        => wallet.Provider = _providerRegistry.GetProvider(wallet.ActiveChain);
 
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, IChainProvider provider, string mnemonic, CancellationToken ct)
     {
