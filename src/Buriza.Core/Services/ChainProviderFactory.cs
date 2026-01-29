@@ -1,3 +1,4 @@
+using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models;
 using Buriza.Core.Providers;
@@ -8,12 +9,14 @@ namespace Buriza.Core.Services;
 /// <summary>
 /// Factory for creating chain providers from configuration.
 /// Caches providers by config to avoid recreating for same settings.
+/// Checks session for custom API keys before falling back to appsettings defaults.
 /// </summary>
-public class ChainProviderFactory(ChainProviderSettings settings) : IChainProviderFactory, IDisposable
+public class ChainProviderFactory(ChainProviderSettings settings, ISessionService? sessionService = null) : IChainProviderFactory, IDisposable
 {
     private readonly Dictionary<string, IChainProvider> _providerCache = [];
     private readonly object _lock = new();
     private readonly ChainProviderSettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+    private readonly ISessionService? _sessionService = sessionService;
     private bool _disposed;
 
     public IChainProvider Create(ProviderConfig config)
@@ -42,7 +45,11 @@ public class ChainProviderFactory(ChainProviderSettings settings) : IChainProvid
 
     private ProviderConfig GetCardanoConfig(NetworkType network)
     {
-        string? apiKey = network switch
+        // Check session for custom API key first
+        string? apiKey = _sessionService?.GetCustomApiKey(ChainType.Cardano, network);
+
+        // Fall back to appsettings default
+        apiKey ??= network switch
         {
             NetworkType.Mainnet => _settings.Cardano?.MainnetApiKey,
             NetworkType.Preprod => _settings.Cardano?.PreprodApiKey,
@@ -51,7 +58,7 @@ public class ChainProviderFactory(ChainProviderSettings settings) : IChainProvid
         };
 
         if (string.IsNullOrEmpty(apiKey))
-            throw new InvalidOperationException($"API key for Cardano {network} not configured in ChainProviderSettings");
+            throw new InvalidOperationException($"API key for Cardano {network} not configured");
 
         return network switch
         {

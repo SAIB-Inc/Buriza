@@ -16,6 +16,9 @@ public class BurizaWallet : IWallet
     public required string Name { get; set; }
     public string Avatar { get; set; } = string.Empty;
 
+    /// <summary>Network this wallet operates on (Mainnet, Preprod, Preview).</summary>
+    public NetworkType Network { get; init; } = NetworkType.Mainnet;
+
     /// <summary>Current active chain for this wallet.</summary>
     public ChainType ActiveChain { get; set; } = ChainType.Cardano;
 
@@ -27,9 +30,6 @@ public class BurizaWallet : IWallet
 
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? LastAccessedAt { get; set; }
-
-    /// <summary>Per-chain provider configurations (endpoint, network, apiKey).</summary>
-    public Dictionary<ChainType, ProviderConfig> ProviderConfigs { get; set; } = [];
 
     /// <summary>Chain provider for querying balance, assets, etc.</summary>
     internal IChainProvider? Provider { get; set; }

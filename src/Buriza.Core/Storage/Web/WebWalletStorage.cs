@@ -4,6 +4,7 @@ using System.Text.Json;
 using Buriza.Core.Crypto;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models;
+using Buriza.Data.Models.Enums;
 using Microsoft.JSInterop;
 
 namespace Buriza.Core.Storage.Web;
@@ -14,6 +15,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     private const string WalletsKey = "buriza_wallets";
     private const string ActiveWalletKey = "buriza_active_wallet";
+    private const string CustomConfigsKey = "buriza_custom_configs";
 
     #region Wallet Metadata
 
@@ -139,6 +141,98 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
     }
 
     private static string GetVaultKey(int walletId) => $"buriza_vault_{walletId}";
+
+    #endregion
+
+    #region Custom Provider Config
+
+    public async Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    {
+        Dictionary<string, CustomProviderConfig> configs = await LoadCustomConfigsAsync(ct);
+        string key = GetCustomConfigKey(chain, network);
+        return configs.TryGetValue(key, out CustomProviderConfig? config) ? config : null;
+    }
+
+    public async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, CancellationToken ct = default)
+    {
+        Dictionary<string, CustomProviderConfig> configs = await LoadCustomConfigsAsync(ct);
+        string key = GetCustomConfigKey(config.Chain, config.Network);
+        configs[key] = config;
+        await SaveCustomConfigsAsync(configs, ct);
+    }
+
+    public async Task DeleteCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    {
+        Dictionary<string, CustomProviderConfig> configs = await LoadCustomConfigsAsync(ct);
+        string key = GetCustomConfigKey(chain, network);
+        if (configs.Remove(key))
+        {
+            await SaveCustomConfigsAsync(configs, ct);
+        }
+        // Also delete the API key
+        await DeleteCustomApiKeyAsync(chain, network, ct);
+    }
+
+    public async Task SaveCustomApiKeyAsync(ChainType chain, NetworkType network, string apiKey, string password, CancellationToken ct = default)
+    {
+        // Encrypt API key using same vault encryption
+        EncryptedVault vault = VaultEncryption.Encrypt(0, apiKey, password);
+        string json = JsonSerializer.Serialize(vault);
+        await _js.InvokeVoidAsync("localStorage.setItem", ct, GetApiKeyVaultKey(chain, network), json);
+
+        // Update config to indicate API key exists
+        CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chain, network, ct);
+        if (existing != null)
+        {
+            await SaveCustomProviderConfigAsync(existing with { HasCustomApiKey = true }, ct);
+        }
+    }
+
+    public async Task<byte[]?> UnlockCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default)
+    {
+        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetApiKeyVaultKey(chain, network));
+        if (string.IsNullOrEmpty(json))
+            return null;
+
+        EncryptedVault? vault = JsonSerializer.Deserialize<EncryptedVault>(json);
+        if (vault == null)
+            return null;
+
+        return VaultEncryption.DecryptToBytes(vault, password);
+    }
+
+    public async Task DeleteCustomApiKeyAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    {
+        await _js.InvokeVoidAsync("localStorage.removeItem", ct, GetApiKeyVaultKey(chain, network));
+
+        // Update config to indicate API key no longer exists
+        CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chain, network, ct);
+        if (existing is { HasCustomApiKey: true })
+        {
+            await SaveCustomProviderConfigAsync(existing with { HasCustomApiKey = false }, ct);
+        }
+    }
+
+    private async Task<Dictionary<string, CustomProviderConfig>> LoadCustomConfigsAsync(CancellationToken ct)
+    {
+        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, CustomConfigsKey);
+        if (string.IsNullOrEmpty(json))
+            return [];
+
+        return JsonSerializer.Deserialize<Dictionary<string, CustomProviderConfig>>(json) ?? [];
+    }
+
+    private async Task SaveCustomConfigsAsync(Dictionary<string, CustomProviderConfig> configs, CancellationToken ct)
+    {
+        string json = JsonSerializer.Serialize(configs);
+        await _js.InvokeVoidAsync("localStorage.setItem", ct, CustomConfigsKey, json);
+    }
+
+    private static string GetCustomConfigKey(ChainType chain, NetworkType network)
+        => $"{(int)chain}:{(int)network}";
+
+    private static string GetApiKeyVaultKey(ChainType chain, NetworkType network)
+        => $"buriza_apikey_{(int)chain}_{(int)network}";
 
     #endregion
 }

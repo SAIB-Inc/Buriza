@@ -70,15 +70,13 @@ public class WalletManagerService : IWalletManager, IDisposable
             LastSyncedAt = DateTime.UtcNow
         };
 
-        ProviderConfig defaultConfig = _providerFactory.GetDefaultConfig(initialChain, network);
-
         BurizaWallet wallet = new()
         {
             Id = newId,
             Name = name,
+            Network = network,
             ActiveChain = initialChain,
             ActiveAccountIndex = 0,
-            ProviderConfigs = new Dictionary<ChainType, ProviderConfig> { [initialChain] = defaultConfig },
             Accounts =
             [
                 new WalletAccount
@@ -167,16 +165,6 @@ public class WalletManagerService : IWalletManager, IDisposable
         WalletAccount? account = wallet.GetActiveAccount()
             ?? throw new InvalidOperationException("No active account");
 
-        // Ensure provider config exists for this chain
-        if (!wallet.ProviderConfigs.ContainsKey(chain))
-        {
-            // Infer network from existing wallet config (use same network as current active chain)
-            NetworkType network = wallet.ProviderConfigs.TryGetValue(wallet.ActiveChain, out ProviderConfig? activeConfig)
-                ? activeConfig.Network
-                : NetworkType.Mainnet;
-            wallet.ProviderConfigs[chain] = _providerFactory.GetDefaultConfig(chain, network);
-        }
-
         // Derive addresses for this chain if needed
         if (account.GetChainData(chain) == null)
         {
@@ -204,34 +192,6 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     public IReadOnlyList<ChainType> GetAvailableChains()
         => _providerFactory.GetSupportedChains();
-
-    #endregion
-
-    #region Provider Configuration
-
-    public async Task UpdateProviderConfigAsync(int walletId, ProviderConfig config, CancellationToken ct = default)
-    {
-        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-
-        wallet.ProviderConfigs[config.Chain] = config;
-        wallet.LastAccessedAt = DateTime.UtcNow;
-        await _storage.SaveAsync(wallet, ct);
-
-        // Re-attach provider if this is the active chain
-        if (wallet.ActiveChain == config.Chain)
-        {
-            AttachProvider(wallet);
-        }
-    }
-
-    public async Task<ProviderConfig?> GetProviderConfigAsync(int walletId, ChainType chain, CancellationToken ct = default)
-    {
-        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        return wallet.ProviderConfigs.TryGetValue(chain, out ProviderConfig? config) ? config : null;
-    }
-
-    public Task<bool> ValidateProviderConfigAsync(ProviderConfig config, CancellationToken ct = default)
-        => _providerFactory.ValidateConfigAsync(config, ct);
 
     #endregion
 
@@ -321,8 +281,7 @@ public class WalletManagerService : IWalletManager, IDisposable
         try
         {
             string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            NetworkType network = wallet.ProviderConfigs[wallet.ActiveChain].Network;
-            privateKey = await _keyService.DerivePrivateKeyAsync(mnemonic, wallet.ActiveChain, network, accountIndex, addressIndex, ct: ct);
+            privateKey = await _keyService.DerivePrivateKeyAsync(mnemonic, wallet.ActiveChain, wallet.Network, accountIndex, addressIndex, ct: ct);
             return await provider.TransactionService.SignAsync(unsignedTx, privateKey, ct);
         }
         finally
@@ -337,6 +296,64 @@ public class WalletManagerService : IWalletManager, IDisposable
     {
         await GetWalletOrThrowAsync(walletId, ct);
         return await _storage.UnlockVaultAsync(walletId, password, ct);
+    }
+
+    #endregion
+
+    #region Custom Provider Config
+
+    public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+        => _storage.GetCustomProviderConfigAsync(chain, network, ct);
+
+    public async Task SetCustomProviderConfigAsync(ChainType chain, NetworkType network, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default)
+    {
+        // Save config metadata (endpoint, name)
+        CustomProviderConfig config = new()
+        {
+            Chain = chain,
+            Network = network,
+            Endpoint = endpoint,
+            HasCustomApiKey = !string.IsNullOrEmpty(apiKey),
+            Name = name
+        };
+        await _storage.SaveCustomProviderConfigAsync(config, ct);
+
+        // Save encrypted API key if provided
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            await _storage.SaveCustomApiKeyAsync(chain, network, apiKey, password, ct);
+            // Also cache in session for immediate use
+            _sessionService.SetCustomApiKey(chain, network, apiKey);
+        }
+        else
+        {
+            // Clear any existing API key
+            await _storage.DeleteCustomApiKeyAsync(chain, network, ct);
+            _sessionService.ClearCustomApiKey(chain, network);
+        }
+    }
+
+    public async Task ClearCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    {
+        await _storage.DeleteCustomProviderConfigAsync(chain, network, ct);
+        _sessionService.ClearCustomApiKey(chain, network);
+    }
+
+    public async Task LoadCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default)
+    {
+        byte[]? apiKeyBytes = await _storage.UnlockCustomApiKeyAsync(chain, network, password, ct);
+        if (apiKeyBytes == null)
+            return;
+
+        try
+        {
+            string apiKey = Encoding.UTF8.GetString(apiKeyBytes);
+            _sessionService.SetCustomApiKey(chain, network, apiKey);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(apiKeyBytes);
+        }
     }
 
     #endregion
@@ -356,17 +373,14 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     private IChainProvider GetProviderForWallet(BurizaWallet wallet)
     {
-        if (!wallet.ProviderConfigs.TryGetValue(wallet.ActiveChain, out ProviderConfig? config))
-            throw new InvalidOperationException($"No provider config found for chain {wallet.ActiveChain}");
-
+        ProviderConfig config = _providerFactory.GetDefaultConfig(wallet.ActiveChain, wallet.Network);
         return _providerFactory.Create(config);
     }
 
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, string mnemonic, CancellationToken ct)
     {
-        NetworkType network = wallet.ProviderConfigs[chain].Network;
-        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, network, accountIndex, i, false, ct))];
-        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, network, accountIndex, i, true, ct))];
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, wallet.Network, accountIndex, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, wallet.Network, accountIndex, i, true, ct))];
 
         await Task.WhenAll(externalTasks.Concat(internalTasks));
 

@@ -46,19 +46,6 @@ public interface IWalletManager
 
     #endregion
 
-    #region Provider Configuration
-
-    /// <summary>Updates the provider configuration for a specific chain on a wallet.</summary>
-    Task UpdateProviderConfigAsync(int walletId, ProviderConfig config, CancellationToken ct = default);
-
-    /// <summary>Gets the provider configuration for a specific chain on a wallet.</summary>
-    Task<ProviderConfig?> GetProviderConfigAsync(int walletId, ChainType chain, CancellationToken ct = default);
-
-    /// <summary>Validates that a provider configuration can connect successfully.</summary>
-    Task<bool> ValidateProviderConfigAsync(ProviderConfig config, CancellationToken ct = default);
-
-    #endregion
-
     #region Account Management
 
     /// <summary>Creates a new account. Call UnlockAccountAsync to derive addresses.</summary>
@@ -85,6 +72,28 @@ public interface IWalletManager
     /// IMPORTANT: Caller MUST zero the returned bytes after use with CryptographicOperations.ZeroMemory().
     /// </summary>
     Task<byte[]> ExportMnemonicAsync(int walletId, string password, CancellationToken ct = default);
+
+    #endregion
+
+    #region Custom Provider Config
+
+    /// <summary>Gets custom provider config for a chain/network. Returns null if using default.</summary>
+    Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sets custom provider config. API key is encrypted with password.
+    /// Pass null for apiKey to use default from appsettings.
+    /// </summary>
+    Task SetCustomProviderConfigAsync(ChainType chain, NetworkType network, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default);
+
+    /// <summary>Removes custom provider config, reverting to appsettings default.</summary>
+    Task ClearCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
+
+    /// <summary>
+    /// Loads custom API key into session (decrypts with password).
+    /// Call this after wallet unlock to enable custom provider for the session.
+    /// </summary>
+    Task LoadCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default);
 
     #endregion
 }
