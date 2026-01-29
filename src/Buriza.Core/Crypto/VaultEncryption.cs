@@ -59,6 +59,11 @@ public static class VaultEncryption
         };
 
         int tagSize = KeyDerivationOptions.TagSize;
+
+        // Validate ciphertext length to prevent invalid array allocation
+        if (combined.Length < tagSize)
+            throw new CryptographicException("Invalid vault data: ciphertext too short");
+
         byte[] key = DeriveKey(password, salt, iterations);
 
         byte[] ciphertext = new byte[combined.Length - tagSize];

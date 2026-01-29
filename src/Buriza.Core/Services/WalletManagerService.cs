@@ -152,6 +152,10 @@ public class WalletManagerService(
 
     public async Task SetActiveChainAsync(int walletId, ChainType chain, string? password = null, CancellationToken ct = default)
     {
+        // Validate chain is supported
+        if (!GetAvailableChains().Contains(chain))
+            throw new NotSupportedException($"Chain {chain} is not supported");
+
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
 
         WalletAccount? account = wallet.GetActiveAccount()
@@ -413,8 +417,9 @@ public class WalletManagerService(
             LastSyncedAt = DateTime.UtcNow
         };
 
-        WalletAccount? account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex);
-        account?.ChainData[chain] = chainData;
+        WalletAccount account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex)
+            ?? throw new InvalidOperationException($"Account {accountIndex} not found in wallet {wallet.Id}");
+        account.ChainData[chain] = chainData;
 
         await _storage.SaveAsync(wallet, ct);
     }

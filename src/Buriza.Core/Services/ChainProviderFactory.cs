@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models;
@@ -110,7 +112,13 @@ public class ChainProviderFactory(ChainProviderSettings settings, ISessionServic
     }
 
     private static string GetCacheKey(ProviderConfig config)
-        => $"{config.Chain}:{config.Endpoint}:{config.Network}:{config.ApiKey ?? ""}";
+    {
+        // Hash the API key to avoid exposing it in cache keys (prevents leakage via logging/debugging)
+        string apiKeyHash = string.IsNullOrEmpty(config.ApiKey)
+            ? string.Empty
+            : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(config.ApiKey)))[..16];
+        return $"{config.Chain}:{config.Endpoint}:{config.Network}:{apiKeyHash}";
+    }
 
     public void Dispose()
     {

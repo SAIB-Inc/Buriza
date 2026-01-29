@@ -15,6 +15,9 @@ public class SessionService : ISessionService
     // Cache custom endpoints: key = "endpoint:chain:network"
     private readonly ConcurrentDictionary<string, string> _endpointCache = new();
 
+    // Lock for atomic cache clearing operations
+    private readonly object _clearLock = new();
+
     private bool _disposed;
 
     #region Address Cache
@@ -39,10 +42,14 @@ public class SessionService : ISessionService
 
     public void ClearWalletCache(int walletId)
     {
-        string prefix = $"{walletId}:";
-        foreach (string key in _addressCache.Keys.Where(k => k.StartsWith(prefix)).ToList())
+        // Lock to prevent race condition where new keys could be added between snapshot and removal
+        lock (_clearLock)
         {
-            _addressCache.TryRemove(key, out _);
+            string prefix = $"{walletId}:";
+            foreach (string key in _addressCache.Keys.Where(k => k.StartsWith(prefix)).ToList())
+            {
+                _addressCache.TryRemove(key, out _);
+            }
         }
     }
 
