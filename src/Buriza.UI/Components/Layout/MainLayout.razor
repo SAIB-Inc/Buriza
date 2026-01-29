@@ -1,6 +1,7 @@
 @using Buriza.UI.Components.Common
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
+@using Buriza.UI.Routing
 @using Buriza.UI.Services
 @using Buriza.Data.Models.Enums
 @using static Buriza.Data.Models.Enums.DrawerContentType
@@ -8,7 +9,7 @@
 @inherits LayoutComponentBase
 
 
-<MudThemeProvider IsDarkMode="AppStateService.IsDarkMode" Theme="BurizaTheme.Theme"/>
+<MudThemeProvider IsDarkMode="AppStateService.IsDarkMode" Theme="BurizaTheme"/>
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
