@@ -37,35 +37,14 @@
             />
         </div>
         @* Progress Stepper - visible only on slides 1-5 *@
-        <div class="@($"w-full flex items-center max-w-[420px]! transition-all duration-300 {(CurrentSlide >= 1 && CurrentSlide <= 5 ? "max-[430px]:!mt-[82px] opacity-100 h-[32px]!" : "opacity-0 h-0! pointer-events-none")}")">
+        <div class="@($"w-full gap-1 flex items-center max-w-[420px]! transition-all duration-300 {(CurrentSlide >= 1 && CurrentSlide <= 4 ? "max-[430px]:!mt-[82px] opacity-100 h-[32px]!" : "opacity-0 h-0! pointer-events-none")}")">
             @for (int i = 1; i <= 4; i++)
             {
                 int step = i;
-                bool isActive = CurrentSlide == step;
                 bool isCompleted = CurrentSlide > step;
-                string stepLabel = GetStepLabel(step);
-                bool isLastStep = step == 4;
-                bool isNextStepReached = CurrentSlide > step;
-                <div class="@($"flex items-center {(isLastStep ? "" : "flex-1")}")">
-                    <div class="flex items-center gap-2">
-                        <div class="@($"w-[32px] h-[32px] rounded-full flex items-center justify-center transition-all duration-300 {(isCompleted ? "bg-[var(--mud-palette-success)]" : isActive ? "bg-[var(--mud-palette-primary)]" : "bg-[var(--mud-palette-gray-default)] border border-[var(--mud-palette-divider)]")}")">
-                            @if (isCompleted)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Class="!text-white !text-base" />
-                            }
-                            else
-                            {
-                                <MudText Class="@($"max-[430px]:!text-xs !text-sm !font-medium {(isActive ? "!text-white" : "!text-[var(--mud-palette-text-secondary)]")}")">@step</MudText>
-                            }
-                        </div>
-                        <div class="@($"transition-all duration-300 overflow-hidden {(isActive ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0")}")">
-                            <MudText Class="max-[430px]:!text-xs !text-[var(--mud-palette-primary)] !text-xs !font-medium whitespace-nowrap">@stepLabel</MudText>
-                        </div>
-                    </div>
-                    @if (!isLastStep)
-                    {
-                        <div class="@($"flex-1 h-[2px] mx-3 transition-all duration-300 {(isNextStepReached ? "bg-[var(--mud-palette-success)]" : "bg-[var(--mud-palette-divider)]")}")"></div>
-                    }
+                bool isActive = CurrentSlide == step;
+                <div class="w-full h-[6px] rounded-full bg-white/10 overflow-hidden">
+                    <div class="@($"h-full rounded-full bg-[var(--mud-palette-primary)] transition-all duration-500 ease-out {(isCompleted ? "w-full" : isActive ? "animate-progress-fill" : "w-0")}")"></div>
                 </div>
             }
         </div>
@@ -140,8 +119,8 @@
                         <div>
                             <MudImage
                                 Alt="mascot 8"
-                                Src="@Mascots.Mascot7"
-                                Class="!w-[64px]"
+                                Src="@Mascots.Mascot9"
+                                Class="!w-[92px]"
                             />
                         </div>
                         <div class="!text-center">
@@ -235,26 +214,23 @@
                             Variant="Variant.Filled"
                             Color="Color.Secondary"
                             OnClick="OnGoBackClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent !px-0 [&_.mud-button-label]:!gap-1"
+                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent !px-0 [&_.mud-icon-root]:!text-xl [&_.mud-button-label]:!gap-1"
                         >
                             <MudIcon Icon="@BurizaIcons.ChevronRightIcon" />
                             Go back
                         </BurizaButton>
                     </div>
                     <div class="flex items-center gap-2">
-                        <BurizaButton
-                            Variant="Variant.Filled"
-                            Color="Color.Secondary"
+                        <MudIconButton
+                            Icon="@BurizaIcons.CopySymbolIcon"
                             OnClick="OnCopyPhraseClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent"
-                        >
-                            Copy Phrase
-                        </BurizaButton>
+                            Class="!p-0 !bg-[var(--mud-palette-overlay-light)] !h-10 !w-10 [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
+                        />
                         <BurizaButton
                             Variant="Variant.Filled"
                             Color="Color.Primary"
                             OnClick="OnNextButtonClicked"
-                            Class="!w-full"
+                            Class="!w-[95px]"
                         >
                             Next
                         </BurizaButton>
@@ -348,19 +324,16 @@
                         </BurizaButton>
                     </div>
                     <div class="flex items-center gap-2">
-                        <BurizaButton
-                            Variant="Variant.Filled"
-                            Color="Color.Secondary"
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.ContentPaste"
                             OnClick="OnPastePhraseClicked"
-                            Class="!w-full !bg-transparent !min-w-max hover:!bg-transparent"
-                        >
-                            Paste Phrase
-                        </BurizaButton>
+                            Class="!p-0 !bg-[var(--mud-palette-overlay-light)] !h-10 !w-10 [&_.mud-icon-root]:!text-xl [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
+                        />
                         <BurizaButton
                             Variant="Variant.Filled"
                             Color="Color.Primary"
                             OnClick="OnNextButtonClicked"
-                            Class="!w-full"
+                            Class="!w-[95px]"
                         >
                             Next
                         </BurizaButton>
@@ -436,7 +409,7 @@
                             Variant="Variant.Filled"
                             Color="Color.Primary"
                             OnClick="OnNextButtonClicked"
-                            Class="!w-full"
+                            Class="!w-[95px]"
                         >
                             Next
                         </BurizaButton>
@@ -531,7 +504,7 @@
                             Variant="Variant.Filled"
                             Color="Color.Primary"
                             OnClick="OnNextButtonClicked"
-                            Class="!w-full"
+                            Class="!w-[95px]"
                         >
                             Next
                         </BurizaButton>
@@ -572,9 +545,11 @@
                         <MudText Class="max-[376px]:!text-sm !text-[var(--mud-palette-text-secondary)]">
                             Way to go!
                         </MudText>
-                        <MudText Class="max-[376px]:max-w-[200px] max-[376px]:!text-xl !text-2xl !font-medium max-w-[250px] lg:max-w-[430px]">
-                            <span>Congratulations </span><br/>
-                            <span>your new wallet has been created!</span>
+                        <MudText Class="max-[376px]:max-w-[200px] max-[376px]:!text-xl !text-2xl !font-medium max-w-[250px] !text-[#0271F4] lg:!text-[40px] lg:max-w-[430px]">
+                            Congratulations!
+                        </MudText>
+                        <MudText Class="!text-2xl !font-medium !text-center max-w-[336px]">
+                            your new wallet has been created!
                         </MudText>
                     </div>
                 </div>
