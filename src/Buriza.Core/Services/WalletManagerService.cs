@@ -11,27 +11,19 @@ using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 
 namespace Buriza.Core.Services;
 
-public class WalletManagerService : IWalletManager, IDisposable
+public class WalletManagerService(
+    IWalletStorage storage,
+    IChainProviderFactory providerFactory,
+    IKeyService keyService,
+    ISessionService sessionService) : IWalletManager, IDisposable
 {
-    private readonly IWalletStorage _storage;
-    private readonly IChainProviderFactory _providerFactory;
-    private readonly IKeyService _keyService;
-    private readonly ISessionService _sessionService;
+    private readonly IWalletStorage _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+    private readonly IChainProviderFactory _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
+    private readonly IKeyService _keyService = keyService ?? throw new ArgumentNullException(nameof(keyService));
+    private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
     private bool _disposed;
 
     private const int GapLimit = 20;
-
-    public WalletManagerService(
-        IWalletStorage storage,
-        IChainProviderFactory providerFactory,
-        IKeyService keyService,
-        ISessionService sessionService)
-    {
-        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-        _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
-        _keyService = keyService ?? throw new ArgumentNullException(nameof(keyService));
-        _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
-    }
 
     #region Wallet Lifecycle
 
