@@ -66,6 +66,20 @@ public partial class OnBoard
         [24] = ["elephant", "quack", "taught", "light", "short", "hard", "help", "please", "earth", "cake", "control", "guard", "trust", "frost", "echo", "swim", "give", "seen", "eyes", "wade", "ice", "explain", "water", "geese"]
     };
     
+    private bool _useFaceId = false;
+    protected bool UseFaceId
+    {
+        get => _useFaceId;
+        set
+        {
+            if (_useFaceId != value)
+            {
+                _useFaceId = value;
+                StateHasChanged();
+            }
+        }
+    }
+
     private int _currentSlide = 0;
     protected int CurrentSlide 
     { 

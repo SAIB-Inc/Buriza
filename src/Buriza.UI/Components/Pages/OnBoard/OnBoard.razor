@@ -501,8 +501,10 @@
                                 Use Face ID
                             </MudText>
                             <MudSwitch
+                                @bind-Value="UseFaceId"
                                 T="bool"
-                                Class="!bg-[var(--mud-palette-gray-default)] !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)] [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!h-[32px] [&_.mud-switch-track]:!bg-transparent"
+                                Color="Color.Primary"
+                                Class="@($"!transition-all !duration-150 {(UseFaceId ? "!bg-[var(--mud-palette-primary)] [&_.mud-switch-button]:!text-[var(--mud-palette-white)]" : "!bg-[var(--mud-palette-gray-default)] [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)]")} !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!w-[52px] [&_.mud-switch-span]:!h-[32px] [&_.mud-switch-track]:!bg-transparent")"
                             />
                         </div>
                     </div>
@@ -570,9 +572,6 @@
                         />
                     </div>
                     <div class="!text-center !space-y-2 max-w-[430px]">
-                        <MudText Class="max-[376px]:!text-sm !text-[var(--mud-palette-text-secondary)]">
-                            Way to go!
-                        </MudText>
                         <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium max-w-full !text-center !text-[#0271F4] lg:!text-[40px] lg:max-w-[430px]">
                             Congratulations!
                         </MudText>
@@ -581,7 +580,7 @@
                         </MudText>
                     </div>
                 </div>
-                <div class="max-md:hidden! w-full flex items-center justify-between max-w-[420px]!">
+                <div class="max-md:hidden! mt-6! w-full flex items-center justify-between max-w-[420px]!">
                     <BurizaButton
                         Variant="Variant.Filled"
                         Color="Color.Primary"
