@@ -12,7 +12,7 @@ public interface ISessionService : IDisposable
 
     #endregion
 
-    #region Custom API Key Cache (decrypted, session-only)
+    #region Custom Provider Config Cache (session-only)
 
     /// <summary>Gets a cached custom API key for a chain/network. Returns null if not set.</summary>
     string? GetCustomApiKey(ChainType chain, NetworkType network);
@@ -25,6 +25,15 @@ public interface ISessionService : IDisposable
 
     /// <summary>Removes a custom API key from the session cache.</summary>
     void ClearCustomApiKey(ChainType chain, NetworkType network);
+
+    /// <summary>Gets a cached custom endpoint for a chain/network. Returns null if not set.</summary>
+    string? GetCustomEndpoint(ChainType chain, NetworkType network);
+
+    /// <summary>Caches a custom endpoint for the session.</summary>
+    void SetCustomEndpoint(ChainType chain, NetworkType network, string endpoint);
+
+    /// <summary>Removes a custom endpoint from the session cache.</summary>
+    void ClearCustomEndpoint(ChainType chain, NetworkType network);
 
     #endregion
 

@@ -307,6 +307,10 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     public async Task SetCustomProviderConfigAsync(ChainType chain, NetworkType network, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default)
     {
+        // Validate endpoint URL if provided
+        if (!string.IsNullOrEmpty(endpoint) && !Uri.TryCreate(endpoint, UriKind.Absolute, out _))
+            throw new ArgumentException("Invalid endpoint URL", nameof(endpoint));
+
         // Save config metadata (endpoint, name)
         CustomProviderConfig config = new()
         {
@@ -317,6 +321,12 @@ public class WalletManagerService : IWalletManager, IDisposable
             Name = name
         };
         await _storage.SaveCustomProviderConfigAsync(config, ct);
+
+        // Cache endpoint in session for immediate use
+        if (!string.IsNullOrEmpty(endpoint))
+            _sessionService.SetCustomEndpoint(chain, network, endpoint);
+        else
+            _sessionService.ClearCustomEndpoint(chain, network);
 
         // Save encrypted API key if provided
         if (!string.IsNullOrEmpty(apiKey))
@@ -337,22 +347,32 @@ public class WalletManagerService : IWalletManager, IDisposable
     {
         await _storage.DeleteCustomProviderConfigAsync(chain, network, ct);
         _sessionService.ClearCustomApiKey(chain, network);
+        _sessionService.ClearCustomEndpoint(chain, network);
     }
 
-    public async Task LoadCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default)
+    public async Task LoadCustomProviderConfigAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default)
     {
-        byte[]? apiKeyBytes = await _storage.UnlockCustomApiKeyAsync(chain, network, password, ct);
-        if (apiKeyBytes == null)
-            return;
+        // Load and cache endpoint (not encrypted)
+        CustomProviderConfig? config = await _storage.GetCustomProviderConfigAsync(chain, network, ct);
+        if (config?.Endpoint != null)
+            _sessionService.SetCustomEndpoint(chain, network, config.Endpoint);
 
-        try
+        // Load and cache API key (encrypted)
+        if (config?.HasCustomApiKey == true)
         {
-            string apiKey = Encoding.UTF8.GetString(apiKeyBytes);
-            _sessionService.SetCustomApiKey(chain, network, apiKey);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(apiKeyBytes);
+            byte[]? apiKeyBytes = await _storage.UnlockCustomApiKeyAsync(chain, network, password, ct);
+            if (apiKeyBytes != null)
+            {
+                try
+                {
+                    string apiKey = Encoding.UTF8.GetString(apiKeyBytes);
+                    _sessionService.SetCustomApiKey(chain, network, apiKey);
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(apiKeyBytes);
+                }
+            }
         }
     }
 

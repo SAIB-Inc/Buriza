@@ -45,10 +45,13 @@ public class ChainProviderFactory(ChainProviderSettings settings, ISessionServic
 
     private ProviderConfig GetCardanoConfig(NetworkType network)
     {
-        // Check session for custom API key first
+        // Check session for custom endpoint
+        string? customEndpoint = _sessionService?.GetCustomEndpoint(ChainType.Cardano, network);
+
+        // Check session for custom API key
         string? apiKey = _sessionService?.GetCustomApiKey(ChainType.Cardano, network);
 
-        // Fall back to appsettings default
+        // Fall back to appsettings default for API key
         apiKey ??= network switch
         {
             NetworkType.Mainnet => _settings.Cardano?.MainnetApiKey,
@@ -59,6 +62,18 @@ public class ChainProviderFactory(ChainProviderSettings settings, ISessionServic
 
         if (string.IsNullOrEmpty(apiKey))
             throw new InvalidOperationException($"API key for Cardano {network} not configured");
+
+        // Use custom endpoint if set, otherwise use preset
+        if (!string.IsNullOrEmpty(customEndpoint))
+        {
+            return new ProviderConfig
+            {
+                Chain = ChainType.Cardano,
+                Network = network,
+                Endpoint = customEndpoint,
+                ApiKey = apiKey
+            };
+        }
 
         return network switch
         {

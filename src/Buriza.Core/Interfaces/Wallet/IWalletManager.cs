@@ -90,10 +90,10 @@ public interface IWalletManager
     Task ClearCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
 
     /// <summary>
-    /// Loads custom API key into session (decrypts with password).
+    /// Loads custom provider config into session (endpoint and decrypted API key).
     /// Call this after wallet unlock to enable custom provider for the session.
     /// </summary>
-    Task LoadCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default);
+    Task LoadCustomProviderConfigAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default);
 
     #endregion
 }

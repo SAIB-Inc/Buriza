@@ -9,8 +9,11 @@ public class SessionService : ISessionService
     // Cache derived addresses: key = "walletId:chain:accountIndex:isChange:addressIndex"
     private readonly ConcurrentDictionary<string, string> _addressCache = new();
 
-    // Cache decrypted custom API keys: key = "chain:network"
+    // Cache decrypted custom API keys: key = "apikey:chain:network"
     private readonly ConcurrentDictionary<string, string> _apiKeyCache = new();
+
+    // Cache custom endpoints: key = "endpoint:chain:network"
+    private readonly ConcurrentDictionary<string, string> _endpointCache = new();
 
     private bool _disposed;
 
@@ -74,8 +77,29 @@ public class SessionService : ISessionService
         _apiKeyCache.TryRemove(key, out _);
     }
 
+    public string? GetCustomEndpoint(ChainType chain, NetworkType network)
+    {
+        string key = BuildEndpointKey(chain, network);
+        return _endpointCache.TryGetValue(key, out string? endpoint) ? endpoint : null;
+    }
+
+    public void SetCustomEndpoint(ChainType chain, NetworkType network, string endpoint)
+    {
+        string key = BuildEndpointKey(chain, network);
+        _endpointCache[key] = endpoint;
+    }
+
+    public void ClearCustomEndpoint(ChainType chain, NetworkType network)
+    {
+        string key = BuildEndpointKey(chain, network);
+        _endpointCache.TryRemove(key, out _);
+    }
+
     private static string BuildApiKeyKey(ChainType chain, NetworkType network)
         => $"apikey:{(int)chain}:{(int)network}";
+
+    private static string BuildEndpointKey(ChainType chain, NetworkType network)
+        => $"endpoint:{(int)chain}:{(int)network}";
 
     #endregion
 
@@ -83,6 +107,7 @@ public class SessionService : ISessionService
     {
         _addressCache.Clear();
         _apiKeyCache.Clear();
+        _endpointCache.Clear();
     }
 
     public virtual void Dispose()
