@@ -103,10 +103,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
         if (string.IsNullOrEmpty(json))
             throw new InvalidOperationException($"Vault for wallet {walletId} not found");
 
-        EncryptedVault? vault = JsonSerializer.Deserialize<EncryptedVault>(json);
-        if (vault == null)
-            throw new InvalidOperationException($"Failed to deserialize vault for wallet {walletId}");
-
+        EncryptedVault? vault = JsonSerializer.Deserialize<EncryptedVault>(json) ?? throw new InvalidOperationException($"Failed to deserialize vault for wallet {walletId}");
         return VaultEncryption.DecryptToBytes(vault, password);
     }
 
@@ -122,8 +119,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
             return false;
 
         EncryptedVault? vault = JsonSerializer.Deserialize<EncryptedVault>(json);
-        if (vault == null)
-            return false;
+        if (vault == null) return false;
 
         return VaultEncryption.VerifyPassword(vault, password);
     }

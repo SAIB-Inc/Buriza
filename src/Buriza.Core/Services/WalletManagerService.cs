@@ -356,9 +356,8 @@ public class WalletManagerService : IWalletManager, IDisposable
 
     private IChainProvider GetProviderForWallet(BurizaWallet wallet)
     {
-        ProviderConfig config = wallet.ProviderConfigs.TryGetValue(wallet.ActiveChain, out ProviderConfig? existing)
-            ? existing
-            : _providerFactory.GetDefaultConfig(wallet.ActiveChain);
+        if (!wallet.ProviderConfigs.TryGetValue(wallet.ActiveChain, out ProviderConfig? config))
+            throw new InvalidOperationException($"No provider config found for chain {wallet.ActiveChain}");
 
         return _providerFactory.Create(config);
     }
