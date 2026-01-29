@@ -36,10 +36,9 @@ using System.Threading.Channels;
 
 namespace Buriza.Core.Providers;
 
-public class CardanoProvider : IChainProvider, IKeyService, IQueryService, ITransactionService, ICardanoDataProvider, IDisposable
+public class CardanoProvider : IChainProvider, IQueryService, ITransactionService, ICardanoDataProvider, IDisposable
 {
     public ChainInfo ChainInfo { get; }
-    public IKeyService KeyService => this;
     public IQueryService QueryService => this;
     public ITransactionService TransactionService => this;
 
@@ -87,26 +86,7 @@ public class CardanoProvider : IChainProvider, IKeyService, IQueryService, ITran
         return headers;
     }
 
-    #region IKeyService
-
-    public Task<string> GenerateMnemonicAsync(int wordCount = 24, CancellationToken ct = default)
-    {
-        Mnemonic mnemonic = Mnemonic.Generate(English.Words, wordCount);
-        return Task.FromResult(string.Join(" ", mnemonic.Words));
-    }
-
-    public Task<bool> ValidateMnemonicAsync(string mnemonic, CancellationToken ct = default)
-    {
-        try
-        {
-            Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
-            return Task.FromResult(restored != null);
-        }
-        catch
-        {
-            return Task.FromResult(false);
-        }
-    }
+    #region IChainProvider - Key Derivation
 
     public Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {

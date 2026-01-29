@@ -1,4 +1,5 @@
 using Buriza.Data.Models.Common;
+using Chrysalis.Wallet.Models.Keys;
 
 namespace Buriza.Core.Interfaces.Chain;
 
@@ -6,9 +7,13 @@ public interface IChainProvider
 {
     ChainInfo ChainInfo { get; }
 
-    IKeyService KeyService { get; }
     IQueryService QueryService { get; }
     ITransactionService TransactionService { get; }
 
     Task<bool> ValidateConnectionAsync(CancellationToken ct = default);
+
+    // Chain-specific key derivation
+    Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
 }

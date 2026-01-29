@@ -15,10 +15,12 @@ namespace Buriza.Core.Services;
 public class WalletManagerService(
     IWalletStorage storage,
     ChainProviderRegistry providerRegistry,
+    IKeyService keyService,
     ISessionService sessionService) : IWalletManager
 {
     private readonly IWalletStorage _storage = storage;
     private readonly ChainProviderRegistry _providerRegistry = providerRegistry;
+    private readonly IKeyService _keyService = keyService;
     private readonly ISessionService _sessionService = sessionService;
 
     private const int GapLimit = 20;
@@ -27,24 +29,20 @@ public class WalletManagerService(
 
     public async Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, int mnemonicWordCount = 24, CancellationToken ct = default)
     {
-        IChainProvider provider = _providerRegistry.GetProvider(initialChain);
-        string mnemonic = await provider.KeyService.GenerateMnemonicAsync(mnemonicWordCount, ct);
+        string mnemonic = _keyService.GenerateMnemonic(mnemonicWordCount);
         return await ImportAsync(name, mnemonic, password, initialChain, ct);
     }
 
     public async Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default)
     {
-        IChainProvider provider = _providerRegistry.GetProvider(initialChain);
-
-        bool isValid = await provider.KeyService.ValidateMnemonicAsync(mnemonic, ct);
-        if (!isValid)
+        if (!_keyService.ValidateMnemonic(mnemonic))
             throw new ArgumentException("Invalid mnemonic", nameof(mnemonic));
 
         IReadOnlyList<BurizaWallet> existingWallets = await _storage.LoadAllAsync(ct);
         int newId = existingWallets.Count > 0 ? existingWallets.Max(w => w.Id) + 1 : 1;
 
-        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, 0, i, false, ct))];
-        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, 0, i, true, ct))];
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, initialChain, 0, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, initialChain, 0, i, true, ct))];
 
         await Task.WhenAll(externalTasks.Concat(internalTasks));
 
@@ -61,7 +59,6 @@ public class WalletManagerService(
         ChainAddressData chainData = new()
         {
             Chain = initialChain,
-            BasePath = GetBasePath(initialChain, 0),
             ExternalAddresses = externalAddresses,
             InternalAddresses = internalAddresses,
             LastSyncedAt = DateTime.UtcNow
@@ -142,7 +139,7 @@ public class WalletManagerService(
             try
             {
                 string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-                await DeriveAndSaveChainDataAsync(wallet, account.Index, chain, provider, mnemonic, ct);
+                await DeriveAndSaveChainDataAsync(wallet, account.Index, chain, mnemonic, ct);
             }
             finally
             {
@@ -218,7 +215,7 @@ public class WalletManagerService(
         try
         {
             string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            await DeriveAndSaveChainDataAsync(wallet, accountIndex, chain, provider, mnemonic, ct);
+            await DeriveAndSaveChainDataAsync(wallet, accountIndex, chain, mnemonic, ct);
         }
         finally
         {
@@ -239,7 +236,7 @@ public class WalletManagerService(
         try
         {
             string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            PrivateKey privateKey = await provider.KeyService.DerivePrivateKeyAsync(mnemonic, accountIndex, addressIndex, ct: ct);
+            PrivateKey privateKey = await _keyService.DerivePrivateKeyAsync(mnemonic, wallet.ActiveChain, accountIndex, addressIndex, ct: ct);
             return await provider.TransactionService.SignAsync(unsignedTx, privateKey, ct);
         }
         finally
@@ -278,11 +275,11 @@ public class WalletManagerService(
     private void AttachProvider(BurizaWallet wallet)
         => wallet.Provider = _providerRegistry.GetProvider(wallet.ActiveChain);
 
-    private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, IChainProvider provider, string mnemonic, CancellationToken ct)
+    private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, string mnemonic, CancellationToken ct)
     {
         // Derive all addresses in parallel
-        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, accountIndex, i, false, ct))];
-        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => provider.KeyService.DeriveAddressAsync(mnemonic, accountIndex, i, true, ct))];
+        Task<string>[] externalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, accountIndex, i, false, ct))];
+        Task<string>[] internalTasks = [.. Enumerable.Range(0, GapLimit).Select(i => _keyService.DeriveAddressAsync(mnemonic, chain, accountIndex, i, true, ct))];
 
         await Task.WhenAll(externalTasks.Concat(internalTasks));
 
@@ -299,7 +296,6 @@ public class WalletManagerService(
         ChainAddressData chainData = new()
         {
             Chain = chain,
-            BasePath = GetBasePath(chain, accountIndex),
             ExternalAddresses = externalAddresses,
             InternalAddresses = internalAddresses,
             LastSyncedAt = DateTime.UtcNow
@@ -311,12 +307,6 @@ public class WalletManagerService(
 
         await _storage.SaveAsync(wallet, ct);
     }
-
-    private static string GetBasePath(ChainType chain, int account) => chain switch
-    {
-        ChainType.Cardano => DerivationPaths.Cardano.GetBasePath(account),
-        _ => throw new NotSupportedException($"Chain {chain} is not supported")
-    };
 
     #endregion
 }

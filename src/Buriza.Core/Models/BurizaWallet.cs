@@ -200,9 +200,6 @@ public class ChainAddressData
 {
     public required ChainType Chain { get; init; }
 
-    /// <summary>Base derivation path for this chain (e.g., m/1852'/1815'/0').</summary>
-    public required string BasePath { get; init; }
-
     /// <summary>External (receive) addresses - role 0.</summary>
     public List<AddressInfo> ExternalAddresses { get; set; } = [];
 
