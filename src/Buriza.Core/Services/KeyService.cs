@@ -1,4 +1,5 @@
 using Buriza.Core.Interfaces.Chain;
+using Buriza.Core.Models;
 using Buriza.Data.Models.Enums;
 using Chrysalis.Wallet.Models.Keys;
 using Chrysalis.Wallet.Words;
@@ -9,9 +10,9 @@ namespace Buriza.Core.Services;
 /// Chain-agnostic key service implementation.
 /// BIP-39 operations are handled directly, derivation delegates to chain providers.
 /// </summary>
-public class KeyService(ChainProviderRegistry providerRegistry) : IKeyService
+public class KeyService(IChainProviderFactory providerFactory) : IKeyService
 {
-    private readonly ChainProviderRegistry _providerRegistry = providerRegistry;
+    private readonly IChainProviderFactory _providerFactory = providerFactory;
 
     #region BIP-39 Mnemonic (Chain-Agnostic)
 
@@ -38,23 +39,29 @@ public class KeyService(ChainProviderRegistry providerRegistry) : IKeyService
 
     #region Chain-Specific Derivation
 
-    public Task<string> DeriveAddressAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<string> DeriveAddressAsync(string mnemonic, ChainType chain, NetworkType network, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
+        IChainProvider provider = GetProvider(chain, network);
         return provider.DeriveAddressAsync(mnemonic, accountIndex, addressIndex, isChange, ct);
     }
 
-    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainType chain, NetworkType network, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
+        IChainProvider provider = GetProvider(chain, network);
         return provider.DerivePrivateKeyAsync(mnemonic, accountIndex, addressIndex, isChange, ct);
     }
 
-    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainType chain, NetworkType network, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        IChainProvider provider = _providerRegistry.GetProvider(chain);
+        IChainProvider provider = GetProvider(chain, network);
         return provider.DerivePublicKeyAsync(mnemonic, accountIndex, addressIndex, isChange, ct);
     }
 
     #endregion
+
+    private IChainProvider GetProvider(ChainType chain, NetworkType network)
+    {
+        ProviderConfig config = _providerFactory.GetDefaultConfig(chain, network);
+        return _providerFactory.Create(config);
+    }
 }

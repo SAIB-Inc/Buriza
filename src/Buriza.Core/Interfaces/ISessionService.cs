@@ -9,4 +9,5 @@ public interface ISessionService : IDisposable
     void CacheAddress(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange, string address);
     bool HasCachedAddresses(int walletId, ChainType chain, int accountIndex);
     void ClearCache();
+    void ClearWalletCache(int walletId);
 }

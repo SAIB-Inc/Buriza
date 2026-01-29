@@ -45,15 +45,9 @@ This guide demonstrates how to use `IWalletManager` and `BurizaWallet` for walle
 // In Program.cs or startup
 services.AddSingleton<IWalletStorage, SecureWalletStorage>();
 services.AddSingleton<ISessionService, SessionService>();
-services.AddSingleton<ChainProviderRegistry>();
+services.AddSingleton<IChainProviderFactory, ChainProviderFactory>();
 services.AddSingleton<IKeyService, KeyService>();
 services.AddSingleton<IWalletManager, WalletManagerService>();
-
-// Register chain providers
-services.AddSingleton<CardanoProvider>(sp => new CardanoProvider(
-    endpoint: "https://cardano-preprod.utxorpc-m1.demeter.run",
-    network: NetworkType.Preprod,
-    apiKey: "your-api-key"));
 ```
 
 ## Usage Flows

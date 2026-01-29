@@ -72,6 +72,17 @@ public class ExtensionWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
         await _js.InvokeVoidAsync("buriza.storage.set", ct, ActiveWalletKey, walletId.ToString());
     }
 
+    public async Task ClearActiveWalletIdAsync(CancellationToken ct = default)
+    {
+        await _js.InvokeVoidAsync("buriza.storage.remove", ct, ActiveWalletKey);
+    }
+
+    public async Task<int> GenerateNextIdAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<BurizaWallet> wallets = await LoadAllAsync(ct);
+        return wallets.Count > 0 ? wallets.Max(w => w.Id) + 1 : 1;
+    }
+
     #endregion
 
     #region Secure Vault

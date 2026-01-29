@@ -13,10 +13,10 @@ public interface IWalletManager
     #region Wallet Lifecycle
 
     /// <summary>Creates a new wallet with a newly generated mnemonic.</summary>
-    Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, int mnemonicWordCount = 24, CancellationToken ct = default);
+    Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, NetworkType network = NetworkType.Mainnet, int mnemonicWordCount = 24, CancellationToken ct = default);
 
     /// <summary>Imports an existing wallet from a mnemonic phrase.</summary>
-    Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default);
+    Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, NetworkType network = NetworkType.Mainnet, CancellationToken ct = default);
 
     /// <summary>Gets all wallets.</summary>
     Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default);
@@ -34,11 +34,28 @@ public interface IWalletManager
 
     #region Chain Management
 
-    /// <summary>Sets the active chain for a wallet. Derives addresses for the new chain if needed (requires password).</summary>
-    Task SetActiveChainAsync(int walletId, ChainType chain, string password, CancellationToken ct = default);
+    /// <summary>
+    /// Sets the active chain for a wallet.
+    /// Password is only required if this is the first time using the chain (to derive addresses).
+    /// Throws ArgumentException if password is needed but not provided.
+    /// </summary>
+    Task SetActiveChainAsync(int walletId, ChainType chain, string? password = null, CancellationToken ct = default);
 
     /// <summary>Gets all registered chain types from the provider registry.</summary>
     IReadOnlyList<ChainType> GetAvailableChains();
+
+    #endregion
+
+    #region Provider Configuration
+
+    /// <summary>Updates the provider configuration for a specific chain on a wallet.</summary>
+    Task UpdateProviderConfigAsync(int walletId, ProviderConfig config, CancellationToken ct = default);
+
+    /// <summary>Gets the provider configuration for a specific chain on a wallet.</summary>
+    Task<ProviderConfig?> GetProviderConfigAsync(int walletId, ChainType chain, CancellationToken ct = default);
+
+    /// <summary>Validates that a provider configuration can connect successfully.</summary>
+    Task<bool> ValidateProviderConfigAsync(ProviderConfig config, CancellationToken ct = default);
 
     #endregion
 
@@ -63,8 +80,11 @@ public interface IWalletManager
     /// <summary>Signs a transaction. Requires password to derive private key from vault.</summary>
     Task<Transaction> SignTransactionAsync(int walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default);
 
-    /// <summary>Exports the mnemonic phrase. Use with caution.</summary>
-    Task<string> ExportMnemonicAsync(int walletId, string password, CancellationToken ct = default);
+    /// <summary>
+    /// Exports the mnemonic phrase as bytes.
+    /// IMPORTANT: Caller MUST zero the returned bytes after use with CryptographicOperations.ZeroMemory().
+    /// </summary>
+    Task<byte[]> ExportMnemonicAsync(int walletId, string password, CancellationToken ct = default);
 
     #endregion
 }

@@ -3,7 +3,7 @@ using Chrysalis.Wallet.Models.Keys;
 
 namespace Buriza.Core.Interfaces.Chain;
 
-public interface IChainProvider
+public interface IChainProvider : IDisposable
 {
     ChainInfo ChainInfo { get; }
 

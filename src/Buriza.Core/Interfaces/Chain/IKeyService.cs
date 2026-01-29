@@ -14,7 +14,7 @@ public interface IKeyService
     bool ValidateMnemonic(string mnemonic);
 
     // Chain-specific derivation (delegates to chain provider)
-    Task<string> DeriveAddressAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<string> DeriveAddressAsync(string mnemonic, ChainType chain, NetworkType network, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainType chain, NetworkType network, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainType chain, NetworkType network, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
 }

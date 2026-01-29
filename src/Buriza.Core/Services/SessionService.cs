@@ -31,15 +31,19 @@ public class SessionService : ISessionService
         return _addressCache.Keys.Any(k => k.StartsWith(prefix));
     }
 
-    public void ClearCache()
+    public void ClearCache() => _addressCache.Clear();
+
+    public void ClearWalletCache(int walletId)
     {
-        _addressCache.Clear();
+        string prefix = $"{walletId}:";
+        foreach (string key in _addressCache.Keys.Where(k => k.StartsWith(prefix)).ToList())
+        {
+            _addressCache.TryRemove(key, out _);
+        }
     }
 
     private static string BuildKey(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange)
-    {
-        return $"{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}";
-    }
+        => $"{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}";
 
     #endregion
 

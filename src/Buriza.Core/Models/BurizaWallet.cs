@@ -28,6 +28,9 @@ public class BurizaWallet : IWallet
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? LastAccessedAt { get; set; }
 
+    /// <summary>Per-chain provider configurations (endpoint, network, apiKey).</summary>
+    public Dictionary<ChainType, ProviderConfig> ProviderConfigs { get; set; } = [];
+
     /// <summary>Chain provider for querying balance, assets, etc.</summary>
     internal IChainProvider? Provider { get; set; }
 

@@ -12,6 +12,12 @@ public interface IWalletStorage
     Task DeleteAsync(int walletId, CancellationToken ct = default);
     Task<int?> GetActiveWalletIdAsync(CancellationToken ct = default);
     Task SetActiveWalletIdAsync(int walletId, CancellationToken ct = default);
+    Task ClearActiveWalletIdAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Generates the next available wallet ID atomically.
+    /// </summary>
+    Task<int> GenerateNextIdAsync(CancellationToken ct = default);
 
     #endregion
 
