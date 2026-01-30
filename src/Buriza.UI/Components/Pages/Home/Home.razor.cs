@@ -11,6 +11,12 @@ public partial class Home : ComponentBase, IDisposable
     public required AppStateService AppStateService { get; set; }
 
     private bool IsCard2Expanded { get; set; } = false;
+    private bool IsSearchExpanded { get; set; } = false;
+
+    private void ToggleSearch()
+    {
+        IsSearchExpanded = !IsSearchExpanded;
+    }
 
     private void ToggleCardExpansion()
     {
