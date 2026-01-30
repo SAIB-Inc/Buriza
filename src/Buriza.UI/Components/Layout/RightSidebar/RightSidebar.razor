@@ -6,46 +6,7 @@
 
 @namespace Buriza.UI.Components.Layout
 
-<div class="max-lg:hidden !pt-6 flex flex-col !gap-3 h-full flex-shrink-0 lg:w-[300px] xl:w-[338px]">
-    <div class="w-full flex items-center !gap-8 h-[56px] !mb-6">
-        <div>
-            <MudIconButton
-                Icon="@(AppStateService.IsDarkMode ? BurizaIcons.LightModeIcon : BurizaIcons.DarkModeIcon)"
-                OnClick="@ToggleTheme"
-                Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-            />
-        </div>
-        <div class="flex items-center !gap-4 w-full">
-            <div class="max-w-[48px] max-h-[48px] overflow-hidden rounded-full cursor-pointer" @onclick="OpenManageDrawer">
-                <MudImage
-                    Alt="nft profile"
-                    Src="@Nfts.Nft1"
-                    Class="!w-full aspect-square"
-                />
-            </div>
-            <div class="w-full">
-                <div class="[&_.mud-select]:!w-full [&_.mud-input]:!pr-0">
-                    <BurizaSelect TItem="string"
-                        Variant="Variant.Outlined"
-                        Value="@("Account01")"
-                        AdornmentIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                        ToStringFunc="@(item => item)"
-                        Class="[&_.mud-input]:!gap-2 [&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-bold [&_.mud-input-slot]:text-[var(--mud-palette-text-primary)]! [&_.mud-icon-root]:text-[var(--mud-palette-text-primary)]!"
-                    >
-                        <MudSelectItem Value="@("Account01")">Account01</MudSelectItem>
-                        <MudSelectItem Value="@("Account02")">Account02</MudSelectItem>
-                        <MudSelectItem Value="@("Account03")">Account03</MudSelectItem>
-                    </BurizaSelect>
-                </div>
-                <div class="flex items-center !gap-2">
-                    <MudText Class="!text-xs text-[var(--mud-palette-text-secondary)]!">
-                        addr1q9rvp...az138441s15a
-                    </MudText>
-                </div>
-            </div>
-        </div>
-    </div>
-
+<div class="max-lg:hidden !pt-4 flex flex-col !gap-3 h-full flex-shrink-0 lg:w-[300px] xl:w-[338px]">
     @switch (AppStateService.CurrentSidebarContent)
     {
         case SidebarContentType.Portfolio:
@@ -55,23 +16,4 @@
             <HistorySidebarContent />
             break;
     }
-
-    <div class="flex items-center !gap-4 !mt-4">
-        <BurizaButton
-            Variant="Variant.Filled"
-            Color="Color.Primary"
-            StartIcon="@BurizaIcons.ReceiveSymbolIcon"
-            OnClick="@OpenReceiveDrawer"
-        >
-            Receive
-        </BurizaButton>
-        <BurizaButton
-            Variant="Variant.Filled"
-            Color="Color.Primary"
-            StartIcon="@BurizaIcons.Send1Icon"
-            OnClick="@OpenSendDrawer"
-        >
-            Send
-        </BurizaButton>
-    </div>
 </div>

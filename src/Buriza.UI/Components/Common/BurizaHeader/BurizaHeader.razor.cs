@@ -1,6 +1,7 @@
 using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
+using static Buriza.Data.Models.Enums.DrawerContentType;
 
 namespace Buriza.UI.Components.Common;
 
@@ -31,6 +32,11 @@ public partial class BurizaHeader : IDisposable
         await InvokeAsync(StateHasChanged);
     }
 
+    protected void ToggleTheme()
+    {
+        AppStateService.IsDarkMode = !AppStateService.IsDarkMode;
+    }
+
     protected void TogglePopup()
     {
         IsPopupVisible = !IsPopupVisible;
@@ -56,6 +62,10 @@ public partial class BurizaHeader : IDisposable
             : "text-[11px] !text-[var(--mud-palette-text-secondary)] !px-1 !py-[2px]";
     }
 
+    protected void OpenManageDrawer()
+    {
+        AppStateService.SetDrawerContent(Manage);
+    }
     public void Dispose()
     {
         Navigation.LocationChanged -= OnLocationChanged;
