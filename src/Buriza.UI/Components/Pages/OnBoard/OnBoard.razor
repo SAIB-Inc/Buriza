@@ -66,8 +66,8 @@
                     int step = i;
                     bool isCompleted = CurrentSlide > step;
                     bool isActive = CurrentSlide == step;
-                    <div class="w-full h-[6px] rounded-full bg-white/10 overflow-hidden">
-                        <div class="@($"h-full rounded-full bg-[var(--mud-palette-primary)] transition-all duration-500 ease-out {(isCompleted ? "w-full" : isActive ? "animate-progress-fill" : "w-0")}")" />
+                    <div class="w-full h-[6px] rounded-full bg-[var(--mud-palette-tertiary-lighten)] overflow-hidden">
+                        <div class="@($"h-full rounded-full transition-all duration-500 ease-out {(isCompleted ? "w-full bg-[var(--mud-palette-tertiary-darken)]" : isActive ? "animate-progress-fill bg-[var(--mud-palette-primary)]" : "w-0 bg-[var(--mud-palette-primary)]")}")" />
                     </div>
                 }
             </div>
