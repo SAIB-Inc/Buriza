@@ -10,9 +10,9 @@ namespace Buriza.Core.Services;
 /// Chain-agnostic key service implementation.
 /// BIP-39 operations are handled directly, derivation delegates to chain providers.
 /// </summary>
-public class KeyService(IChainProviderFactory providerFactory) : IKeyService
+public class KeyService(IChainRegistry chainRegistry) : IKeyService
 {
-    private readonly IChainProviderFactory _providerFactory = providerFactory;
+    private readonly IChainRegistry _chainRegistry = chainRegistry;
 
     #region BIP-39 Mnemonic (Chain-Agnostic)
 
@@ -61,7 +61,7 @@ public class KeyService(IChainProviderFactory providerFactory) : IKeyService
 
     private IChainProvider GetProvider(ChainType chain, NetworkType network)
     {
-        ProviderConfig config = _providerFactory.GetDefaultConfig(chain, network);
-        return _providerFactory.Create(config);
+        ProviderConfig config = _chainRegistry.GetDefaultConfig(chain, network);
+        return _chainRegistry.GetProvider(config);
     }
 }

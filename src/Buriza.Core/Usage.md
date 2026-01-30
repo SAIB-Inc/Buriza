@@ -45,7 +45,7 @@ This guide demonstrates how to use `IWalletManager` and `BurizaWallet` for walle
 // In Program.cs or startup
 services.AddSingleton<IWalletStorage, SecureWalletStorage>();
 services.AddSingleton<ISessionService, SessionService>();
-services.AddSingleton<IChainProviderFactory, ChainProviderFactory>();
+services.AddSingleton<IChainRegistry, ChainRegistry>();
 services.AddSingleton<IKeyService, KeyService>();
 services.AddSingleton<IWalletManager, WalletManagerService>();
 ```

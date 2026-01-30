@@ -4,13 +4,13 @@ using Buriza.Data.Models.Enums;
 namespace Buriza.Core.Interfaces.Chain;
 
 /// <summary>
-/// Factory for creating chain providers from configuration.
+/// Registry for chain providers. Creates and caches providers from configuration.
 /// Allows wallets to have custom provider settings (e.g., self-hosted UTxO RPC).
 /// </summary>
-public interface IChainProviderFactory : IDisposable
+public interface IChainRegistry : IDisposable
 {
-    /// <summary>Creates a provider for the specified chain using the given configuration. Providers are cached by config.</summary>
-    IChainProvider Create(ProviderConfig config);
+    /// <summary>Gets or creates a provider for the specified chain using the given configuration. Providers are cached by config.</summary>
+    IChainProvider GetProvider(ProviderConfig config);
 
     /// <summary>Gets the default configuration for a chain and network (with API key from app settings).</summary>
     ProviderConfig GetDefaultConfig(ChainType chain, NetworkType network = NetworkType.Mainnet);

@@ -9,11 +9,11 @@ using Buriza.Data.Models.Enums;
 namespace Buriza.Core.Services;
 
 /// <summary>
-/// Factory for creating chain providers from configuration.
+/// Registry for chain providers.
 /// Caches providers by config to avoid recreating for same settings.
 /// Checks session for custom API keys before falling back to appsettings defaults.
 /// </summary>
-public class ChainProviderFactory(ChainProviderSettings settings, ISessionService? sessionService = null) : IChainProviderFactory, IDisposable
+public class ChainRegistry(ChainProviderSettings settings, ISessionService? sessionService = null) : IChainRegistry, IDisposable
 {
     private readonly Dictionary<string, IChainProvider> _providerCache = [];
     private readonly object _lock = new();
@@ -21,7 +21,7 @@ public class ChainProviderFactory(ChainProviderSettings settings, ISessionServic
     private readonly ISessionService? _sessionService = sessionService;
     private bool _disposed;
 
-    public IChainProvider Create(ProviderConfig config)
+    public IChainProvider GetProvider(ProviderConfig config)
     {
         string cacheKey = GetCacheKey(config);
 

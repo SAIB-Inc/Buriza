@@ -13,12 +13,12 @@ namespace Buriza.Core.Services;
 
 public class WalletManagerService(
     IWalletStorage storage,
-    IChainProviderFactory providerFactory,
+    IChainRegistry chainRegistry,
     IKeyService keyService,
     ISessionService sessionService) : IWalletManager, IDisposable
 {
     private readonly IWalletStorage _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-    private readonly IChainProviderFactory _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
+    private readonly IChainRegistry _chainRegistry = chainRegistry ?? throw new ArgumentNullException(nameof(chainRegistry));
     private readonly IKeyService _keyService = keyService ?? throw new ArgumentNullException(nameof(keyService));
     private readonly ISessionService _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
     private bool _disposed;
@@ -187,7 +187,7 @@ public class WalletManagerService(
     }
 
     public IReadOnlyList<ChainType> GetAvailableChains()
-        => _providerFactory.GetSupportedChains();
+        => _chainRegistry.GetSupportedChains();
 
     #endregion
 
@@ -389,8 +389,8 @@ public class WalletManagerService(
 
     private IChainProvider GetProviderForWallet(BurizaWallet wallet)
     {
-        ProviderConfig config = _providerFactory.GetDefaultConfig(wallet.ActiveChain, wallet.Network);
-        return _providerFactory.Create(config);
+        ProviderConfig config = _chainRegistry.GetDefaultConfig(wallet.ActiveChain, wallet.Network);
+        return _chainRegistry.GetProvider(config);
     }
 
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainType chain, string mnemonic, CancellationToken ct)
@@ -433,7 +433,7 @@ public class WalletManagerService(
         if (_disposed) return;
         _disposed = true;
 
-        _providerFactory.Dispose();
+        _chainRegistry.Dispose();
         _sessionService.Dispose();
 
         GC.SuppressFinalize(this);
