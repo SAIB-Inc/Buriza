@@ -47,13 +47,22 @@ public class ChainRegistry(ChainProviderSettings settings, ISessionService? sess
 
     private ProviderConfig GetCardanoConfig(NetworkType network)
     {
-        // Check session for custom endpoint
-        string? customEndpoint = _sessionService?.GetCustomEndpoint(ChainType.Cardano, network);
+        // Priority: session override > appsettings custom > Demeter default
 
-        // Check session for custom API key
+        // 1. Check session for custom endpoint
+        string? endpoint = _sessionService?.GetCustomEndpoint(ChainType.Cardano, network);
+
+        // 2. Fall back to appsettings custom endpoint
+        endpoint ??= network switch
+        {
+            NetworkType.Mainnet => _settings.Cardano?.MainnetEndpoint,
+            NetworkType.Preprod => _settings.Cardano?.PreprodEndpoint,
+            NetworkType.Preview => _settings.Cardano?.PreviewEndpoint,
+            _ => _settings.Cardano?.MainnetEndpoint
+        };
+
+        // Get API key (session override > appsettings)
         string? apiKey = _sessionService?.GetCustomApiKey(ChainType.Cardano, network);
-
-        // Fall back to appsettings default for API key
         apiKey ??= network switch
         {
             NetworkType.Mainnet => _settings.Cardano?.MainnetApiKey,
@@ -62,20 +71,13 @@ public class ChainRegistry(ChainProviderSettings settings, ISessionService? sess
             _ => _settings.Cardano?.MainnetApiKey
         };
 
-        if (string.IsNullOrEmpty(apiKey))
-            throw new InvalidOperationException($"API key for Cardano {network} not configured");
+        // If custom endpoint is set, use it (API key optional)
+        if (!string.IsNullOrEmpty(endpoint))
+            return ProviderPresets.Cardano.Custom(endpoint, network, apiKey);
 
-        // Use custom endpoint if set, otherwise use preset
-        if (!string.IsNullOrEmpty(customEndpoint))
-        {
-            return new ProviderConfig
-            {
-                Chain = ChainType.Cardano,
-                Network = network,
-                Endpoint = customEndpoint,
-                ApiKey = apiKey
-            };
-        }
+        // 3. Fall back to Demeter (requires API key)
+        if (string.IsNullOrEmpty(apiKey))
+            throw new InvalidOperationException($"API key for Cardano {network} not configured. Set an API key or configure a custom endpoint.");
 
         return network switch
         {
