@@ -173,6 +173,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         Manage => AppStateService.IsManageAccountFormVisible
             ? (AppStateService.IsManageEditMode ? "Edit Wallet" : "New Account")
             : "Manage",
+        DrawerContentType.Filter => "Filter",
         _ => "Details"
     };
 
@@ -272,7 +273,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         }
         else if (IsOnRoute(Routes.History))
         {
-            AppStateService.CurrentSidebarContent = SidebarContentType.Portfolio;
+            AppStateService.CurrentSidebarContent = SidebarContentType.None;
         }
         else
         {

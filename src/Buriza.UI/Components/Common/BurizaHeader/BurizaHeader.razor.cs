@@ -14,6 +14,11 @@ public partial class BurizaHeader : IDisposable
     public required AppStateService AppStateService { get; set; }
 
     protected bool IsPopupVisible = false;
+    protected bool IsBaseLinksVisible = false;
+
+    private DateTime _lastTapTime = DateTime.MinValue;
+    private const int DoubleTapThresholdMs = 300;
+    private System.Threading.Timer? _singleTapTimer;
 
     protected override void OnInitialized()
     {
@@ -23,7 +28,7 @@ public partial class BurizaHeader : IDisposable
 
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        ClosePopup();
+        CloseAll();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -37,6 +42,69 @@ public partial class BurizaHeader : IDisposable
         AppStateService.IsDarkMode = !AppStateService.IsDarkMode;
     }
 
+    protected void HandleBurizaTap()
+    {
+        var now = DateTime.Now;
+        var timeSinceLastTap = (now - _lastTapTime).TotalMilliseconds;
+
+        // Cancel any pending single tap action
+        _singleTapTimer?.Dispose();
+        _singleTapTimer = null;
+
+        if (timeSinceLastTap < DoubleTapThresholdMs)
+        {
+            // Double tap detected
+            _lastTapTime = DateTime.MinValue;
+            HandleDoubleTap();
+        }
+        else
+        {
+            // Potential single tap - wait to see if another tap comes
+            _lastTapTime = now;
+            _singleTapTimer = new System.Threading.Timer(
+                _ => InvokeAsync(() =>
+                {
+                    HandleSingleTap();
+                    StateHasChanged();
+                }),
+                null,
+                DoubleTapThresholdMs,
+                System.Threading.Timeout.Infinite
+            );
+        }
+    }
+
+    private void HandleSingleTap()
+    {
+        if (IsPopupVisible)
+        {
+            // If popup is open, close it and show base links
+            IsPopupVisible = false;
+            IsBaseLinksVisible = true;
+        }
+        else
+        {
+            // Toggle base links
+            IsBaseLinksVisible = !IsBaseLinksVisible;
+        }
+    }
+
+    private void HandleDoubleTap()
+    {
+        if (IsPopupVisible)
+        {
+            // Close everything - back to just logo
+            IsPopupVisible = false;
+            IsBaseLinksVisible = false;
+        }
+        else
+        {
+            // Open popup menu
+            IsPopupVisible = true;
+            IsBaseLinksVisible = false;
+        }
+    }
+
     protected void TogglePopup()
     {
         IsPopupVisible = !IsPopupVisible;
@@ -45,6 +113,12 @@ public partial class BurizaHeader : IDisposable
     protected void ClosePopup()
     {
         IsPopupVisible = false;
+    }
+
+    protected void CloseAll()
+    {
+        IsPopupVisible = false;
+        IsBaseLinksVisible = false;
     }
 
     protected bool IsOnRoute(string route)
@@ -68,6 +142,7 @@ public partial class BurizaHeader : IDisposable
     }
     public void Dispose()
     {
+        _singleTapTimer?.Dispose();
         Navigation.LocationChanged -= OnLocationChanged;
         AppStateService.OnChanged -= OnStateChanged;
     }

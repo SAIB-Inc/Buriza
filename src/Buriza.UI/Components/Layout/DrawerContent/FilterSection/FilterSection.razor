@@ -1,0 +1,121 @@
+@using Buriza.UI.Resources
+@using Buriza.Data.Models.Enums
+@namespace Buriza.UI.Components.Layout
+
+<div class="w-full h-full flex flex-col">
+    <div class="!px-4 !space-y-6 flex-1 overflow-auto">
+        <div>
+            <MudText Class="!font-medium !mb-3 !text-white">
+                Transaction Type
+            </MudText>
+            <div class="grid grid-cols-2 !gap-1 [&_.mud-button-root]:!text-[#D8E2FF] [&_.mud-typography]:!text-white">
+                <MudCheckBox T="bool" @bind-Value="SentSelected" Label="Sent" Color="Color.Primary" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="ReceiveSelected" Label="Receive" Color="Color.Primary" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="SwapsSelected" Label="Voting" Color="Color.Primary" Dense="true" />
+                <MudCheckBox T="bool" @bind-Value="StakingSelected" Label="Staking" Color="Color.Primary" Dense="true" />
+            </div>
+        </div>
+
+        <div>
+            <MudText Class="!font-medium !mb-3 !text-white">
+                Date Range
+            </MudText>
+            <div class="flex items-center justify-between !gap-2">
+                <div>
+                    <MudText Class="!text-xs !text-[#C1C6D7] !font-medium">
+                        From
+                    </MudText>
+                    <MudDatePicker
+                        Label="From"
+                        @bind-Date="FromDate"
+                        Variant="Variant.Outlined"
+                        Class="[&_.mud-input]:!bg-[var(--mud-palette-background)] [&_.mud-input-control]:!rounded-full [&_.mud-input-slot]:!rounded-full [&_.mud-input-outlined-border]:!rounded-full [&_.mud-input-slot]:!h-12 [&_.mud-input]:!h-12 [&_.mud-input-label-outlined]:![transform:translate(14px,16px)_scale(1)]"
+                    />
+                </div>
+                <div>
+                    <MudText Class="!text-xs !text-[#C1C6D7] !font-medium">
+                        To
+                    </MudText>
+                    <MudDatePicker
+                        Label="To"
+                        @bind-Date="ToDate"
+                        Variant="Variant.Outlined"
+                        Class="[&_.mud-input]:!bg-[var(--mud-palette-background)] [&_.mud-input-control]:!rounded-full [&_.mud-input-slot]:!rounded-full [&_.mud-input-outlined-border]:!rounded-full [&_.mud-input-slot]:!h-12 [&_.mud-input]:!h-12 [&_.mud-input-label-outlined]:![transform:translate(14px,16px)_scale(1)]"
+                    />
+                </div>
+            </div>
+            <MudToggleGroup
+                T="string?"
+                @bind-Value="SelectedDateRange"
+                Outlined="false"
+                Class="!mt-3 !w-full [&_.mud-button-root]:!py-1 [&_.mud-button-root]:!px-3 !flex items-center [&_.mud-toggle-item]:!normal-case [&_.mud-button-label]:!font-medium [&_.mud-button]:!bg-transparent [&_.mud-button]:!border [&_.mud-button]:!border-[#C1C6D7] [&_.mud-button-label]:!text-[var(--mud-palette-text-primary)] [&_.mud-button]:!rounded-full [&_.mud-toggle-item-selected]:!bg-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected]:!border-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-tertiary)] [&_.mud-toggle-item]:!flex-1 !gap-2 !h-10 [&_.mud-button-root]:!h-full"
+            >
+                <MudToggleItem Value="@("Today")" Class="!rounded-full" />
+                <MudToggleItem Value="@("This Week")" Class="!rounded-full" />
+                <MudToggleItem Value="@("This Month")" Class="!rounded-full" />
+            </MudToggleGroup>
+        </div>
+
+        <div>
+            <MudText Class="!font-medium !mb-3 !text-white">
+                Status
+            </MudText>
+            <MudRadioGroup T="string" @bind-Value="SelectedStatus" Class="!flex [&_.mud-radio]:!gap-2 [&_.mud-radio-group]:!gap-1 [&_.mud-radio-group]:!items-start [&_.mud-radio-group]:!flex-col [&_.mud-typography]:!text-white [&_.mud-button-root]:!text-[#D8E2FF]">
+                <MudRadio T="string" Value="@("Completed")" Color="Color.Primary" Dense="true">Completed</MudRadio>
+                <MudRadio T="string" Value="@("Pending")" Color="Color.Primary" Dense="true">Pending</MudRadio>
+                <MudRadio T="string" Value="@("Failed")" Color="Color.Primary" Dense="true">Failed</MudRadio>
+            </MudRadioGroup>
+        </div>
+    </div>
+
+    <div class="!px-4 !py-4 flex !gap-3 mt-auto">
+        <MudButton
+            Variant="Variant.Outlined"
+            Color="Color.Default"
+            Class="flex-1 !rounded-full !normal-case !h-12"
+            OnClick="HandleReset"
+        >
+            Clear All
+        </MudButton>
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Class="flex-1 !rounded-full !normal-case !h-12"
+            OnClick="HandleApply"
+        >
+            Apply Filters
+        </MudButton>
+    </div>
+</div>
+
+@code {
+    private bool SentSelected { get; set; }
+    private bool ReceiveSelected { get; set; }
+    private bool SwapsSelected { get; set; }
+    private bool StakingSelected { get; set; }
+    private DateTime? FromDate { get; set; }
+    private DateTime? ToDate { get; set; }
+    private string? SelectedDateRange { get; set; }
+    private string? SelectedStatus { get; set; }
+    private decimal? MinAmount { get; set; }
+    private decimal? MaxAmount { get; set; }
+
+    private void HandleReset()
+    {
+        SentSelected = false;
+        ReceiveSelected = false;
+        SwapsSelected = false;
+        StakingSelected = false;
+        FromDate = null;
+        ToDate = null;
+        SelectedDateRange = null;
+        SelectedStatus = null;
+        MinAmount = null;
+        MaxAmount = null;
+    }
+
+    private void HandleApply()
+    {
+        // TODO: Apply filters and close drawer
+    }
+}

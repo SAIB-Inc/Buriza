@@ -12,10 +12,10 @@
 
 <PageTitle>Buriza</PageTitle>
 
-<section class="max-md:h-screen min-h-[600px] lg:!ml-4 xl:!ml-8">
+<section class="max-md:h-screen min-h-[600px] lg:!ml-4">
     <div class="max-md:!pb-8 max-md:!mx-auto max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 h-full w-full flex flex-col items-center !pt-16 !gap-3 md:!pt-0">
         <div class="max-md:!px-4 w-full flex items-center justify-between md:hidden">
-            <div class="flex items-center !gap-2">
+            <div class="@($"flex items-center !gap-2 transition-opacity duration-300 {(IsSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100")}")">
                 <div>
                     <MudIconButton
                         Icon="@BurizaIcons.ChevronRightIcon"
@@ -29,39 +29,120 @@
                     </MudText>
                 </div>
             </div>
-            <div class="flex items-center !gap-5">
+            <div class="w-full flex items-center gap-[10px] justify-end md:justify-between relative">
+                @* Mobile: Expandable search with absolute positioning *@
+                <div class="@($"{(IsSearchExpanded ? "w-[calc(200%-223px)] z-10" : "w-0 z-0")} [&_input]:!px-3 [&_input]:!py-2 [&_input]:!text-sm absolute right-11 transition-all duration-300 md:relative md:right-0 md:w-full md:z-auto [&_.mud-input-control]:!mb-0") md:hidden">
+                    <BurizaSearchBar
+                        Class="shadow-[var(--mud-elevation-1)]! !bg-[var(--mud-palette-overlay-light)] !h-9 md:!h-12 md:[&_input]:!py-[14.5px] [&_.mud-icon-root]:!hidden md:[&_.mud-icon-root]:!inline-block"
+                    />
+                    <MudIconButton
+                        OnClick="ToggleSearch"
+                        Icon="@(IsSearchExpanded ? Icons.Material.Filled.Close : Icons.Material.Filled.Search)"
+                        Class="shadow-[var(--mud-elevation-1)]! absolute top-0 right-0 !bg-[var(--mud-palette-overlay-light)] [&_.mud-icon-root]:!text-[18px] !p-0 !h-9 !w-9 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] md:!hidden"
+                    />
+                </div>
                 <MudIconButton
                     Icon="@BurizaIcons.FilterSymbolIcon"
-                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                />
-                <MudIconButton
-                    Icon="@BurizaIcons.CloseSymbolIcon"
-                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                    OnClick="() => IsSummaryDisplayed = false"
+                    Class="shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:!text-[18px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9"
+                    OnClick="HandleFilterClick"
                 />
             </div>
-        </div>
-        <div class="max-md:hidden w-full">
-            <BurizaSearchBar/>
         </div>
         <div class="w-full rounded-[16px] h-full md:bg-[var(--mud-palette-drawer-background)] md:!pt-4">
             <div class="max-lg:hidden w-full flex items-center justify-between !mb-4 md:!px-6 h-[38px]">
                 <MudText Class="!font-medium !text-[22px]">
                     History
                 </MudText>
-                <MudIconButton
-                    Icon="@BurizaIcons.FilterSymbolIcon"
-                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                />
+            </div>
+            @*Stats*@
+            <div class="!px-4 w-full grid gap-3 !mb-4 grid-cols-2 md:!px-6 md:grid-cols-3">
+                <MudCard Class="max-md:col-span-2! !bg-[#00332480] !rounded-[16px] !p-4 !justify-between !h-[103px] md:!h-[151px]">
+                    <div class="flex items-center justify-between">
+                        <MudText Class="max-md:!text-xs">
+                            30-Day Net Flow
+                        </MudText>
+                        <MudIcon
+                            Icon="@BurizaIcons.BurizaSymbolIcon"
+                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60 max-md:hidden!"
+                        />
+                    </div>
+                    <div>
+                        <MudText Class="!font-bold !text-base md:!text-2xl">
+                            + 85, 000 ADA
+                        </MudText>
+                    </div>
+                    <div>
+                        <MudText Class="max-md:!text-[11px] !text-sm !text-[#51DDAE]">
+                            ~ $800.00
+                        </MudText>
+                    </div>
+                </MudCard>
+                <MudCard Class="!bg-[#1C1F27] !rounded-[16px] !p-4 !justify-between !h-[103px] md:!h-[151px]">
+                    <div class="flex items-center justify-between">
+                        <MudText Class="max-md:!text-xs">
+                            Fees Paid
+                        </MudText>
+                        <MudIcon
+                            Icon="@BurizaIcons.BurizaSymbolIcon"
+                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60 max-md:hidden!"
+                        />
+                    </div>
+                    <div>
+                        <MudText Class="!text-2xl !font-bold !text-base md:!text-2xl">
+                            12.45 ADA
+                        </MudText>
+                    </div>
+                    <div>
+                        <MudText Class="max-md:!text-[11px] !text-sm !text-[#9EB8F5]">
+                            ~ $7.47
+                        </MudText>
+                    </div>
+                </MudCard>
+                <MudCard Class="!bg-[#1C1F27] !rounded-[16px] !p-4 !justify-between !h-[103px] md:!h-[151px]">
+                    <div class="flex items-center justify-between">
+                        <MudText Class="max-md:!text-xs">
+                            Total Transactions
+                        </MudText>
+                        <MudIcon
+                            Icon="@BurizaIcons.BurizaSymbolIcon"
+                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60 max-md:hidden!"
+                        />
+                    </div>
+                    <div>
+                        <MudText Class="!font-bold !text-base md:!text-2xl">
+                            32
+                        </MudText>
+                    </div>
+                    <div>
+                        <MudText Class="max-md:!text-[11px] !text-sm !text-[#9EB8F5]">
+                            4 Pending
+                        </MudText>
+                    </div>
+                </MudCard>
+            </div>
+            <div class="max-md:hidden w-full flex items-center gap-[10px] justify-end md:justify-between relative !px-4 !mb-2 md:!mb-4 md:!px-6">
+                <div class="w-full">
+                    <BurizaSearchBar
+                        Class="shadow-[var(--mud-elevation-1)]! !bg-[var(--mud-palette-overlay-light)] mb-0! w-full !h-12 md:[&_input]:!py-[14.5px] md:[&_.mud-icon-root]:!inline-block max-md:!hidden"
+                    />
+                </div>
+                <div>
+                    <MudIconButton
+                        Icon="@BurizaIcons.FilterSymbolIcon"
+                        Class="shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:!text-[18px] md:[&_.mud-icon-root]:!text-[24px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9 md:!w-12 md:!h-12"
+                        OnClick="HandleFilterClick"
+                    />
+                </div>
             </div>
             @if (!IsSummaryDisplayed)
             {
-                <div class="max-[376px]:h-[calc(100vh-124px)] max-md:!px-4 w-full !space-y-6 overflow-y-auto h-[calc(100vh-192px)] !pb-6 md:!pb-14 md:!px-6 lg:h-[calc(100vh-210px)] lg:!pb-6">
+                <div class="relative">
+                <div class="max-[376px]:h-[calc(100vh-124px)] max-md:!px-4 w-full !space-y-6 overflow-y-auto h-[calc(100vh-392px)] md:h-[calc(100vh-192px)] !pb-17 md:!pb-14 md:!px-6 lg:h-[calc(100vh-428px)] lg:!pb-6">
                     @foreach (KeyValuePair<string, List<TransactionHistory>> dateGroup in TransactionsByDate)
                     {
                         <div>
                             <div class="w-full !mb-3">
-                                <MudText Class="!text-center !font-medium !text-sm">
+                                <MudText Class="!font-medium !text-sm">
                                     @dateGroup.Key
                                 </MudText>
                             </div>
@@ -124,6 +205,8 @@
                             </div>
                         </div>
                     }
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[var(--mud-palette-background)] to-transparent pointer-events-none rounded-b-[12px] md:from-[var(--mud-palette-drawer-background)]"></div>
                 </div>
             }
             else
