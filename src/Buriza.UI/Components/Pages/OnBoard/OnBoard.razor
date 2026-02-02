@@ -14,8 +14,8 @@
     </div>
 
     <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 !gap-3 sm:!gap-10 sm:justify-between">
-        @* Mobile App Bar - only on slide 1 (second slide) *@
-        @if (CurrentSlide >= 1)
+        @* Mobile App Bar - visible on slides 1-4, hidden on first and last slide *@
+        @if (CurrentSlide >= 1 && CurrentSlide <= 4)
         {
             <div class="md:hidden fixed top-0 left-0 right-0 z-10 flex items-center mt-10! !px-4 !py-3 bg-[var(--mud-palette-background)] !shadow-md">
                 <BurizaButton
@@ -30,7 +30,7 @@
                 </BurizaButton>
             </div>
         }
-        <div class="max-lg:!hidden absolute bottom-0 right-0">
+        <div class="@($"max-lg:!hidden absolute bottom-0 right-0 transition-opacity duration-300 ease-in-out {(CurrentSlide == 1 || CurrentSlide == 2 ? "opacity-100" : "opacity-0 pointer-events-none")}")">
             <MudImage
                 Alt="buriza mascot"
                 Src="@Mascots.Mascot5"
@@ -52,7 +52,7 @@
             double stepWidth = 100.0 / totalSteps;
             double leftPercent = (activeStep - 1) * stepWidth + (stepWidth / 2);
         }
-        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-300 {(showProgress ? "max-sm:!mt-[92px] !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
+        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-150 {(showProgress ? "max-sm:!mt-[92px] !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
             @* Step Label - pops up from bottom *@
             <div class="w-full relative h-5 mb-1">
                 <div class="absolute" style="left: @(leftPercent)%;">
@@ -156,6 +156,7 @@
                 <div class="max-md:hidden w-full flex flex-col items-center justify-center !gap-6">
                     <BurizaButton
                         OnClick="OnImportFromSeedClicked"
+                        Ripple="false"
                         Class="max-w-[386px] !py-9 h-[238px]! [&_.mud-button-label]:h-full [&_.mud-button-label]:!justify-between [&_.mud-button-label]:flex-col! rounded-[16px]!">
                         <div>
                             <MudImage
@@ -175,6 +176,7 @@
                     </BurizaButton>
                     <BurizaButton
                         OnClick="OnCreateNewWalletClicked"
+                        Ripple="false"
                         Class="max-w-[386px] !py-9 h-[238px]! [&_.mud-button-label]:h-full [&_.mud-button-label]:!justify-between [&_.mud-button-label]:flex-col! rounded-[16px]!">
                         <div>
                             <MudImage
