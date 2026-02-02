@@ -37,14 +37,23 @@
                 Class="w-[330px]"
             />
         </div>
-        @* Progress Stepper - visible only on slides 1-5 *@
-        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-300 {(CurrentSlide >= 1 && CurrentSlide <= 4 ? "max-sm:!mt-[92px] !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
+        @* Progress Stepper - visible only on slides 1-5 (or 2-4 for import mode) *@
+        @{
+            bool showProgress = IsImportMode
+                ? (CurrentSlide >= 2 && CurrentSlide <= 4)
+                : (CurrentSlide >= 1 && CurrentSlide <= 4);
+            string[] stepLabels = IsImportMode
+                ? ["Recovery", "Name", "Password"]
+                : ["Save", "Recovery", "Name", "Password"];
+            int totalSteps = IsImportMode ? 3 : 4;
+            int activeStep = IsImportMode
+                ? Math.Clamp(CurrentSlide - 1, 1, 3)
+                : Math.Clamp(CurrentSlide, 1, 4);
+            double stepWidth = 100.0 / totalSteps;
+            double leftPercent = (activeStep - 1) * stepWidth + (stepWidth / 2);
+        }
+        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-300 {(showProgress ? "max-sm:!mt-[92px] !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
             @* Step Label - pops up from bottom *@
-            @{
-                string[] stepLabels = ["Save", "Recovery", "Name", "Password"];
-                int activeStep = Math.Clamp(CurrentSlide, 1, 4);
-                double leftPercent = (activeStep - 1) * 25 + 12.5;
-            }
             <div class="w-full relative h-5 mb-1">
                 <div class="absolute" style="left: @(leftPercent)%;">
                     <div @key="activeStep" class="relative animate-step-label">
@@ -61,11 +70,12 @@
             </div>
             @* Progress Bars *@
             <div class="w-full gap-1 flex items-center">
-                @for (int i = 1; i <= 4; i++)
+                @for (int i = 1; i <= totalSteps; i++)
                 {
                     int step = i;
-                    bool isCompleted = CurrentSlide > step;
-                    bool isActive = CurrentSlide == step;
+                    int adjustedCurrentSlide = IsImportMode ? CurrentSlide - 1 : CurrentSlide;
+                    bool isCompleted = adjustedCurrentSlide > step;
+                    bool isActive = adjustedCurrentSlide == step;
                     <div class="w-full h-[6px] rounded-full bg-[var(--mud-palette-tertiary-lighten)] overflow-hidden">
                         <div class="@($"h-full rounded-full transition-all duration-500 ease-out {(isCompleted ? "w-full bg-[var(--mud-palette-tertiary-darken)]" : isActive ? "animate-progress-fill bg-[var(--mud-palette-primary)]" : "w-0 bg-[var(--mud-palette-primary)]")}")" />
                     </div>
@@ -75,7 +85,7 @@
         <MudCarousel
                 @ref="_carousel"
                 TData="object"
-                Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]:!mt-[20px] sm:max-h-[720px]"
+                Class="max-[376px]:[&_.mud-carousel-item]:!mt-[10px] mud-width-full h-full [&_.mud-carousel-item]: sm:max-h-[720px]"
                 ShowArrows="false"
                 ShowBullets="false"
                 AutoCycle="false"
@@ -83,7 +93,7 @@
                 SelectedIndexChanged="@OnSlideChanged"
             >
             @*1st slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center justify-center gap-6! md:!gap-10">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center justify-center -mt-4! gap-6! md:!gap-10">
                 <div class="md:hidden">
                     <MudImage
                         Alt="onboard buriza"
@@ -93,7 +103,7 @@
                 </div>
                 <div class="!text-center !space-y-2 md:hidden">
                     <MudText Class="!text-[32px] !font-semibold">
-                        Welcome to Buriza
+                        Welcome to Burizas
                     </MudText>
                     <MudText Class="max-[376px]:!text-sm">
                         <span>To get started, create new wallet or</span><br/>
@@ -103,15 +113,41 @@
                 <div class="max-md:hidden flex flex-col items-center justify-center">
                     <div class="">
                         <MudImage
-                            Src="@Logos.BurizaOnboard"
-                            ALt="buriza logo"
+                            Alt="Buriza Logo"
+                            Src="@(AppStateService.IsDarkMode ? Logos.BurizaDark : Logos.BurizaLight)"
                             Class="!w-[128px]"
                         />
                     </div>
                     <div class="!mt-4 !text-center">
-                        <MudText Class="!text-[48px] !text-[var(--mud-palette-text-primary)]">
-                            Welcome to Buriza
-                        </MudText>
+                        <div class="relative">
+                            <div>
+                                <MudText Class="!text-[48px] !text-[var(--mud-palette-text-primary)]">
+                                    Welcome to Buriza
+                                </MudText>
+                            </div>
+                            <div>
+                                <MudImage
+                                    Alt="yellow diamond"
+                                    Src="@Misc.DiamondYellow"
+                                    Class="absolute top-0 -left-13 w-[50px] rotate-3"
+                                />
+                                <MudImage
+                                    Alt="blue diamond"
+                                    Src="@Misc.DiamondBlue"
+                                    Class="absolute -top-4 -left-4 rotate-3 w-6"
+                                />
+                                <MudImage
+                                    Alt="yellow diamond"
+                                    Src="@Misc.DiamondYellow"
+                                    Class="absolute top-7 -right-12 rotate-3 w-6"
+                                />
+                                <MudImage
+                                    Alt="purple diamond"
+                                    Src="@Misc.DiamondPurple"
+                                    Class="absolute -top-6 -right-11 w-[60px] rotate-3"
+                                />
+                            </div>
+                        </div>
                         <MudText Class="!text-base !text-[var(--mud-palette-gray-dark)] !font-semibold">
                             How would you like to get started?
                         </MudText>
@@ -159,7 +195,7 @@
                 </div>
             </MudCarouselItem>
             @*2nd slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! !mt-[20px] sm:gap-8!">
                  <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -174,7 +210,7 @@
                                 Class="absolute top-0 -left-2 w-[32px] rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
                                 Class="absolute -top-3 left-5 rotate-3"
                             />
@@ -184,7 +220,7 @@
                                 Class="absolute top-3 -right-2 rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
                                 Class="absolute -top-5 right-0 w-[40px] rotate-3"
                             />
@@ -263,7 +299,7 @@
                 </div>
             </MudCarouselItem>
             @*3rd slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! !mt-[20px] sm:gap-8!">
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -278,7 +314,7 @@
                                 Class="absolute top-0 -left-2 w-[32px] rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
                                 Class="absolute -top-3 left-5 rotate-3"
                             />
@@ -288,7 +324,7 @@
                                 Class="absolute top-3 -right-2 rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
                                 Class="absolute -top-5 right-0 w-[40px] rotate-3"
                             />
@@ -303,7 +339,7 @@
                 </div>
                 <div class="max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
                     <div class="@($"max-[430px]:!gap-x-2 w-full grid grid-cols-3 place-items-center !gap-x-2 !gap-y-2 transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
-                        @for (int i = 1; i <= PhraseLength; i++)
+                        @for (int i = 1; i <= DisplayedPhraseLength; i++)
                         {
                             int index = i;
                             string wordValue = index <= ImportedPhraseWords.Count ? ImportedPhraseWords[index - 1] : "";
@@ -324,10 +360,11 @@
                         </MudText>
                     </div>
                     <div>
-                        <MudToggleGroup 
-                            T="int" 
-                            @bind-Value="PhraseLength" 
+                        <MudToggleGroup
+                            T="int"
+                            @bind-Value="PhraseLength"
                             Outlined="false"
+                            Disabled="@(!IsImportMode)"
                             Class="max-[376px]:w-[138px] max-[376px]:[&_.mud-button-label]:!text-xs w-[150px] !rounded-full h-[24px] [&_.mud-button-label]:!text-[var(--mud-palette-primary-lighten)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-primary-text)] [&_.mud-button-filled]:!rounded-full [&_.mud-button-filled]:!bg-[var(--mud-palette-primary-lighten)]"
                         >
                             <MudToggleItem Value="12" Class="!rounded-full"/>
@@ -367,7 +404,7 @@
                 </div>
             </MudCarouselItem>
             @*4th slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! !mt-[20px] sm:gap-8!">
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -382,7 +419,7 @@
                                 Class="absolute top-0 -left-9 w-[32px] rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
                                 Class="absolute -top-3 -left-4 rotate-3"
                             />
@@ -392,7 +429,7 @@
                                 Class="absolute top-3 -right-8 rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
                                 Class="absolute -top-5 -right-8 w-[40px] rotate-3"
                             />
@@ -444,7 +481,7 @@
                 </div>
             </MudCarouselItem>
             @*5th slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! sm:gap-8!">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center gap-5! !mt-[20px] sm:gap-8!">
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
@@ -456,22 +493,22 @@
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-0 left-3 w-[32px] rotate-3"
+                                Class="absolute top-0 left-8 w-[32px] rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
-                                Class="absolute -top-3 left-10 rotate-3"
+                                Class="absolute -top-3 left-14 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-3 right-4 rotate-3"
+                                Class="absolute top-3 right-7 rotate-3"
                             />
                             <MudImage
-                                Alt="yellow diamond"
+                                Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
-                                Class="absolute -top-5 right-6 w-[40px] rotate-3"
+                                Class="absolute -top-5 right-8 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
@@ -542,7 +579,7 @@
                 </div>
             </MudCarouselItem>
             @*6th slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="flex flex-col items-center justify-center gap-5! sm:gap-6!">
+            <MudCarouselItem Transition="Transition.Fade" Class="flex flex-col items-center justify-center gap-5! !mt-[20px] sm:gap-6!">
                 <div class="flex flex-col items-center justify-center gap-6! h-[510px]">
                     <div class="relative">
                         <MudImage
@@ -576,7 +613,7 @@
                             Congratulations!
                         </MudText>
                         <MudText Class="!text-2xl !font-medium !text-center max-w-[336px]">
-                            your new wallet has been created!
+                            Your new wallet has been created!
                         </MudText>
                     </div>
                 </div>

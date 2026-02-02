@@ -20,8 +20,10 @@ public partial class OnBoard
     public required JavaScriptBridgeService JsBridge { get; set; }
 
     private int _phraseLength = 24;
+    private int _displayedPhraseLength = 24;
     private bool _isPhraseTransitioning = false;
     protected bool IsPhraseTransitioning => _isPhraseTransitioning;
+    protected int DisplayedPhraseLength => _displayedPhraseLength;
 
 
     protected int PhraseLength
@@ -46,7 +48,8 @@ public partial class OnBoard
         // Wait for fade out animation to complete
         await Task.Delay(200);
 
-        // Switch to the phrase for the selected length
+        // Update displayed length and phrase after fade out
+        _displayedPhraseLength = _phraseLength;
         RecoveryPhrase = _phrasesByLength[_phraseLength];
 
         // Fade in
@@ -66,6 +69,9 @@ public partial class OnBoard
         [24] = ["elephant", "quack", "taught", "light", "short", "hard", "help", "please", "earth", "cake", "control", "guard", "trust", "frost", "echo", "swim", "give", "seen", "eyes", "wade", "ice", "explain", "water", "geese"]
     };
     
+    private bool _isImportMode = false;
+    protected bool IsImportMode => _isImportMode;
+
     private bool _useFaceId = false;
     protected bool UseFaceId
     {
@@ -153,6 +159,18 @@ public partial class OnBoard
 
     private void OnGoBackClicked()
     {
+        // In import mode, skip the "Save This Phrase" slide when going back
+        if (_isImportMode && CurrentSlide == 2)
+        {
+            _isImportMode = false;
+            _carousel?.MoveTo(0);
+            if (_carousel != null)
+            {
+                CurrentSlide = _carousel.SelectedIndex;
+            }
+            return;
+        }
+
         _carousel?.Previous();
         if (_carousel != null)
         {
@@ -187,6 +205,7 @@ public partial class OnBoard
 
     private void OnCreateNewWalletClicked()
     {
+        _isImportMode = false;
         // Go to slide 2 (Save This Phrase)
         _carousel?.MoveTo(1);
         if (_carousel != null)
@@ -197,6 +216,7 @@ public partial class OnBoard
 
     private void OnImportFromSeedClicked()
     {
+        _isImportMode = true;
         // Go to slide 3 (Recovery Phrase import)
         _carousel?.MoveTo(2);
         if (_carousel != null)
