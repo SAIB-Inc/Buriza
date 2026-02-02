@@ -64,4 +64,33 @@ public interface IWalletStorage
     Task DeleteCustomApiKeyAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
 
     #endregion
+
+    #region Custom Data Service Config
+
+    /// <summary>Gets custom data service config (endpoint, name). API key stored separately encrypted.</summary>
+    Task<DataServiceConfig?> GetDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default);
+
+    /// <summary>Gets all custom data service configs.</summary>
+    Task<IReadOnlyList<DataServiceConfig>> GetAllDataServiceConfigsAsync(CancellationToken ct = default);
+
+    /// <summary>Saves custom data service config (endpoint, name). Use SaveDataServiceApiKeyAsync for API key.</summary>
+    Task SaveDataServiceConfigAsync(DataServiceConfig config, CancellationToken ct = default);
+
+    /// <summary>Deletes custom data service config.</summary>
+    Task DeleteDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default);
+
+    /// <summary>Saves encrypted custom API key for a data service. Requires password for encryption.</summary>
+    Task SaveDataServiceApiKeyAsync(DataServiceType serviceType, string apiKey, string password, CancellationToken ct = default);
+
+    /// <summary>
+    /// Decrypts and returns custom API key as bytes.
+    /// IMPORTANT: Caller MUST zero the returned bytes after use.
+    /// Returns null if no custom API key is set.
+    /// </summary>
+    Task<byte[]?> UnlockDataServiceApiKeyAsync(DataServiceType serviceType, string password, CancellationToken ct = default);
+
+    /// <summary>Deletes encrypted custom API key for a data service.</summary>
+    Task DeleteDataServiceApiKeyAsync(DataServiceType serviceType, CancellationToken ct = default);
+
+    #endregion
 }

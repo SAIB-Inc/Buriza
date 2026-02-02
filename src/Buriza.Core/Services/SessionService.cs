@@ -1,130 +1,127 @@
 using System.Collections.Concurrent;
 using Buriza.Core.Interfaces;
 using Buriza.Data.Models.Enums;
+using Buriza.Data.Services;
 
 namespace Buriza.Core.Services;
 
-public class SessionService : ISessionService
+public class SessionService : ISessionService, IDataServiceSessionProvider
 {
-    // Cache derived addresses: key = "walletId:chain:accountIndex:isChange:addressIndex"
-    private readonly ConcurrentDictionary<string, string> _addressCache = new();
-
-    // Cache decrypted custom API keys: key = "apikey:chain:network"
-    private readonly ConcurrentDictionary<string, string> _apiKeyCache = new();
-
-    // Cache custom endpoints: key = "endpoint:chain:network"
-    private readonly ConcurrentDictionary<string, string> _endpointCache = new();
-
-    // Lock for atomic cache clearing operations
-    private readonly object _clearLock = new();
+    // Single cache for all session data
+    // Key patterns:
+    //   - address:{walletId}:{chain}:{accountIndex}:{isChange}:{addressIndex}
+    //   - chainEndpoint:{chain}:{network}
+    //   - chainApiKey:{chain}:{network}
+    //   - dataEndpoint:{serviceType}
+    //   - dataApiKey:{serviceType}
+    private readonly ConcurrentDictionary<string, string> _cache = new();
 
     private bool _disposed;
+
+    #region Cache Helpers
+
+    private string? Get(string key)
+        => _cache.TryGetValue(key, out string? value) ? value : null;
+
+    private void Set(string key, string value)
+        => _cache[key] = value;
+
+    private bool TryAdd(string key, string value)
+        => _cache.TryAdd(key, value);
+
+    private void Remove(string key)
+        => _cache.TryRemove(key, out _);
+
+    private void RemoveByPrefix(string prefix)
+    {
+        foreach (string key in _cache.Keys.Where(k => k.StartsWith(prefix)).ToList())
+        {
+            _cache.TryRemove(key, out _);
+        }
+    }
+
+    #endregion
 
     #region Address Cache
 
     public string? GetCachedAddress(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange)
-    {
-        string key = BuildAddressKey(walletId, chain, accountIndex, addressIndex, isChange);
-        return _addressCache.TryGetValue(key, out string? address) ? address : null;
-    }
+        => Get($"address:{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}");
 
     public void CacheAddress(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange, string address)
-    {
-        string key = BuildAddressKey(walletId, chain, accountIndex, addressIndex, isChange);
-        _addressCache.TryAdd(key, address);
-    }
+        => TryAdd($"address:{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}", address);
 
     public bool HasCachedAddresses(int walletId, ChainType chain, int accountIndex)
-    {
-        string prefix = $"{walletId}:{(int)chain}:{accountIndex}:";
-        return _addressCache.Keys.Any(k => k.StartsWith(prefix));
-    }
+        => _cache.Keys.Any(k => k.StartsWith($"address:{walletId}:{(int)chain}:{accountIndex}:"));
 
     public void ClearWalletCache(int walletId)
-    {
-        // Lock to prevent race condition where new keys could be added between snapshot and removal
-        lock (_clearLock)
-        {
-            string prefix = $"{walletId}:";
-            foreach (string key in _addressCache.Keys.Where(k => k.StartsWith(prefix)).ToList())
-            {
-                _addressCache.TryRemove(key, out _);
-            }
-        }
-    }
-
-    private static string BuildAddressKey(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange)
-        => $"{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}";
+        => RemoveByPrefix($"address:{walletId}:");
 
     #endregion
 
-    #region Custom API Key Cache
+    #region Chain Provider Config Cache
 
     public string? GetCustomApiKey(ChainType chain, NetworkType network)
-    {
-        string key = BuildApiKeyKey(chain, network);
-        return _apiKeyCache.TryGetValue(key, out string? apiKey) ? apiKey : null;
-    }
+        => Get($"chainApiKey:{(int)chain}:{(int)network}");
 
     public void SetCustomApiKey(ChainType chain, NetworkType network, string apiKey)
-    {
-        string key = BuildApiKeyKey(chain, network);
-        _apiKeyCache[key] = apiKey;
-    }
+        => Set($"chainApiKey:{(int)chain}:{(int)network}", apiKey);
 
     public bool HasCustomApiKey(ChainType chain, NetworkType network)
-    {
-        string key = BuildApiKeyKey(chain, network);
-        return _apiKeyCache.ContainsKey(key);
-    }
+        => _cache.ContainsKey($"chainApiKey:{(int)chain}:{(int)network}");
 
     public void ClearCustomApiKey(ChainType chain, NetworkType network)
-    {
-        string key = BuildApiKeyKey(chain, network);
-        _apiKeyCache.TryRemove(key, out _);
-    }
+        => Remove($"chainApiKey:{(int)chain}:{(int)network}");
 
     public string? GetCustomEndpoint(ChainType chain, NetworkType network)
-    {
-        string key = BuildEndpointKey(chain, network);
-        return _endpointCache.TryGetValue(key, out string? endpoint) ? endpoint : null;
-    }
+        => Get($"chainEndpoint:{(int)chain}:{(int)network}");
 
     public void SetCustomEndpoint(ChainType chain, NetworkType network, string endpoint)
-    {
-        string key = BuildEndpointKey(chain, network);
-        _endpointCache[key] = endpoint;
-    }
+        => Set($"chainEndpoint:{(int)chain}:{(int)network}", endpoint);
 
     public void ClearCustomEndpoint(ChainType chain, NetworkType network)
-    {
-        string key = BuildEndpointKey(chain, network);
-        _endpointCache.TryRemove(key, out _);
-    }
-
-    private static string BuildApiKeyKey(ChainType chain, NetworkType network)
-        => $"apikey:{(int)chain}:{(int)network}";
-
-    private static string BuildEndpointKey(ChainType chain, NetworkType network)
-        => $"endpoint:{(int)chain}:{(int)network}";
+        => Remove($"chainEndpoint:{(int)chain}:{(int)network}");
 
     #endregion
 
-    public void ClearCache()
+    #region Data Service Config Cache
+
+    public string? GetDataServiceEndpoint(DataServiceType serviceType)
+        => Get($"dataEndpoint:{(int)serviceType}");
+
+    public void SetDataServiceEndpoint(DataServiceType serviceType, string endpoint)
+        => Set($"dataEndpoint:{(int)serviceType}", endpoint);
+
+    public void ClearDataServiceEndpoint(DataServiceType serviceType)
+        => Remove($"dataEndpoint:{(int)serviceType}");
+
+    public string? GetDataServiceApiKey(DataServiceType serviceType)
+        => Get($"dataApiKey:{(int)serviceType}");
+
+    public void SetDataServiceApiKey(DataServiceType serviceType, string apiKey)
+        => Set($"dataApiKey:{(int)serviceType}", apiKey);
+
+    public void ClearDataServiceApiKey(DataServiceType serviceType)
+        => Remove($"dataApiKey:{(int)serviceType}");
+
+    #endregion
+
+    public void ClearCache() => _cache.Clear();
+
+    public void Dispose()
     {
-        _addressCache.Clear();
-        _apiKeyCache.Clear();
-        _endpointCache.Clear();
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
-    public virtual void Dispose()
+    protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed) return;
+
+        if (disposing)
         {
-            ClearCache();
-            _disposed = true;
+            _cache.Clear();
         }
 
-        GC.SuppressFinalize(this);
+        _disposed = true;
     }
 }

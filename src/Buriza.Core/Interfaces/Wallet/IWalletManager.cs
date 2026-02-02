@@ -96,4 +96,5 @@ public interface IWalletManager
     Task LoadCustomProviderConfigAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default);
 
     #endregion
+
 }

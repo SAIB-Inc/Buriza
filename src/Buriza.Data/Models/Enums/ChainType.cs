@@ -12,3 +12,9 @@ public enum NetworkType
     Preview = 1,
     Preprod = 2
 }
+
+public enum DataServiceType
+{
+    TokenMetadata = 0,
+    TokenPrice = 1
+}

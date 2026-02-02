@@ -16,6 +16,7 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
     private const string WalletsKey = "buriza_wallets";
     private const string ActiveWalletKey = "buriza_active_wallet";
     private const string CustomConfigsKey = "buriza_custom_configs";
+    private const string DataServiceConfigsKey = "buriza_data_service_configs";
 
     #region Wallet Metadata
 
@@ -233,6 +234,100 @@ public class WebWalletStorage(IJSRuntime jsRuntime) : IWalletStorage
 
     private static string GetApiKeyVaultKey(ChainType chain, NetworkType network)
         => $"buriza_apikey_{(int)chain}_{(int)network}";
+
+    #endregion
+
+    #region Custom Data Service Config
+
+    public async Task<DataServiceConfig?> GetDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
+    {
+        Dictionary<string, DataServiceConfig> configs = await LoadDataServiceConfigsAsync(ct);
+        string key = GetDataServiceConfigKey(serviceType);
+        return configs.TryGetValue(key, out DataServiceConfig? config) ? config : null;
+    }
+
+    public async Task<IReadOnlyList<DataServiceConfig>> GetAllDataServiceConfigsAsync(CancellationToken ct = default)
+    {
+        Dictionary<string, DataServiceConfig> configs = await LoadDataServiceConfigsAsync(ct);
+        return [.. configs.Values];
+    }
+
+    public async Task SaveDataServiceConfigAsync(DataServiceConfig config, CancellationToken ct = default)
+    {
+        Dictionary<string, DataServiceConfig> configs = await LoadDataServiceConfigsAsync(ct);
+        string key = GetDataServiceConfigKey(config.ServiceType);
+        configs[key] = config;
+        await SaveDataServiceConfigsAsync(configs, ct);
+    }
+
+    public async Task DeleteDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
+    {
+        Dictionary<string, DataServiceConfig> configs = await LoadDataServiceConfigsAsync(ct);
+        string key = GetDataServiceConfigKey(serviceType);
+        if (configs.Remove(key))
+        {
+            await SaveDataServiceConfigsAsync(configs, ct);
+        }
+        await DeleteDataServiceApiKeyAsync(serviceType, ct);
+    }
+
+    public async Task SaveDataServiceApiKeyAsync(DataServiceType serviceType, string apiKey, string password, CancellationToken ct = default)
+    {
+        EncryptedVault vault = VaultEncryption.Encrypt(0, apiKey, password);
+        string json = JsonSerializer.Serialize(vault);
+        await _js.InvokeVoidAsync("localStorage.setItem", ct, GetDataServiceApiKeyVaultKey(serviceType), json);
+
+        DataServiceConfig? existing = await GetDataServiceConfigAsync(serviceType, ct);
+        if (existing != null)
+        {
+            await SaveDataServiceConfigAsync(existing with { HasCustomApiKey = true }, ct);
+        }
+    }
+
+    public async Task<byte[]?> UnlockDataServiceApiKeyAsync(DataServiceType serviceType, string password, CancellationToken ct = default)
+    {
+        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, GetDataServiceApiKeyVaultKey(serviceType));
+        if (string.IsNullOrEmpty(json))
+            return null;
+
+        EncryptedVault? vault = JsonSerializer.Deserialize<EncryptedVault>(json);
+        if (vault == null)
+            return null;
+
+        return VaultEncryption.DecryptToBytes(vault, password);
+    }
+
+    public async Task DeleteDataServiceApiKeyAsync(DataServiceType serviceType, CancellationToken ct = default)
+    {
+        await _js.InvokeVoidAsync("localStorage.removeItem", ct, GetDataServiceApiKeyVaultKey(serviceType));
+
+        DataServiceConfig? existing = await GetDataServiceConfigAsync(serviceType, ct);
+        if (existing is { HasCustomApiKey: true })
+        {
+            await SaveDataServiceConfigAsync(existing with { HasCustomApiKey = false }, ct);
+        }
+    }
+
+    private async Task<Dictionary<string, DataServiceConfig>> LoadDataServiceConfigsAsync(CancellationToken ct)
+    {
+        string? json = await _js.InvokeAsync<string?>("localStorage.getItem", ct, DataServiceConfigsKey);
+        if (string.IsNullOrEmpty(json))
+            return [];
+
+        return JsonSerializer.Deserialize<Dictionary<string, DataServiceConfig>>(json) ?? [];
+    }
+
+    private async Task SaveDataServiceConfigsAsync(Dictionary<string, DataServiceConfig> configs, CancellationToken ct)
+    {
+        string json = JsonSerializer.Serialize(configs);
+        await _js.InvokeVoidAsync("localStorage.setItem", ct, DataServiceConfigsKey, json);
+    }
+
+    private static string GetDataServiceConfigKey(DataServiceType serviceType)
+        => $"{(int)serviceType}";
+
+    private static string GetDataServiceApiKeyVaultKey(DataServiceType serviceType)
+        => $"buriza_data_apikey_{(int)serviceType}";
 
     #endregion
 }
