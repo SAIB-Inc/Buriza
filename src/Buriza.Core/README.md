@@ -82,11 +82,8 @@ Buriza.Core/
 │   ├── KeyService.cs               # IKeyService implementation
 │   ├── SessionService.cs           # In-memory address/config cache
 │   └── WalletManagerService.cs     # IWalletManager implementation
-├── Storage/
-│   ├── Web/
-│   │   └── WebWalletStorage.cs     # localStorage implementation
-│   └── Extension/
-│       └── ExtensionWalletStorage.cs # chrome.storage implementation
+│   # Note: Storage implementations are in platform projects (Buriza.Web, Buriza.Extension, Buriza.App)
+│   # Buriza.Core only defines IWalletStorage interface
 ├── Crypto/
 │   ├── VaultEncryption.cs          # AES-256-GCM encryption
 │   └── KeyDerivationOptions.cs     # PBKDF2 parameters
@@ -899,10 +896,11 @@ var provider = chainRegistry.GetProvider(chainInfo);
 <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
 <PackageReference Include="Utxorpc.Spec" Version="0.18.1-alpha" />
 
-<!-- Platform integration -->
+<!-- HTTP client factory -->
 <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
-<PackageReference Include="Microsoft.JSInterop" Version="10.0.0" />
 ```
+
+**Note:** `Buriza.Core` has no platform-specific dependencies (no JSInterop, no MAUI). Storage implementations are in platform projects.
 
 **Chrysalis** provides:
 - `Chrysalis.Wallet` - BIP-39 mnemonic, CIP-1852 key derivation
@@ -963,13 +961,67 @@ await walletManager.LoadCustomProviderConfigAsync(
 
 ---
 
-## Platform Storage
+## Platform Storage Architecture
 
-| Platform | Wallet Metadata | Encrypted Vault | Implementation |
-|----------|-----------------|-----------------|----------------|
-| Web | localStorage | localStorage + Web Crypto | `WebWalletStorage` |
-| Extension | chrome.storage.local | chrome.storage.local + Web Crypto | `ExtensionWalletStorage` |
-| iOS | Preferences | SecureStorage (Keychain) | MAUI (future) |
-| Android | SharedPreferences | EncryptedSharedPreferences | MAUI (future) |
-| macOS | Preferences | SecureStorage (Keychain) | MAUI (future) |
-| Windows | LocalSettings | SecureStorage (DPAPI) | MAUI (future) |
+`Buriza.Core` defines `IWalletStorage` interface only. Platform projects provide implementations using dependency inversion:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       Buriza.Core                               │
+│                  (Pure .NET - NO platform code)                 │
+├─────────────────────────────────────────────────────────────────┤
+│  Interfaces/Storage/IWalletStorage.cs  ← Contract only          │
+│  Crypto/VaultEncryption.cs             ← Pure .NET AES-256-GCM  │
+└─────────────────────────────────────────────────────────────────┘
+                              ▲
+                              │ implements
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌───────────────────┐ ┌───────────────────┐ ┌───────────────────┐
+│    Buriza.Web     │ │ Buriza.Extension  │ │    Buriza.App     │
+│  (Blazor WASM)    │ │   (Blazor WASM)   │ │      (MAUI)       │
+├───────────────────┤ ├───────────────────┤ ├───────────────────┤
+│ Storage/          │ │ Storage/          │ │ Platforms/        │
+│ WebWalletStorage  │ │ ExtensionWallet   │ │ ├─iOS/            │
+│ (localStorage)    │ │ Storage           │ │ ├─Android/        │
+│                   │ │ (chrome.storage)  │ │ └─Windows/        │
+└───────────────────┘ └───────────────────┘ └───────────────────┘
+```
+
+### Platform Implementations
+
+| Platform | Project | Storage Backend | Security |
+|----------|---------|-----------------|----------|
+| **Web** | `Buriza.Web` | localStorage via JSInterop | AES-256-GCM (PBKDF2 600K) |
+| **Extension** | `Buriza.Extension` | chrome.storage.local via JSInterop | AES-256-GCM + isolated context |
+| **iOS** | `Buriza.App` | Keychain (SecureStorage) | Hardware-backed + AES-256-GCM |
+| **Android** | `Buriza.App` | EncryptedSharedPreferences | Keystore + AES-256-GCM |
+| **macOS** | `Buriza.App` | Keychain (SecureStorage) | Hardware-backed + AES-256-GCM |
+| **Windows** | `Buriza.App` | DPAPI (SecureStorage) | User-scoped + AES-256-GCM |
+
+### DI Registration
+
+```csharp
+// Buriza.Web/Program.cs
+builder.Services.AddScoped<IWalletStorage, WebWalletStorage>();
+
+// Buriza.Extension/Program.cs
+builder.Services.AddScoped<IWalletStorage, ExtensionWalletStorage>();
+
+// Buriza.App/MauiProgram.cs (platform-specific)
+#if IOS || MACCATALYST
+builder.Services.AddSingleton<IWalletStorage, iOSWalletStorage>();
+#elif ANDROID
+builder.Services.AddSingleton<IWalletStorage, AndroidWalletStorage>();
+#elif WINDOWS
+builder.Services.AddSingleton<IWalletStorage, WindowsWalletStorage>();
+#endif
+```
+
+### Why This Architecture?
+
+1. **Buriza.Core stays pure** - No JSInterop, no MAUI dependencies
+2. **Testable** - Mock `IWalletStorage` in unit tests
+3. **Platform-optimal** - Each platform uses native secure storage
+4. **Single interface** - `WalletManagerService` works identically across all platforms

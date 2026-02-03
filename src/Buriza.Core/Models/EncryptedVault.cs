@@ -34,6 +34,11 @@ public record EncryptedVault
     public required int WalletId { get; init; }
 
     /// <summary>
+    /// Purpose of this vault. Used as part of AAD to prevent vault type confusion attacks.
+    /// </summary>
+    public VaultPurpose Purpose { get; init; } = VaultPurpose.Mnemonic;
+
+    /// <summary>
     /// Timestamp when the vault was created.
     /// </summary>
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;

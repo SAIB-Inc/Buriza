@@ -130,9 +130,11 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
 
     #region IChainProvider - Key Derivation
 
-    public Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+        // Convert to string only for Chrysalis library call - string is short-lived on stack
+        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
+        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
 
         PublicKey paymentKey = restored
@@ -157,9 +159,10 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
         return Task.FromResult(address.ToBech32());
     }
 
-    public Task<string> DeriveStakingAddressAsync(string mnemonic, int accountIndex, CancellationToken ct = default)
+    public Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, CancellationToken ct = default)
     {
-        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
+        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
 
         PublicKey stakingKey = restored
             .GetRootKey()
@@ -174,9 +177,10 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
         return Task.FromResult(address.ToBech32());
     }
 
-    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
+        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
 
         PrivateKey key = restored
@@ -190,9 +194,10 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
         return Task.FromResult(key);
     }
 
-    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<PublicKey> DerivePublicKeyAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
+        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
 
         PublicKey key = restored

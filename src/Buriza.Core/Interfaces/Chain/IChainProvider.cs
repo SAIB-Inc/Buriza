@@ -4,6 +4,10 @@ using Chrysalis.Wallet.Models.Keys;
 
 namespace Buriza.Core.Interfaces.Chain;
 
+/// <summary>
+/// Chain provider interface for blockchain-specific operations.
+/// SECURITY: Key derivation methods accept mnemonic as ReadOnlySpan&lt;byte&gt; to enable proper memory cleanup.
+/// </summary>
 public interface IChainProvider : IDisposable
 {
     ChainInfo ChainInfo { get; }
@@ -16,9 +20,9 @@ public interface IChainProvider : IDisposable
 
     Task<bool> ValidateConnectionAsync(CancellationToken ct = default);
 
-    // Chain-specific key derivation
-    Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    Task<string> DeriveStakingAddressAsync(string mnemonic, int accountIndex, CancellationToken ct = default);
-    Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    // Chain-specific key derivation (mnemonic as bytes for security)
+    Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, CancellationToken ct = default);
+    Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<PublicKey> DerivePublicKeyAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
 }

@@ -33,8 +33,7 @@ public class WalletManagerService(
         byte[] mnemonicBytes = _keyService.GenerateMnemonic(mnemonicWordCount);
         try
         {
-            string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            return await ImportAsync(name, mnemonic, password, chainInfo, ct);
+            return await ImportFromBytesAsync(name, mnemonicBytes, password, chainInfo, ct);
         }
         finally
         {
@@ -44,15 +43,29 @@ public class WalletManagerService(
 
     public async Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default)
     {
+        // Convert user-provided string to bytes, then delegate to bytes-based import
+        byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
+        try
+        {
+            return await ImportFromBytesAsync(name, mnemonicBytes, password, chainInfo, ct);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(mnemonicBytes);
+        }
+    }
+
+    private async Task<BurizaWallet> ImportFromBytesAsync(string name, byte[] mnemonicBytes, string password, ChainInfo? chainInfo, CancellationToken ct)
+    {
         chainInfo ??= ChainRegistryData.CardanoMainnet;
 
-        if (!_keyService.ValidateMnemonic(mnemonic))
-            throw new ArgumentException("Invalid mnemonic", nameof(mnemonic));
+        if (!_keyService.ValidateMnemonic(mnemonicBytes))
+            throw new ArgumentException("Invalid mnemonic", nameof(mnemonicBytes));
 
         int newId = await _storage.GenerateNextIdAsync(ct);
 
-        // Derive only the first receive address
-        string receiveAddress = await _keyService.DeriveAddressAsync(mnemonic, chainInfo, 0, 0, false, ct);
+        // Derive only the first receive address (passing bytes directly)
+        string receiveAddress = await _keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, 0, 0, false, ct);
         _sessionService.CacheAddress(newId, chainInfo, 0, 0, false, receiveAddress);
 
         ChainAddressData chainData = new()
@@ -80,7 +93,9 @@ public class WalletManagerService(
             ]
         };
 
-        await _storage.CreateVaultAsync(wallet.Id, mnemonic, password, ct);
+        // Storage needs string for JSON serialization - convert only at storage boundary
+        string mnemonicStr = Encoding.UTF8.GetString(mnemonicBytes);
+        await _storage.CreateVaultAsync(wallet.Id, mnemonicStr, password, ct);
         try
         {
             await _storage.SaveAsync(wallet, ct);
@@ -170,8 +185,7 @@ public class WalletManagerService(
             byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
             try
             {
-                string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-                await DeriveAndSaveChainDataAsync(wallet, account.Index, chainInfo, mnemonic, ct);
+                await DeriveAndSaveChainDataAsync(wallet, account.Index, chainInfo, mnemonicBytes, ct);
             }
             finally
             {
@@ -249,8 +263,7 @@ public class WalletManagerService(
         byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
-            string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            await DeriveAndSaveChainDataAsync(wallet, accountIndex, chainInfo, mnemonic, ct);
+            await DeriveAndSaveChainDataAsync(wallet, accountIndex, chainInfo, mnemonicBytes, ct);
         }
         finally
         {
@@ -282,8 +295,6 @@ public class WalletManagerService(
         byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
-            string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-
             while (consecutiveEmpty < accountGapLimit && accountIndex < MaxAccountDiscoveryLimit)
             {
                 // Skip if account already exists
@@ -294,8 +305,8 @@ public class WalletManagerService(
                     continue;
                 }
 
-                // Derive first receive address for this account
-                string address = await _keyService.DeriveAddressAsync(mnemonic, chainInfo, accountIndex, 0, false, ct);
+                // Derive first receive address for this account (passing bytes directly)
+                string address = await _keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
 
                 // Check if address has any transaction history
                 IReadOnlyList<TransactionHistory> history = await provider.QueryService.GetTransactionHistoryAsync(address, 1, ct);
@@ -381,8 +392,7 @@ public class WalletManagerService(
         byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
-            string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            string stakingAddress = await _keyService.DeriveStakingAddressAsync(mnemonic, chainInfo, accountIndex, ct);
+            string stakingAddress = await _keyService.DeriveStakingAddressAsync(mnemonicBytes, chainInfo, accountIndex, ct);
 
             // Cache the staking address
             if (chainData != null)
@@ -422,8 +432,7 @@ public class WalletManagerService(
         byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
         try
         {
-            string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            privateKey = await _keyService.DerivePrivateKeyAsync(mnemonic, chainInfo, accountIndex, addressIndex, ct: ct);
+            privateKey = await _keyService.DerivePrivateKeyAsync(mnemonicBytes, chainInfo, accountIndex, addressIndex, ct: ct);
             return await provider.TransactionService.SignAsync(unsignedTx, privateKey, ct);
         }
         finally
@@ -557,9 +566,9 @@ public class WalletManagerService(
     private static ChainInfo GetChainInfo(BurizaWallet wallet)
         => ChainRegistryData.Get(wallet.ActiveChain, wallet.Network);
 
-    private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainInfo chainInfo, string mnemonic, CancellationToken ct)
+    private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainInfo chainInfo, byte[] mnemonicBytes, CancellationToken ct)
     {
-        string receiveAddress = await _keyService.DeriveAddressAsync(mnemonic, chainInfo, accountIndex, 0, false, ct);
+        string receiveAddress = await _keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
         _sessionService.CacheAddress(wallet.Id, chainInfo, accountIndex, 0, false, receiveAddress);
 
         ChainAddressData chainData = new()
@@ -585,8 +594,9 @@ public class WalletManagerService(
         if (_disposed) return;
         _disposed = true;
 
-        _chainRegistry.Dispose();
-        _sessionService.Dispose();
+        // Note: Do NOT dispose _chainRegistry or _sessionService here.
+        // They are injected dependencies (typically singletons) and their
+        // lifecycle is managed by the DI container, not by this service.
 
         GC.SuppressFinalize(this);
     }

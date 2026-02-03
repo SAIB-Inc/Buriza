@@ -6,7 +6,7 @@ namespace Buriza.Core.Crypto;
 
 public static class VaultEncryption
 {
-    public static EncryptedVault Encrypt(int walletId, string plaintext, string password, KeyDerivationOptions? options = null)
+    public static EncryptedVault Encrypt(int walletId, string plaintext, string password, VaultPurpose purpose = VaultPurpose.Mnemonic, KeyDerivationOptions? options = null)
     {
         options ??= KeyDerivationOptions.Default;
 
@@ -18,10 +18,13 @@ public static class VaultEncryption
         byte[] ciphertext = new byte[plaintextBytes.Length];
         byte[] tag = new byte[options.TagSize];
 
+        // AAD binds the ciphertext to specific context, preventing swap/rollback attacks
+        byte[] aad = BuildAad(version: 1, walletId, purpose);
+
         try
         {
             using AesGcm aes = new(key, options.TagSize);
-            aes.Encrypt(iv, plaintextBytes, ciphertext, tag);
+            aes.Encrypt(iv, plaintextBytes, ciphertext, tag, aad);
 
             byte[] combined = new byte[ciphertext.Length + tag.Length];
             Buffer.BlockCopy(ciphertext, 0, combined, 0, ciphertext.Length);
@@ -33,6 +36,7 @@ public static class VaultEncryption
                 Salt = Convert.ToBase64String(salt),
                 Iv = Convert.ToBase64String(iv),
                 WalletId = walletId,
+                Purpose = purpose,
                 CreatedAt = DateTime.UtcNow
             };
         }
@@ -55,7 +59,7 @@ public static class VaultEncryption
         byte[] iv = Convert.FromBase64String(vault.Iv);
         byte[] combined = Convert.FromBase64String(vault.Data);
 
-        // Version 1: PBKDF2 (600K) + AES-256-GCM
+        // Version 1: PBKDF2 (600K) + AES-256-GCM with AAD
         int iterations = vault.Version switch
         {
             1 => options.Iterations,
@@ -77,10 +81,13 @@ public static class VaultEncryption
 
         byte[] plaintext = new byte[ciphertext.Length];
 
+        // Rebuild AAD for verification (must match what was used during encryption)
+        byte[] aad = BuildAad(vault.Version, vault.WalletId, vault.Purpose);
+
         try
         {
             using AesGcm aes = new(key, tagSize);
-            aes.Decrypt(iv, ciphertext, tag, plaintext);
+            aes.Decrypt(iv, ciphertext, tag, plaintext, aad);
 
             // Return bytes - caller is responsible for zeroing
             return plaintext;
@@ -129,4 +136,11 @@ public static class VaultEncryption
             iterations,
             HashAlgorithmName.SHA256,
             keyLength / 8);
+
+    /// <summary>
+    /// Builds Associated Authenticated Data (AAD) for AES-GCM.
+    /// AAD binds ciphertext to context, preventing vault swap and rollback attacks.
+    /// </summary>
+    private static byte[] BuildAad(int version, int walletId, VaultPurpose purpose)
+        => Encoding.UTF8.GetBytes($"v={version};wid={walletId};purpose={purpose}");
 }

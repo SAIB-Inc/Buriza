@@ -9,6 +9,7 @@ namespace Buriza.Core.Services;
 /// <summary>
 /// Chain-agnostic key service implementation.
 /// BIP-39 operations are handled directly, derivation delegates to chain providers.
+/// SECURITY: All mnemonic parameters use ReadOnlySpan&lt;byte&gt; to enable proper memory cleanup.
 /// </summary>
 public class KeyService(IChainRegistry chainRegistry) : IKeyService
 {
@@ -22,11 +23,13 @@ public class KeyService(IChainRegistry chainRegistry) : IKeyService
         return Encoding.UTF8.GetBytes(string.Join(" ", mnemonic.Words));
     }
 
-    public bool ValidateMnemonic(string mnemonic)
+    public bool ValidateMnemonic(ReadOnlySpan<byte> mnemonic)
     {
         try
         {
-            Mnemonic.Restore(mnemonic, English.Words);
+            // Convert to string only for Chrysalis library call
+            string mnemonicStr = Encoding.UTF8.GetString(mnemonic);
+            Mnemonic.Restore(mnemonicStr, English.Words);
             return true;
         }
         catch
@@ -39,25 +42,25 @@ public class KeyService(IChainRegistry chainRegistry) : IKeyService
 
     #region Chain-Specific Derivation
 
-    public Task<string> DeriveAddressAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         IChainProvider provider = GetProvider(chainInfo);
         return provider.DeriveAddressAsync(mnemonic, accountIndex, addressIndex, isChange, ct);
     }
 
-    public Task<string> DeriveStakingAddressAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default)
+    public Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default)
     {
         IChainProvider provider = GetProvider(chainInfo);
         return provider.DeriveStakingAddressAsync(mnemonic, accountIndex, ct);
     }
 
-    public Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         IChainProvider provider = GetProvider(chainInfo);
         return provider.DerivePrivateKeyAsync(mnemonic, accountIndex, addressIndex, isChange, ct);
     }
 
-    public Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<PublicKey> DerivePublicKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         IChainProvider provider = GetProvider(chainInfo);
         return provider.DerivePublicKeyAsync(mnemonic, accountIndex, addressIndex, isChange, ct);
