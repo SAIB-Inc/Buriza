@@ -1,24 +1,18 @@
 namespace Buriza.Core.Crypto;
 
-public static class KeyDerivationOptions
+public record KeyDerivationOptions
 {
-    public const string Algorithm = "PBKDF2";
-    public const string Hash = "SHA-256";
-    public const int Iterations = 600_000;
+    public string Algorithm { get; init; } = "PBKDF2";
+    public string Hash { get; init; } = "SHA-256";
+    public int Iterations { get; init; } = 600_000;
 
-    public const string Encryption = "AES-GCM";
-    public const int KeyLength = 256;
+    public string Encryption { get; init; } = "AES-GCM";
+    public int KeyLength { get; init; } = 256;
 
-    public const int SaltSize = 32;
-    public const int IvSize = 12;
-    public const int TagSize = 16;
-}
+    public int SaltSize { get; init; } = 32;
+    public int IvSize { get; init; } = 12;
+    public int TagSize { get; init; } = 16;
 
-public static class CardanoDerivation
-{
-    public const int Purpose = 1852;
-    public const int CoinType = 1815;
-
-    public static string GetPath(int account, int role, int index)
-        => $"m/{Purpose}'/{CoinType}'/{account}'/{role}/{index}";
+    /// <summary>Default key derivation options (PBKDF2 600K iterations + AES-256-GCM).</summary>
+    public static KeyDerivationOptions Default { get; } = new();
 }

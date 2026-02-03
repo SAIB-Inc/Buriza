@@ -1,4 +1,5 @@
 using Buriza.Core.Models;
+using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 
 namespace Buriza.Core.Interfaces.Storage;
@@ -42,26 +43,26 @@ public interface IWalletStorage
     #region Custom Provider Config
 
     /// <summary>Gets custom provider config (endpoint, name). API key stored separately encrypted.</summary>
-    Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
+    Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
 
     /// <summary>Saves custom provider config (endpoint, name). Use SaveCustomApiKeyAsync for API key.</summary>
     Task SaveCustomProviderConfigAsync(CustomProviderConfig config, CancellationToken ct = default);
 
-    /// <summary>Deletes custom provider config for a chain/network.</summary>
-    Task DeleteCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
+    /// <summary>Deletes custom provider config for a chain.</summary>
+    Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
 
     /// <summary>Saves encrypted custom API key. Requires password for encryption.</summary>
-    Task SaveCustomApiKeyAsync(ChainType chain, NetworkType network, string apiKey, string password, CancellationToken ct = default);
+    Task SaveCustomApiKeyAsync(ChainInfo chainInfo, string apiKey, string password, CancellationToken ct = default);
 
     /// <summary>
     /// Decrypts and returns custom API key as bytes.
     /// IMPORTANT: Caller MUST zero the returned bytes after use.
     /// Returns null if no custom API key is set.
     /// </summary>
-    Task<byte[]?> UnlockCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default);
+    Task<byte[]?> UnlockCustomApiKeyAsync(ChainInfo chainInfo, string password, CancellationToken ct = default);
 
-    /// <summary>Deletes encrypted custom API key for a chain/network.</summary>
-    Task DeleteCustomApiKeyAsync(ChainType chain, NetworkType network, CancellationToken ct = default);
+    /// <summary>Deletes encrypted custom API key for a chain.</summary>
+    Task DeleteCustomApiKeyAsync(ChainInfo chainInfo, CancellationToken ct = default);
 
     #endregion
 

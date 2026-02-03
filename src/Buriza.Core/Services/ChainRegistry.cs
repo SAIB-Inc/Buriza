@@ -4,6 +4,7 @@ using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models;
 using Buriza.Core.Providers;
+using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 
 namespace Buriza.Core.Services;
@@ -11,7 +12,7 @@ namespace Buriza.Core.Services;
 /// <summary>
 /// Registry for chain providers.
 /// Caches providers by config to avoid recreating for same settings.
-/// Checks session for custom API keys before falling back to appsettings defaults.
+/// Checks session for custom endpoints/API keys before falling back to appsettings.
 /// </summary>
 public class ChainRegistry(ChainProviderSettings settings, ISessionService? sessionService = null) : IChainRegistry, IDisposable
 {
@@ -21,8 +22,9 @@ public class ChainRegistry(ChainProviderSettings settings, ISessionService? sess
     private readonly ISessionService? _sessionService = sessionService;
     private bool _disposed;
 
-    public IChainProvider GetProvider(ProviderConfig config)
+    public IChainProvider GetProvider(ChainInfo chainInfo)
     {
+        ProviderConfig config = GetConfig(chainInfo);
         string cacheKey = GetCacheKey(config);
 
         lock (_lock)
@@ -36,55 +38,47 @@ public class ChainRegistry(ChainProviderSettings settings, ISessionService? sess
         }
     }
 
-    public ProviderConfig GetDefaultConfig(ChainType chain, NetworkType network = NetworkType.Mainnet)
+    /// <summary>
+    /// Invalidates all cached providers. Call when config changes require reconnection.
+    /// </summary>
+    public void InvalidateCache()
     {
-        return chain switch
+        lock (_lock)
         {
-            ChainType.Cardano => GetCardanoConfig(network),
-            _ => throw new NotSupportedException($"Chain {chain} is not supported")
-        };
+            foreach (IChainProvider provider in _providerCache.Values)
+                provider.Dispose();
+            _providerCache.Clear();
+        }
     }
 
-    private ProviderConfig GetCardanoConfig(NetworkType network)
+    /// <summary>
+    /// Invalidates cached provider for a specific chain. Call when that chain's config changes.
+    /// </summary>
+    public void InvalidateCache(ChainInfo chainInfo)
     {
-        // Priority: session override > appsettings custom > Demeter default
+        ProviderConfig config = GetConfig(chainInfo);
+        string cacheKey = GetCacheKey(config);
 
-        // 1. Check session for custom endpoint
-        string? endpoint = _sessionService?.GetCustomEndpoint(ChainType.Cardano, network);
-
-        // 2. Fall back to appsettings custom endpoint
-        endpoint ??= network switch
+        lock (_lock)
         {
-            NetworkType.Mainnet => _settings.Cardano?.MainnetEndpoint,
-            NetworkType.Preprod => _settings.Cardano?.PreprodEndpoint,
-            NetworkType.Preview => _settings.Cardano?.PreviewEndpoint,
-            _ => _settings.Cardano?.MainnetEndpoint
-        };
+            if (_providerCache.TryGetValue(cacheKey, out IChainProvider? cached))
+            {
+                cached.Dispose();
+                _providerCache.Remove(cacheKey);
+            }
+        }
+    }
 
-        // Get API key (session override > appsettings)
-        string? apiKey = _sessionService?.GetCustomApiKey(ChainType.Cardano, network);
-        apiKey ??= network switch
+    private ProviderConfig GetConfig(ChainInfo chainInfo)
+    {
+        // Get session overrides (if any)
+        string? customEndpoint = _sessionService?.GetCustomEndpoint(chainInfo);
+        string? customApiKey = _sessionService?.GetCustomApiKey(chainInfo);
+
+        return chainInfo.Chain switch
         {
-            NetworkType.Mainnet => _settings.Cardano?.MainnetApiKey,
-            NetworkType.Preprod => _settings.Cardano?.PreprodApiKey,
-            NetworkType.Preview => _settings.Cardano?.PreviewApiKey,
-            _ => _settings.Cardano?.MainnetApiKey
-        };
-
-        // If custom endpoint is set, use it (API key optional)
-        if (!string.IsNullOrEmpty(endpoint))
-            return ProviderPresets.Cardano.Custom(endpoint, network, apiKey);
-
-        // 3. Fall back to Demeter (requires API key)
-        if (string.IsNullOrEmpty(apiKey))
-            throw new InvalidOperationException($"API key for Cardano {network} not configured. Set an API key or configure a custom endpoint.");
-
-        return network switch
-        {
-            NetworkType.Mainnet => ProviderPresets.Cardano.DemeterMainnet(apiKey),
-            NetworkType.Preprod => ProviderPresets.Cardano.DemeterPreprod(apiKey),
-            NetworkType.Preview => ProviderPresets.Cardano.DemeterPreview(apiKey),
-            _ => ProviderPresets.Cardano.DemeterMainnet(apiKey)
+            ChainType.Cardano => CardanoProvider.ResolveConfig(_settings.Cardano, chainInfo.Network, customEndpoint, customApiKey),
+            _ => throw new NotSupportedException($"Chain {chainInfo.Chain} is not supported")
         };
     }
 

@@ -39,28 +39,78 @@ namespace Buriza.Core.Providers;
 public class CardanoProvider : IChainProvider, IQueryService, ITransactionService, ICardanoDataProvider, IDisposable
 {
     public ChainInfo ChainInfo { get; }
+    public ProviderConfig Config { get; }
     public IQueryService QueryService => this;
     public ITransactionService TransactionService => this;
 
     public ChrysalisNetworkType NetworkType { get; }
 
-    private readonly string? _apiKey;
     private readonly GrpcChannel _channel;
     private readonly UtxorpcQuery.QueryService.QueryServiceClient _queryClient;
     private readonly UtxorpcSync.SyncService.SyncServiceClient _syncClient;
     private readonly SubmitService.SubmitServiceClient _submitClient;
+    private readonly GrpcMetadata _headers;
     private bool _disposed;
+
+    /// <summary>
+    /// Resolves provider config from settings and optional custom overrides.
+    /// </summary>
+    public static ProviderConfig ResolveConfig(CardanoSettings? settings, BurizaNetworkType network, string? customEndpoint = null, string? customApiKey = null)
+    {
+        // Priority: custom override > appsettings
+        string? endpoint = customEndpoint ?? network switch
+        {
+            BurizaNetworkType.Mainnet => settings?.MainnetEndpoint,
+            BurizaNetworkType.Preprod => settings?.PreprodEndpoint,
+            BurizaNetworkType.Preview => settings?.PreviewEndpoint,
+            _ => settings?.MainnetEndpoint
+        };
+
+        string? apiKey = customApiKey ?? network switch
+        {
+            BurizaNetworkType.Mainnet => settings?.MainnetApiKey,
+            BurizaNetworkType.Preprod => settings?.PreprodApiKey,
+            BurizaNetworkType.Preview => settings?.PreviewApiKey,
+            _ => settings?.MainnetApiKey
+        };
+
+        if (string.IsNullOrEmpty(endpoint))
+            throw new InvalidOperationException($"Endpoint for Cardano {network} not configured.");
+
+        return new ProviderConfig
+        {
+            Chain = Data.Models.Enums.ChainType.Cardano,
+            Endpoint = endpoint,
+            Network = network,
+            ApiKey = apiKey
+        };
+    }
 
     public CardanoProvider(string endpoint, BurizaNetworkType network = BurizaNetworkType.Mainnet, string? apiKey = null)
     {
-        _apiKey = apiKey;
         NetworkType = network == BurizaNetworkType.Mainnet ? ChrysalisNetworkType.Mainnet : ChrysalisNetworkType.Testnet;
         ChainInfo = ChainRegistry.Get(Data.Models.Enums.ChainType.Cardano, network);
+        Config = new ProviderConfig
+        {
+            Chain = Data.Models.Enums.ChainType.Cardano,
+            Endpoint = endpoint,
+            Network = network,
+            ApiKey = apiKey
+        };
 
         _channel = GrpcChannel.ForAddress(endpoint);
         _queryClient = new UtxorpcQuery.QueryService.QueryServiceClient(_channel);
         _syncClient = new UtxorpcSync.SyncService.SyncServiceClient(_channel);
         _submitClient = new SubmitService.SubmitServiceClient(_channel);
+        _headers = BuildHeaders(apiKey);
+    }
+
+    private static GrpcMetadata BuildHeaders(string? apiKey)
+    {
+        GrpcMetadata headers = [];
+        if (!string.IsNullOrEmpty(apiKey))
+            headers.Add("dmtr-api-key", apiKey);
+        return headers;
     }
 
     public async Task<bool> ValidateConnectionAsync(CancellationToken ct = default)
@@ -76,15 +126,7 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
         }
     }
 
-    private GrpcMetadata GetHeaders()
-    {
-        GrpcMetadata headers = [];
-        if (!string.IsNullOrEmpty(_apiKey))
-        {
-            headers.Add("dmtr-api-key", _apiKey);
-        }
-        return headers;
-    }
+    private GrpcMetadata GetHeaders() => _headers;
 
     #region IChainProvider - Key Derivation
 
@@ -112,6 +154,23 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
             .GetPublicKey();
 
         Address address = Address.FromPublicKeys(NetworkType, AddressType.Base, paymentKey, stakingKey);
+        return Task.FromResult(address.ToBech32());
+    }
+
+    public Task<string> DeriveStakingAddressAsync(string mnemonic, int accountIndex, CancellationToken ct = default)
+    {
+        Mnemonic restored = Mnemonic.Restore(mnemonic, English.Words);
+
+        PublicKey stakingKey = restored
+            .GetRootKey()
+            .Derive(PurposeType.Shelley, DerivationType.HARD)
+            .Derive(CoinType.Ada, DerivationType.HARD)
+            .Derive(accountIndex, DerivationType.HARD)
+            .Derive(RoleType.Staking)
+            .Derive(0, DerivationType.SOFT)
+            .GetPublicKey();
+
+        Address address = Address.FromPublicKeys(NetworkType, AddressType.Delegation, stakingKey);
         return Task.FromResult(address.ToBech32());
     }
 
@@ -205,6 +264,7 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
 
         _ = Task.Run(async () =>
         {
+            Exception? error = null;
             try
             {
                 UtxorpcSync.FollowTipRequest request = new();
@@ -236,9 +296,14 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
                     }
                 }
             }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                error = ex;
+            }
             finally
             {
-                channel.Writer.Complete();
+                channel.Writer.Complete(error);
             }
         }, ct);
 

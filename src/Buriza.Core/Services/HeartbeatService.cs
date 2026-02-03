@@ -22,7 +22,17 @@ public class HeartbeatService : IDisposable
         _queryService = queryService;
         _logger = logger;
 
-        Task.Run(FollowTipAsync);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await FollowTipAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogCritical(ex, "HeartbeatService fatal error");
+            }
+        });
     }
 
     private async Task FollowTipAsync()

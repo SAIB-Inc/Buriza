@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Buriza.Core.Interfaces;
+using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 using Buriza.Data.Services;
 
@@ -9,7 +10,7 @@ public class SessionService : ISessionService, IDataServiceSessionProvider
 {
     // Single cache for all session data
     // Key patterns:
-    //   - address:{walletId}:{chain}:{accountIndex}:{isChange}:{addressIndex}
+    //   - address:{walletId}:{chain}:{network}:{accountIndex}:{isChange}:{addressIndex}
     //   - chainEndpoint:{chain}:{network}
     //   - chainApiKey:{chain}:{network}
     //   - dataEndpoint:{serviceType}
@@ -40,18 +41,20 @@ public class SessionService : ISessionService, IDataServiceSessionProvider
         }
     }
 
+    private static string GetChainKey(ChainInfo chainInfo) => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
+
     #endregion
 
     #region Address Cache
 
-    public string? GetCachedAddress(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange)
-        => Get($"address:{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}");
+    public string? GetCachedAddress(int walletId, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange)
+        => Get($"address:{walletId}:{GetChainKey(chainInfo)}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}");
 
-    public void CacheAddress(int walletId, ChainType chain, int accountIndex, int addressIndex, bool isChange, string address)
-        => TryAdd($"address:{walletId}:{(int)chain}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}", address);
+    public void CacheAddress(int walletId, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange, string address)
+        => TryAdd($"address:{walletId}:{GetChainKey(chainInfo)}:{accountIndex}:{(isChange ? 1 : 0)}:{addressIndex}", address);
 
-    public bool HasCachedAddresses(int walletId, ChainType chain, int accountIndex)
-        => _cache.Keys.Any(k => k.StartsWith($"address:{walletId}:{(int)chain}:{accountIndex}:"));
+    public bool HasCachedAddresses(int walletId, ChainInfo chainInfo, int accountIndex)
+        => _cache.Keys.Any(k => k.StartsWith($"address:{walletId}:{GetChainKey(chainInfo)}:{accountIndex}:"));
 
     public void ClearWalletCache(int walletId)
         => RemoveByPrefix($"address:{walletId}:");
@@ -60,26 +63,26 @@ public class SessionService : ISessionService, IDataServiceSessionProvider
 
     #region Chain Provider Config Cache
 
-    public string? GetCustomApiKey(ChainType chain, NetworkType network)
-        => Get($"chainApiKey:{(int)chain}:{(int)network}");
+    public string? GetCustomApiKey(ChainInfo chainInfo)
+        => Get($"chainApiKey:{GetChainKey(chainInfo)}");
 
-    public void SetCustomApiKey(ChainType chain, NetworkType network, string apiKey)
-        => Set($"chainApiKey:{(int)chain}:{(int)network}", apiKey);
+    public void SetCustomApiKey(ChainInfo chainInfo, string apiKey)
+        => Set($"chainApiKey:{GetChainKey(chainInfo)}", apiKey);
 
-    public bool HasCustomApiKey(ChainType chain, NetworkType network)
-        => _cache.ContainsKey($"chainApiKey:{(int)chain}:{(int)network}");
+    public bool HasCustomApiKey(ChainInfo chainInfo)
+        => _cache.ContainsKey($"chainApiKey:{GetChainKey(chainInfo)}");
 
-    public void ClearCustomApiKey(ChainType chain, NetworkType network)
-        => Remove($"chainApiKey:{(int)chain}:{(int)network}");
+    public void ClearCustomApiKey(ChainInfo chainInfo)
+        => Remove($"chainApiKey:{GetChainKey(chainInfo)}");
 
-    public string? GetCustomEndpoint(ChainType chain, NetworkType network)
-        => Get($"chainEndpoint:{(int)chain}:{(int)network}");
+    public string? GetCustomEndpoint(ChainInfo chainInfo)
+        => Get($"chainEndpoint:{GetChainKey(chainInfo)}");
 
-    public void SetCustomEndpoint(ChainType chain, NetworkType network, string endpoint)
-        => Set($"chainEndpoint:{(int)chain}:{(int)network}", endpoint);
+    public void SetCustomEndpoint(ChainInfo chainInfo, string endpoint)
+        => Set($"chainEndpoint:{GetChainKey(chainInfo)}", endpoint);
 
-    public void ClearCustomEndpoint(ChainType chain, NetworkType network)
-        => Remove($"chainEndpoint:{(int)chain}:{(int)network}");
+    public void ClearCustomEndpoint(ChainInfo chainInfo)
+        => Remove($"chainEndpoint:{GetChainKey(chainInfo)}");
 
     #endregion
 

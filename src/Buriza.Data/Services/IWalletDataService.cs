@@ -46,8 +46,8 @@ public interface IWalletDataService
     /// <summary>Gets transaction history for the active account.</summary>
     Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(int limit = 50, CancellationToken ct = default);
 
-    /// <summary>Gets receive addresses for the active account.</summary>
-    Task<IReadOnlyList<ReceiveAccount>> GetReceiveAddressesAsync(CancellationToken ct = default);
+    /// <summary>Gets the receive address for the active account.</summary>
+    Task<ReceiveAccount?> GetReceiveAddressAsync(CancellationToken ct = default);
 
     #endregion
 

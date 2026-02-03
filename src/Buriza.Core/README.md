@@ -7,6 +7,7 @@ Business logic layer for the Buriza wallet suite. Provides multi-chain HD wallet
 - [Architecture Overview](#architecture-overview)
 - [Project Structure](#project-structure)
 - [Core Design Decisions](#core-design-decisions)
+- [Configuration Flow](#configuration-flow)
 - [Interfaces](#interfaces)
 - [Implementations](#implementations)
 - [Models](#models)
@@ -76,14 +77,11 @@ Buriza.Core/
 │   └── ISessionService.cs          # Address caching
 ├── Services/
 │   ├── ChainRegistry.cs            # Creates/caches chain providers
+│   ├── DataServiceRegistry.cs      # Data service endpoint management
 │   ├── HeartbeatService.cs         # Blockchain tip monitoring
 │   ├── KeyService.cs               # IKeyService implementation
-│   ├── SessionService.cs           # In-memory address cache
+│   ├── SessionService.cs           # In-memory address/config cache
 │   └── WalletManagerService.cs     # IWalletManager implementation
-├── Providers/
-│   ├── CardanoProvider.cs          # IChainProvider for Cardano
-│   ├── CardanoConfiguration.cs     # Network configuration
-│   └── CardanoProtocolDefaults.cs  # Protocol parameter fallbacks
 ├── Storage/
 │   ├── Web/
 │   │   └── WebWalletStorage.cs     # localStorage implementation
@@ -92,13 +90,17 @@ Buriza.Core/
 ├── Crypto/
 │   ├── VaultEncryption.cs          # AES-256-GCM encryption
 │   └── KeyDerivationOptions.cs     # PBKDF2 parameters
+├── Providers/
+│   ├── CardanoProvider.cs          # IChainProvider for Cardano
+│   └── CardanoDerivation.cs        # CIP-1852 derivation constants
 ├── Models/
 │   ├── BurizaWallet.cs             # HD wallet + accounts + addresses
-│   ├── ChainProviderSettings.cs    # Provider API key settings
+│   ├── ChainProviderSettings.cs    # Provider API keys + custom endpoints
 │   ├── ChainTip.cs                 # Blockchain tip tracking
 │   ├── CustomProviderConfig.cs     # Custom endpoint configuration
+│   ├── DataServiceConfig.cs        # Custom data service configuration
 │   ├── EncryptedVault.cs           # Encrypted mnemonic format
-│   ├── ProviderConfig.cs           # Provider configuration + presets
+│   ├── ProviderConfig.cs           # Provider configuration
 │   ├── TransactionRequest.cs       # Transaction build request
 │   ├── UnsignedTransaction.cs      # Built transaction awaiting signature
 │   └── Utxo.cs                     # Unspent transaction output
@@ -173,6 +175,104 @@ Storing `ChainAddressData` per `(account, chain)` enables:
 
 ---
 
+## Configuration Flow
+
+### Provider Configuration Resolution
+
+When the application needs a chain provider, `ChainRegistry` resolves the configuration using this priority:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PROVIDER CONFIGURATION FLOW                       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  1. Session Override (Highest Priority)                              │
+│     └── Runtime custom endpoint/API key from SessionService          │
+│                          ↓                                           │
+│  2. appsettings Configuration (Required)                             │
+│     └── Pre-configured endpoint (MainnetEndpoint, etc.)              │
+│     └── API key (MainnetApiKey, etc.) - required for most providers  │
+│                          ↓                                           │
+│  3. Error if not configured                                          │
+│     └── Throws InvalidOperationException                             │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Configuration Sources
+
+| Source | Location | When Used |
+|--------|----------|-----------|
+| Session | In-memory (`SessionService`) | Runtime user overrides |
+| appsettings | `appsettings.json` / `wwwroot/appsettings.json` | Required configuration |
+
+### CardanoSettings Model
+
+```csharp
+public class CardanoSettings
+{
+    // API keys (required for Demeter, optional for self-hosted)
+    public string? MainnetApiKey { get; set; }
+    public string? PreprodApiKey { get; set; }
+    public string? PreviewApiKey { get; set; }
+
+    // Custom endpoints - if set, overrides Demeter default
+    public string? MainnetEndpoint { get; set; }
+    public string? PreprodEndpoint { get; set; }
+    public string? PreviewEndpoint { get; set; }
+}
+```
+
+### Example Configurations
+
+**1. UTxO RPC provider (e.g., Demeter.run):**
+```json
+{
+  "ChainProviderSettings": {
+    "Cardano": {
+      "MainnetEndpoint": "https://cardano-mainnet.utxorpc-m1.demeter.run",
+      "MainnetApiKey": "dmtr_your_api_key",
+      "PreprodEndpoint": "https://cardano-preprod.utxorpc-m1.demeter.run",
+      "PreprodApiKey": "dmtr_your_preprod_key",
+      "PreviewEndpoint": "https://cardano-preview.utxorpc-m1.demeter.run",
+      "PreviewApiKey": "dmtr_your_preview_key"
+    }
+  }
+}
+```
+
+**2. Self-hosted node (no API key needed):**
+```json
+{
+  "ChainProviderSettings": {
+    "Cardano": {
+      "MainnetEndpoint": "https://my-cardano-node.example.com:443"
+    }
+  }
+}
+```
+
+**3. TxPipe or other provider with API key:**
+```json
+{
+  "ChainProviderSettings": {
+    "Cardano": {
+      "MainnetEndpoint": "https://mainnet.utxorpc.cloud",
+      "MainnetApiKey": "your_txpipe_api_key"
+    }
+  }
+}
+```
+
+### Why This Design?
+
+1. **Decentralization** - Users can run their own nodes without relying on third parties
+2. **Flexibility** - Works with Demeter, TxPipe, or any UTxO RPC compatible endpoint
+3. **Explicit Configuration** - No hidden defaults; users must configure their endpoints
+4. **Security** - API keys for custom endpoints can be encrypted and cached in session
+
+---
+
 ## Interfaces
 
 ### IChainProvider
@@ -180,14 +280,16 @@ Storing `ChainAddressData` per `(account, chain)` enables:
 Core abstraction for blockchain-specific operations.
 
 ```csharp
-public interface IChainProvider
+public interface IChainProvider : IDisposable
 {
     ChainInfo ChainInfo { get; }  // Symbol, name, decimals, network
+    ProviderConfig Config { get; }  // Endpoint, API key, etc.
     IQueryService QueryService { get; }
     ITransactionService TransactionService { get; }
 
     // Key derivation (chain-specific paths)
     Task<string> DeriveAddressAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<string> DeriveStakingAddressAsync(string mnemonic, int accountIndex, CancellationToken ct = default);
     Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
     Task<PublicKey> DerivePublicKeyAsync(string mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
 
@@ -197,6 +299,9 @@ public interface IChainProvider
 
 Each chain implements its own derivation paths:
 - **Cardano (CIP-1852)**: `m/1852'/1815'/account'/role/index`
+  - Role 0: External (receive addresses)
+  - Role 1: Internal (change addresses)
+  - Role 2: Staking (staking/reward addresses)
 - **Bitcoin (BIP-84)**: `m/84'/0'/account'/change/index` (future)
 - **Ethereum (BIP-44)**: `m/44'/60'/account'/0/index` (future)
 
@@ -212,9 +317,10 @@ public interface IKeyService
     bool ValidateMnemonic(string mnemonic);
 
     // Delegates to IChainProvider for chain-specific derivation
-    Task<string> DeriveAddressAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainType chain, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<string> DeriveAddressAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<string> DeriveStakingAddressAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default);
+    Task<PrivateKey> DerivePrivateKeyAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    Task<PublicKey> DerivePublicKeyAsync(string mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
 }
 ```
 
@@ -263,26 +369,42 @@ Main wallet management facade.
 public interface IWalletManager
 {
     // Wallet Lifecycle
-    Task<BurizaWallet> CreateAsync(string name, string password, ChainType initialChain = ChainType.Cardano, int mnemonicWordCount = 24, CancellationToken ct = default);
-    Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainType initialChain = ChainType.Cardano, CancellationToken ct = default);
+    Task<BurizaWallet> CreateAsync(string name, string password, ChainInfo? chainInfo = null, int mnemonicWordCount = 24, CancellationToken ct = default);
+    Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default);
     Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default);
     Task<BurizaWallet?> GetActiveAsync(CancellationToken ct = default);
     Task SetActiveAsync(int walletId, CancellationToken ct = default);
     Task DeleteAsync(int walletId, CancellationToken ct = default);
 
     // Chain Management
-    Task SetActiveChainAsync(int walletId, ChainType chain, string password, CancellationToken ct = default);
+    Task SetActiveChainAsync(int walletId, ChainInfo chainInfo, string? password = null, CancellationToken ct = default);
     IReadOnlyList<ChainType> GetAvailableChains();
 
     // Account Management
-    Task<WalletAccount> CreateAccountAsync(int walletId, string name, CancellationToken ct = default);
+    Task<WalletAccount> CreateAccountAsync(int walletId, string name, int? accountIndex = null, CancellationToken ct = default);
     Task<WalletAccount?> GetActiveAccountAsync(CancellationToken ct = default);
     Task SetActiveAccountAsync(int walletId, int accountIndex, CancellationToken ct = default);
     Task UnlockAccountAsync(int walletId, int accountIndex, string password, CancellationToken ct = default);
+    Task RenameAccountAsync(int walletId, int accountIndex, string newName, CancellationToken ct = default);
+    Task<IReadOnlyList<WalletAccount>> DiscoverAccountsAsync(int walletId, string password, int accountGapLimit = 5, CancellationToken ct = default);
+
+    // Address Operations
+    Task<string> GetReceiveAddressAsync(int walletId, int accountIndex = 0, CancellationToken ct = default);
+    Task<string> GetStakingAddressAsync(int walletId, int accountIndex, string? password = null, CancellationToken ct = default);
+
+    // Password Operations
+    Task<bool> VerifyPasswordAsync(int walletId, string password, CancellationToken ct = default);
+    Task ChangePasswordAsync(int walletId, string currentPassword, string newPassword, CancellationToken ct = default);
 
     // Sensitive Operations (password required)
     Task<Transaction> SignTransactionAsync(int walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default);
-    Task<string> ExportMnemonicAsync(int walletId, string password, CancellationToken ct = default);
+    Task<byte[]> ExportMnemonicAsync(int walletId, string password, CancellationToken ct = default);
+
+    // Custom Provider Config
+    Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
+    Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default);
+    Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
+    Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, string password, CancellationToken ct = default);
 }
 ```
 
@@ -435,6 +557,17 @@ Lifecycle:
 - All caches cleared on logout or app close (`Dispose()`)
 
 **ChainRegistry Integration:**
+
+The `ChainRegistry` resolves provider configuration using a priority hierarchy:
+
+```
+Session Override → appsettings Configuration → Error (if not configured)
+```
+
+**Priority Flow:**
+1. **Session override** - Runtime custom endpoint/API key (highest priority)
+2. **appsettings configuration** - Pre-configured endpoint and API key (required)
+
 ```csharp
 // Factory checks session for custom config before using defaults
 using var sessionService = new SessionService();
@@ -447,6 +580,26 @@ sessionService.SetCustomEndpoint(ChainType.Cardano, NetworkType.Mainnet, "https:
 var config = factory.GetDefaultConfig(ChainType.Cardano, NetworkType.Mainnet);
 // config.Endpoint = "https://my-node.com"
 ```
+
+**appsettings.json Configuration:**
+```json
+{
+  "ChainProviderSettings": {
+    "Cardano": {
+      "MainnetApiKey": "",
+      "PreprodApiKey": "",
+      "PreviewApiKey": "",
+      "MainnetEndpoint": "",
+      "PreprodEndpoint": "",
+      "PreviewEndpoint": ""
+    }
+  }
+}
+```
+
+- **Endpoints**: Required - must be configured for each network you want to use
+- **API keys**: Required for most providers (Demeter, TxPipe), optional for self-hosted nodes
+- Self-hosted nodes typically don't require API keys
 
 ### HeartbeatService
 
@@ -508,13 +661,13 @@ Addresses for one chain within one account.
 public class ChainAddressData
 {
     public required ChainType Chain { get; init; }
-    public List<AddressInfo> ExternalAddresses { get; set; }  // Receive (role 0)
-    public List<AddressInfo> InternalAddresses { get; set; }  // Change (role 1)
-    public int NextExternalIndex { get; set; }
-    public int NextInternalIndex { get; set; }
+    public required string ReceiveAddress { get; init; }  // First external address
+    public string? StakingAddress { get; set; }  // Cached staking address (CIP-1852 role 2)
     public DateTime? LastSyncedAt { get; set; }
 }
 ```
+
+**Note:** Change addresses are derived on-demand during transaction building, not stored.
 
 ### EncryptedVault
 
@@ -675,46 +828,39 @@ public class BitcoinProvider : IChainProvider
 {
     // Implement IQueryService, ITransactionService
     // Implement BIP-84 derivation: m/84'/0'/account'/change/index
+
+    public static ProviderConfig ResolveConfig(BitcoinSettings? settings, NetworkType network,
+        string? customEndpoint = null, string? customApiKey = null)
+    {
+        // Resolution logic: session override > appsettings > throw if not configured
+    }
 }
 ```
 
 **2. Add to factory switch in `ChainRegistry.cs`:**
 ```csharp
-private static IChainProvider CreateProvider(ProviderConfig config)
+private ProviderConfig GetConfig(ChainInfo chainInfo)
 {
-    return config.Chain switch
+    string? customEndpoint = _sessionService?.GetCustomEndpoint(chainInfo);
+    string? customApiKey = _sessionService?.GetCustomApiKey(chainInfo);
+
+    return chainInfo.Chain switch
     {
-        ChainType.Cardano => new CardanoProvider(config.Endpoint, config.Network, config.ApiKey),
-        ChainType.Bitcoin => new BitcoinProvider(config.Endpoint, config.Network, config.ApiKey),
-        _ => throw new NotSupportedException($"Chain {config.Chain} is not supported")
+        ChainType.Cardano => CardanoProvider.ResolveConfig(_settings.Cardano, chainInfo.Network, customEndpoint, customApiKey),
+        ChainType.Bitcoin => BitcoinProvider.ResolveConfig(_settings.Bitcoin, chainInfo.Network, customEndpoint, customApiKey),
+        _ => throw new NotSupportedException($"Chain {chainInfo.Chain} is not supported")
     };
 }
 ```
 
-**3. Add presets in `ProviderConfig.cs`:**
+**3. Add settings model:**
 ```csharp
-public static class ProviderPresets
+public class BitcoinSettings
 {
-    public static class Cardano { /* existing */ }
-
-    public static class Bitcoin
-    {
-        public static ProviderConfig MempoolMainnet => new()
-        {
-            Chain = ChainType.Bitcoin,
-            Endpoint = "https://mempool.space/api",
-            Network = NetworkType.Mainnet,
-            Name = "Mempool.space Mainnet"
-        };
-
-        public static ProviderConfig MempoolTestnet => new()
-        {
-            Chain = ChainType.Bitcoin,
-            Endpoint = "https://mempool.space/testnet/api",
-            Network = NetworkType.Testnet,
-            Name = "Mempool.space Testnet"
-        };
-    }
+    public string? MainnetEndpoint { get; set; }
+    public string? MainnetApiKey { get; set; }
+    public string? TestnetEndpoint { get; set; }
+    public string? TestnetApiKey { get; set; }
 }
 ```
 
@@ -726,20 +872,19 @@ public IReadOnlyList<ChainType> GetSupportedChains()
 
 **No changes needed to:**
 - `WalletManagerService` - Already chain-agnostic
-- `BurizaWallet` - Provider attached via factory
-- `IWalletManager` - Already uses `ChainType` parameter
-- `KeyService` - Delegates to provider via factory
+- `BurizaWallet` - Provider attached via registry
+- `IWalletManager` - Already uses `ChainInfo` parameter
+- `KeyService` - Delegates to provider via registry
 
 **Result:** Custom config is global per chain/network (not per-wallet):
 ```csharp
 // Custom config applies to all wallets on that chain/network
-sessionService.SetCustomEndpoint(ChainType.Cardano, NetworkType.Mainnet, "https://my-node.com");
-sessionService.SetCustomApiKey(ChainType.Cardano, NetworkType.Mainnet, "my-key");
+sessionService.SetCustomEndpoint(chainInfo, "https://my-node.com");
+sessionService.SetCustomApiKey(chainInfo, "my-key");
 
-// All subsequent provider creation uses custom config
-var config = factory.GetDefaultConfig(ChainType.Cardano, NetworkType.Mainnet);
-// config.Endpoint = "https://my-node.com"
-// config.ApiKey = "my-key"
+// ChainRegistry now uses custom config when creating providers
+var provider = chainRegistry.GetProvider(chainInfo);
+// provider.Config.Endpoint = "https://my-node.com"
 ```
 
 ---

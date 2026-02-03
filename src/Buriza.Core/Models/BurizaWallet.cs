@@ -13,8 +13,9 @@ namespace Buriza.Core.Models;
 public class BurizaWallet : IWallet
 {
     public required int Id { get; init; }
-    public required string Name { get; set; }
-    public string Avatar { get; set; } = string.Empty;
+
+    /// <summary>Wallet profile (name, label, avatar).</summary>
+    public required WalletProfile Profile { get; set; }
 
     /// <summary>Network this wallet operates on (Mainnet, Preprod, Preview).</summary>
     public NetworkType Network { get; init; } = NetworkType.Mainnet;
@@ -39,88 +40,57 @@ public class BurizaWallet : IWallet
     public WalletAccount? GetActiveAccount() =>
         Accounts.FirstOrDefault(a => a.Index == ActiveAccountIndex);
 
-    public string? GetPrimaryAddress()
-    {
-        WalletAccount? account = GetActiveAccount();
-        ChainAddressData? chainData = account?.GetChainData(ActiveChain);
-        return chainData?.ExternalAddresses.FirstOrDefault()?.Address;
-    }
-
-    public IReadOnlyList<string> GetAddresses(int? accountIndex = null, bool includeChange = false)
+    public ChainAddressData? GetAddressInfo(int? accountIndex = null)
     {
         WalletAccount? account = accountIndex.HasValue
             ? Accounts.FirstOrDefault(a => a.Index == accountIndex.Value)
             : GetActiveAccount();
 
-        ChainAddressData? chainData = account?.GetChainData(ActiveChain);
-        if (chainData == null) return [];
-
-        List<string> addresses = [.. chainData.ExternalAddresses.Select(a => a.Address)];
-        if (includeChange)
-            addresses.AddRange(chainData.InternalAddresses.Select(a => a.Address));
-
-        return addresses;
+        return account?.GetChainData(ActiveChain);
     }
 
     #endregion
 
     #region IWallet - Query Operations
 
-    public async Task<ulong> GetBalanceAsync(int? accountIndex = null, bool allAddresses = false, CancellationToken ct = default)
+    public async Task<ulong> GetBalanceAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        EnsureProvider();
+        IChainProvider provider = EnsureProvider();
 
-        IReadOnlyList<string> addresses = GetAddresses(accountIndex, allAddresses);
-        if (addresses.Count == 0) return 0;
+        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        if (string.IsNullOrEmpty(address)) return 0;
 
-        if (!allAddresses)
-            return await Provider!.QueryService.GetBalanceAsync(addresses[0], ct);
-
-        IEnumerable<Task<ulong>> tasks = addresses.Select(a => Provider!.QueryService.GetBalanceAsync(a, ct));
-        ulong[] balances = await Task.WhenAll(tasks);
-        return balances.Aggregate(0UL, (total, b) => total + b);
+        return await provider.QueryService.GetBalanceAsync(address, ct);
     }
 
-    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int? accountIndex = null, bool allAddresses = false, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        EnsureProvider();
+        IChainProvider provider = EnsureProvider();
 
-        IReadOnlyList<string> addresses = GetAddresses(accountIndex, allAddresses);
-        if (addresses.Count == 0) return [];
+        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        if (string.IsNullOrEmpty(address)) return [];
 
-        if (!allAddresses)
-            return await Provider!.QueryService.GetAssetsAsync(addresses[0], ct);
-
-        IEnumerable<Task<IReadOnlyList<Asset>>> tasks = addresses.Select(a => Provider!.QueryService.GetAssetsAsync(a, ct));
-        IReadOnlyList<Asset>[] results = await Task.WhenAll(tasks);
-
-        return [.. results
-            .SelectMany(assets => assets)
-            .GroupBy(a => a.Subject)
-            .Select(g => g.First() with { Quantity = g.Aggregate(0UL, (sum, a) => sum + a.Quantity) })];
+        return await provider.QueryService.GetAssetsAsync(address, ct);
     }
 
     public async Task<IReadOnlyList<Utxo>> GetUtxosAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        EnsureProvider();
+        IChainProvider provider = EnsureProvider();
 
-        IReadOnlyList<string> addresses = GetAddresses(accountIndex, includeChange: true);
-        if (addresses.Count == 0) return [];
+        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        if (string.IsNullOrEmpty(address)) return [];
 
-        IEnumerable<Task<IReadOnlyList<Utxo>>> tasks = addresses.Select(a => Provider!.QueryService.GetUtxosAsync(a, ct));
-        IReadOnlyList<Utxo>[] results = await Task.WhenAll(tasks);
-
-        return [.. results.SelectMany(u => u)];
+        return await provider.QueryService.GetUtxosAsync(address, ct);
     }
 
     public async Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(int? accountIndex = null, int limit = 50, CancellationToken ct = default)
     {
-        EnsureProvider();
+        IChainProvider provider = EnsureProvider();
 
-        string? address = GetAddresses(accountIndex).FirstOrDefault();
-        if (address == null) return [];
+        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        if (string.IsNullOrEmpty(address)) return [];
 
-        return await Provider!.QueryService.GetTransactionHistoryAsync(address, limit, ct);
+        return await provider.QueryService.GetTransactionHistoryAsync(address, limit, ct);
     }
 
     #endregion
@@ -129,10 +99,11 @@ public class BurizaWallet : IWallet
 
     public async Task<UnsignedTransaction> BuildTransactionAsync(ulong amount, string toAddress, CancellationToken ct = default)
     {
-        EnsureProvider();
+        IChainProvider provider = EnsureProvider();
 
-        string? fromAddress = GetPrimaryAddress()
-            ?? throw new InvalidOperationException("No address available");
+        string? fromAddress = GetAddressInfo()?.ReceiveAddress;
+        if (string.IsNullOrEmpty(fromAddress))
+            throw new InvalidOperationException("No address available");
 
         TransactionRequest request = new()
         {
@@ -140,39 +111,36 @@ public class BurizaWallet : IWallet
             Recipients = [new TransactionRecipient { Address = toAddress, Amount = amount }]
         };
 
-        return await Provider!.TransactionService.BuildAsync(request, ct);
+        return await provider.TransactionService.BuildAsync(request, ct);
     }
 
     public async Task<UnsignedTransaction> BuildTransactionAsync(TransactionRequest request, CancellationToken ct = default)
     {
-        EnsureProvider();
+        IChainProvider provider = EnsureProvider();
 
         // Use wallet's primary address if FromAddress not specified
         if (string.IsNullOrEmpty(request.FromAddress))
         {
-            request = request with
-            {
-                FromAddress = GetPrimaryAddress()
-                    ?? throw new InvalidOperationException("No address available")
-            };
+            string? fromAddress = GetAddressInfo()?.ReceiveAddress;
+            if (string.IsNullOrEmpty(fromAddress))
+                throw new InvalidOperationException("No address available");
+
+            request = request with { FromAddress = fromAddress };
         }
 
-        return await Provider!.TransactionService.BuildAsync(request, ct);
+        return await provider.TransactionService.BuildAsync(request, ct);
     }
 
     public async Task<string> SubmitAsync(Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction tx, CancellationToken ct = default)
     {
-        EnsureProvider();
-        return await Provider!.TransactionService.SubmitAsync(tx, ct);
+        IChainProvider provider = EnsureProvider();
+        return await provider.TransactionService.SubmitAsync(tx, ct);
     }
 
     #endregion
 
-    private void EnsureProvider()
-    {
-        if (Provider == null)
-            throw new InvalidOperationException("Wallet is not connected to a provider. Use WalletManager to load the wallet.");
-    }
+    private IChainProvider EnsureProvider() =>
+        Provider ?? throw new InvalidOperationException("Wallet is not connected to a provider. Use WalletManager to load the wallet.");
 }
 
 /// <summary>
@@ -184,8 +152,8 @@ public class WalletAccount
     /// <summary>BIP-44 account index (hardened).</summary>
     public required int Index { get; init; }
 
+    /// <summary>Account name (e.g., "Savings", "Trading").</summary>
     public required string Name { get; set; }
-    public string Avatar { get; set; } = string.Empty;
 
     /// <summary>Chain-specific address data, keyed by ChainType.</summary>
     public Dictionary<ChainType, ChainAddressData> ChainData { get; set; } = [];
@@ -198,92 +166,29 @@ public class WalletAccount
 
 /// <summary>
 /// Chain-specific address data for an account.
+/// Stores only the primary receive address. Change addresses derived on-demand during tx build.
 /// </summary>
 public class ChainAddressData
 {
     public required ChainType Chain { get; init; }
 
-    /// <summary>External (receive) addresses - role 0.</summary>
-    public List<AddressInfo> ExternalAddresses { get; set; } = [];
+    /// <summary>Primary receive address (index 0, role 0).</summary>
+    public required string ReceiveAddress { get; set; }
 
-    /// <summary>Internal (change) addresses - role 1.</summary>
-    public List<AddressInfo> InternalAddresses { get; set; } = [];
-
-    /// <summary>Next unused external address index.</summary>
-    public int NextExternalIndex { get; set; } = 0;
-
-    /// <summary>Next unused internal address index.</summary>
-    public int NextInternalIndex { get; set; } = 0;
+    /// <summary>Staking/reward address (role 2, index 0). Null if not yet derived.</summary>
+    public string? StakingAddress { get; set; }
 
     /// <summary>Last time this chain data was synced with the network.</summary>
     public DateTime? LastSyncedAt { get; set; }
 }
 
 /// <summary>
-/// Individual address information.
+/// Global wallet profile for customization.
 /// </summary>
-public class AddressInfo
+public class WalletProfile
 {
-    /// <summary>Address index in derivation path.</summary>
-    public required int Index { get; init; }
-
-    /// <summary>Bech32 or other format address string.</summary>
-    public required string Address { get; init; }
-
-    /// <summary>Whether this address has been used on-chain.</summary>
-    public bool IsUsed { get; set; } = false;
-
-    /// <summary>Optional label for this address.</summary>
+    public required string Name { get; set; }
     public string? Label { get; set; }
+    public string? Avatar { get; set; }
 }
 
-/// <summary>
-/// Derivation path constants for supported chains.
-/// </summary>
-public static class DerivationPaths
-{
-    /// <summary>
-    /// Cardano CIP-1852: m/1852'/1815'/account'/role/index
-    /// </summary>
-    public static class Cardano
-    {
-        public const int Purpose = 1852;
-        public const int CoinType = 1815;
-
-        public static string GetBasePath(int account) =>
-            $"m/{Purpose}'/{CoinType}'/{account}'";
-
-        public static string GetFullPath(int account, int role, int index) =>
-            $"m/{Purpose}'/{CoinType}'/{account}'/{role}/{index}";
-    }
-
-    /// <summary>
-    /// Bitcoin BIP-84 (Native SegWit): m/84'/0'/account'/change/index
-    /// </summary>
-    public static class Bitcoin
-    {
-        public const int Purpose = 84;
-        public const int CoinType = 0;
-
-        public static string GetBasePath(int account) =>
-            $"m/{Purpose}'/{CoinType}'/{account}'";
-
-        public static string GetFullPath(int account, int change, int index) =>
-            $"m/{Purpose}'/{CoinType}'/{account}'/{change}/{index}";
-    }
-
-    /// <summary>
-    /// Ethereum BIP-44: m/44'/60'/account'/0/index
-    /// </summary>
-    public static class Ethereum
-    {
-        public const int Purpose = 44;
-        public const int CoinType = 60;
-
-        public static string GetBasePath(int account) =>
-            $"m/{Purpose}'/{CoinType}'/{account}'";
-
-        public static string GetFullPath(int account, int index) =>
-            $"m/{Purpose}'/{CoinType}'/{account}'/0/{index}";
-    }
-}

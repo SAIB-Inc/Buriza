@@ -10,9 +10,9 @@ namespace Buriza.Core.Interfaces.Wallet;
 public interface IWallet
 {
     // Query operations
-    Task<ulong> GetBalanceAsync(int? accountIndex = null, bool allAddresses = false, CancellationToken ct = default);
+    Task<ulong> GetBalanceAsync(int? accountIndex = null, CancellationToken ct = default);
     Task<IReadOnlyList<Utxo>> GetUtxosAsync(int? accountIndex = null, CancellationToken ct = default);
-    Task<IReadOnlyList<Asset>> GetAssetsAsync(int? accountIndex = null, bool allAddresses = false, CancellationToken ct = default);
+    Task<IReadOnlyList<Asset>> GetAssetsAsync(int? accountIndex = null, CancellationToken ct = default);
     Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(int? accountIndex = null, int limit = 50, CancellationToken ct = default);
 
     // Transaction operations

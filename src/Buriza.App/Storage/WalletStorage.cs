@@ -3,6 +3,7 @@ using System.Text.Json;
 using Buriza.Core.Crypto;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models;
+using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 using MauiSecureStorage = Microsoft.Maui.Storage.SecureStorage;
 
@@ -163,10 +164,10 @@ public class WalletStorage(IPreferences preferences) : IWalletStorage
 
     #region Custom Provider Config
 
-    public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         Dictionary<string, CustomProviderConfig> configs = LoadCustomConfigsFromPreferences();
-        string key = GetCustomConfigKey(chain, network);
+        string key = GetCustomConfigKey(chainInfo);
         CustomProviderConfig? config = configs.TryGetValue(key, out CustomProviderConfig? c) ? c : null;
         return Task.FromResult(config);
     }
@@ -180,33 +181,33 @@ public class WalletStorage(IPreferences preferences) : IWalletStorage
         return Task.CompletedTask;
     }
 
-    public async Task DeleteCustomProviderConfigAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    public async Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         Dictionary<string, CustomProviderConfig> configs = LoadCustomConfigsFromPreferences();
-        string key = GetCustomConfigKey(chain, network);
+        string key = GetCustomConfigKey(chainInfo);
         if (configs.Remove(key))
         {
             SaveCustomConfigsToPreferences(configs);
         }
-        await DeleteCustomApiKeyAsync(chain, network, ct);
+        await DeleteCustomApiKeyAsync(chainInfo, ct);
     }
 
-    public async Task SaveCustomApiKeyAsync(ChainType chain, NetworkType network, string apiKey, string password, CancellationToken ct = default)
+    public async Task SaveCustomApiKeyAsync(ChainInfo chainInfo, string apiKey, string password, CancellationToken ct = default)
     {
         EncryptedVault vault = VaultEncryption.Encrypt(0, apiKey, password);
         string json = JsonSerializer.Serialize(vault);
-        await MauiSecureStorage.Default.SetAsync(GetApiKeyVaultKey(chain, network), json);
+        await MauiSecureStorage.Default.SetAsync(GetApiKeyVaultKey(chainInfo), json);
 
-        CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chain, network, ct);
+        CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chainInfo, ct);
         if (existing != null)
         {
             await SaveCustomProviderConfigAsync(existing with { HasCustomApiKey = true }, ct);
         }
     }
 
-    public async Task<byte[]?> UnlockCustomApiKeyAsync(ChainType chain, NetworkType network, string password, CancellationToken ct = default)
+    public async Task<byte[]?> UnlockCustomApiKeyAsync(ChainInfo chainInfo, string password, CancellationToken ct = default)
     {
-        string? json = await MauiSecureStorage.Default.GetAsync(GetApiKeyVaultKey(chain, network));
+        string? json = await MauiSecureStorage.Default.GetAsync(GetApiKeyVaultKey(chainInfo));
         if (string.IsNullOrEmpty(json))
             return null;
 
@@ -217,11 +218,11 @@ public class WalletStorage(IPreferences preferences) : IWalletStorage
         return VaultEncryption.DecryptToBytes(vault, password);
     }
 
-    public async Task DeleteCustomApiKeyAsync(ChainType chain, NetworkType network, CancellationToken ct = default)
+    public async Task DeleteCustomApiKeyAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        MauiSecureStorage.Default.Remove(GetApiKeyVaultKey(chain, network));
+        MauiSecureStorage.Default.Remove(GetApiKeyVaultKey(chainInfo));
 
-        CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chain, network, ct);
+        CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chainInfo, ct);
         if (existing is { HasCustomApiKey: true })
         {
             await SaveCustomProviderConfigAsync(existing with { HasCustomApiKey = false }, ct);
@@ -243,11 +244,106 @@ public class WalletStorage(IPreferences preferences) : IWalletStorage
         _preferences.Set(CustomConfigsKey, json);
     }
 
+    private static string GetCustomConfigKey(ChainInfo chainInfo)
+        => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
+
     private static string GetCustomConfigKey(ChainType chain, NetworkType network)
         => $"{(int)chain}:{(int)network}";
 
-    private static string GetApiKeyVaultKey(ChainType chain, NetworkType network)
-        => $"buriza_apikey_{(int)chain}_{(int)network}";
+    private static string GetApiKeyVaultKey(ChainInfo chainInfo)
+        => $"buriza_apikey_{(int)chainInfo.Chain}_{(int)chainInfo.Network}";
+
+    #endregion
+
+    #region Custom Data Service Config
+
+    private const string DataServiceConfigsKey = "buriza_data_service_configs";
+
+    public Task<DataServiceConfig?> GetDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
+    {
+        Dictionary<DataServiceType, DataServiceConfig> configs = LoadDataServiceConfigsFromPreferences();
+        DataServiceConfig? config = configs.TryGetValue(serviceType, out DataServiceConfig? c) ? c : null;
+        return Task.FromResult(config);
+    }
+
+    public Task<IReadOnlyList<DataServiceConfig>> GetAllDataServiceConfigsAsync(CancellationToken ct = default)
+    {
+        Dictionary<DataServiceType, DataServiceConfig> configs = LoadDataServiceConfigsFromPreferences();
+        return Task.FromResult<IReadOnlyList<DataServiceConfig>>(configs.Values.ToList());
+    }
+
+    public Task SaveDataServiceConfigAsync(DataServiceConfig config, CancellationToken ct = default)
+    {
+        Dictionary<DataServiceType, DataServiceConfig> configs = LoadDataServiceConfigsFromPreferences();
+        configs[config.ServiceType] = config;
+        SaveDataServiceConfigsToPreferences(configs);
+        return Task.CompletedTask;
+    }
+
+    public async Task DeleteDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
+    {
+        Dictionary<DataServiceType, DataServiceConfig> configs = LoadDataServiceConfigsFromPreferences();
+        if (configs.Remove(serviceType))
+        {
+            SaveDataServiceConfigsToPreferences(configs);
+        }
+        await DeleteDataServiceApiKeyAsync(serviceType, ct);
+    }
+
+    public async Task SaveDataServiceApiKeyAsync(DataServiceType serviceType, string apiKey, string password, CancellationToken ct = default)
+    {
+        EncryptedVault vault = VaultEncryption.Encrypt(0, apiKey, password);
+        string json = JsonSerializer.Serialize(vault);
+        await MauiSecureStorage.Default.SetAsync(GetDataServiceApiKeyVaultKey(serviceType), json);
+
+        DataServiceConfig? existing = await GetDataServiceConfigAsync(serviceType, ct);
+        if (existing != null)
+        {
+            await SaveDataServiceConfigAsync(existing with { HasCustomApiKey = true }, ct);
+        }
+    }
+
+    public async Task<byte[]?> UnlockDataServiceApiKeyAsync(DataServiceType serviceType, string password, CancellationToken ct = default)
+    {
+        string? json = await MauiSecureStorage.Default.GetAsync(GetDataServiceApiKeyVaultKey(serviceType));
+        if (string.IsNullOrEmpty(json))
+            return null;
+
+        EncryptedVault? vault = JsonSerializer.Deserialize<EncryptedVault>(json);
+        if (vault == null)
+            return null;
+
+        return VaultEncryption.DecryptToBytes(vault, password);
+    }
+
+    public async Task DeleteDataServiceApiKeyAsync(DataServiceType serviceType, CancellationToken ct = default)
+    {
+        MauiSecureStorage.Default.Remove(GetDataServiceApiKeyVaultKey(serviceType));
+
+        DataServiceConfig? existing = await GetDataServiceConfigAsync(serviceType, ct);
+        if (existing is { HasCustomApiKey: true })
+        {
+            await SaveDataServiceConfigAsync(existing with { HasCustomApiKey = false }, ct);
+        }
+    }
+
+    private Dictionary<DataServiceType, DataServiceConfig> LoadDataServiceConfigsFromPreferences()
+    {
+        string? json = _preferences.Get<string?>(DataServiceConfigsKey, null);
+        if (string.IsNullOrEmpty(json))
+            return [];
+
+        return JsonSerializer.Deserialize<Dictionary<DataServiceType, DataServiceConfig>>(json) ?? [];
+    }
+
+    private void SaveDataServiceConfigsToPreferences(Dictionary<DataServiceType, DataServiceConfig> configs)
+    {
+        string json = JsonSerializer.Serialize(configs);
+        _preferences.Set(DataServiceConfigsKey, json);
+    }
+
+    private static string GetDataServiceApiKeyVaultKey(DataServiceType serviceType)
+        => $"buriza_data_service_apikey_{(int)serviceType}";
 
     #endregion
 }

@@ -295,11 +295,11 @@ await walletManager.ClearCustomProviderConfigAsync(ChainType.Cardano, NetworkTyp
 
 ### Provider Config Resolution Order
 
-When `GetDefaultConfig()` is called, the registry checks in order:
+When `GetProvider()` is called, the registry checks in order:
 
 1. **SessionService custom endpoint** - Runtime overrides
-2. **App settings default** - From `ChainProviderSettings`
-3. **Built-in presets** - Fallback endpoints (Demeter)
+2. **App settings configuration** - From `ChainProviderSettings` (required)
+3. **Error** - Throws `InvalidOperationException` if not configured
 
 ### Validate Custom Endpoint
 
@@ -766,30 +766,39 @@ public class BitcoinProvider : IChainProvider, IBitcoinDataProvider
 }
 ```
 
-**3. Add provider presets:**
+**3. Add settings model and ResolveConfig:**
 
 ```csharp
-// Models/ProviderConfig.cs
-public static class ProviderPresets
+// Models/ChainProviderSettings.cs
+public class BitcoinSettings
 {
-    public static class Bitcoin
-    {
-        public static ProviderConfig MempoolMainnet => new()
-        {
-            Chain = ChainType.Bitcoin,
-            Endpoint = "https://mempool.space/api",
-            Network = NetworkType.Mainnet,
-            Name = "Mempool.space Mainnet"
-        };
+    public string? MainnetEndpoint { get; set; }
+    public string? MainnetApiKey { get; set; }
+    public string? TestnetEndpoint { get; set; }
+    public string? TestnetApiKey { get; set; }
+}
 
-        public static ProviderConfig MempoolTestnet => new()
-        {
-            Chain = ChainType.Bitcoin,
-            Endpoint = "https://mempool.space/testnet/api",
-            Network = NetworkType.Testnet,
-            Name = "Mempool.space Testnet"
-        };
-    }
+// Providers/BitcoinProvider.cs
+public static ProviderConfig ResolveConfig(BitcoinSettings? settings, NetworkType network,
+    string? customEndpoint = null, string? customApiKey = null)
+{
+    string? endpoint = customEndpoint ?? network switch
+    {
+        NetworkType.Mainnet => settings?.MainnetEndpoint,
+        NetworkType.Testnet => settings?.TestnetEndpoint,
+        _ => settings?.MainnetEndpoint
+    };
+
+    if (string.IsNullOrEmpty(endpoint))
+        throw new InvalidOperationException($"Endpoint for Bitcoin {network} not configured.");
+
+    return new ProviderConfig
+    {
+        Chain = ChainType.Bitcoin,
+        Endpoint = endpoint,
+        Network = network,
+        ApiKey = customApiKey ?? /* similar resolution */
+    };
 }
 ```
 
@@ -797,13 +806,16 @@ public static class ProviderPresets
 
 ```csharp
 // Services/ChainRegistry.cs
-private static IChainProvider CreateProvider(ProviderConfig config)
+private ProviderConfig GetConfig(ChainInfo chainInfo)
 {
-    return config.Chain switch
+    string? customEndpoint = _sessionService?.GetCustomEndpoint(chainInfo);
+    string? customApiKey = _sessionService?.GetCustomApiKey(chainInfo);
+
+    return chainInfo.Chain switch
     {
-        ChainType.Cardano => new CardanoProvider(config.Endpoint, config.Network, config.ApiKey),
-        ChainType.Bitcoin => new BitcoinProvider(config.Endpoint, config.Network, config.ApiKey),
-        _ => throw new NotSupportedException($"Chain {config.Chain} is not supported")
+        ChainType.Cardano => CardanoProvider.ResolveConfig(_settings.Cardano, chainInfo.Network, customEndpoint, customApiKey),
+        ChainType.Bitcoin => BitcoinProvider.ResolveConfig(_settings.Bitcoin, chainInfo.Network, customEndpoint, customApiKey),
+        _ => throw new NotSupportedException($"Chain {chainInfo.Chain} is not supported")
     };
 }
 
