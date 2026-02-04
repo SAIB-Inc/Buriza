@@ -6,6 +6,7 @@ using Buriza.Core.Crypto;
 using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models;
+using Buriza.Core.Storage;
 
 namespace Buriza.Core.Services;
 
@@ -31,10 +32,10 @@ public class AuthenticationService(
 
     #region Storage Keys
 
-    private static string GetPinVaultKey(int walletId) => $"buriza_pin_{walletId}";
-    private static string GetFailedAttemptsKey(int walletId) => $"buriza_failed_{walletId}";
-    private static string GetLockoutKey(int walletId) => $"buriza_lockout_{walletId}";
-    private static string GetBiometricKey(int walletId) => $"buriza_bio_{walletId}";
+    private static string GetPinVaultKey(int walletId) => StorageKeys.PinVault(walletId);
+    private static string GetFailedAttemptsKey(int walletId) => StorageKeys.FailedAttempts(walletId);
+    private static string GetLockoutKey(int walletId) => StorageKeys.Lockout(walletId);
+    private static string GetBiometricKey(int walletId) => StorageKeys.BiometricKey(walletId);
 
     #endregion
 

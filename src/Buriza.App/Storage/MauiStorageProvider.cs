@@ -1,4 +1,5 @@
 using Buriza.Core.Interfaces.Storage;
+using Buriza.Core.Storage;
 using MauiSecureStorage = Microsoft.Maui.Storage.SecureStorage;
 
 namespace Buriza.App.Storage;
@@ -14,7 +15,6 @@ namespace Buriza.App.Storage;
 /// </summary>
 public class MauiStorageProvider(IPreferences preferences) : IStorageProvider, ISecureStorageProvider
 {
-    private const string KeysIndexKey = "buriza_storage_keys_index";
     private static readonly object _keyTrackingLock = new();
 
     #region IStorageProvider
@@ -84,7 +84,7 @@ public class MauiStorageProvider(IPreferences preferences) : IStorageProvider, I
 
     private HashSet<string> GetTrackedKeys()
     {
-        string? keysJson = preferences.Get<string?>(KeysIndexKey, null);
+        string? keysJson = preferences.Get<string?>(StorageKeys.KeysIndex, null);
         if (string.IsNullOrEmpty(keysJson))
             return [];
 
@@ -101,12 +101,12 @@ public class MauiStorageProvider(IPreferences preferences) : IStorageProvider, I
     private void SaveTrackedKeys(HashSet<string> keys)
     {
         string keysJson = System.Text.Json.JsonSerializer.Serialize(keys);
-        preferences.Set(KeysIndexKey, keysJson);
+        preferences.Set(StorageKeys.KeysIndex, keysJson);
     }
 
     private void TrackKey(string key)
     {
-        if (key == KeysIndexKey) return;
+        if (key == StorageKeys.KeysIndex) return;
 
         lock (_keyTrackingLock)
         {
@@ -118,7 +118,7 @@ public class MauiStorageProvider(IPreferences preferences) : IStorageProvider, I
 
     private void UntrackKey(string key)
     {
-        if (key == KeysIndexKey) return;
+        if (key == StorageKeys.KeysIndex) return;
 
         lock (_keyTrackingLock)
         {

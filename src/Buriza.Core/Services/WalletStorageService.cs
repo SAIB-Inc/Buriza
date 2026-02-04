@@ -4,6 +4,7 @@ using Buriza.Core.Crypto;
 using Buriza.Core.Extensions;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models;
+using Buriza.Core.Storage;
 using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 
@@ -18,14 +19,8 @@ public class WalletStorageService(
     IStorageProvider storage,
     ISecureStorageProvider secureStorage) : IWalletStorage
 {
-    private const string WalletsKey = "buriza_wallets";
-    private const string ActiveWalletKey = "buriza_active_wallet";
-    private const string CustomConfigsKey = "buriza_custom_configs";
-    private const string DataServiceConfigsKey = "buriza_data_service_configs";
-
-    // Instance-based lock to avoid cross-request blocking in web scenarios.
+    // Instance-based lock for thread-safe ID generation.
     // For MAUI (singleton), same instance is reused. For Web (scoped), each request gets its own.
-    // ID generation uses timestamp-based approach to avoid lock contention.
     private readonly SemaphoreSlim _storageLock = new(1, 1);
 
     #region Encrypted Vault Helpers
@@ -64,7 +59,7 @@ public class WalletStorageService(
         else
             wallets.Add(wallet);
 
-        await storage.SetJsonAsync(WalletsKey, wallets, ct);
+        await storage.SetJsonAsync(StorageKeys.Wallets, wallets, ct);
     }
 
     public async Task<BurizaWallet?> LoadAsync(int walletId, CancellationToken ct = default)
@@ -74,26 +69,26 @@ public class WalletStorageService(
     }
 
     public async Task<IReadOnlyList<BurizaWallet>> LoadAllAsync(CancellationToken ct = default)
-        => await storage.GetJsonAsync<List<BurizaWallet>>(WalletsKey, ct) ?? [];
+        => await storage.GetJsonAsync<List<BurizaWallet>>(StorageKeys.Wallets, ct) ?? [];
 
     public async Task DeleteAsync(int walletId, CancellationToken ct = default)
     {
         List<BurizaWallet> wallets = [.. await LoadAllAsync(ct)];
         wallets.RemoveAll(w => w.Id == walletId);
-        await storage.SetJsonAsync(WalletsKey, wallets, ct);
+        await storage.SetJsonAsync(StorageKeys.Wallets, wallets, ct);
     }
 
     public async Task<int?> GetActiveWalletIdAsync(CancellationToken ct = default)
     {
-        string? value = await storage.GetAsync(ActiveWalletKey, ct);
+        string? value = await storage.GetAsync(StorageKeys.ActiveWallet, ct);
         return string.IsNullOrEmpty(value) ? null : int.TryParse(value, out int id) ? id : null;
     }
 
     public async Task SetActiveWalletIdAsync(int walletId, CancellationToken ct = default)
-        => await storage.SetAsync(ActiveWalletKey, walletId.ToString(), ct);
+        => await storage.SetAsync(StorageKeys.ActiveWallet, walletId.ToString(), ct);
 
     public async Task ClearActiveWalletIdAsync(CancellationToken ct = default)
-        => await storage.RemoveAsync(ActiveWalletKey, ct);
+        => await storage.RemoveAsync(StorageKeys.ActiveWallet, ct);
 
     public async Task<int> GenerateNextIdAsync(CancellationToken ct = default)
     {
@@ -155,7 +150,7 @@ public class WalletStorageService(
         }
     }
 
-    private static string GetVaultKey(int walletId) => $"buriza_vault_{walletId}";
+    private static string GetVaultKey(int walletId) => StorageKeys.Vault(walletId);
 
     #endregion
 
@@ -163,22 +158,22 @@ public class WalletStorageService(
 
     public async Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
+        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         return configs.GetValueOrDefault(GetCustomConfigKey(chainInfo));
     }
 
     public async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
+        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         configs[GetCustomConfigKey(config.Chain, config.Network)] = config;
-        await storage.SetJsonAsync(CustomConfigsKey, configs, ct);
+        await storage.SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
     }
 
     public async Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
+        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         if (configs.Remove(GetCustomConfigKey(chainInfo)))
-            await storage.SetJsonAsync(CustomConfigsKey, configs, ct);
+            await storage.SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
 
         await DeleteCustomApiKeyAsync(chainInfo, ct);
     }
@@ -211,7 +206,7 @@ public class WalletStorageService(
         => $"{(int)chain}:{(int)network}";
 
     private static string GetApiKeyVaultKey(ChainInfo chainInfo)
-        => $"buriza_apikey_{(int)chainInfo.Chain}_{(int)chainInfo.Network}";
+        => StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
 
     #endregion
 
@@ -219,28 +214,28 @@ public class WalletStorageService(
 
     public async Task<DataServiceConfig?> GetDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(StorageKeys.DataServiceConfigs, ct) ?? [];
         return configs.GetValueOrDefault(GetDataServiceConfigKey(serviceType));
     }
 
     public async Task<IReadOnlyList<DataServiceConfig>> GetAllDataServiceConfigsAsync(CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(StorageKeys.DataServiceConfigs, ct) ?? [];
         return [.. configs.Values];
     }
 
     public async Task SaveDataServiceConfigAsync(DataServiceConfig config, CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(StorageKeys.DataServiceConfigs, ct) ?? [];
         configs[GetDataServiceConfigKey(config.ServiceType)] = config;
-        await storage.SetJsonAsync(DataServiceConfigsKey, configs, ct);
+        await storage.SetJsonAsync(StorageKeys.DataServiceConfigs, configs, ct);
     }
 
     public async Task DeleteDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(StorageKeys.DataServiceConfigs, ct) ?? [];
         if (configs.Remove(GetDataServiceConfigKey(serviceType)))
-            await storage.SetJsonAsync(DataServiceConfigsKey, configs, ct);
+            await storage.SetJsonAsync(StorageKeys.DataServiceConfigs, configs, ct);
 
         await DeleteDataServiceApiKeyAsync(serviceType, ct);
     }
@@ -270,7 +265,7 @@ public class WalletStorageService(
         => $"{(int)serviceType}";
 
     private static string GetDataServiceApiKeyVaultKey(DataServiceType serviceType)
-        => $"buriza_data_apikey_{(int)serviceType}";
+        => StorageKeys.DataServiceApiKeyVault((int)serviceType);
 
     #endregion
 }
