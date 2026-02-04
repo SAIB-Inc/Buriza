@@ -98,11 +98,14 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SuccessDarken = "#002116",
             SuccessContrastText = "#FAF9FF",
             Error = "#FF5449",
-            Info = "#00B286",
+            ErrorLighten = "#F87171",
+            Info = "#51DDAE",
             InfoLighten = "#1C1F27",
             Warning = "#FF9C39",
+            WarningLighten = "#D8E2FF",
             LinesDefault = "#181B23",
-            LinesInputs = "#1C1F27"
+            LinesInputs = "#1C1F27",
+            ActionDefault = "#2A2E38"
         },
 
         PaletteLight = new PaletteLight()

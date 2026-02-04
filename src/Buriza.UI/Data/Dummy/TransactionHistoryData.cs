@@ -19,7 +19,10 @@ public static class TransactionHistoryData
                 Assets: [
                     new TransactionAsset(Tokens.Ada, "ADA", -212.28m, 192.57m),
                     new TransactionAsset(Tokens.Strike, "STRIKE", -15.50m, 25.74m),
-                    new TransactionAsset(Tokens.Meld, "MELD", -850.20m, 7.11m)
+                    new TransactionAsset(Tokens.Meld, "MELD", -850.20m, 7.11m),
+                    new TransactionAsset(Tokens.Sundae, "SUNDAE", -120.00m, 0.62m),
+                    new TransactionAsset(Tokens.Snek, "SNEK", -5000.00m, 23.65m),
+                    new TransactionAsset(Tokens.Hosky, "HOSKY", -1000000.00m, 6.33m)
                 ],
                 CollateralAda: 433.00m,
                 TransactionFeeAda: 0.034m
@@ -34,7 +37,9 @@ public static class TransactionHistoryData
                 Assets: [
                     new TransactionAsset(Tokens.Usdc, "USDC", 1500.00m, 1504.50m),
                     new TransactionAsset(Tokens.Djed, "DJED", 850.75m, 858.61m),
-                    new TransactionAsset(Tokens.Ada, "ADA", 75.25m, 68.22m)
+                    new TransactionAsset(Tokens.Ada, "ADA", 75.25m, 68.22m),
+                    new TransactionAsset(Tokens.Wmt, "WMT", 500.00m, 125.00m),
+                    new TransactionAsset(Tokens.Angel, "ANGEL", 25.00m, 66.38m)
                 ],
                 CollateralAda: 0m,
                 TransactionFeeAda: 0.021m

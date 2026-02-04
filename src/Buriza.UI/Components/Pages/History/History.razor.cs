@@ -19,6 +19,9 @@ public partial class History
     protected TransactionHistory? SelectedTransaction { get; set; }
     protected Dictionary<string, List<TransactionHistory>> TransactionsByDate { get; set; } = new();
 
+    protected int CurrentPage { get; set; } = 1;
+    protected int TotalPages { get; set; } = 4;
+
     protected void ToggleSearch()
     {
         IsSearchExpanded = !IsSearchExpanded;

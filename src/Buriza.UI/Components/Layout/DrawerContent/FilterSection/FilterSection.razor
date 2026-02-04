@@ -8,7 +8,7 @@
             <MudText Class="!font-medium !mb-3 !text-white">
                 Transaction Type
             </MudText>
-            <div class="grid grid-cols-2 !gap-1 [&_.mud-button-root]:!text-[#D8E2FF] [&_.mud-typography]:!text-white">
+            <div class="grid grid-cols-2 !gap-1 [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)] [&_.mud-typography]:!text-white">
                 <MudCheckBox T="bool" @bind-Value="SentSelected" Label="Sent" Color="Color.Primary" Dense="true" />
                 <MudCheckBox T="bool" @bind-Value="ReceiveSelected" Label="Receive" Color="Color.Primary" Dense="true" />
                 <MudCheckBox T="bool" @bind-Value="SwapsSelected" Label="Voting" Color="Color.Primary" Dense="true" />
@@ -22,7 +22,7 @@
             </MudText>
             <div class="flex items-center justify-between !gap-2">
                 <div>
-                    <MudText Class="!text-xs !text-[#C1C6D7] !font-medium">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-gray-dark)] !font-medium">
                         From
                     </MudText>
                     <MudDatePicker
@@ -33,7 +33,7 @@
                     />
                 </div>
                 <div>
-                    <MudText Class="!text-xs !text-[#C1C6D7] !font-medium">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-gray-dark)] !font-medium">
                         To
                     </MudText>
                     <MudDatePicker
@@ -45,10 +45,10 @@
                 </div>
             </div>
             <MudToggleGroup
-                T="string?"
+                T="string"
                 @bind-Value="SelectedDateRange"
                 Outlined="false"
-                Class="!mt-3 !w-full [&_.mud-button-root]:!py-1 [&_.mud-button-root]:!px-3 !flex items-center [&_.mud-toggle-item]:!normal-case [&_.mud-button-label]:!font-medium [&_.mud-button]:!bg-transparent [&_.mud-button]:!border [&_.mud-button]:!border-[#C1C6D7] [&_.mud-button-label]:!text-[var(--mud-palette-text-primary)] [&_.mud-button]:!rounded-full [&_.mud-toggle-item-selected]:!bg-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected]:!border-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-tertiary)] [&_.mud-toggle-item]:!flex-1 !gap-2 !h-10 [&_.mud-button-root]:!h-full"
+                Class="!mt-3 !w-full [&_.mud-button-root]:!py-1 [&_.mud-button-root]:!px-3 !flex items-center [&_.mud-toggle-item]:!normal-case [&_.mud-button-label]:!font-medium [&_.mud-button]:!bg-transparent [&_.mud-button]:!border [&_.mud-button]:!border-[var(--mud-palette-gray-dark)] [&_.mud-button-label]:!text-[var(--mud-palette-text-primary)] [&_.mud-button]:!rounded-full [&_.mud-toggle-item-selected]:!bg-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected]:!border-[var(--mud-palette-primary)] [&_.mud-toggle-item-selected_.mud-button-label]:!text-[var(--mud-palette-tertiary)] [&_.mud-toggle-item]:!flex-1 !gap-2 !h-10 [&_.mud-button-root]:!h-full"
             >
                 <MudToggleItem Value="@("Today")" Class="!rounded-full" />
                 <MudToggleItem Value="@("This Week")" Class="!rounded-full" />
@@ -60,10 +60,10 @@
             <MudText Class="!font-medium !mb-3 !text-white">
                 Status
             </MudText>
-            <MudRadioGroup T="string" @bind-Value="SelectedStatus" Class="!flex [&_.mud-radio]:!gap-2 [&_.mud-radio-group]:!gap-1 [&_.mud-radio-group]:!items-start [&_.mud-radio-group]:!flex-col [&_.mud-typography]:!text-white [&_.mud-button-root]:!text-[#D8E2FF]">
-                <MudRadio T="string" Value="@("Completed")" Color="Color.Primary" Dense="true">Completed</MudRadio>
-                <MudRadio T="string" Value="@("Pending")" Color="Color.Primary" Dense="true">Pending</MudRadio>
-                <MudRadio T="string" Value="@("Failed")" Color="Color.Primary" Dense="true">Failed</MudRadio>
+            <MudRadioGroup T="string" @bind-Value="SelectedStatus" Class="!flex [&_.mud-radio]:!gap-2 [&_.mud-radio-group]:!gap-1 [&_.mud-radio-group]:!items-start [&_.mud-radio-group]:!flex-col [&_.mud-typography]:!text-white [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)]">
+                <MudRadio Value="@("Completed")" Color="Color.Primary" Dense="true">Completed</MudRadio>
+                <MudRadio Value="@("Pending")" Color="Color.Primary" Dense="true">Pending</MudRadio>
+                <MudRadio Value="@("Failed")" Color="Color.Primary" Dense="true">Failed</MudRadio>
             </MudRadioGroup>
         </div>
     </div>
@@ -87,35 +87,3 @@
         </MudButton>
     </div>
 </div>
-
-@code {
-    private bool SentSelected { get; set; }
-    private bool ReceiveSelected { get; set; }
-    private bool SwapsSelected { get; set; }
-    private bool StakingSelected { get; set; }
-    private DateTime? FromDate { get; set; }
-    private DateTime? ToDate { get; set; }
-    private string? SelectedDateRange { get; set; }
-    private string? SelectedStatus { get; set; }
-    private decimal? MinAmount { get; set; }
-    private decimal? MaxAmount { get; set; }
-
-    private void HandleReset()
-    {
-        SentSelected = false;
-        ReceiveSelected = false;
-        SwapsSelected = false;
-        StakingSelected = false;
-        FromDate = null;
-        ToDate = null;
-        SelectedDateRange = null;
-        SelectedStatus = null;
-        MinAmount = null;
-        MaxAmount = null;
-    }
-
-    private void HandleApply()
-    {
-        // TODO: Apply filters and close drawer
-    }
-}
