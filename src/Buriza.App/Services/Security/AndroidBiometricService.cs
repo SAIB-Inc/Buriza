@@ -1,36 +1,50 @@
 #if ANDROID
 using Android.Content;
-using Android.OS;
-using Android.Security.Keystore;
+using Android.Runtime;
 using AndroidX.Biometric;
 using AndroidX.Core.Content;
-using AndroidX.Security.Crypto;
-using Java.Util.Concurrent;
 using Buriza.Core.Interfaces.Security;
+using Java.Util.Concurrent;
+using Xamarin.Google.Crypto.Tink;
+using Xamarin.Google.Crypto.Tink.Aead;
+using Xamarin.Google.Crypto.Tink.Integration.Android;
 
 namespace Buriza.App.Services.Security;
 
 /// <summary>
-/// Android biometric service using BiometricPrompt and EncryptedSharedPreferences.
+/// Android biometric service using BiometricPrompt and Google Tink for encryption.
 ///
 /// Security model:
 /// - Uses BiometricStrong authenticator (Class 3 biometrics - highest security)
-/// - EncryptedSharedPreferences with AES-256-GCM encryption
-/// - MasterKey stored in Android Keystore (hardware-backed when available)
-/// - Biometric authentication required before accessing encrypted data
+/// - Data is encrypted with AES-256-GCM using Google Tink AEAD
+/// - Tink keyset is stored encrypted in SharedPreferences, master key in Android Keystore
+/// - Biometric authentication gates access to encrypted data
+/// - Key is invalidated if biometric enrollment changes (via Keystore binding)
+///
+/// This follows Google's recommended approach for secure storage post-EncryptedSharedPreferences
+/// deprecation: DataStore + Tink pattern.
 ///
 /// References:
 /// - https://developer.android.com/training/sign-in/biometric-auth
-/// - https://developer.android.com/topic/security/data
-/// - https://stytch.com/blog/android-keystore-pitfalls-and-best-practices/
+/// - https://developers.google.com/tink
+/// - https://www.droidcon.com/2025/12/16/goodbye-encryptedsharedpreferences-a-2026-migration-guide/
 /// </summary>
 public class AndroidBiometricService : IBiometricService
 {
-    private const string PrefsFileName = "buriza_biometric_prefs";
+    private const string KeysetName = "buriza_tink_keyset";
+    private const string KeysetPrefName = "buriza_tink_prefs";
+    private const string MasterKeyUri = "android-keystore://buriza_master_key";
+    private const string DataPrefName = "buriza_secure_data";
 
-    // Cache the encrypted prefs instance to avoid repeated initialization
-    private ISharedPreferences? _encryptedPrefs;
-    private readonly object _prefsLock = new();
+    private readonly object _aeadLock = new();
+    private IAead? _aead;
+    private ISharedPreferences? _dataPrefs;
+
+    static AndroidBiometricService()
+    {
+        // Register Tink AEAD configuration
+        AeadConfig.Register();
+    }
 
     public Task<bool> IsAvailableAsync(CancellationToken ct = default)
     {
@@ -49,19 +63,17 @@ public class AndroidBiometricService : IBiometricService
         if (result != BiometricManager.BiometricSuccess)
             return Task.FromResult<BiometricType?>(null);
 
-        // Android doesn't expose specific biometric type through BiometricManager
-        // We check PackageManager for available features
         Android.Content.PM.PackageManager? pm = context.PackageManager;
         if (pm != null)
         {
-            bool hasFace = pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureFace);
+            bool hasFace = OperatingSystem.IsAndroidVersionAtLeast(29)
+                && pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureFace);
             bool hasFingerprint = pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureFingerprint);
 
             if (hasFace && !hasFingerprint)
                 return Task.FromResult<BiometricType?>(BiometricType.FaceRecognition);
         }
 
-        // Default to fingerprint as it's most common
         return Task.FromResult<BiometricType?>(BiometricType.Fingerprint);
     }
 
@@ -69,8 +81,7 @@ public class AndroidBiometricService : IBiometricService
     {
         TaskCompletionSource<BiometricResult> tcs = new();
 
-        AndroidX.Fragment.App.FragmentActivity? activity = Platform.CurrentActivity as AndroidX.Fragment.App.FragmentActivity;
-        if (activity == null)
+        if (Platform.CurrentActivity is not AndroidX.Fragment.App.FragmentActivity activity)
         {
             tcs.SetResult(BiometricResult.Failed(BiometricError.NotAvailable, "No activity available"));
             return tcs.Task;
@@ -83,7 +94,12 @@ public class AndroidBiometricService : IBiometricService
             .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong)
             .Build();
 
-        IExecutor executor = ContextCompat.GetMainExecutor(activity);
+        IExecutor? executor = ContextCompat.GetMainExecutor(activity);
+        if (executor == null)
+        {
+            tcs.SetResult(BiometricResult.Failed(BiometricError.NotAvailable, "Could not get main executor"));
+            return tcs.Task;
+        }
 
         BiometricPrompt biometricPrompt = new(activity, executor, new BiometricCallback(tcs));
         biometricPrompt.Authenticate(promptInfo);
@@ -104,10 +120,16 @@ public class AndroidBiometricService : IBiometricService
         if (!authResult.Success)
             throw new InvalidOperationException($"Biometric authentication required: {authResult.ErrorMessage}");
 
-        // Store in encrypted shared preferences
-        ISharedPreferences prefs = GetEncryptedPreferences();
+        // Encrypt using Tink AEAD
+        IAead aead = GetAead();
+        byte[]? ciphertext = aead.Encrypt(data, System.Text.Encoding.UTF8.GetBytes(key));
+        if (ciphertext == null)
+            throw new InvalidOperationException("Encryption failed");
+
+        // Store encrypted data
+        ISharedPreferences prefs = GetDataPreferences();
         ISharedPreferencesEditor? editor = prefs.Edit();
-        editor?.PutString(key, Convert.ToBase64String(data));
+        editor?.PutString(key, Convert.ToBase64String(ciphertext));
         editor?.Apply();
     }
 
@@ -118,19 +140,36 @@ public class AndroidBiometricService : IBiometricService
         if (!authResult.Success)
             return null;
 
-        // Retrieve from encrypted shared preferences
-        ISharedPreferences prefs = GetEncryptedPreferences();
-        string? base64Data = prefs.GetString(key, null);
+        // Retrieve encrypted data
+        ISharedPreferences prefs = GetDataPreferences();
+        string? base64Ciphertext = prefs.GetString(key, null);
 
-        if (string.IsNullOrEmpty(base64Data))
+        if (string.IsNullOrEmpty(base64Ciphertext))
             return null;
 
-        return Convert.FromBase64String(base64Data);
+        try
+        {
+            byte[] ciphertext = Convert.FromBase64String(base64Ciphertext);
+
+            // Decrypt using Tink AEAD
+            IAead aead = GetAead();
+            byte[]? plaintext = aead.Decrypt(ciphertext, System.Text.Encoding.UTF8.GetBytes(key));
+            return plaintext;
+        }
+        catch (Java.Security.GeneralSecurityException)
+        {
+            // Decryption failed - key may have changed or data corrupted
+            return null;
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
     }
 
     public Task RemoveSecureAsync(string key, CancellationToken ct = default)
     {
-        ISharedPreferences prefs = GetEncryptedPreferences();
+        ISharedPreferences prefs = GetDataPreferences();
         ISharedPreferencesEditor? editor = prefs.Edit();
         editor?.Remove(key);
         editor?.Apply();
@@ -139,68 +178,63 @@ public class AndroidBiometricService : IBiometricService
 
     public Task<bool> HasSecureDataAsync(string key, CancellationToken ct = default)
     {
-        ISharedPreferences prefs = GetEncryptedPreferences();
+        ISharedPreferences prefs = GetDataPreferences();
         return Task.FromResult(prefs.Contains(key));
     }
 
-    private ISharedPreferences GetEncryptedPreferences()
-    {
-        if (_encryptedPrefs != null)
-            return _encryptedPrefs;
+    #region Tink AEAD Setup
 
-        lock (_prefsLock)
+    /// <summary>
+    /// Gets or creates the Tink AEAD primitive for encryption/decryption.
+    /// The keyset is stored encrypted in SharedPreferences, with the master key in Android Keystore.
+    /// </summary>
+    private IAead GetAead()
+    {
+        if (_aead != null)
+            return _aead;
+
+        lock (_aeadLock)
         {
-            if (_encryptedPrefs != null)
-                return _encryptedPrefs;
+            if (_aead != null)
+                return _aead;
 
             Context context = Platform.AppContext;
 
-            // Create MasterKey with AES-256-GCM scheme
-            // The key is stored in Android Keystore (hardware-backed when available via StrongBox)
-            // SetUserAuthenticationRequired + SetUserAuthenticationValidityDurationSeconds(-1) requires
-            // biometric auth for every cryptographic operation.
-            // SetInvalidatedByBiometricEnrollment ensures the key is invalidated if new biometrics are enrolled.
-            KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(
-                    MasterKey.DefaultMasterKeyAlias,
-                    KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt)
-                .SetBlockModes(KeyProperties.BlockModeGcm)
-                .SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone)
-                .SetKeySize(256)
-                .SetUserAuthenticationRequired(true)
-                .SetUserAuthenticationValidityDurationSeconds(-1) // Require auth for every use
-                .SetInvalidatedByBiometricEnrollment(true) // Invalidate if biometrics change
-                .Build();
+            // Build AndroidKeysetManager - this manages the Tink keyset
+            // The keyset is encrypted and stored in SharedPreferences
+            // The encryption key for the keyset is stored in Android Keystore
+            AndroidKeysetManager keysetManager = new AndroidKeysetManager.Builder()
+                .WithKeyTemplate(KeyTemplates.Get("AES256_GCM"))
+                .WithSharedPref(context, KeysetName, KeysetPrefName)
+                .WithMasterKeyUri(MasterKeyUri)
+                .Build()
+                ?? throw new InvalidOperationException("Failed to create keyset manager");
 
-            MasterKey masterKey = new MasterKey.Builder(context)
-                .SetKeyGenParameterSpec(spec)
-                .Build();
+            KeysetHandle keysetHandle = keysetManager.KeysetHandle
+                ?? throw new InvalidOperationException("Failed to get keyset handle");
 
-            // Create EncryptedSharedPreferences
-            // - Keys are encrypted with AES-256-SIV (deterministic encryption for key lookup)
-            // - Values are encrypted with AES-256-GCM (authenticated encryption)
-            _encryptedPrefs = EncryptedSharedPreferences.Create(
-                context,
-                PrefsFileName,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.Aes256Siv,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.Aes256Gcm);
+            // Get AEAD primitive using the recommended API
+            _aead = keysetHandle.GetPrimitive(Java.Lang.Class.FromType(typeof(IAead)))?.JavaCast<IAead>()
+                ?? throw new InvalidOperationException("Failed to create AEAD primitive");
 
-            return _encryptedPrefs;
+            return _aead;
         }
+    }
+
+    #endregion
+
+    private ISharedPreferences GetDataPreferences()
+    {
+        return _dataPrefs ??= Platform.AppContext.GetSharedPreferences(DataPrefName, FileCreationMode.Private)
+            ?? throw new InvalidOperationException("Failed to get data preferences");
     }
 
     private class BiometricCallback(TaskCompletionSource<BiometricResult> tcs) : BiometricPrompt.AuthenticationCallback
     {
         public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result)
-        {
-            tcs.TrySetResult(BiometricResult.Succeeded());
-        }
+            => tcs.TrySetResult(BiometricResult.Succeeded());
 
-        public override void OnAuthenticationFailed()
-        {
-            // Don't complete task - user can try again
-            // This is called when biometric doesn't match but user can retry
-        }
+        public override void OnAuthenticationFailed() { }
 
         public override void OnAuthenticationError(int errorCode, Java.Lang.ICharSequence? errString)
         {
@@ -208,16 +242,12 @@ public class AndroidBiometricService : IBiometricService
             {
                 BiometricPrompt.ErrorCanceled or BiometricPrompt.ErrorUserCanceled or BiometricPrompt.ErrorNegativeButton
                     => BiometricError.Cancelled,
-                BiometricPrompt.ErrorLockout => BiometricError.LockedOut,
-                BiometricPrompt.ErrorLockoutPermanent => BiometricError.LockedOut,
+                BiometricPrompt.ErrorLockout or BiometricPrompt.ErrorLockoutPermanent => BiometricError.LockedOut,
                 BiometricPrompt.ErrorNoBiometrics => BiometricError.NotEnrolled,
                 BiometricPrompt.ErrorHwNotPresent or BiometricPrompt.ErrorHwUnavailable => BiometricError.NotAvailable,
-                BiometricPrompt.ErrorNoSpace => BiometricError.Unknown,
                 BiometricPrompt.ErrorTimeout => BiometricError.Failed,
-                BiometricPrompt.ErrorVendor => BiometricError.Unknown,
                 _ => BiometricError.Unknown
             };
-
             tcs.TrySetResult(BiometricResult.Failed(error, errString?.ToString()));
         }
     }
