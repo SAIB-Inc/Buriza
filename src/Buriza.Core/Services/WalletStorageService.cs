@@ -23,7 +23,10 @@ public class WalletStorageService(
     private const string CustomConfigsKey = "buriza_custom_configs";
     private const string DataServiceConfigsKey = "buriza_data_service_configs";
 
-    private static readonly SemaphoreSlim _storageLock = new(1, 1);
+    // Instance-based lock to avoid cross-request blocking in web scenarios.
+    // For MAUI (singleton), same instance is reused. For Web (scoped), each request gets its own.
+    // ID generation uses timestamp-based approach to avoid lock contention.
+    private readonly SemaphoreSlim _storageLock = new(1, 1);
 
     #region Encrypted Vault Helpers
 

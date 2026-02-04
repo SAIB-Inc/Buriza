@@ -51,11 +51,23 @@ public static class VaultEncryption
     /// </summary>
     public static byte[] DecryptToBytes(EncryptedVault vault, string password, KeyDerivationOptions? options = null)
     {
+        // Validate required fields before attempting crypto operations
+        if (string.IsNullOrEmpty(vault.Salt) || string.IsNullOrEmpty(vault.Iv) || string.IsNullOrEmpty(vault.Data))
+            throw new CryptographicException("Invalid vault: missing required fields");
+
         options ??= KeyDerivationOptions.Default;
 
-        byte[] salt = Convert.FromBase64String(vault.Salt);
-        byte[] iv = Convert.FromBase64String(vault.Iv);
-        byte[] combined = Convert.FromBase64String(vault.Data);
+        byte[] salt, iv, combined;
+        try
+        {
+            salt = Convert.FromBase64String(vault.Salt);
+            iv = Convert.FromBase64String(vault.Iv);
+            combined = Convert.FromBase64String(vault.Data);
+        }
+        catch (FormatException ex)
+        {
+            throw new CryptographicException("Invalid vault: malformed Base64 data", ex);
+        }
 
         // Version 1: PBKDF2 (600K) + AES-256-GCM with AAD
         int iterations = vault.Version switch

@@ -51,7 +51,7 @@ window.buriza.storage = (() => {
                 return Promise.resolve();
             } catch (e) {
                 return Promise.reject(e.name === 'QuotaExceededError'
-                    ? new Error('Storage quota exceeded')
+                    ? new Error(`Storage quota exceeded while saving '${key}'`)
                     : e);
             }
         },

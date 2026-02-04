@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -199,7 +200,8 @@ public class AuthenticationService(
         if (string.IsNullOrEmpty(value))
             return null;
 
-        return DateTime.TryParse(value, out DateTime lockoutEnd) ? lockoutEnd : null;
+        return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime lockoutEnd)
+            ? lockoutEnd : null;
     }
 
     private async Task CheckLockoutAsync(int walletId, CancellationToken ct)
