@@ -88,8 +88,8 @@ Buriza.Core/
 │   ├── WalletManagerService.cs     # IWalletManager implementation
 │   └── WalletStorageService.cs     # Unified IWalletStorage implementation
 ├── Crypto/
-│   ├── VaultEncryption.cs          # AES-256-GCM encryption
-│   └── KeyDerivationOptions.cs     # PBKDF2 parameters
+│   ├── VaultEncryption.cs          # Argon2id + AES-256-GCM encryption
+│   └── KeyDerivationOptions.cs     # Argon2id parameters
 ├── Providers/
 │   ├── CardanoProvider.cs          # IChainProvider for Cardano
 │   └── CardanoDerivation.cs        # CIP-1852 derivation constants
@@ -709,13 +709,17 @@ Mnemonics are encrypted using industry-standard cryptography:
 
 | Parameter | Value | Rationale |
 |-----------|-------|-----------|
-| KDF | PBKDF2-SHA256 | Widely supported, FIPS compliant |
-| Iterations | 600,000 | OWASP 2025 recommendation |
+| KDF | Argon2id | RFC 9106 memory-hard KDF |
+| Memory | 64 MiB (65536 KiB) | RFC 9106 second recommendation |
+| Iterations | 3 | RFC 9106 second recommendation |
+| Parallelism | 4 | RFC 9106 recommendation |
 | Key Size | 256 bits | AES-256 requirement |
 | Cipher | AES-256-GCM | Authenticated encryption |
 | IV Size | 12 bytes | GCM standard |
 | Tag Size | 16 bytes | Full authentication strength |
-| Salt Size | 32 bytes | Unique per wallet |
+| Salt Size | 32 bytes | Unique per vault |
+
+See [Architecture/Security.md](../Buriza.Docs/Architecture/Security.md) for full cryptographic details.
 
 ### Memory Safety
 
@@ -1004,14 +1008,14 @@ await walletManager.LoadCustomProviderConfigAsync(
 
 ### Platform Implementations
 
-| Platform      | Provider                 | Storage Backend              | Security                       |
-|---------------|--------------------------|------------------------------|--------------------------------|
-| **Web**       | `BrowserStorageProvider` | localStorage via JSInterop   | AES-256-GCM (PBKDF2 600K)      |
-| **Extension** | `BrowserStorageProvider` | chrome.storage.local         | AES-256-GCM + isolated context |
-| **iOS**       | `MauiStorageProvider`    | Keychain (SecureStorage)     | Hardware-backed + AES-256-GCM  |
-| **Android**   | `MauiStorageProvider`    | EncryptedSharedPreferences   | Keystore + AES-256-GCM         |
-| **macOS**     | `MauiStorageProvider`    | Keychain (SecureStorage)     | Hardware-backed + AES-256-GCM  |
-| **Windows**   | `MauiStorageProvider`    | DPAPI (SecureStorage)        | User-scoped + AES-256-GCM      |
+| Platform      | Provider                 | Storage Backend              | Security                            |
+|---------------|--------------------------|------------------------------|-------------------------------------|
+| **Web**       | `BrowserStorageProvider` | localStorage via JSInterop   | Argon2id + AES-256-GCM              |
+| **Extension** | `BrowserStorageProvider` | chrome.storage.local         | Argon2id + AES-256-GCM + isolation  |
+| **iOS**       | `MauiStorageProvider`    | Keychain (SecureStorage)     | Hardware-backed + Argon2id + AES    |
+| **Android**   | `MauiStorageProvider`    | EncryptedSharedPreferences   | Keystore + Argon2id + AES           |
+| **macOS**     | `MauiStorageProvider`    | Keychain (SecureStorage)     | Hardware-backed + Argon2id + AES    |
+| **Windows**   | `MauiStorageProvider`    | DPAPI (SecureStorage)        | User-scoped + Argon2id + AES        |
 
 ### DI Registration
 

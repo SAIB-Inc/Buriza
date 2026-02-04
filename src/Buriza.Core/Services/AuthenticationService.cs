@@ -136,7 +136,7 @@ public class AuthenticationService(
 
         try
         {
-            byte[] passwordBytes = VaultEncryption.DecryptToBytes(vault, pin);
+            byte[] passwordBytes = VaultEncryption.Decrypt(vault, pin);
             await ResetFailedAttemptsAsync(walletId, ct);
             return passwordBytes;
         }

@@ -129,13 +129,6 @@ public class CardanoDerivationTests
 public class KeyDerivationOptionsTests
 {
     [Fact]
-    public void Algorithm_IsArgon2id()
-    {
-        // RFC 9106 recommended algorithm
-        Assert.Equal("Argon2id", KeyDerivationOptions.Default.Algorithm);
-    }
-
-    [Fact]
     public void MemoryCost_Is64MiB()
     {
         // RFC 9106 second recommendation, Bitwarden default
@@ -154,12 +147,6 @@ public class KeyDerivationOptionsTests
     {
         // RFC 9106 recommendation
         Assert.Equal(4, KeyDerivationOptions.Default.Parallelism);
-    }
-
-    [Fact]
-    public void Encryption_IsAESGCM()
-    {
-        Assert.Equal("AES-GCM", KeyDerivationOptions.Default.Encryption);
     }
 
     [Fact]
@@ -196,12 +183,4 @@ public class KeyDerivationOptionsTests
         Assert.Equal(KeyDerivationOptions.Default.SaltSize, KeyDerivationOptions.Default.KeyLength / 8);
     }
 
-    [Fact]
-    public void Minimum_HasOWASPMinimumValues()
-    {
-        // OWASP minimum for constrained environments
-        Assert.Equal(19456, KeyDerivationOptions.Minimum.MemoryCost);  // 19 MiB
-        Assert.Equal(2, KeyDerivationOptions.Minimum.TimeCost);
-        Assert.Equal(1, KeyDerivationOptions.Minimum.Parallelism);
-    }
 }

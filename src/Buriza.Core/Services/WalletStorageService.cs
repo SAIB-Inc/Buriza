@@ -42,7 +42,7 @@ public class WalletStorageService(
     private async Task<byte[]?> UnlockEncryptedAsync(string key, string password, CancellationToken ct)
     {
         EncryptedVault? vault = await secureStorage.GetSecureJsonAsync<EncryptedVault>(key, ct);
-        return vault is null ? null : VaultEncryption.DecryptToBytes(vault, password);
+        return vault is null ? null : VaultEncryption.Decrypt(vault, password);
     }
 
     #endregion
@@ -125,7 +125,7 @@ public class WalletStorageService(
         EncryptedVault vault = await secureStorage.GetSecureJsonAsync<EncryptedVault>(GetVaultKey(walletId), ct)
             ?? throw new InvalidOperationException($"Vault for wallet {walletId} not found");
 
-        return VaultEncryption.DecryptToBytes(vault, password);
+        return VaultEncryption.Decrypt(vault, password);
     }
 
     public async Task DeleteVaultAsync(int walletId, CancellationToken ct = default)

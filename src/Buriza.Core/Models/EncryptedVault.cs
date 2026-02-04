@@ -2,14 +2,14 @@ namespace Buriza.Core.Models;
 
 /// <summary>
 /// Encrypted vault format for wallet storage.
-/// Uses AES-256-GCM encryption with PBKDF2 key derivation (600K iterations).
+/// Uses AES-256-GCM encryption with Argon2id key derivation.
 /// Version field determines algorithm parameters.
 /// </summary>
 public record EncryptedVault
 {
     /// <summary>
     /// Vault format version. Determines encryption parameters:
-    /// - Version 1: PBKDF2 (600K iterations, SHA-256) + AES-256-GCM
+    /// - Version 1: Argon2id (64 MiB/3 iter/4 parallel) + AES-256-GCM
     /// </summary>
     public int Version { get; init; } = 1;
 
@@ -24,17 +24,17 @@ public record EncryptedVault
     public required string Iv { get; init; }
 
     /// <summary>
-    /// Base64-encoded PBKDF2 salt (32 bytes).
+    /// Base64-encoded Argon2id salt (32 bytes).
     /// </summary>
     public required string Salt { get; init; }
 
     /// <summary>
-    /// Unique wallet identifier.
+    /// Unique wallet identifier. Bound via AAD to prevent vault swap attacks.
     /// </summary>
     public required int WalletId { get; init; }
 
     /// <summary>
-    /// Purpose of this vault. Used as part of AAD to prevent vault type confusion attacks.
+    /// Purpose of this vault. Bound via AAD to prevent vault type confusion attacks.
     /// </summary>
     public VaultPurpose Purpose { get; init; } = VaultPurpose.Mnemonic;
 

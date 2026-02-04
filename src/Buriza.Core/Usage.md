@@ -854,6 +854,6 @@ The following are already chain-agnostic:
 
 2. **Never store passwords** - prompt user each time
 
-3. **Mnemonic is encrypted at rest** using AES-256-GCM with PBKDF2 key derivation
+3. **Mnemonic is encrypted at rest** using Argon2id + AES-256-GCM (see [Security.md](../Buriza.Docs/Architecture/Security.md))
 
 4. **Session caching** - derived addresses are cached in memory to avoid repeated vault access
