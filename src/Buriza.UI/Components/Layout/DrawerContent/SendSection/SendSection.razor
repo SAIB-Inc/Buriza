@@ -4,8 +4,8 @@
 
 @namespace Buriza.UI.Components.Layout
 
-<div class="relative h-full !pb-8 flex flex-col justify-between items-center">
-    <div class="!mt-2 w-full h-full max-h-[calc(100vh-170px)] overflow-y-auto !space-y-4 !px-4 !pb-12">
+<div class="relative h-full flex flex-col justify-between items-center">
+    <div class="!mt-2 w-full h-full max-h-[calc(100vh-154px)] overflow-y-auto !space-y-4 !px-4 !pb-12">
         @foreach (var recipient in recipients)
         {
             <MudCard
@@ -250,7 +250,7 @@
             </MudCard>
         }
     </div>
-    <div class="w-full absolute bottom-8 !px-4 !pt-4">
+    <div class="w-full absolute bottom-4 !px-4 !pt-4">
         <BurizaButton
             Variant="Variant.Filled"
             Color="Color.Primary"
