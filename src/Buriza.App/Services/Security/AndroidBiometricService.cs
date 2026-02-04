@@ -1,6 +1,7 @@
 #if ANDROID
 using Android.Content;
 using Android.OS;
+using Android.Security.Keystore;
 using AndroidX.Biometric;
 using AndroidX.Core.Content;
 using AndroidX.Security.Crypto;
@@ -156,8 +157,22 @@ public class AndroidBiometricService : IBiometricService
 
             // Create MasterKey with AES-256-GCM scheme
             // The key is stored in Android Keystore (hardware-backed when available via StrongBox)
+            // SetUserAuthenticationRequired + SetUserAuthenticationValidityDurationSeconds(-1) requires
+            // biometric auth for every cryptographic operation.
+            // SetInvalidatedByBiometricEnrollment ensures the key is invalidated if new biometrics are enrolled.
+            KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(
+                    MasterKey.DefaultMasterKeyAlias,
+                    KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt)
+                .SetBlockModes(KeyProperties.BlockModeGcm)
+                .SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone)
+                .SetKeySize(256)
+                .SetUserAuthenticationRequired(true)
+                .SetUserAuthenticationValidityDurationSeconds(-1) // Require auth for every use
+                .SetInvalidatedByBiometricEnrollment(true) // Invalidate if biometrics change
+                .Build();
+
             MasterKey masterKey = new MasterKey.Builder(context)
-                .SetKeyScheme(MasterKey.KeyScheme.Aes256Gcm)
+                .SetKeyGenParameterSpec(spec)
                 .Build();
 
             // Create EncryptedSharedPreferences

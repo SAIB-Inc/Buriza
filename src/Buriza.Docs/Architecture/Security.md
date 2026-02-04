@@ -174,11 +174,24 @@ Counter resets only on successful authentication.
 
 ## Known Limitations
 
+### Chrysalis Library (Pending Fixes)
+
+| Issue | Description | Status |
+|-------|-------------|--------|
+| Mnemonic string materialization | `Mnemonic.Restore()` requires `string` input which cannot be zeroed | Pending: Add `ReadOnlySpan<byte>` overload |
+| Intermediate keys not cleared | Root key and derivation chain keys are not zeroed after use | Pending: Add `IDisposable` to PrivateKey/PublicKey |
+| Key bytes not clearable | `PrivateKey.Key` and `PublicKey.Key` have no zeroing method | Pending: Add `IDisposable` with `CryptographicOperations.ZeroMemory()` |
+
+**Impact:** Memory dump attacks could potentially recover mnemonic or key material.
+
+**Mitigation:** Callers zero all `byte[]` inputs/outputs. String materialization is unavoidable until library is updated.
+
 ### Encryption
 
 | Limitation | Description | Accepted Risk |
 |------------|-------------|---------------|
-| Password strength | No minimum password requirements enforced | Users must choose strong passwords; Argon2id provides some protection for weak passwords |
+| Password strength | No minimum password requirements enforced | User responsibility; Argon2id provides some protection for weak passwords |
+| Weak PIN allowed | No validation against common PINs (0000, 1234) | User responsibility; PIN is convenience layer, not primary security |
 | Fixed KDF parameters | Cannot adjust per-vault; upgrade requires re-encryption | Version field handles future algorithm changes |
 | No HSM support | Keys derived and used in software | Hardware-backed storage not integrated |
 | No recovery | Lost password = lost funds | Intentional for self-custody wallet |
