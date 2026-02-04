@@ -28,12 +28,20 @@ public class WalletManagerService(
 
     #region Wallet Lifecycle
 
-    public async Task<BurizaWallet> CreateAsync(string name, string password, ChainInfo? chainInfo = null, int mnemonicWordCount = 24, CancellationToken ct = default)
+    public void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic)
     {
-        byte[] mnemonicBytes = _keyService.GenerateMnemonic(mnemonicWordCount);
+        byte[] mnemonicBytes = _keyService.GenerateMnemonic(wordCount);
         try
         {
-            return await ImportFromBytesAsync(name, mnemonicBytes, password, chainInfo, ct);
+            char[] mnemonicChars = Encoding.UTF8.GetChars(mnemonicBytes);
+            try
+            {
+                onMnemonic(mnemonicChars);
+            }
+            finally
+            {
+                Array.Clear(mnemonicChars);
+            }
         }
         finally
         {
@@ -41,9 +49,8 @@ public class WalletManagerService(
         }
     }
 
-    public async Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default)
+    public async Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default)
     {
-        // Convert user-provided string to bytes, then delegate to bytes-based import
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
         try
         {

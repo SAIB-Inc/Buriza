@@ -14,11 +14,36 @@ public interface IWalletManager
 {
     #region Wallet Lifecycle
 
-    /// <summary>Creates a new wallet with a newly generated mnemonic.</summary>
-    Task<BurizaWallet> CreateAsync(string name, string password, ChainInfo? chainInfo = null, int mnemonicWordCount = 24, CancellationToken ct = default);
+    /// <summary>
+    /// Generates a new mnemonic phrase for wallet creation.
+    ///
+    /// Flow:
+    /// 1. Call GenerateMnemonic to get words for user to write down
+    /// 2. User confirms they saved the mnemonic
+    /// 3. Call CreateFromMnemonicAsync with the mnemonic and password
+    ///
+    /// SECURITY: The mnemonic is passed as ReadOnlySpan&lt;char&gt; and source memory is
+    /// zeroed immediately after the callback completes.
+    ///
+    /// WARNING: Avoid calling mnemonic.ToString() which creates an immutable string
+    /// that cannot be cleared from memory. If you must store temporarily, use char[]
+    /// and call Array.Clear() when done. For UI display, prefer binding directly to
+    /// the span or splitting into individual word displays.
+    /// </summary>
+    /// <param name="wordCount">Number of words (12, 15, 18, 21, or 24)</param>
+    /// <param name="onMnemonic">Callback receiving the mnemonic. Do not store as string.</param>
+    void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic);
 
-    /// <summary>Imports an existing wallet from a mnemonic phrase.</summary>
-    Task<BurizaWallet> ImportAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default);
+    /// <summary>
+    /// Creates a wallet from a mnemonic phrase.
+    /// Use after GenerateMnemonic for new wallets, or for restoring existing wallets.
+    ///
+    /// SECURITY: The mnemonic string parameter is converted to bytes internally and
+    /// the byte array is zeroed after use. However, the input string remains in managed
+    /// memory until garbage collected. For maximum security, ensure the source string
+    /// is not retained longer than necessary.
+    /// </summary>
+    Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default);
 
     /// <summary>Gets all wallets.</summary>
     Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default);
@@ -103,8 +128,14 @@ public interface IWalletManager
     Task<Transaction> SignTransactionAsync(int walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default);
 
     /// <summary>
-    /// Exports the mnemonic phrase via callback. Memory is automatically zeroed after callback completes.
-    /// The callback receives the mnemonic as a ReadOnlySpan to prevent copying.
+    /// Exports the mnemonic phrase via callback.
+    ///
+    /// SECURITY: The mnemonic is passed as ReadOnlySpan&lt;char&gt; and source memory is
+    /// zeroed immediately after the callback completes.
+    ///
+    /// WARNING: Avoid calling mnemonic.ToString() which creates an immutable string
+    /// that cannot be cleared from memory. If you must store temporarily, use char[]
+    /// and call Array.Clear() when done.
     /// </summary>
     Task ExportMnemonicAsync(int walletId, string password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default);
 
