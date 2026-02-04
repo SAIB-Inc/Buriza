@@ -26,7 +26,12 @@ public interface IWalletStorage
     #region Secure Vault
 
     Task<bool> HasVaultAsync(int walletId, CancellationToken ct = default);
-    Task CreateVaultAsync(int walletId, string mnemonic, string password, CancellationToken ct = default);
+
+    /// <summary>
+    /// Creates an encrypted vault for the wallet's mnemonic.
+    /// IMPORTANT: Caller MUST zero the mnemonic bytes after this call with CryptographicOperations.ZeroMemory()
+    /// </summary>
+    Task CreateVaultAsync(int walletId, byte[] mnemonic, string password, CancellationToken ct = default);
 
     /// <summary>
     /// Unlocks the vault and returns the mnemonic as a byte array.

@@ -1,60 +1,49 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using Buriza.Core.Crypto;
+using Buriza.Core.Extensions;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models;
 using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
-using Microsoft.JSInterop;
 
-namespace Buriza.Core.Storage;
+namespace Buriza.Core.Services;
 
 /// <summary>
-/// Unified wallet storage for browser environments (web and extension).
-/// Calls buriza.storage.* which auto-detects chrome.storage.local (extension) or localStorage (web).
-/// Requires storage.js to be loaded.
+/// Unified wallet storage service that implements IWalletStorage.
+/// Uses IStorageProvider for general data and ISecureStorageProvider for sensitive data.
+/// This single implementation replaces platform-specific implementations.
 /// </summary>
-public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
+public class WalletStorageService(
+    IStorageProvider storage,
+    ISecureStorageProvider secureStorage) : IWalletStorage
 {
     private const string WalletsKey = "buriza_wallets";
     private const string ActiveWalletKey = "buriza_active_wallet";
     private const string CustomConfigsKey = "buriza_custom_configs";
     private const string DataServiceConfigsKey = "buriza_data_service_configs";
 
-    #region Storage Helpers
-
-    private async Task<string?> GetAsync(string key, CancellationToken ct)
-        => await js.InvokeAsync<string?>("buriza.storage.get", ct, key);
-
-    private async Task SetAsync(string key, string value, CancellationToken ct)
-        => await js.InvokeVoidAsync("buriza.storage.set", ct, key, value);
-
-    private async Task RemoveAsync(string key, CancellationToken ct)
-        => await js.InvokeVoidAsync("buriza.storage.remove", ct, key);
-
-    private async Task<T?> GetJsonAsync<T>(string key, CancellationToken ct) where T : class
-    {
-        string? json = await GetAsync(key, ct);
-        return string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<T>(json);
-    }
-
-    private async Task SetJsonAsync<T>(string key, T value, CancellationToken ct)
-        => await SetAsync(key, JsonSerializer.Serialize(value), ct);
-
-    #endregion
+    private static readonly SemaphoreSlim _storageLock = new(1, 1);
 
     #region Encrypted Vault Helpers
 
     private async Task SaveEncryptedAsync(string key, string plaintext, string password, CancellationToken ct)
     {
-        EncryptedVault vault = VaultEncryption.Encrypt(0, plaintext, password);
-        await SetJsonAsync(key, vault, ct);
+        byte[] plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+        try
+        {
+            EncryptedVault vault = VaultEncryption.Encrypt(0, plaintextBytes, password);
+            await secureStorage.SetSecureJsonAsync(key, vault, ct);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plaintextBytes);
+        }
     }
 
     private async Task<byte[]?> UnlockEncryptedAsync(string key, string password, CancellationToken ct)
     {
-        EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(key, ct);
+        EncryptedVault? vault = await secureStorage.GetSecureJsonAsync<EncryptedVault>(key, ct);
         return vault is null ? null : VaultEncryption.DecryptToBytes(vault, password);
     }
 
@@ -72,7 +61,7 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
         else
             wallets.Add(wallet);
 
-        await SetJsonAsync(WalletsKey, wallets, ct);
+        await storage.SetJsonAsync(WalletsKey, wallets, ct);
     }
 
     public async Task<BurizaWallet?> LoadAsync(int walletId, CancellationToken ct = default)
@@ -82,31 +71,39 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
     }
 
     public async Task<IReadOnlyList<BurizaWallet>> LoadAllAsync(CancellationToken ct = default)
-        => await GetJsonAsync<List<BurizaWallet>>(WalletsKey, ct) ?? [];
+        => await storage.GetJsonAsync<List<BurizaWallet>>(WalletsKey, ct) ?? [];
 
     public async Task DeleteAsync(int walletId, CancellationToken ct = default)
     {
         List<BurizaWallet> wallets = [.. await LoadAllAsync(ct)];
         wallets.RemoveAll(w => w.Id == walletId);
-        await SetJsonAsync(WalletsKey, wallets, ct);
+        await storage.SetJsonAsync(WalletsKey, wallets, ct);
     }
 
     public async Task<int?> GetActiveWalletIdAsync(CancellationToken ct = default)
     {
-        string? value = await GetAsync(ActiveWalletKey, ct);
+        string? value = await storage.GetAsync(ActiveWalletKey, ct);
         return string.IsNullOrEmpty(value) ? null : int.TryParse(value, out int id) ? id : null;
     }
 
     public async Task SetActiveWalletIdAsync(int walletId, CancellationToken ct = default)
-        => await SetAsync(ActiveWalletKey, walletId.ToString(), ct);
+        => await storage.SetAsync(ActiveWalletKey, walletId.ToString(), ct);
 
     public async Task ClearActiveWalletIdAsync(CancellationToken ct = default)
-        => await RemoveAsync(ActiveWalletKey, ct);
+        => await storage.RemoveAsync(ActiveWalletKey, ct);
 
     public async Task<int> GenerateNextIdAsync(CancellationToken ct = default)
     {
-        IReadOnlyList<BurizaWallet> wallets = await LoadAllAsync(ct);
-        return wallets.Count > 0 ? wallets.Max(w => w.Id) + 1 : 1;
+        await _storageLock.WaitAsync(ct);
+        try
+        {
+            IReadOnlyList<BurizaWallet> wallets = await LoadAllAsync(ct);
+            return wallets.Count > 0 ? wallets.Max(w => w.Id) + 1 : 1;
+        }
+        finally
+        {
+            _storageLock.Release();
+        }
     }
 
     #endregion
@@ -114,28 +111,31 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
     #region Secure Vault
 
     public async Task<bool> HasVaultAsync(int walletId, CancellationToken ct = default)
-        => !string.IsNullOrEmpty(await GetAsync(GetVaultKey(walletId), ct));
+    {
+        string? json = await secureStorage.GetSecureAsync(GetVaultKey(walletId), ct);
+        return !string.IsNullOrEmpty(json);
+    }
 
-    public async Task CreateVaultAsync(int walletId, string mnemonic, string password, CancellationToken ct = default)
+    public async Task CreateVaultAsync(int walletId, byte[] mnemonic, string password, CancellationToken ct = default)
     {
         EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic, password);
-        await SetJsonAsync(GetVaultKey(walletId), vault, ct);
+        await secureStorage.SetSecureJsonAsync(GetVaultKey(walletId), vault, ct);
     }
 
     public async Task<byte[]> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default)
     {
-        EncryptedVault vault = await GetJsonAsync<EncryptedVault>(GetVaultKey(walletId), ct)
+        EncryptedVault vault = await secureStorage.GetSecureJsonAsync<EncryptedVault>(GetVaultKey(walletId), ct)
             ?? throw new InvalidOperationException($"Vault for wallet {walletId} not found");
 
         return VaultEncryption.DecryptToBytes(vault, password);
     }
 
     public async Task DeleteVaultAsync(int walletId, CancellationToken ct = default)
-        => await RemoveAsync(GetVaultKey(walletId), ct);
+        => await secureStorage.RemoveSecureAsync(GetVaultKey(walletId), ct);
 
     public async Task<bool> VerifyPasswordAsync(int walletId, string password, CancellationToken ct = default)
     {
-        EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(GetVaultKey(walletId), ct);
+        EncryptedVault? vault = await secureStorage.GetSecureJsonAsync<EncryptedVault>(GetVaultKey(walletId), ct);
         return vault is not null && VaultEncryption.VerifyPassword(vault, password);
     }
 
@@ -144,8 +144,7 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
         byte[] mnemonicBytes = await UnlockVaultAsync(walletId, oldPassword, ct);
         try
         {
-            string mnemonic = Encoding.UTF8.GetString(mnemonicBytes);
-            await CreateVaultAsync(walletId, mnemonic, newPassword, ct);
+            await CreateVaultAsync(walletId, mnemonicBytes, newPassword, ct);
         }
         finally
         {
@@ -161,22 +160,22 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
 
     public async Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
+        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
         return configs.GetValueOrDefault(GetCustomConfigKey(chainInfo));
     }
 
     public async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
+        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
         configs[GetCustomConfigKey(config.Chain, config.Network)] = config;
-        await SetJsonAsync(CustomConfigsKey, configs, ct);
+        await storage.SetJsonAsync(CustomConfigsKey, configs, ct);
     }
 
     public async Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
+        Dictionary<string, CustomProviderConfig> configs = await storage.GetJsonAsync<Dictionary<string, CustomProviderConfig>>(CustomConfigsKey, ct) ?? [];
         if (configs.Remove(GetCustomConfigKey(chainInfo)))
-            await SetJsonAsync(CustomConfigsKey, configs, ct);
+            await storage.SetJsonAsync(CustomConfigsKey, configs, ct);
 
         await DeleteCustomApiKeyAsync(chainInfo, ct);
     }
@@ -195,7 +194,7 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
 
     public async Task DeleteCustomApiKeyAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        await RemoveAsync(GetApiKeyVaultKey(chainInfo), ct);
+        await secureStorage.RemoveSecureAsync(GetApiKeyVaultKey(chainInfo), ct);
 
         CustomProviderConfig? existing = await GetCustomProviderConfigAsync(chainInfo, ct);
         if (existing is { HasCustomApiKey: true })
@@ -217,28 +216,28 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
 
     public async Task<DataServiceConfig?> GetDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
         return configs.GetValueOrDefault(GetDataServiceConfigKey(serviceType));
     }
 
     public async Task<IReadOnlyList<DataServiceConfig>> GetAllDataServiceConfigsAsync(CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
         return [.. configs.Values];
     }
 
     public async Task SaveDataServiceConfigAsync(DataServiceConfig config, CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
         configs[GetDataServiceConfigKey(config.ServiceType)] = config;
-        await SetJsonAsync(DataServiceConfigsKey, configs, ct);
+        await storage.SetJsonAsync(DataServiceConfigsKey, configs, ct);
     }
 
     public async Task DeleteDataServiceConfigAsync(DataServiceType serviceType, CancellationToken ct = default)
     {
-        Dictionary<string, DataServiceConfig> configs = await GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
+        Dictionary<string, DataServiceConfig> configs = await storage.GetJsonAsync<Dictionary<string, DataServiceConfig>>(DataServiceConfigsKey, ct) ?? [];
         if (configs.Remove(GetDataServiceConfigKey(serviceType)))
-            await SetJsonAsync(DataServiceConfigsKey, configs, ct);
+            await storage.SetJsonAsync(DataServiceConfigsKey, configs, ct);
 
         await DeleteDataServiceApiKeyAsync(serviceType, ct);
     }
@@ -257,7 +256,7 @@ public class BrowserWalletStorage(IJSRuntime js) : IWalletStorage
 
     public async Task DeleteDataServiceApiKeyAsync(DataServiceType serviceType, CancellationToken ct = default)
     {
-        await RemoveAsync(GetDataServiceApiKeyVaultKey(serviceType), ct);
+        await secureStorage.RemoveSecureAsync(GetDataServiceApiKeyVaultKey(serviceType), ct);
 
         DataServiceConfig? existing = await GetDataServiceConfigAsync(serviceType, ct);
         if (existing is { HasCustomApiKey: true })

@@ -70,20 +70,23 @@ Buriza.Core/
 │   │   ├── IQueryService.cs        # Blockchain queries
 │   │   └── ITransactionService.cs  # Transaction lifecycle
 │   ├── Storage/
+│   │   ├── IStorageProvider.cs     # Low-level key-value storage
+│   │   ├── ISecureStorageProvider.cs # Secure storage for sensitive data
 │   │   └── IWalletStorage.cs       # Wallet persistence + encrypted vault
 │   ├── Wallet/
 │   │   ├── IWallet.cs              # Wallet query/transaction interface
 │   │   └── IWalletManager.cs       # Main wallet management facade
 │   └── ISessionService.cs          # Address caching
+├── Extensions/
+│   └── StorageProviderExtensions.cs # JSON helpers for storage providers
 ├── Services/
 │   ├── ChainRegistry.cs            # Creates/caches chain providers
 │   ├── DataServiceRegistry.cs      # Data service endpoint management
 │   ├── HeartbeatService.cs         # Blockchain tip monitoring
 │   ├── KeyService.cs               # IKeyService implementation
 │   ├── SessionService.cs           # In-memory address/config cache
-│   └── WalletManagerService.cs     # IWalletManager implementation
-│   # Note: Storage implementations are in platform projects (Buriza.Web, Buriza.Extension, Buriza.App)
-│   # Buriza.Core only defines IWalletStorage interface
+│   ├── WalletManagerService.cs     # IWalletManager implementation
+│   └── WalletStorageService.cs     # Unified IWalletStorage implementation
 ├── Crypto/
 │   ├── VaultEncryption.cs          # AES-256-GCM encryption
 │   └── KeyDerivationOptions.cs     # PBKDF2 parameters
@@ -963,65 +966,72 @@ await walletManager.LoadCustomProviderConfigAsync(
 
 ## Platform Storage Architecture
 
-`Buriza.Core` defines `IWalletStorage` interface only. Platform projects provide implementations using dependency inversion:
+`Buriza.Core` defines storage interfaces and a unified `WalletStorageService`. Platform projects provide low-level `IStorageProvider` implementations:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                       Buriza.Core                               │
 │                  (Pure .NET - NO platform code)                 │
 ├─────────────────────────────────────────────────────────────────┤
-│  Interfaces/Storage/IWalletStorage.cs  ← Contract only          │
-│  Crypto/VaultEncryption.cs             ← Pure .NET AES-256-GCM  │
+│  Interfaces/Storage/                                            │
+│    ├── IStorageProvider.cs        ← Low-level key-value         │
+│    ├── ISecureStorageProvider.cs  ← Secure storage              │
+│    └── IWalletStorage.cs          ← High-level business API     │
+│  Services/WalletStorageService.cs ← Unified implementation      │
+│  Crypto/VaultEncryption.cs        ← Pure .NET AES-256-GCM       │
 └─────────────────────────────────────────────────────────────────┘
                               ▲
-                              │ implements
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────────┐ ┌───────────────────┐ ┌───────────────────┐
-│    Buriza.Web     │ │ Buriza.Extension  │ │    Buriza.App     │
-│  (Blazor WASM)    │ │   (Blazor WASM)   │ │      (MAUI)       │
-├───────────────────┤ ├───────────────────┤ ├───────────────────┤
-│ Storage/          │ │ Storage/          │ │ Platforms/        │
-│ WebWalletStorage  │ │ ExtensionWallet   │ │ ├─iOS/            │
-│ (localStorage)    │ │ Storage           │ │ ├─Android/        │
-│                   │ │ (chrome.storage)  │ │ └─Windows/        │
-└───────────────────┘ └───────────────────┘ └───────────────────┘
+                              │ implements IStorageProvider
+        ┌─────────────────────┴─────────────────────┐
+        │                                           │
+        ▼                                           ▼
+┌─────────────────────────────┐     ┌─────────────────────────────┐
+│         Buriza.UI           │     │        Buriza.App           │
+│    (Shared Blazor components)│     │          (MAUI)             │
+├─────────────────────────────┤     ├─────────────────────────────┤
+│ Storage/                    │     │ Storage/                    │
+│   BrowserStorageProvider    │     │   MauiStorageProvider       │
+│   (JS interop)              │     │   (IPreferences +           │
+│                             │     │    SecureStorage)           │
+│ Used by: Web + Extension    │     │                             │
+│ Auto-detects:               │     │ Uses native APIs:           │
+│   • localStorage (Web)      │     │   • iOS: Keychain           │
+│   • chrome.storage (Ext)    │     │   • Android: Keystore       │
+└─────────────────────────────┘     │   • macOS: Keychain         │
+                                    │   • Windows: DPAPI          │
+                                    └─────────────────────────────┘
 ```
 
 ### Platform Implementations
 
-| Platform | Project | Storage Backend | Security |
-|----------|---------|-----------------|----------|
-| **Web** | `Buriza.Web` | localStorage via JSInterop | AES-256-GCM (PBKDF2 600K) |
-| **Extension** | `Buriza.Extension` | chrome.storage.local via JSInterop | AES-256-GCM + isolated context |
-| **iOS** | `Buriza.App` | Keychain (SecureStorage) | Hardware-backed + AES-256-GCM |
-| **Android** | `Buriza.App` | EncryptedSharedPreferences | Keystore + AES-256-GCM |
-| **macOS** | `Buriza.App` | Keychain (SecureStorage) | Hardware-backed + AES-256-GCM |
-| **Windows** | `Buriza.App` | DPAPI (SecureStorage) | User-scoped + AES-256-GCM |
+| Platform      | Provider                 | Storage Backend              | Security                       |
+|---------------|--------------------------|------------------------------|--------------------------------|
+| **Web**       | `BrowserStorageProvider` | localStorage via JSInterop   | AES-256-GCM (PBKDF2 600K)      |
+| **Extension** | `BrowserStorageProvider` | chrome.storage.local         | AES-256-GCM + isolated context |
+| **iOS**       | `MauiStorageProvider`    | Keychain (SecureStorage)     | Hardware-backed + AES-256-GCM  |
+| **Android**   | `MauiStorageProvider`    | EncryptedSharedPreferences   | Keystore + AES-256-GCM         |
+| **macOS**     | `MauiStorageProvider`    | Keychain (SecureStorage)     | Hardware-backed + AES-256-GCM  |
+| **Windows**   | `MauiStorageProvider`    | DPAPI (SecureStorage)        | User-scoped + AES-256-GCM      |
 
 ### DI Registration
 
 ```csharp
-// Buriza.Web/Program.cs
-builder.Services.AddScoped<IWalletStorage, WebWalletStorage>();
+// Buriza.Web/Program.cs & Buriza.Extension/Program.cs
+builder.Services.AddScoped<IStorageProvider, BrowserStorageProvider>();
+builder.Services.AddScoped<ISecureStorageProvider, BrowserStorageProvider>();
+builder.Services.AddScoped<IWalletStorage, WalletStorageService>();
 
-// Buriza.Extension/Program.cs
-builder.Services.AddScoped<IWalletStorage, ExtensionWalletStorage>();
-
-// Buriza.App/MauiProgram.cs (platform-specific)
-#if IOS || MACCATALYST
-builder.Services.AddSingleton<IWalletStorage, iOSWalletStorage>();
-#elif ANDROID
-builder.Services.AddSingleton<IWalletStorage, AndroidWalletStorage>();
-#elif WINDOWS
-builder.Services.AddSingleton<IWalletStorage, WindowsWalletStorage>();
-#endif
+// Buriza.App/MauiProgram.cs
+builder.Services.AddSingleton(Preferences.Default);
+builder.Services.AddSingleton<IStorageProvider, MauiStorageProvider>();
+builder.Services.AddSingleton<ISecureStorageProvider, MauiStorageProvider>();
+builder.Services.AddSingleton<IWalletStorage, WalletStorageService>();
 ```
 
 ### Why This Architecture?
 
 1. **Buriza.Core stays pure** - No JSInterop, no MAUI dependencies
-2. **Testable** - Mock `IWalletStorage` in unit tests
-3. **Platform-optimal** - Each platform uses native secure storage
+2. **Single WalletStorageService** - Business logic in one place, not duplicated
+3. **Testable** - Mock `IStorageProvider` in unit tests
+4. **Platform-optimal** - Each platform uses native secure storage
 4. **Single interface** - `WalletManagerService` works identically across all platforms

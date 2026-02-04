@@ -93,9 +93,7 @@ public class WalletManagerService(
             ]
         };
 
-        // Storage needs string for JSON serialization - convert only at storage boundary
-        string mnemonicStr = Encoding.UTF8.GetString(mnemonicBytes);
-        await _storage.CreateVaultAsync(wallet.Id, mnemonicStr, password, ct);
+        await _storage.CreateVaultAsync(wallet.Id, mnemonicBytes, password, ct);
         try
         {
             await _storage.SaveAsync(wallet, ct);

@@ -5,12 +5,12 @@ namespace Buriza.Core.Models;
 /// </summary>
 public enum VaultPurpose
 {
-    /// <summary>Wallet mnemonic seed phrase.</summary>
+    /// <summary>Wallet mnemonic seed phrase (password-protected).</summary>
     Mnemonic = 0,
 
-    /// <summary>Chain provider API key.</summary>
+    /// <summary>API key for external services (chain providers, data services, etc.). Optional - not needed for self-hosted instances.</summary>
     ApiKey = 1,
 
-    /// <summary>Data service API key.</summary>
-    DataServiceApiKey = 2
+    /// <summary>PIN-encrypted wallet password.</summary>
+    PinProtectedPassword = 2
 }

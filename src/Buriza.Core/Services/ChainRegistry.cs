@@ -112,7 +112,7 @@ public class ChainRegistry(ChainProviderSettings settings, ISessionService? sess
         // Hash the API key to avoid exposing it in cache keys (prevents leakage via logging/debugging)
         string apiKeyHash = string.IsNullOrEmpty(config.ApiKey)
             ? string.Empty
-            : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(config.ApiKey)))[..16];
+            : Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(config.ApiKey)));
         return $"{config.Chain}:{config.Endpoint}:{config.Network}:{apiKeyHash}";
     }
 
