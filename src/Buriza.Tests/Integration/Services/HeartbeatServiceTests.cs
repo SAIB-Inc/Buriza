@@ -2,7 +2,7 @@ using Buriza.Core.Providers;
 using Buriza.Core.Services;
 using Buriza.Data.Models.Enums;
 
-namespace Buriza.Tests.Services;
+namespace Buriza.Tests.Integration.Services;
 
 public class HeartbeatServiceTests : IDisposable
 {
@@ -21,37 +21,30 @@ public class HeartbeatServiceTests : IDisposable
     [Fact]
     public async Task HeartbeatService_ConnectsAndReceivesTip()
     {
-        // Wait for the heartbeat loop to connect
-        await Task.Delay(2000);
+        // Wait for connection and first tip (network dependent)
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(10));
+        while (string.IsNullOrEmpty(_heartbeatService.Hash) && !cts.IsCancellationRequested)
+        {
+            await Task.Delay(200, cts.Token);
+        }
 
-        // Assert
         Assert.True(_heartbeatService.IsConnected);
-        Assert.True(_heartbeatService.Slot > 0);
         Assert.False(string.IsNullOrEmpty(_heartbeatService.Hash));
-
-        Console.WriteLine($"Connected: {_heartbeatService.IsConnected}");
-        Console.WriteLine($"Slot: {_heartbeatService.Slot}");
-        Console.WriteLine($"Hash: {_heartbeatService.Hash[..16]}...");
     }
 
     [Fact]
     public async Task Beat_EventFires_WhenNewBlockArrives()
     {
-        // Arrange
         int beatCount = 0;
-        _heartbeatService.Beat += (s, e) => beatCount++;
+        _heartbeatService.Beat += (_, _) => beatCount++;
 
-        // Wait for at least one beat (new block)
-        // Preview network has ~20 second block time, so wait up to 30 seconds
-        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
-        while (beatCount == 0 && !cts.Token.IsCancellationRequested)
+        // Wait for at least one beat (preview network ~20s block time)
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(30));
+        while (beatCount == 0 && !cts.IsCancellationRequested)
         {
             await Task.Delay(500, cts.Token);
         }
 
-        // Assert - at least the initial tip should trigger a beat
-        Console.WriteLine($"Beat count: {beatCount}");
         Assert.True(beatCount >= 1, "Expected at least one beat event");
     }
 

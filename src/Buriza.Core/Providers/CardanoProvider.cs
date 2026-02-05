@@ -33,6 +33,7 @@ using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using UtxorpcQuery = Utxorpc.V1alpha.Query;
 using UtxorpcSync = Utxorpc.V1alpha.Sync;
 using System.Threading.Channels;
+using Utxorpc.V1alpha.Sync;
 
 namespace Buriza.Core.Providers;
 
@@ -44,6 +45,8 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
     public ITransactionService TransactionService => this;
 
     public ChrysalisNetworkType NetworkType { get; }
+
+    private const int MaxParallelQueries = 5;
 
     private readonly GrpcChannel _channel;
     private readonly UtxorpcQuery.QueryService.QueryServiceClient _queryClient;
@@ -132,85 +135,54 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
 
     public Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        // Convert to string only for Chrysalis library call - string is short-lived on stack
-        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
-        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
+        Mnemonic restored = RestoreMnemonic(mnemonic);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
+        PrivateKey accountKey = DeriveAccountKey(restored, accountIndex);
 
-        PublicKey paymentKey = restored
-            .GetRootKey()
-            .Derive(PurposeType.Shelley, DerivationType.HARD)
-            .Derive(CoinType.Ada, DerivationType.HARD)
-            .Derive(accountIndex, DerivationType.HARD)
-            .Derive(role)
-            .Derive(addressIndex, DerivationType.SOFT)
-            .GetPublicKey();
+        PublicKey paymentKey = DeriveAddressKey(accountKey, role, addressIndex).GetPublicKey();
+        PublicKey stakingKey = DeriveAddressKey(accountKey, RoleType.Staking, 0).GetPublicKey();
 
-        PublicKey stakingKey = restored
-            .GetRootKey()
-            .Derive(PurposeType.Shelley, DerivationType.HARD)
-            .Derive(CoinType.Ada, DerivationType.HARD)
-            .Derive(accountIndex, DerivationType.HARD)
-            .Derive(RoleType.Staking)
-            .Derive(0, DerivationType.SOFT)
-            .GetPublicKey();
-
-        Address address = Address.FromPublicKeys(NetworkType, AddressType.Base, paymentKey, stakingKey);
-        return Task.FromResult(address.ToBech32());
+        return Task.FromResult(Address.FromPublicKeys(NetworkType, AddressType.Base, paymentKey, stakingKey).ToBech32());
     }
 
     public Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, CancellationToken ct = default)
     {
-        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
-        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
+        Mnemonic restored = RestoreMnemonic(mnemonic);
+        PublicKey stakingKey = DeriveAddressKey(DeriveAccountKey(restored, accountIndex), RoleType.Staking, 0).GetPublicKey();
 
-        PublicKey stakingKey = restored
-            .GetRootKey()
-            .Derive(PurposeType.Shelley, DerivationType.HARD)
-            .Derive(CoinType.Ada, DerivationType.HARD)
-            .Derive(accountIndex, DerivationType.HARD)
-            .Derive(RoleType.Staking)
-            .Derive(0, DerivationType.SOFT)
-            .GetPublicKey();
-
-        Address address = Address.FromPublicKeys(NetworkType, AddressType.Delegation, stakingKey);
-        return Task.FromResult(address.ToBech32());
+        return Task.FromResult(Address.FromPublicKeys(NetworkType, AddressType.Delegation, stakingKey).ToBech32());
     }
 
     public Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
-        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
+        Mnemonic restored = RestoreMnemonic(mnemonic);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
 
-        PrivateKey key = restored
-            .GetRootKey()
-            .Derive(PurposeType.Shelley, DerivationType.HARD)
-            .Derive(CoinType.Ada, DerivationType.HARD)
-            .Derive(accountIndex, DerivationType.HARD)
-            .Derive(role)
-            .Derive(addressIndex);
-
-        return Task.FromResult(key);
+        return Task.FromResult(DeriveAddressKey(DeriveAccountKey(restored, accountIndex), role, addressIndex));
     }
 
     public Task<PublicKey> DerivePublicKeyAsync(ReadOnlySpan<byte> mnemonic, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
-        string mnemonicStr = System.Text.Encoding.UTF8.GetString(mnemonic);
-        Mnemonic restored = Mnemonic.Restore(mnemonicStr, English.Words);
+        Mnemonic restored = RestoreMnemonic(mnemonic);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
 
-        PublicKey key = restored
-            .GetRootKey()
+        return Task.FromResult(DeriveAddressKey(DeriveAccountKey(restored, accountIndex), role, addressIndex).GetPublicKey());
+    }
+
+    // Note: String conversion required by Chrysalis library - short-lived on stack
+    private static Mnemonic RestoreMnemonic(ReadOnlySpan<byte> mnemonic) =>
+        Mnemonic.Restore(System.Text.Encoding.UTF8.GetString(mnemonic), English.Words);
+
+    // BIP-44 path: m/1852'/1815'/account'
+    private static PrivateKey DeriveAccountKey(Mnemonic mnemonic, int accountIndex) =>
+        mnemonic.GetRootKey()
             .Derive(PurposeType.Shelley, DerivationType.HARD)
             .Derive(CoinType.Ada, DerivationType.HARD)
-            .Derive(accountIndex, DerivationType.HARD)
-            .Derive(role)
-            .Derive(addressIndex)
-            .GetPublicKey();
+            .Derive(accountIndex, DerivationType.HARD);
 
-        return Task.FromResult(key);
-    }
+    // Derives: account'/role/index
+    private static PrivateKey DeriveAddressKey(PrivateKey accountKey, RoleType role, int addressIndex) =>
+        accountKey.Derive(role).Derive(addressIndex);
 
     #endregion
 
@@ -273,7 +245,7 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
             try
             {
                 UtxorpcSync.FollowTipRequest request = new();
-                using var call = _syncClient.FollowTip(request, headers: GetHeaders(), cancellationToken: ct);
+                using Grpc.Core.AsyncServerStreamingCall<FollowTipResponse> call = _syncClient.FollowTip(request, headers: GetHeaders(), cancellationToken: ct);
 
                 while (await call.ResponseStream.MoveNext(ct))
                 {
@@ -396,23 +368,32 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
 
     public async Task<List<ResolvedInput>> GetUtxosAsync(List<string> addresses)
     {
-        List<ResolvedInput> results = [];
+        if (addresses.Count == 0) return [];
+        if (addresses.Count == 1) return await GetUtxosForSingleAddressAsync(addresses[0]);
 
-        foreach (string address in addresses)
+        // Parallel query with bounded concurrency
+        using SemaphoreSlim semaphore = new(MaxParallelQueries);
+        IEnumerable<Task<UtxorpcQuery.SearchUtxosResponse>> tasks = addresses.Select(async address =>
         {
-            UtxorpcQuery.SearchUtxosResponse response = await SearchUtxosByAddressAsync(address);
+            await semaphore.WaitAsync();
+            try { return await SearchUtxosByAddressAsync(address); }
+            finally { semaphore.Release(); }
+        });
 
-            foreach (UtxorpcQuery.AnyUtxoData item in response.Items)
-            {
-                if (item.TxoRef == null) continue;
-                if (item.Cardano == null && item.NativeBytes.IsEmpty) continue;
+        UtxorpcQuery.SearchUtxosResponse[] responses = await Task.WhenAll(tasks);
 
-                ResolvedInput resolvedInput = MapToResolvedInput(item, item.TxoRef);
-                results.Add(resolvedInput);
-            }
-        }
+        return [.. responses
+            .SelectMany(r => r.Items)
+            .Where(item => item.TxoRef != null && (item.Cardano != null || !item.NativeBytes.IsEmpty))
+            .Select(item => MapToResolvedInput(item, item.TxoRef!))];
+    }
 
-        return results;
+    private async Task<List<ResolvedInput>> GetUtxosForSingleAddressAsync(string address)
+    {
+        UtxorpcQuery.SearchUtxosResponse response = await SearchUtxosByAddressAsync(address);
+        return [.. response.Items
+            .Where(item => item.TxoRef != null && (item.Cardano != null || !item.NativeBytes.IsEmpty))
+            .Select(item => MapToResolvedInput(item, item.TxoRef!))];
     }
 
     public async Task<ProtocolParams> GetParametersAsync()
@@ -564,24 +545,9 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
             TxHash = txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
             OutputIndex = (int)(txoRef?.Index ?? 0),
             Value = ToUlong(txOutput.Coin),
-            Address = txOutput.Address != null
-                ? Address.FromBytes(txOutput.Address.ToByteArray()).ToBech32()
-                : null,
-            Assets = [.. txOutput.Assets
-                .SelectMany(ma => ma.Assets.Select(a =>
-                {
-                    byte[] nameBytes = a.Name.ToByteArray();
-                    string hexName = Convert.ToHexStringLower(nameBytes);
-                    string assetName = TryDecodeUtf8(nameBytes) ?? hexName;
-
-                    return new Asset
-                    {
-                        PolicyId = Convert.ToHexStringLower(ma.PolicyId.ToByteArray()),
-                        AssetName = assetName,
-                        HexName = hexName,
-                        Quantity = ToUlong(a.OutputCoin)
-                    };
-                }))]
+            Address = txOutput.Address != null ? Address.FromBytes(txOutput.Address.ToByteArray()).ToBech32() : null,
+            Assets = [.. txOutput.Assets.SelectMany(ma =>
+                ma.Assets.Select(a => CreateAsset(ma.PolicyId.ToByteArray(), a.Name.ToByteArray(), ToUlong(a.OutputCoin))))]
         };
     }
 
@@ -614,26 +580,9 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
             multiAsset = (alonzo.Amount as LovelaceWithMultiAsset)?.MultiAsset;
         }
 
-        List<Asset> assets = [];
-        if (multiAsset != null)
-        {
-            foreach ((byte[]? policyId, TokenBundleOutput? tokenBundle) in multiAsset.Value)
-            {
-                string policyIdHex = Convert.ToHexStringLower(policyId);
-                foreach ((byte[]? assetName, ulong quantity) in tokenBundle.Value)
-                {
-                    string hexName = Convert.ToHexStringLower(assetName);
-                    string displayName = TryDecodeUtf8(assetName) ?? hexName;
-                    assets.Add(new Asset
-                    {
-                        PolicyId = policyIdHex,
-                        AssetName = displayName,
-                        HexName = hexName,
-                        Quantity = quantity
-                    });
-                }
-            }
-        }
+        List<Asset> assets = multiAsset?.Value
+            .SelectMany(kv => kv.Value.Value.Select(t => CreateAsset(kv.Key, t.Key, t.Value)))
+            .ToList() ?? [];
 
         return new Utxo
         {
@@ -747,6 +696,18 @@ public class CardanoProvider : IChainProvider, IQueryService, ITransactionServic
         {
             PostMaryTransaction conway => conway.TransactionBody.Fee(),
             _ => 0
+        };
+    }
+
+    private static Asset CreateAsset(byte[] policyIdBytes, byte[] assetNameBytes, ulong quantity)
+    {
+        string hexName = Convert.ToHexStringLower(assetNameBytes);
+        return new Asset
+        {
+            PolicyId = Convert.ToHexStringLower(policyIdBytes),
+            AssetName = TryDecodeUtf8(assetNameBytes) ?? hexName,
+            HexName = hexName,
+            Quantity = quantity
         };
     }
 

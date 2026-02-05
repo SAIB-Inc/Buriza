@@ -6,7 +6,7 @@ using Buriza.Data.Models.Enums;
 using NSubstitute;
 using CoreWalletAccount = Buriza.Core.Models.WalletAccount;
 
-namespace Buriza.Tests.Models;
+namespace Buriza.Tests.Unit.Models;
 
 public class BurizaWalletTests
 {

@@ -4,7 +4,7 @@ using System.Text.Json;
 using Buriza.Core.Crypto;
 using Buriza.Core.Models;
 
-namespace Buriza.Tests.Models;
+namespace Buriza.Tests.Unit.Models;
 
 public class EncryptedVaultSerializationTests
 {

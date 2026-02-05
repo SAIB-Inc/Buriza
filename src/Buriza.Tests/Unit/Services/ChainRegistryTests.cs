@@ -6,7 +6,7 @@ using Buriza.Data.Models.Enums;
 
 using ChainRegistryData = Buriza.Data.Models.Common.ChainRegistry;
 
-namespace Buriza.Tests.Services;
+namespace Buriza.Tests.Unit.Services;
 
 public class ChainRegistryTests : IDisposable
 {

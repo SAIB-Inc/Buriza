@@ -1,7 +1,7 @@
 using Buriza.Core.Crypto;
 using Buriza.Core.Providers;
 
-namespace Buriza.Tests.Crypto;
+namespace Buriza.Tests.Unit.Crypto;
 
 public class CardanoDerivationTests
 {

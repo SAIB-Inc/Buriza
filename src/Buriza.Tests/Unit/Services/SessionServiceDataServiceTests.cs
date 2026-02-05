@@ -4,7 +4,7 @@ using Buriza.Data.Models.Enums;
 
 using ChainRegistryData = Buriza.Data.Models.Common.ChainRegistry;
 
-namespace Buriza.Tests.Services;
+namespace Buriza.Tests.Unit.Services;
 
 /// <summary>
 /// Tests for SessionService data service config caching (endpoints and API keys for TokenMetadata, TokenPrice, etc.).

@@ -7,7 +7,7 @@ using Buriza.Data.Models.Enums;
 
 using ChainRegistryData = Buriza.Data.Models.Common.ChainRegistry;
 
-namespace Buriza.Tests.Services;
+namespace Buriza.Tests.Unit.Services;
 
 /// <summary>
 /// Tests for ChainRegistry custom provider config (custom endpoints and API keys from session).

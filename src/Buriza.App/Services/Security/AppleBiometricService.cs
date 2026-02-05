@@ -90,8 +90,10 @@ public class AppleBiometricService : IBiometricService
         {
             Service = ServiceName,
             Account = key,
+            Label = $"Buriza Wallet: {key}",
             ValueData = NSData.FromArray(data),
-            AccessControl = accessControl
+            AccessControl = accessControl,
+            Synchronizable = false // Never sync to iCloud - sensitive wallet keys must stay on device
         };
 
         SecStatusCode result = SecKeyChain.Add(record);
@@ -140,9 +142,10 @@ public class AppleBiometricService : IBiometricService
         SecRecord query = CreateBaseQuery(key);
         SecKeyChain.QueryAsRecord(query, out SecStatusCode result);
 
-        // Only return true if item exists and is accessible
-        // AuthFailed means item exists but we can't verify without prompting - don't leak this info
-        return Task.FromResult(result == SecStatusCode.Success);
+        // Return true if item exists, regardless of whether we can access it without biometric
+        // AuthFailed means item exists but requires biometric authentication to access
+        // This is the correct behavior - we're checking existence, not accessibility
+        return Task.FromResult(result == SecStatusCode.Success || result == SecStatusCode.AuthFailed);
     }
 
     private static SecRecord CreateBaseQuery(string key) => new(SecKind.GenericPassword)

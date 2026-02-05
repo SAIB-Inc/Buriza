@@ -4,7 +4,7 @@ using Buriza.Core.Services;
 using Buriza.Data.Models.Enums;
 using Buriza.Tests.Mocks;
 
-namespace Buriza.Tests.Services;
+namespace Buriza.Tests.Unit.Services;
 
 /// <summary>
 /// Tests for DataServiceRegistry - manages custom data service configurations

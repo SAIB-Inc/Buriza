@@ -3,7 +3,7 @@ using System.Text;
 using Buriza.Core.Crypto;
 using Buriza.Core.Models;
 
-namespace Buriza.Tests.Crypto;
+namespace Buriza.Tests.Unit.Crypto;
 
 public class VaultEncryptionTests
 {
