@@ -27,6 +27,7 @@ public record TransactionRequest : ITransactionParameters
 
             return parties;
         }
+        set { } // Required by ITransactionParameters interface
     }
 }
 

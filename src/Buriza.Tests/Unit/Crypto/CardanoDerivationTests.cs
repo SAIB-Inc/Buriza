@@ -1,128 +1,64 @@
 using Buriza.Core.Crypto;
-using Buriza.Core.Providers;
+using Chrysalis.Wallet.Models.Enums;
 
 namespace Buriza.Tests.Unit.Crypto;
 
+/// <summary>
+/// Tests for CIP-1852 Cardano derivation path constants from Chrysalis.Wallet.
+/// Verifies that the library uses correct values per specification.
+/// </summary>
 public class CardanoDerivationTests
 {
     [Fact]
-    public void Purpose_IsShelleyPurpose()
+    public void PurposeType_Shelley_IsCip1852Purpose()
     {
-        // Assert - CIP-1852 Shelley purpose
-        Assert.Equal(1852, CardanoDerivation.Purpose);
+        // CIP-1852 Shelley purpose = 1852
+        Assert.Equal(1852, (int)PurposeType.Shelley);
     }
 
     [Fact]
-    public void CoinType_IsAdaCoinType()
+    public void CoinType_Ada_IsSlip44CoinType()
     {
-        // Assert - SLIP-44 ADA coin type
-        Assert.Equal(1815, CardanoDerivation.CoinType);
+        // SLIP-44 ADA coin type = 1815
+        Assert.Equal(1815, (int)CoinType.Ada);
     }
 
     [Fact]
-    public void GetPath_WithDefaultValues_ReturnsCorrectPath()
+    public void RoleType_ExternalChain_IsZero()
     {
-        // Act
-        string path = CardanoDerivation.GetPath(0, 0, 0);
-
-        // Assert - m/1852'/1815'/0'/0/0
-        Assert.Equal("m/1852'/1815'/0'/0/0", path);
+        // External/payment addresses = role 0
+        Assert.Equal(0, (int)RoleType.ExternalChain);
     }
 
     [Fact]
-    public void GetPath_WithDifferentAccount_ReturnsCorrectPath()
+    public void RoleType_InternalChain_IsOne()
     {
-        // Act
-        string path = CardanoDerivation.GetPath(1, 0, 0);
-
-        // Assert
-        Assert.Equal("m/1852'/1815'/1'/0/0", path);
+        // Internal/change addresses = role 1
+        Assert.Equal(1, (int)RoleType.InternalChain);
     }
 
     [Fact]
-    public void GetPath_WithInternalRole_ReturnsCorrectPath()
+    public void RoleType_Staking_IsTwo()
     {
-        // Act - Role 1 is internal/change addresses
-        string path = CardanoDerivation.GetPath(0, 1, 0);
-
-        // Assert
-        Assert.Equal("m/1852'/1815'/0'/1/0", path);
-    }
-
-    [Fact]
-    public void GetPath_WithStakingRole_ReturnsCorrectPath()
-    {
-        // Act - Role 2 is staking
-        string path = CardanoDerivation.GetPath(0, 2, 0);
-
-        // Assert
-        Assert.Equal("m/1852'/1815'/0'/2/0", path);
-    }
-
-    [Fact]
-    public void GetPath_WithDifferentIndex_ReturnsCorrectPath()
-    {
-        // Act
-        string path = CardanoDerivation.GetPath(0, 0, 5);
-
-        // Assert
-        Assert.Equal("m/1852'/1815'/0'/0/5", path);
-    }
-
-    [Fact]
-    public void GetPath_WithAllDifferentValues_ReturnsCorrectPath()
-    {
-        // Act
-        string path = CardanoDerivation.GetPath(2, 1, 10);
-
-        // Assert
-        Assert.Equal("m/1852'/1815'/2'/1/10", path);
+        // Staking addresses = role 2
+        Assert.Equal(2, (int)RoleType.Staking);
     }
 
     [Theory]
-    [InlineData(0, 0, 0, "m/1852'/1815'/0'/0/0")]
-    [InlineData(0, 0, 1, "m/1852'/1815'/0'/0/1")]
-    [InlineData(0, 1, 0, "m/1852'/1815'/0'/1/0")]
-    [InlineData(1, 0, 0, "m/1852'/1815'/1'/0/0")]
-    [InlineData(5, 2, 100, "m/1852'/1815'/5'/2/100")]
-    public void GetPath_VariousCombinations_ReturnsExpectedPath(int account, int role, int index, string expected)
+    [InlineData(PurposeType.Shelley, 1852)]
+    [InlineData(PurposeType.MultiSig, 1854)]
+    public void PurposeType_HasCorrectValues(PurposeType purpose, int expected)
     {
-        // Act
-        string path = CardanoDerivation.GetPath(account, role, index);
-
-        // Assert
-        Assert.Equal(expected, path);
+        Assert.Equal(expected, (int)purpose);
     }
 
-    [Fact]
-    public void GetPath_AccountIsHardened()
+    [Theory]
+    [InlineData(RoleType.ExternalChain, 0)]
+    [InlineData(RoleType.InternalChain, 1)]
+    [InlineData(RoleType.Staking, 2)]
+    public void RoleType_HasCorrectValues(RoleType role, int expected)
     {
-        // Act
-        string path = CardanoDerivation.GetPath(0, 0, 0);
-
-        // Assert - Account level should have hardened marker (')
-        Assert.Contains("'/0'/0/0", path);
-    }
-
-    [Fact]
-    public void GetPath_RoleAndIndexAreNotHardened()
-    {
-        // Act
-        string path = CardanoDerivation.GetPath(0, 0, 0);
-
-        // Assert - Role and index should NOT have hardened marker
-        // Path ends with /0/0 (not /0'/0')
-        Assert.EndsWith("/0/0", path);
-    }
-
-    [Fact]
-    public void GetPath_StartsWithMasterNode()
-    {
-        // Act
-        string path = CardanoDerivation.GetPath(0, 0, 0);
-
-        // Assert
-        Assert.StartsWith("m/", path);
+        Assert.Equal(expected, (int)role);
     }
 }
 
@@ -182,5 +118,4 @@ public class KeyDerivationOptionsTests
         // 256 bits = 32 bytes
         Assert.Equal(KeyDerivationOptions.Default.SaltSize, KeyDerivationOptions.Default.KeyLength / 8);
     }
-
 }

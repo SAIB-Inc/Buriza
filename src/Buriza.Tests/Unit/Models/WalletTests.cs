@@ -455,28 +455,6 @@ public class BurizaWalletTests
 
     #endregion
 
-    #region CardanoDerivation Tests
-
-    [Fact]
-    public void CardanoDerivation_GetPath_ReturnsCorrectPath()
-    {
-        // Act
-        string path = CardanoDerivation.GetPath(0, 0, 5);
-
-        // Assert
-        Assert.Equal("m/1852'/1815'/0'/0/5", path);
-    }
-
-    [Fact]
-    public void CardanoDerivation_Constants_AreCorrect()
-    {
-        // Assert
-        Assert.Equal(1852, CardanoDerivation.Purpose);
-        Assert.Equal(1815, CardanoDerivation.CoinType);
-    }
-
-    #endregion
-
     #region Helper Methods
 
     private static BurizaWallet CreateWalletWithAddress()
