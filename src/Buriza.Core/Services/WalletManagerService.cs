@@ -471,9 +471,15 @@ public class WalletManagerService(
 
     public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default)
     {
-        // Validate endpoint URL if provided
-        if (!string.IsNullOrEmpty(endpoint) && !Uri.TryCreate(endpoint, UriKind.Absolute, out _))
-            throw new ArgumentException("Invalid endpoint URL", nameof(endpoint));
+        // Validate endpoint URL if provided - only allow HTTP/HTTPS schemes
+        if (!string.IsNullOrEmpty(endpoint))
+        {
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri))
+                throw new ArgumentException("Invalid endpoint URL", nameof(endpoint));
+
+            if (uri.Scheme != "http" && uri.Scheme != "https")
+                throw new ArgumentException("Endpoint must use HTTP or HTTPS", nameof(endpoint));
+        }
 
         // Save config metadata (endpoint, name)
         CustomProviderConfig config = new()
