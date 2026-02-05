@@ -386,3 +386,4 @@ ehthumbs_vista.db
 # App settings (may contain API keys)
 **/appsettings.json
 **/appsettings.*.json
+!**/appsettings.example.json

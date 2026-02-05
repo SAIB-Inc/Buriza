@@ -11,7 +11,8 @@ namespace Buriza.Tests.Integration.Providers;
 
 public class QueryServiceIntegrationTests : IDisposable
 {
-    private readonly CardanoProvider _provider;
+    private readonly CardanoProvider? _provider;
+    private readonly CardanoTestConfig _config = IntegrationTestConfig.Instance.Cardano;
 
     private const string TestAddress = "addr_test1qpyzvufcwjfmfv5sld6cvnv9jxyt3fe0fh3kacgjlzu237ujrq209004flg53g7uwam0djh230lh5s7vrket4lgl5k3sxs7shy";
     private static byte[] TestMnemonicBytes => Encoding.UTF8.GetBytes(
@@ -19,40 +20,47 @@ public class QueryServiceIntegrationTests : IDisposable
 
     public QueryServiceIntegrationTests()
     {
-        _provider = new CardanoProvider(
-            endpoint: "https://cardano-preview.utxorpc-m1.demeter.run",
-            network: NetworkType.Preview,
-            apiKey: "utxorpc14n9dqyezn3x52wf9wf8");
+        if (_config.IsConfigured)
+        {
+            NetworkType network = Enum.Parse<NetworkType>(_config.Network);
+            _provider = new CardanoProvider(_config.Endpoint!, network, _config.ApiKey);
+        }
     }
 
     public void Dispose()
     {
-        _provider.Dispose();
+        _provider?.Dispose();
         GC.SuppressFinalize(this);
     }
 
     #region IQueryService Tests
 
-    [Fact]
+    [SkippableFact]
     public async Task GetUtxosAsync_SingleAddress_ReturnsUtxos()
     {
-        IReadOnlyList<Utxo> utxos = await _provider.GetUtxosAsync(TestAddress);
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
+
+        IReadOnlyList<Utxo> utxos = await _provider!.GetUtxosAsync(TestAddress);
 
         Assert.NotNull(utxos);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task GetBalanceAsync_ReturnsBalance()
     {
-        ulong balance = await _provider.GetBalanceAsync(TestAddress);
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
+
+        ulong balance = await _provider!.GetBalanceAsync(TestAddress);
 
         Assert.True(balance >= 0);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task GetAssetsAsync_ReturnsAggregatedAssets()
     {
-        IReadOnlyList<Asset> assets = await _provider.GetAssetsAsync(TestAddress);
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
+
+        IReadOnlyList<Asset> assets = await _provider!.GetAssetsAsync(TestAddress);
 
         Assert.NotNull(assets);
     }
@@ -61,44 +69,49 @@ public class QueryServiceIntegrationTests : IDisposable
 
     #region ICardanoDataProvider Tests (Multi-Address UTxO)
 
-    [Fact]
+    [SkippableFact]
     public async Task GetUtxosAsync_EmptyList_ReturnsEmpty()
     {
-        List<ResolvedInput> utxos = await _provider.GetUtxosAsync([]);
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
+
+        List<ResolvedInput> utxos = await _provider!.GetUtxosAsync([]);
 
         Assert.Empty(utxos);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task GetUtxosAsync_SingleAddressList_ReturnsUtxos()
     {
-        List<ResolvedInput> utxos = await _provider.GetUtxosAsync([TestAddress]);
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
+
+        List<ResolvedInput> utxos = await _provider!.GetUtxosAsync([TestAddress]);
 
         Assert.NotNull(utxos);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task GetUtxosAsync_MultipleAddresses_ReturnsAggregated()
     {
-        List<string> addresses = await DeriveAddressesAsync(5);
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
 
-        List<ResolvedInput> utxos = await _provider.GetUtxosAsync(addresses);
+        List<string> addresses = await DeriveAddressesAsync(5);
+        List<ResolvedInput> utxos = await _provider!.GetUtxosAsync(addresses);
 
         Assert.NotNull(utxos);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task GetUtxosAsync_MultipleAddresses_ExecutesInParallel()
     {
+        Skip.If(!_config.IsConfigured, _config.SkipReason);
+
         List<string> addresses = await DeriveAddressesAsync(10);
 
         Stopwatch sw = Stopwatch.StartNew();
-        List<ResolvedInput> utxos = await _provider.GetUtxosAsync(addresses);
+        List<ResolvedInput> utxos = await _provider!.GetUtxosAsync(addresses);
         sw.Stop();
 
         Assert.NotNull(utxos);
-        // With MaxParallelQueries=5, 10 addresses should complete in ~2 batches
-        // Smoke test: parallel should be faster than 10 sequential calls
     }
 
     #endregion
@@ -110,7 +123,7 @@ public class QueryServiceIntegrationTests : IDisposable
         List<string> addresses = [];
         for (int i = 0; i < count; i++)
         {
-            addresses.Add(await _provider.DeriveAddressAsync(TestMnemonicBytes, 0, i));
+            addresses.Add(await _provider!.DeriveAddressAsync(TestMnemonicBytes, 0, i));
         }
         return addresses;
     }
