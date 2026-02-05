@@ -335,7 +335,7 @@
             @if (!IsSummaryDisplayed)
             {
                 <div class="relative">
-                <div class="max-sm:h-[calc(100vh-458px)] max-md:!px-4 w-full !space-y-6 overflow-y-auto h-[calc(100vh-392px)] sm:h-[calc(100vh-518px)] md:h-[calc(100vh-642px)] lg:h-[calc(100vh-192px)] !pb-24 md:!pb-4 md:!px-6 lg:h-[calc(100vh-610px)] lg:!pb-6">
+                <div class="max-sm:h-[calc(100vh-460px)] max-md:!px-4 w-full !space-y-6 overflow-y-auto h-[calc(100vh-392px)] sm:h-[calc(100vh-518px)] md:h-[calc(100vh-642px)] lg:h-[calc(100vh-192px)] !pb-24 md:!pb-4 md:!px-6 lg:h-[calc(100vh-610px)] lg:!pb-6">
                     @foreach (KeyValuePair<string, List<TransactionHistory>> dateGroup in TransactionsByDate)
                     {
                         <div>
@@ -347,7 +347,7 @@
                             <div>
                                 @foreach (TransactionHistory transaction in dateGroup.Value)
                                 {
-                                    <div class="@($"w-full bg-[var(--mud-palette-dark-darken)] !py-3 !px-3 md:!px-4 border-l-[2px]! {(transaction.Type == TransactionType.Sent ? "border-l-[var(--mud-palette-error)]" : "border-l-[var(--mud-palette-success)]")}")">
+                                    <div class="@($"w-full bg-[var(--mud-palette-dark-darken)] !py-3 !px-3 md:!px-4 border-l-[2px]! {GetBorderColorClass(transaction.Type)}")">
                                         <div class="grid items-center gap-4 grid-cols-[auto_1fr_1fr] sm:grid-cols-[auto_1fr_1fr_5rem] md:grid-cols-[auto_1fr_1fr_1fr_5rem] lg:grid-cols-[auto_1fr_1fr_1fr_5rem_1fr]">
                                             @* Column 1: Transaction Hash with Copy *@
                                             <div class="w-max">
@@ -399,8 +399,8 @@
                                             </div>
                                             @* Column 4: Value *@
                                             <div>
-                                                <MudText Class="@($"max-sm:!text-right !text-sm !font-semibold {(transaction.Type == TransactionType.Sent ? "!text-[var(--mud-palette-error)]" : "!text-[var(--mud-palette-success)]")}")">
-                                                    @GetAmountDisplay(transaction.Assets.Sum(a => a.Amount), transaction.Type) ADA
+                                                <MudText Class="@($"max-sm:!text-right !text-sm !font-semibold {GetAmountColorClass(transaction.Assets.Sum(a => a.Amount))}")">
+                                                    @GetAmountDisplay(transaction.Assets.Sum(a => a.Amount), transaction.Type)
                                                 </MudText>
                                                 <MudText Class="max-sm:!text-right !text-xs !text-[var(--mud-palette-text-secondary)]">
                                                     ≈ $@transaction.Assets.Sum(a => a.UsdValue).ToString("F2")
@@ -408,8 +408,8 @@
                                             </div>
                                             @* Column 5: Status *@
                                             <div Class="max-sm:hidden !text-center">
-                                                <MudText Typo="Typo.body2" Color="@(transaction.Type == TransactionType.Sent ? Color.Error : Color.Success)">
-                                                    @(transaction.Type == TransactionType.Sent ? "Sent" : "Received")
+                                                <MudText Typo="Typo.body2" Class="@GetTextColorClass(transaction.Type)">
+                                                    @GetStatusLabel(transaction.Type)
                                                 </MudText>
                                             </div>
                                             @* Column 6: View Summary *@

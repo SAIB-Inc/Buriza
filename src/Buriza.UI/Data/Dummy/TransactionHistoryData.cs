@@ -44,6 +44,21 @@ public static class TransactionHistoryData
                 CollateralAda: 0m,
                 TransactionFeeAda: 0.021m
             ),
+
+            new TransactionHistory(
+                TransactionId: "2f3a4b5c...6d7e8f",
+                Timestamp: DateTime.Now.AddDays(-2).AddHours(-6),
+                FromAddress: "addr1q...8r7z4lgcqrqt9uu",
+                ToAddress: "addr1q...5x9z2mgcqrqt8pp",
+                Type: TransactionType.Mixed,
+                Assets: [
+                    new TransactionAsset(Tokens.Ada, "ADA", 45.50m, 41.25m),
+                    new TransactionAsset(Tokens.Sundae, "SUNDAE", -200.00m, 110.50m),
+                    new TransactionAsset(Tokens.Snek, "SNEK", 350.00m, 87.25m)
+                ],
+                CollateralAda: 150.00m,
+                TransactionFeeAda: 0.035m
+            ),
             
             new TransactionHistory(
                 TransactionId: "8e1f2a3b...4c5d6e",
@@ -94,7 +109,7 @@ public static class TransactionHistoryData
                 TransactionId: "4a5b6c7d...8e9f0a",
                 Timestamp: DateTime.Now.AddDays(-2).AddHours(-1),
                 FromAddress: "addr1q...1k4m7ngcqrqt2ll",
-                ToAddress: "addr1q...8r7z4lgcqrqt9uu", 
+                ToAddress: "addr1q...8r7z4lgcqrqt9uu",
                 Type: TransactionType.Received,
                 Assets: [
                     new TransactionAsset(Tokens.Paylkoyn, "PAYLKOYN", 185.30m, 103.83m),

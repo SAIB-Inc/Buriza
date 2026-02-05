@@ -5,9 +5,14 @@
 <div class="w-full h-full flex flex-col">
     <div class="!px-4 !space-y-6 flex-1 overflow-auto">
         <div>
-            <MudText Class="max-sm:!text-sm !font-medium !mb-3 !text-white">
-                Transaction Type
-            </MudText>
+            <div class="flex items-center justify-between !mb-3">
+                <MudText Class="max-sm:!text-sm !font-medium !text-white">
+                    Transaction Type
+                </MudText>
+                <MudButton Variant="Variant.Text" Class="!p-0 !min-w-0 !normal-case !text-[var(--mud-palette-primary)]" OnClick="ResetTransactionType">
+                    Reset
+                </MudButton>
+            </div>
             <div class="max-sm:[&_.mud-typography]:!text-sm grid grid-cols-2 !gap-1 [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)] [&_.mud-typography]:!text-white">
                 <MudCheckBox T="bool" @bind-Value="SentSelected" Label="Sent" Color="Color.Primary" Dense="true" />
                 <MudCheckBox T="bool" @bind-Value="ReceiveSelected" Label="Receive" Color="Color.Primary" Dense="true" />
@@ -16,13 +21,20 @@
             </div>
         </div>
 
+        <MudDivider Class="!border-[var(--mud-palette-dark-darken)] !my-2 md:!border-[var(--mud-palette-lines-default)] md:!my-8" />
+
         <div>
-            <MudText Class="max-sm:!text-sm !font-medium !mb-3 !text-white">
-                Date Range
-            </MudText>
+            <div class="flex items-center justify-between !mb-3">
+                <MudText Class="max-sm:!text-sm !font-medium !text-white">
+                    Date Range
+                </MudText>
+                <MudButton Variant="Variant.Text" Class="!p-0 !min-w-0 !normal-case !text-[var(--mud-palette-primary)]" OnClick="ResetDateRange">
+                    Reset
+                </MudButton>
+            </div>
             <div class="flex items-center justify-between !gap-2">
                 <div>
-                    <MudText Class="!text-xs !text-[var(--mud-palette-gray-dark)] !font-medium">
+                    <MudText Class="!mb-1 !text-xs !text-[var(--mud-palette-gray-dark)] !font-medium">
                         From
                     </MudText>
                     <MudDatePicker
@@ -33,7 +45,7 @@
                     />
                 </div>
                 <div>
-                    <MudText Class="!text-xs !text-[var(--mud-palette-gray-dark)] !font-medium">
+                    <MudText Class="!mb-1 !text-xs !text-[var(--mud-palette-gray-dark)] !font-medium">
                         To
                     </MudText>
                     <MudDatePicker
@@ -56,10 +68,17 @@
             </MudToggleGroup>
         </div>
 
+        <MudDivider Class="!border-[var(--mud-palette-dark-darken)] !my-2 md:!border-[var(--mud-palette-lines-default)] md:!my-8" />
+
         <div>
-            <MudText Class="max-sm:!text-sm !font-medium !mb-3 !text-white">
-                Status
-            </MudText>
+            <div class="flex items-center justify-between !mb-3">
+                <MudText Class="max-sm:!text-sm !font-medium !text-white">
+                    Status
+                </MudText>
+                <MudButton Variant="Variant.Text" Class="!p-0 !min-w-0 !normal-case !text-[var(--mud-palette-primary)]" OnClick="ResetStatus">
+                    Reset
+                </MudButton>
+            </div>
             <MudRadioGroup T="string" @bind-Value="SelectedStatus" Class="max-sm:[&_.mud-typography]:!text-sm max-sm:[&_.mud-radio]:!gap-1 !flex [&_.mud-radio]:!gap-2 [&_.mud-radio-group]:!gap-1 [&_.mud-radio-group]:!items-start [&_.mud-radio-group]:!flex-col [&_.mud-typography]:!text-white [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)]">
                 <MudRadio Value="@("Completed")" Color="Color.Primary" Dense="true">Completed</MudRadio>
                 <MudRadio Value="@("Pending")" Color="Color.Primary" Dense="true">Pending</MudRadio>

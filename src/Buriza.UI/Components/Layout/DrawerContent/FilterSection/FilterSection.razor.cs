@@ -15,16 +15,31 @@ public partial class FilterSection
 
     private void HandleReset()
     {
+        ResetTransactionType();
+        ResetDateRange();
+        ResetStatus();
+        MinAmount = null;
+        MaxAmount = null;
+    }
+
+    private void ResetTransactionType()
+    {
         SentSelected = false;
         ReceiveSelected = false;
         SwapsSelected = false;
         StakingSelected = false;
+    }
+
+    private void ResetDateRange()
+    {
         FromDate = null;
         ToDate = null;
         SelectedDateRange = string.Empty;
+    }
+
+    private void ResetStatus()
+    {
         SelectedStatus = string.Empty;
-        MinAmount = null;
-        MaxAmount = null;
     }
 
     private void HandleApply()

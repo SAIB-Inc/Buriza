@@ -50,9 +50,42 @@ public partial class History
     
     protected string GetAmountDisplay(decimal amount, TransactionType type)
     {
-        var prefix = type == TransactionType.Sent ? "-" : "+";
-        return $"{prefix}{Math.Abs(amount):F2}";
+        var prefix = type switch
+        {
+            TransactionType.Sent => "-",
+            TransactionType.Received => "+",
+            TransactionType.Mixed => amount >= 0 ? "+" : "-",
+            _ => ""
+        };
+        return $"{prefix} ₳{Math.Abs(amount):F2}";
     }
+
+    protected string GetBorderColorClass(TransactionType type) => type switch
+    {
+        TransactionType.Sent => "border-l-[var(--mud-palette-error)]",
+        TransactionType.Received => "border-l-[var(--mud-palette-success)]",
+        TransactionType.Mixed => "border-l-[#4CA8FF]",
+        _ => "border-l-[var(--mud-palette-text-secondary)]"
+    };
+
+    protected string GetTextColorClass(TransactionType type) => type switch
+    {
+        TransactionType.Sent => "!text-[var(--mud-palette-error)]",
+        TransactionType.Received => "!text-[var(--mud-palette-success)]",
+        TransactionType.Mixed => "!text-[#4CA8FF]",
+        _ => "!text-[var(--mud-palette-text-secondary)]"
+    };
+
+    protected string GetAmountColorClass(decimal amount) =>
+        amount >= 0 ? "!text-[var(--mud-palette-success)]" : "!text-[var(--mud-palette-error)]";
+
+    protected string GetStatusLabel(TransactionType type) => type switch
+    {
+        TransactionType.Sent => "Sent",
+        TransactionType.Received => "Received",
+        TransactionType.Mixed => "Mixed",
+        _ => "Unknown"
+    };
 
     protected void HandleFilterClick()
     {
