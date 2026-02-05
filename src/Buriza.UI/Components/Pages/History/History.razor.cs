@@ -64,7 +64,7 @@ public partial class History
     {
         TransactionType.Sent => "border-l-[var(--mud-palette-error)]",
         TransactionType.Received => "border-l-[var(--mud-palette-success)]",
-        TransactionType.Mixed => "border-l-[#4CA8FF]",
+        TransactionType.Mixed => "border-l-[var(--mud-palette-primary)]",
         _ => "border-l-[var(--mud-palette-text-secondary)]"
     };
 
@@ -72,7 +72,7 @@ public partial class History
     {
         TransactionType.Sent => "!text-[var(--mud-palette-error)]",
         TransactionType.Received => "!text-[var(--mud-palette-success)]",
-        TransactionType.Mixed => "!text-[#4CA8FF]",
+        TransactionType.Mixed => "!text-[var(--mud-palette-primary)]",
         _ => "!text-[var(--mud-palette-text-secondary)]"
     };
 
