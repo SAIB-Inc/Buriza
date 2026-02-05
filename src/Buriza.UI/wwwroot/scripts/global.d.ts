@@ -1,5 +1,9 @@
 export {};
 
+interface DotNetObjectReference {
+    invokeMethodAsync(methodName: string, ...args: unknown[]): Promise<unknown>;
+}
+
 declare global {
     interface Window {
         getScreenWidth(): number;
@@ -22,5 +26,7 @@ declare global {
             gradientEnd2: string
         ): void;
         destroyChart(canvasId: string): void;
+        attachWindowResizeEvent(dotNetRef: DotNetObjectReference): void;
+        detachWindowResizeEvent(dotNetRef: DotNetObjectReference): void;
     }
 }

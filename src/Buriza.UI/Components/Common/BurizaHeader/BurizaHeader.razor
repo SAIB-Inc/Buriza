@@ -85,10 +85,10 @@
         @*Buriza*@
         <div class="relative flex items-center justify-center">
             <div class="relative top-[-11px] w-12 h-12 flex items-center justify-center cursor-pointer z-30" @onclick="HandleBurizaTap">
-                <div class="@($"absolute w-18 h-12 rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 {(IsPopupVisible ? "bg-[#FFFFFF]" : "bg-[var(--mud-palette-primary)]")}")"/>
-                <div class="@($"absolute w-18 h-12 rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 {(IsPopupVisible ? "bg-[#FFFFFF]" : "bg-[var(--mud-palette-primary)]")}")"/>
-                <div class="@($"absolute w-18 h-12 rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 {(IsPopupVisible ? "bg-[#FFFFFF]" : "bg-[var(--mud-palette-primary)]")}")"/>
-                <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="@($"!z-10 !text-[38px] transition-colors duration-300 {(IsPopupVisible ? "!text-[#227CFF]" : "!text-[var(--mud-palette-white)]")}")"/>
+                <div class="@($"absolute w-18 h-12 rounded-lg top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 {(IsPopupVisible ? "bg-[var(--mud-palette-white)]" : "bg-[var(--mud-palette-primary)]")}")"/>
+                <div class="@($"absolute w-18 h-12 rounded-lg rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 {(IsPopupVisible ? "bg-[var(--mud-palette-white)]" : "bg-[var(--mud-palette-primary)]")}")"/>
+                <div class="@($"absolute w-18 h-12 rounded-lg -rotate-60 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 {(IsPopupVisible ? "bg-[var(--mud-palette-white)]" : "bg-[var(--mud-palette-primary)]")}")"/>
+                <MudIcon Icon="@BurizaIcons.BurizaSymbolIcon" Class="@($"!z-10 !text-[38px] transition-colors duration-300 {(IsPopupVisible ? "!text-[var(--mud-palette-primary)]" : "!text-[var(--mud-palette-white)]")}")"/>
             </div>
             @*pop up*@
             <div class="@($"left-1/2 -translate-x-1/2 fixed {(IsPopupVisible ? "bottom-12 opacity-100 duration-200" : "bottom-4 delay-50 opacity-0 duration-100")}") z-10">
@@ -98,13 +98,13 @@
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-[128px] -translate-y-[30px] opacity-100 delay-100" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
-                    <div class="w-10 h-10 rounded-full bg-[#002E6B] flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-[var(--mud-palette-primary-contrast-text)] flex items-center justify-center">
                         <MudIcon
                             Icon="@BurizaIcons.VotingSymbolIcon"
                             Class="!text-[20px] !text-[var(--mud-palette-white)]"
                         />
                     </div>
-                    <span class="text-[11px] !text-[#B9C6E9]">Voting</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-table-lines)]">Voting</span>
                 </MudLink>
 
                 @*left - DApps*@
@@ -113,13 +113,13 @@
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-[82px] -translate-y-[84px] opacity-100 delay-150" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
-                    <div class="w-10 h-10 rounded-full bg-[#002E6B] flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-[var(--mud-palette-primary-contrast-text)] flex items-center justify-center">
                         <MudIcon
                             Icon="@BurizaIcons.DappSymbolIcon"
                             Class="!text-[20px] !text-[var(--mud-palette-white)]"
                         />
                     </div>
-                    <span class="text-[11px] !text-[#B9C6E9]">DApps</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-table-lines)]">DApps</span>
                 </MudLink>
 
                 @*top center - Assets*@
@@ -128,13 +128,13 @@
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "-translate-x-1/2 -translate-y-[114px] opacity-100 delay-200" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
-                    <div class="w-10 h-10 rounded-full bg-[#002E6B] flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-[var(--mud-palette-primary-contrast-text)] flex items-center justify-center">
                         <MudIcon
                             Icon="@BurizaIcons.AssetIcon"
                             Class="!text-[20px] !text-[var(--mud-palette-white)]"
                         />
                     </div>
-                    <span class="text-[11px] !text-[#B9C6E9]">Assets</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-table-lines)]">Assets</span>
                 </MudLink>
 
                 @*right - Settings*@
@@ -143,13 +143,13 @@
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "translate-x-[38px] -translate-y-[84px] opacity-100 delay-250" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
-                    <div class="w-10 h-10 rounded-full bg-[#002E6B] flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-[var(--mud-palette-primary-contrast-text)] flex items-center justify-center">
                         <MudIcon
                             Icon="@BurizaIcons.SettingsSymbolIcon"
                             Class="!text-[20px] !text-[var(--mud-palette-white)]"
                         />
                     </div>
-                    <span class="text-[11px] !text-[#B9C6E9]">Settings</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-table-lines)]">Settings</span>
                 </MudLink>
 
                 @*far right - Staking*@
@@ -158,13 +158,13 @@
                     Class="@($"absolute top-0 left-1/2 flex flex-col items-center justify-center !gap-2 transition-all duration-250 ease-out !text-[var(--mud-palette-text-primary)] {(IsPopupVisible ? "translate-x-[88px] -translate-y-[30px] opacity-100 delay-300" : "-translate-x-1/2 -translate-y-[28px] opacity-0")}")"
                     @onclick="ClosePopup"
                 >
-                    <div class="w-10 h-10 rounded-full bg-[#002E6B] flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-full bg-[var(--mud-palette-primary-contrast-text)] flex items-center justify-center">
                         <MudIcon
                             Icon="@BurizaIcons.StakingSymbolIcon"
                             Class="!text-[20px] !text-[var(--mud-palette-white)]"
                         />
                     </div>
-                    <span class="text-[11px] !text-[#B9C6E9]">Staking</span>
+                    <span class="text-[11px] !text-[var(--mud-palette-table-lines)]">Staking</span>
                 </MudLink>
             </div>
         </div>

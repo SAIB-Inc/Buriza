@@ -5,10 +5,10 @@
 <div class="w-full h-full flex flex-col">
     <div class="!px-4 !space-y-6 flex-1 overflow-auto">
         <div>
-            <MudText Class="!font-medium !mb-3 !text-white">
+            <MudText Class="max-sm:!text-sm !font-medium !mb-3 !text-white">
                 Transaction Type
             </MudText>
-            <div class="grid grid-cols-2 !gap-1 [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)] [&_.mud-typography]:!text-white">
+            <div class="max-sm:[&_.mud-typography]:!text-sm grid grid-cols-2 !gap-1 [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)] [&_.mud-typography]:!text-white">
                 <MudCheckBox T="bool" @bind-Value="SentSelected" Label="Sent" Color="Color.Primary" Dense="true" />
                 <MudCheckBox T="bool" @bind-Value="ReceiveSelected" Label="Receive" Color="Color.Primary" Dense="true" />
                 <MudCheckBox T="bool" @bind-Value="SwapsSelected" Label="Voting" Color="Color.Primary" Dense="true" />
@@ -17,7 +17,7 @@
         </div>
 
         <div>
-            <MudText Class="!font-medium !mb-3 !text-white">
+            <MudText Class="max-sm:!text-sm !font-medium !mb-3 !text-white">
                 Date Range
             </MudText>
             <div class="flex items-center justify-between !gap-2">
@@ -26,10 +26,10 @@
                         From
                     </MudText>
                     <MudDatePicker
-                        Label="From"
+                        Placeholder="@DateTime.Now.ToString("MM/dd/yyyy")"
                         @bind-Date="FromDate"
                         Variant="Variant.Outlined"
-                        Class="[&_.mud-input]:!bg-[var(--mud-palette-background)] [&_.mud-input-control]:!rounded-full [&_.mud-input-slot]:!rounded-full [&_.mud-input-outlined-border]:!rounded-full [&_.mud-input-slot]:!h-12 [&_.mud-input]:!h-12 [&_.mud-input-label-outlined]:![transform:translate(14px,16px)_scale(1)]"
+                        Class="[&_.mud-input]:!bg-[var(--mud-palette-overlay-light)] [&_input]:!text-[var(--mud-palette-gray-dark)] [&_input]:!py-[6px] [&_input]:!px-[16px] [&_.mud-input-label]:!text-[var(--mud-palette-gray-dark)] [&_.mud-icon-root]:!text-[var(--mud-palette-gray-dark)] [&_.mud-input]:rounded-full! [&_.mud-input-control]:!rounded-full [&_.mud-input-slot]:!rounded-full [&_.mud-input-outlined-border]:!rounded-full [&_.mud-input-slot]:!h-12 [&_.mud-input]:!h-12 [&_.mud-input-label-outlined]:![transform:translate(14px,16px)_scale(1)]"
                     />
                 </div>
                 <div>
@@ -37,10 +37,10 @@
                         To
                     </MudText>
                     <MudDatePicker
-                        Label="To"
+                        Placeholder="@DateTime.Now.ToString("MM/dd/yyyy")"
                         @bind-Date="ToDate"
                         Variant="Variant.Outlined"
-                        Class="[&_.mud-input]:!bg-[var(--mud-palette-background)] [&_.mud-input-control]:!rounded-full [&_.mud-input-slot]:!rounded-full [&_.mud-input-outlined-border]:!rounded-full [&_.mud-input-slot]:!h-12 [&_.mud-input]:!h-12 [&_.mud-input-label-outlined]:![transform:translate(14px,16px)_scale(1)]"
+                        Class="[&_.mud-input]:!bg-[var(--mud-palette-overlay-light)] [&_input]:!text-[var(--mud-palette-gray-dark)] [&_input]:!py-[6px] [&_input]:!px-[16px] [&_.mud-input-label]:!text-[var(--mud-palette-gray-dark)] [&_.mud-icon-root]:!text-[var(--mud-palette-gray-dark)] [&_.mud-input]:rounded-full! [&_.mud-input-control]:!rounded-full [&_.mud-input-slot]:!rounded-full [&_.mud-input-outlined-border]:!rounded-full [&_.mud-input-slot]:!h-12 [&_.mud-input]:!h-12 [&_.mud-input-label-outlined]:![transform:translate(14px,16px)_scale(1)]"
                     />
                 </div>
             </div>
@@ -57,10 +57,10 @@
         </div>
 
         <div>
-            <MudText Class="!font-medium !mb-3 !text-white">
+            <MudText Class="max-sm:!text-sm !font-medium !mb-3 !text-white">
                 Status
             </MudText>
-            <MudRadioGroup T="string" @bind-Value="SelectedStatus" Class="!flex [&_.mud-radio]:!gap-2 [&_.mud-radio-group]:!gap-1 [&_.mud-radio-group]:!items-start [&_.mud-radio-group]:!flex-col [&_.mud-typography]:!text-white [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)]">
+            <MudRadioGroup T="string" @bind-Value="SelectedStatus" Class="max-sm:[&_.mud-typography]:!text-sm max-sm:[&_.mud-radio]:!gap-1 !flex [&_.mud-radio]:!gap-2 [&_.mud-radio-group]:!gap-1 [&_.mud-radio-group]:!items-start [&_.mud-radio-group]:!flex-col [&_.mud-typography]:!text-white [&_.mud-button-root]:!text-[var(--mud-palette-warning-lighten)]">
                 <MudRadio Value="@("Completed")" Color="Color.Primary" Dense="true">Completed</MudRadio>
                 <MudRadio Value="@("Pending")" Color="Color.Primary" Dense="true">Pending</MudRadio>
                 <MudRadio Value="@("Failed")" Color="Color.Primary" Dense="true">Failed</MudRadio>
@@ -69,21 +69,21 @@
     </div>
 
     <div class="!px-4 !py-4 flex !gap-3 mt-auto">
-        <MudButton
-            Variant="Variant.Outlined"
+        <BurizaButton
+            Variant="Variant.Filled"
             Color="Color.Default"
-            Class="flex-1 !rounded-full !normal-case !h-12"
+            Class="flex-1 !rounded-full !normal-case !h-12 !bg-[var(--mud-palette-action-default)] !text-[var(--mud-palette-text-primary)]"
             OnClick="HandleReset"
         >
             Clear All
-        </MudButton>
-        <MudButton
+        </BurizaButton>
+        <BurizaButton
             Variant="Variant.Filled"
             Color="Color.Primary"
             Class="flex-1 !rounded-full !normal-case !h-12"
             OnClick="HandleApply"
         >
             Apply Filters
-        </MudButton>
+        </BurizaButton>
     </div>
 </div>

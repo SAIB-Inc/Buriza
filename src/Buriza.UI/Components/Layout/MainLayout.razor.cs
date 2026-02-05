@@ -3,18 +3,25 @@ using Buriza.UI.Services;
 using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 using MudBlazor;
 using static Buriza.Data.Models.Enums.DrawerContentType;
 
 namespace Buriza.UI.Components.Layout;
 
-public partial class MainLayout : LayoutComponentBase, IDisposable
+public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
 
     [Inject]
     public required NavigationManager Navigation { get; set; }
+
+    [Inject]
+    public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
+
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+    protected Anchor FilterDrawerAnchor { get; set; } = Anchor.End;
 
     protected bool IsHeaderHidden => IsOnRoute(Routes.TransactionSuccess, Routes.Onboard, Routes.Splash);
 
@@ -242,6 +249,23 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         SetContentForCurrentRoute();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JavaScriptBridgeService.AttachWindowResizeEvent(_dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public Task OnResize(int width)
+    {
+        FilterDrawerAnchor = width < 768 ? Anchor.Bottom : Anchor.End;
+        _ = InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
     private async void HandleStateChanged()
     {
         await InvokeAsync(StateHasChanged);
@@ -284,9 +308,15 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         AppStateService.OnChanged -= HandleStateChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+
+        if (_dotNetRef != null)
+        {
+            await JavaScriptBridgeService.DetachWindowResizeEvent(_dotNetRef);
+            _dotNetRef.Dispose();
+        }
     }
 }

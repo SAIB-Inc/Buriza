@@ -5,6 +5,9 @@ Chart.register(...registerables);
 // Store chart instances to destroy them when needed
 const chartInstances: Map<string, Chart> = new Map();
 
+// Store resize handlers for cleanup
+const resizeHandlers: Map<object, () => void> = new Map();
+
 window.getScreenWidth = function(): number {
     return window.innerWidth;
 };
@@ -156,4 +159,25 @@ window.createDualAreaChart = function(
     });
 
     chartInstances.set(canvasId, chart);
+};
+
+window.attachWindowResizeEvent = function(dotNetRef: { invokeMethodAsync: (method: string, ...args: unknown[]) => Promise<unknown> }): void {
+    const handler = () => {
+        dotNetRef.invokeMethodAsync('OnResize', window.innerWidth);
+    };
+
+    // Call immediately to set initial state
+    handler();
+
+    // Store the handler for later cleanup
+    resizeHandlers.set(dotNetRef, handler);
+    window.addEventListener('resize', handler);
+};
+
+window.detachWindowResizeEvent = function(dotNetRef: { invokeMethodAsync: (method: string, ...args: unknown[]) => Promise<unknown> }): void {
+    const handler = resizeHandlers.get(dotNetRef);
+    if (handler) {
+        window.removeEventListener('resize', handler);
+        resizeHandlers.delete(dotNetRef);
+    }
 };

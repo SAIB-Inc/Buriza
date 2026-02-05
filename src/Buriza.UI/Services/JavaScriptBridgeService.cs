@@ -37,4 +37,14 @@ public class JavaScriptBridgeService(IJSRuntime jSRuntime)
     {
         await jSRuntime.InvokeVoidAsync("createDualAreaChart", canvasId, data1, color1, gradientStart1, gradientEnd1, data2, color2, gradientStart2, gradientEnd2);
     }
+
+    public async Task AttachWindowResizeEvent<T>(DotNetObjectReference<T> dotNetRef) where T : class
+    {
+        await jSRuntime.InvokeVoidAsync("attachWindowResizeEvent", dotNetRef);
+    }
+
+    public async Task DetachWindowResizeEvent<T>(DotNetObjectReference<T> dotNetRef) where T : class
+    {
+        await jSRuntime.InvokeVoidAsync("detachWindowResizeEvent", dotNetRef);
+    }
 }
