@@ -154,6 +154,9 @@ public class AuthenticationService(
         ValidatePin(oldPin);
         ValidatePin(newPin);
 
+        if (oldPin == newPin)
+            throw new ArgumentException("New PIN must be different from current PIN", nameof(newPin));
+
         // Decrypt with old PIN
         byte[] passwordBytes = await AuthenticateWithPinAsync(walletId, oldPin, ct);
         try
