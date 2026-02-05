@@ -95,8 +95,10 @@ public class WalletStorageService(
         await _storageLock.WaitAsync(ct);
         try
         {
-            IReadOnlyList<BurizaWallet> wallets = await LoadAllAsync(ct);
-            return wallets.Count > 0 ? wallets.Max(w => w.Id) + 1 : 1;
+            string? counterStr = await storage.GetAsync(StorageKeys.WalletIdCounter, ct);
+            int nextId = int.TryParse(counterStr, out int c) ? c + 1 : 1;
+            await storage.SetAsync(StorageKeys.WalletIdCounter, nextId.ToString(), ct);
+            return nextId;
         }
         finally
         {

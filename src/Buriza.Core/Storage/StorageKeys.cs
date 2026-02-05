@@ -41,13 +41,17 @@ public static class StorageKeys
 
     #endregion
 
-    #region Authentication State
+    #region Authentication State (Secure Storage)
 
-    /// <summary>Gets the storage key for tracking failed authentication attempts.</summary>
-    public static string FailedAttempts(int walletId) => $"buriza_failed_{walletId}";
+    /// <summary>Gets the secure storage key for HMAC-protected lockout state.</summary>
+    public static string LockoutState(int walletId) => $"buriza_lockout_state_{walletId}";
 
-    /// <summary>Gets the storage key for storing lockout end time.</summary>
-    public static string Lockout(int walletId) => $"buriza_lockout_{walletId}";
+    #endregion
+
+    #region Wallet ID Counter
+
+    /// <summary>Key for storing the monotonic wallet ID counter in secure storage.</summary>
+    public const string WalletIdCounter = "buriza_wallet_id_counter";
 
     #endregion
 
