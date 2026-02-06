@@ -1,10 +1,10 @@
 using Buriza.Core.Interfaces.Security;
+using Buriza.Core.Models.Enums;
 
 namespace Buriza.Core.Services;
 
 /// <summary>
-/// Null implementation of IBiometricService for platforms without biometric support.
-/// Used by Web and Extension platforms where native biometrics are not available.
+/// Null implementation of IBiometricService for platforms without biometric support (Web/Extension).
 /// </summary>
 public class NullBiometricService : IBiometricService
 {
@@ -12,16 +12,16 @@ public class NullBiometricService : IBiometricService
         => Task.FromResult(false);
 
     public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
-        => Task.FromResult<BiometricType?>(null);
+        => Task.FromResult<BiometricType?>(BiometricType.NotAvailable);
 
     public Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
-        => Task.FromResult(BiometricResult.Failed(BiometricError.NotAvailable, "Biometrics not available on this platform"));
+        => Task.FromResult(BiometricResult.Failed(BiometricError.NotAvailable, "Biometric not available on this platform"));
 
     public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
-        => throw new NotSupportedException("Biometrics not available on this platform");
+        => throw new NotSupportedException("Biometric storage not available on this platform");
 
     public Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
-        => Task.FromResult<byte[]?>(null);
+        => throw new NotSupportedException("Biometric storage not available on this platform");
 
     public Task RemoveSecureAsync(string key, CancellationToken ct = default)
         => Task.CompletedTask;

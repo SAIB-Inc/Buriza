@@ -530,3 +530,5 @@ This allows:
 - Platform-specific optimizations where needed
 - Future backends without changing existing code
 - Unit testing without platform emulators
+
+dotnet build src/Buriza.App/Buriza.App.csproj -f net10.0-android -p:AndroidSdkDirectory=/Users/windss/android-sdk 2>&1 | tail -40

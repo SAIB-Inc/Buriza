@@ -1,5 +1,5 @@
 using Buriza.Core.Interfaces.Chain;
-using Buriza.Core.Models;
+using Buriza.Core.Models.Chain;
 using Microsoft.Extensions.Logging;
 
 namespace Buriza.Core.Services;
@@ -14,7 +14,7 @@ public class HeartbeatService : IDisposable
     public bool IsConnected { get; private set; }
     public int ConsecutiveFailures { get; private set; }
 
-    private readonly IQueryService _queryService;
+    private readonly IBurizaChainProvider _provider;
     private readonly ILogger<HeartbeatService>? _logger;
     private readonly CancellationTokenSource _cts = new();
     private bool _disposed;
@@ -24,9 +24,9 @@ public class HeartbeatService : IDisposable
     private const int MaxDelayMs = 60000;
     private const double BackoffMultiplier = 2.0;
 
-    public HeartbeatService(IQueryService queryService, ILogger<HeartbeatService>? logger = null)
+    public HeartbeatService(IBurizaChainProvider provider, ILogger<HeartbeatService>? logger = null)
     {
-        _queryService = queryService;
+        _provider = provider;
         _logger = logger;
 
         _ = Task.Run(async () =>
@@ -54,7 +54,7 @@ public class HeartbeatService : IDisposable
                 ConsecutiveFailures = 0;
                 currentDelayMs = InitialDelayMs; // Reset backoff on successful connection
 
-                await foreach (TipEvent tip in _queryService.FollowTipAsync(_cts.Token))
+                await foreach (TipEvent tip in _provider.FollowTipAsync(_cts.Token))
                 {
                     if (tip.Slot > 0)
                     {
@@ -136,7 +136,7 @@ public class HeartbeatService : IDisposable
 /// <summary>
 /// Event arguments for heartbeat errors.
 /// </summary>
-record HeartbeatErrorEventArgs(
+public record HeartbeatErrorEventArgs(
     Exception Exception,
     string Message,
     int ConsecutiveFailures,

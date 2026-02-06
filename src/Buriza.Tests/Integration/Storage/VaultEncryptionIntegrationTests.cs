@@ -1,14 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
-using Buriza.Core.Crypto;
-using Buriza.Core.Models;
+using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Services;
-using Buriza.Tests.Mocks;
 
 namespace Buriza.Tests.Integration.Storage;
 
 /// <summary>
-/// Integration tests for VaultEncryption through WalletStorageService.
+/// Integration tests for VaultEncryption through BurizaStorageService.
 /// Tests the full roundtrip: create vault -> unlock -> verify -> change password.
 /// </summary>
 public class VaultEncryptionIntegrationTests
@@ -16,15 +14,14 @@ public class VaultEncryptionIntegrationTests
     private const string TestMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestPassword = "SecurePassword123!";
     private const string NewPassword = "NewSecurePassword456!";
-    private const int TestWalletId = 1;
+    private static readonly Guid TestWalletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
-    private readonly InMemoryStorageProvider _storage = new();
-    private readonly InMemorySecureStorageProvider _secureStorage = new();
-    private readonly WalletStorageService _walletStorage;
+    private readonly InMemoryPlatformStorage _storage = new();
+    private readonly BurizaStorageService _walletStorage;
 
     public VaultEncryptionIntegrationTests()
     {
-        _walletStorage = new WalletStorageService(_storage, _secureStorage);
+        _walletStorage = new BurizaStorageService(_storage, new NullBiometricService());
     }
 
     #region Create and Unlock Roundtrip
@@ -243,13 +240,15 @@ public class VaultEncryptionIntegrationTests
         const string mnemonic2 = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong";
         byte[] mnemonicBytes1 = Encoding.UTF8.GetBytes(mnemonic1);
         byte[] mnemonicBytes2 = Encoding.UTF8.GetBytes(mnemonic2);
+        Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
 
         // Act
-        await _walletStorage.CreateVaultAsync(1, mnemonicBytes1, "password1");
-        await _walletStorage.CreateVaultAsync(2, mnemonicBytes2, "password2");
+        await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, "password1");
+        await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, "password2");
 
-        byte[] decrypted1 = await _walletStorage.UnlockVaultAsync(1, "password1");
-        byte[] decrypted2 = await _walletStorage.UnlockVaultAsync(2, "password2");
+        byte[] decrypted1 = await _walletStorage.UnlockVaultAsync(walletId1, "password1");
+        byte[] decrypted2 = await _walletStorage.UnlockVaultAsync(walletId2, "password2");
 
         // Assert
         Assert.Equal(mnemonic1, Encoding.UTF8.GetString(decrypted1));
@@ -268,13 +267,15 @@ public class VaultEncryptionIntegrationTests
         // Arrange
         byte[] mnemonicBytes1 = Encoding.UTF8.GetBytes(TestMnemonic);
         byte[] mnemonicBytes2 = Encoding.UTF8.GetBytes("zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong");
+        Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
 
-        await _walletStorage.CreateVaultAsync(1, mnemonicBytes1, "password1");
-        await _walletStorage.CreateVaultAsync(2, mnemonicBytes2, "password2");
+        await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, "password1");
+        await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, "password2");
 
         // Act & Assert - password1 shouldn't work for wallet 2
         await Assert.ThrowsAnyAsync<CryptographicException>(
-            () => _walletStorage.UnlockVaultAsync(2, "password1"));
+            () => _walletStorage.UnlockVaultAsync(walletId2, "password1"));
 
         // Cleanup
         CryptographicOperations.ZeroMemory(mnemonicBytes1);
@@ -282,76 +283,12 @@ public class VaultEncryptionIntegrationTests
     }
 
     #endregion
-
-    #region API Key Encryption
-
-    [Fact]
-    public async Task CustomApiKey_CreateAndUnlock_ReturnsOriginalKey()
-    {
-        // Arrange
-        var chainInfo = new Buriza.Data.Models.Common.ChainInfo
-        {
-            Chain = Buriza.Data.Models.Enums.ChainType.Cardano,
-            Network = Buriza.Data.Models.Enums.NetworkType.Mainnet,
-            Name = "Cardano Mainnet",
-            Symbol = "ADA",
-            Decimals = 6
-        };
-        const string apiKey = "dmtr_test_api_key_12345";
-
-        // First save a config
-        await _walletStorage.SaveCustomProviderConfigAsync(new CustomProviderConfig
-        {
-            Chain = chainInfo.Chain,
-            Network = chainInfo.Network,
-            Endpoint = "https://example.com"
-        });
-
-        // Act
-        await _walletStorage.SaveCustomApiKeyAsync(chainInfo, apiKey, TestPassword);
-        byte[]? decrypted = await _walletStorage.UnlockCustomApiKeyAsync(chainInfo, TestPassword);
-
-        // Assert
-        Assert.NotNull(decrypted);
-        Assert.Equal(apiKey, Encoding.UTF8.GetString(decrypted));
-
-        // Cleanup
-        CryptographicOperations.ZeroMemory(decrypted);
-    }
-
-    [Fact]
-    public async Task CustomApiKey_WrongPassword_ThrowsCryptographicException()
-    {
-        // Arrange
-        var chainInfo = new Buriza.Data.Models.Common.ChainInfo
-        {
-            Chain = Buriza.Data.Models.Enums.ChainType.Cardano,
-            Network = Buriza.Data.Models.Enums.NetworkType.Mainnet,
-            Name = "Cardano Mainnet",
-            Symbol = "ADA",
-            Decimals = 6
-        };
-
-        await _walletStorage.SaveCustomProviderConfigAsync(new CustomProviderConfig
-        {
-            Chain = chainInfo.Chain,
-            Network = chainInfo.Network,
-            Endpoint = "https://example.com"
-        });
-        await _walletStorage.SaveCustomApiKeyAsync(chainInfo, "test_api_key", TestPassword);
-
-        // Act & Assert
-        await Assert.ThrowsAnyAsync<CryptographicException>(
-            () => _walletStorage.UnlockCustomApiKeyAsync(chainInfo, "WrongPassword!"));
-    }
-
-    #endregion
 }
 
 /// <summary>
-/// In-memory implementation of IStorageProvider for testing.
+/// In-memory implementation of IPlatformStorage for testing.
 /// </summary>
-public class InMemoryStorageProvider : Buriza.Core.Interfaces.Storage.IStorageProvider
+public class InMemoryPlatformStorage : IPlatformStorage
 {
     private readonly Dictionary<string, string> _data = [];
 
@@ -387,32 +324,6 @@ public class InMemoryStorageProvider : Buriza.Core.Interfaces.Storage.IStoragePr
     public Task ClearAsync(CancellationToken ct = default)
     {
         _data.Clear();
-        return Task.CompletedTask;
-    }
-}
-
-/// <summary>
-/// In-memory implementation of ISecureStorageProvider for testing.
-/// </summary>
-public class InMemorySecureStorageProvider : Buriza.Core.Interfaces.Storage.ISecureStorageProvider
-{
-    private readonly Dictionary<string, string> _data = [];
-
-    public Task<string?> GetSecureAsync(string key, CancellationToken ct = default)
-    {
-        _data.TryGetValue(key, out string? value);
-        return Task.FromResult(value);
-    }
-
-    public Task SetSecureAsync(string key, string value, CancellationToken ct = default)
-    {
-        _data[key] = value;
-        return Task.CompletedTask;
-    }
-
-    public Task RemoveSecureAsync(string key, CancellationToken ct = default)
-    {
-        _data.Remove(key);
         return Task.CompletedTask;
     }
 }

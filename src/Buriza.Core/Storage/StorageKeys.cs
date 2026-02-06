@@ -25,13 +25,13 @@ public static class StorageKeys
     #region Secure Vaults
 
     /// <summary>Gets the storage key for a wallet's encrypted mnemonic vault.</summary>
-    public static string Vault(int walletId) => $"buriza_vault_{walletId}";
+    public static string Vault(Guid walletId) => $"buriza_vault_{walletId:N}";
 
     /// <summary>Gets the storage key for a wallet's PIN-encrypted password vault.</summary>
-    public static string PinVault(int walletId) => $"buriza_pin_{walletId}";
+    public static string PinVault(Guid walletId) => $"buriza_pin_{walletId:N}";
 
     /// <summary>Gets the storage key for a wallet's biometric-protected password.</summary>
-    public static string BiometricKey(int walletId) => $"buriza_bio_{walletId}";
+    public static string BiometricKey(Guid walletId) => $"buriza_bio_{walletId:N}";
 
     /// <summary>Gets the storage key for a chain's encrypted API key vault.</summary>
     public static string ApiKeyVault(int chain, int network) => $"buriza_apikey_{chain}_{network}";
@@ -41,17 +41,13 @@ public static class StorageKeys
 
     #endregion
 
-    #region Authentication State (Secure Storage)
+    #region Authentication State
+
+    /// <summary>Gets the storage key for a wallet's authentication type (password/pin/biometric).</summary>
+    public static string AuthType(Guid walletId) => $"buriza_auth_type_{walletId:N}";
 
     /// <summary>Gets the secure storage key for HMAC-protected lockout state.</summary>
-    public static string LockoutState(int walletId) => $"buriza_lockout_state_{walletId}";
-
-    #endregion
-
-    #region Wallet ID Counter
-
-    /// <summary>Key for storing the monotonic wallet ID counter in secure storage.</summary>
-    public const string WalletIdCounter = "buriza_wallet_id_counter";
+    public static string LockoutState(Guid walletId) => $"buriza_lockout_state_{walletId:N}";
 
     #endregion
 

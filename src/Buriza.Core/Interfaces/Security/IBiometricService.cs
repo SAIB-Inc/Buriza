@@ -1,8 +1,11 @@
+using Buriza.Core.Models.Enums;
+
 namespace Buriza.Core.Interfaces.Security;
 
 /// <summary>
 /// Platform-specific biometric service abstraction.
-/// Implemented per-platform in MAUI.
+/// Handles biometric authentication and secure storage with biometric protection.
+/// Implemented per-platform in MAUI (iOS/macOS Keychain, Android Keystore, Windows Hello).
 /// </summary>
 public interface IBiometricService
 {

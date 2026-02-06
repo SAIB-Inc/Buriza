@@ -1,10 +1,8 @@
 using Buriza.Core.Interfaces.Chain;
-using Buriza.Core.Models;
-using Buriza.Core.Providers;
-using Buriza.Data.Models.Common;
-using Buriza.Data.Models.Enums;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Transaction;
+using Buriza.Core.Models.Wallet;
 using NSubstitute;
-using CoreWalletAccount = Buriza.Core.Models.WalletAccount;
 
 namespace Buriza.Tests.Unit.Models;
 
@@ -18,12 +16,12 @@ public class BurizaWalletTests
         // Arrange & Act
         BurizaWallet wallet = new()
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test Wallet" }
         };
 
         // Assert
-        Assert.Equal(1, wallet.Id);
+        Assert.Equal(Guid.Parse("00000000-0000-0000-0000-000000000001"), wallet.Id);
         Assert.Equal("Test Wallet", wallet.Profile.Name);
     }
 
@@ -33,7 +31,7 @@ public class BurizaWalletTests
         // Arrange & Act
         BurizaWallet wallet = new()
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test Wallet" }
         };
 
@@ -69,10 +67,10 @@ public class BurizaWalletTests
     public void GetActiveAccount_WhenAccountsEmpty_ReturnsNull()
     {
         // Arrange
-        BurizaWallet wallet = new() { Id = 1, Profile = new WalletProfile { Name = "Test" } };
+        BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
 
         // Act
-        CoreWalletAccount? result = wallet.GetActiveAccount();
+        BurizaWalletAccount? result = wallet.GetActiveAccount();
 
         // Assert
         Assert.Null(result);
@@ -84,19 +82,19 @@ public class BurizaWalletTests
         // Arrange
         BurizaWallet wallet = new()
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test" },
             ActiveAccountIndex = 1,
             Accounts =
             [
-                new CoreWalletAccount { Index = 0, Name = "Account 0" },
-                new CoreWalletAccount { Index = 1, Name = "Account 1" },
-                new CoreWalletAccount { Index = 2, Name = "Account 2" }
+                new BurizaWalletAccount { Index = 0, Name = "Account 0" },
+                new BurizaWalletAccount { Index = 1, Name = "Account 1" },
+                new BurizaWalletAccount { Index = 2, Name = "Account 2" }
             ]
         };
 
         // Act
-        CoreWalletAccount? result = wallet.GetActiveAccount();
+        BurizaWalletAccount? result = wallet.GetActiveAccount();
 
         // Assert
         Assert.NotNull(result);
@@ -110,17 +108,17 @@ public class BurizaWalletTests
         // Arrange
         BurizaWallet wallet = new()
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test" },
             ActiveAccountIndex = 99,
             Accounts =
             [
-                new CoreWalletAccount { Index = 0, Name = "Account 0" }
+                new BurizaWalletAccount { Index = 0, Name = "Account 0" }
             ]
         };
 
         // Act
-        CoreWalletAccount? result = wallet.GetActiveAccount();
+        BurizaWalletAccount? result = wallet.GetActiveAccount();
 
         // Assert
         Assert.Null(result);
@@ -134,7 +132,7 @@ public class BurizaWalletTests
     public void GetAddressInfo_WhenNoAccount_ReturnsNull()
     {
         // Arrange
-        BurizaWallet wallet = new() { Id = 1, Profile = new WalletProfile { Name = "Test" } };
+        BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
 
         // Act
         ChainAddressData? result = wallet.GetAddressInfo();
@@ -149,10 +147,10 @@ public class BurizaWalletTests
         // Arrange
         BurizaWallet wallet = new()
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test" },
             ActiveChain = ChainType.Cardano,
-            Accounts = [new CoreWalletAccount { Index = 0, Name = "Account 0" }]
+            Accounts = [new BurizaWalletAccount { Index = 0, Name = "Account 0" }]
         };
 
         // Act
@@ -182,13 +180,13 @@ public class BurizaWalletTests
         // Arrange
         BurizaWallet wallet = new()
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test" },
             ActiveChain = ChainType.Cardano,
             ActiveAccountIndex = 0,
             Accounts =
             [
-                new CoreWalletAccount
+                new BurizaWalletAccount
                 {
                     Index = 0,
                     Name = "Account 0",
@@ -201,7 +199,7 @@ public class BurizaWalletTests
                         }
                     }
                 },
-                new CoreWalletAccount
+                new BurizaWalletAccount
                 {
                     Index = 1,
                     Name = "Account 1",
@@ -245,7 +243,7 @@ public class BurizaWalletTests
     public async Task GetBalanceAsync_WhenNoAddress_ReturnsZero()
     {
         // Arrange
-        BurizaWallet wallet = new() { Id = 1, Profile = new WalletProfile { Name = "Test" } };
+        BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
         AttachMockProvider(wallet);
 
         // Act
@@ -260,8 +258,8 @@ public class BurizaWalletTests
     {
         // Arrange
         BurizaWallet wallet = CreateWalletWithAddress();
-        IChainProvider mockProvider = AttachMockProvider(wallet);
-        mockProvider.QueryService.GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>())
+        IBurizaChainProvider mockProvider = AttachMockProvider(wallet);
+        mockProvider.GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>())
             .Returns(5_000_000UL);
 
         // Act
@@ -269,7 +267,7 @@ public class BurizaWalletTests
 
         // Assert
         Assert.Equal(5_000_000UL, result);
-        await mockProvider.QueryService.Received(1).GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>());
+        await mockProvider.Received(1).GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -287,10 +285,10 @@ public class BurizaWalletTests
     {
         // Arrange
         BurizaWallet wallet = CreateWalletWithAddress();
-        IChainProvider mockProvider = AttachMockProvider(wallet);
+        IBurizaChainProvider mockProvider = AttachMockProvider(wallet);
 
         List<Utxo> utxos = [new Utxo { TxHash = "tx1", OutputIndex = 0, Address = "addr_test1qz...", Value = 1_000_000 }];
-        mockProvider.QueryService.GetUtxosAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(utxos);
+        mockProvider.GetUtxosAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(utxos);
 
         // Act
         IReadOnlyList<Utxo> result = await wallet.GetUtxosAsync();
@@ -339,7 +337,7 @@ public class BurizaWalletTests
     public async Task BuildTransactionAsync_WhenNoAddress_ThrowsInvalidOperationException()
     {
         // Arrange
-        BurizaWallet wallet = new() { Id = 1, Profile = new WalletProfile { Name = "Test" } };
+        BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
         AttachMockProvider(wallet);
 
         // Act & Assert
@@ -361,13 +359,13 @@ public class BurizaWalletTests
 
     #endregion
 
-    #region WalletAccount Tests
+    #region BurizaWalletAccount Tests
 
     [Fact]
-    public void WalletAccount_RequiredProperties_CanBeSet()
+    public void BurizaWalletAccount_RequiredProperties_CanBeSet()
     {
         // Arrange & Act
-        CoreWalletAccount account = new()
+        BurizaWalletAccount account = new()
         {
             Index = 0,
             Name = "Main Account"
@@ -379,7 +377,7 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public void WalletAccount_GetChainData_WhenExists_ReturnsData()
+    public void BurizaWalletAccount_GetChainData_WhenExists_ReturnsData()
     {
         // Arrange
         ChainAddressData cardanoData = new()
@@ -388,7 +386,7 @@ public class BurizaWalletTests
             ReceiveAddress = "addr_test1..."
         };
 
-        CoreWalletAccount account = new()
+        BurizaWalletAccount account = new()
         {
             Index = 0,
             Name = "Test",
@@ -408,10 +406,10 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public void WalletAccount_GetChainData_WhenNotExists_ReturnsNull()
+    public void BurizaWalletAccount_GetChainData_WhenNotExists_ReturnsNull()
     {
         // Arrange
-        CoreWalletAccount account = new() { Index = 0, Name = "Test" };
+        BurizaWalletAccount account = new() { Index = 0, Name = "Test" };
 
         // Act
         ChainAddressData? result = account.GetChainData(ChainType.Cardano);
@@ -461,13 +459,13 @@ public class BurizaWalletTests
     {
         return new BurizaWallet
         {
-            Id = 1,
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test Wallet", Avatar = "test.png" },
             ActiveChain = ChainType.Cardano,
             ActiveAccountIndex = 0,
             Accounts =
             [
-                new CoreWalletAccount
+                new BurizaWalletAccount
                 {
                     Index = 0,
                     Name = "Account 0",
@@ -484,23 +482,9 @@ public class BurizaWalletTests
         };
     }
 
-    private static IChainProvider AttachMockProvider(BurizaWallet wallet)
+    private static IBurizaChainProvider AttachMockProvider(BurizaWallet wallet)
     {
-        IChainProvider provider = Substitute.For<IChainProvider>();
-        provider.ChainInfo.Returns(new ChainInfo
-        {
-            Chain = ChainType.Cardano,
-            Network = NetworkType.Preprod,
-            Name = "Cardano Preprod",
-            Symbol = "ADA",
-            Decimals = 6
-        });
-
-        IQueryService queryService = Substitute.For<IQueryService>();
-        ITransactionService txService = Substitute.For<ITransactionService>();
-
-        provider.QueryService.Returns(queryService);
-        provider.TransactionService.Returns(txService);
+        IBurizaChainProvider provider = Substitute.For<IBurizaChainProvider>();
 
         // Use reflection to set internal Provider property
         var providerProperty = typeof(BurizaWallet).GetProperty("Provider",

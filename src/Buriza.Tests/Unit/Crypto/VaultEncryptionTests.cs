@@ -1,7 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using Buriza.Core.Crypto;
-using Buriza.Core.Models;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 
 namespace Buriza.Tests.Unit.Crypto;
 
@@ -9,7 +10,7 @@ public class VaultEncryptionTests
 {
     private const string TestMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestPassword = "MySecurePassword123!";
-    private const int TestWalletId = 1;
+    private static readonly Guid TestWalletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
     private static byte[] ToBytes(string s) => Encoding.UTF8.GetBytes(s);
 
@@ -521,7 +522,7 @@ public class VaultEncryptionTests
     public void Encrypt_PreservesWalletId()
     {
         // Arrange
-        const int walletId = 42;
+        Guid walletId = Guid.Parse("00000000-0000-0000-0000-00000000002a");
 
         // Act
         EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(TestMnemonic), TestPassword);
@@ -631,10 +632,12 @@ public class VaultEncryptionTests
     public void Decrypt_WithWrongWalletId_ThrowsCryptographicException()
     {
         // Arrange - Encrypt with wallet ID 1
-        EncryptedVault vault = VaultEncryption.Encrypt(1, ToBytes(TestMnemonic), TestPassword);
+        Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId1, ToBytes(TestMnemonic), TestPassword);
 
         // Act - Try to decrypt with modified wallet ID (simulating vault swap attack)
-        EncryptedVault tamperedVault = vault with { WalletId = 2 };
+        EncryptedVault tamperedVault = vault with { WalletId = walletId2 };
 
         // Assert - AAD mismatch causes authentication failure
         Assert.ThrowsAny<CryptographicException>(() =>
@@ -672,11 +675,13 @@ public class VaultEncryptionTests
     public void VaultSwapAttack_SamePasswordDifferentWallets_FailsDecryption()
     {
         // Arrange - Create two vaults for different wallets with same password
-        EncryptedVault wallet1Vault = VaultEncryption.Encrypt(1, ToBytes("mnemonic for wallet 1"), TestPassword);
-        EncryptedVault wallet2Vault = VaultEncryption.Encrypt(2, ToBytes("mnemonic for wallet 2"), TestPassword);
+        Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
+        EncryptedVault wallet1Vault = VaultEncryption.Encrypt(walletId1, ToBytes("mnemonic for wallet 1"), TestPassword);
+        EncryptedVault wallet2Vault = VaultEncryption.Encrypt(walletId2, ToBytes("mnemonic for wallet 2"), TestPassword);
 
         // Act - Try to use wallet 1's encrypted data with wallet 2's metadata
-        EncryptedVault swappedVault = wallet1Vault with { WalletId = 2 };
+        EncryptedVault swappedVault = wallet1Vault with { WalletId = walletId2 };
 
         // Assert - AAD prevents the swap attack
         Assert.ThrowsAny<CryptographicException>(() =>
@@ -732,7 +737,7 @@ public class VaultEncryptionTests
     {
         // Arrange
         EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
-        EncryptedVault tamperedVault = vault with { WalletId = 999 };
+        EncryptedVault tamperedVault = vault with { WalletId = Guid.Parse("00000000-0000-0000-0000-0000000003e7") };
 
         // Act & Assert
         Assert.ThrowsAny<CryptographicException>(() =>
@@ -754,12 +759,13 @@ public class VaultEncryptionTests
     }
 
     [Theory]
-    [InlineData(1)]
-    [InlineData(42)]
-    [InlineData(int.MaxValue)]
-    public void AAD_BindsToWalletId_CorrectlyDecrypts(int walletId)
+    [InlineData("00000000-0000-0000-0000-000000000001")]
+    [InlineData("00000000-0000-0000-0000-00000000002a")]
+    [InlineData("ffffffff-ffff-ffff-ffff-ffffffffffff")]
+    public void AAD_BindsToWalletId_CorrectlyDecrypts(string walletIdStr)
     {
         // Arrange & Act
+        Guid walletId = Guid.Parse(walletIdStr);
         EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(TestMnemonic), TestPassword);
         string decrypted = DecryptToString(vault, TestPassword);
 

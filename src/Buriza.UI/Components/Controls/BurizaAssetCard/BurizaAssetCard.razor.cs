@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using Buriza.Data.Models.Enums;
+using Buriza.Core.Models.Enums;
 
 namespace Buriza.UI.Components.Controls;
 

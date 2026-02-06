@@ -1,12 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
-using Buriza.Core.Models;
+using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Wallet;
 using Buriza.Core.Services;
-using Buriza.Data.Models.Common;
-using Buriza.Data.Models.Enums;
+using Buriza.Data.Models;
+using Buriza.Data.Services;
 using Buriza.Tests.Mocks;
 
-using ChainRegistryData = Buriza.Data.Models.Common.ChainRegistry;
+using ChainRegistryData = Buriza.Core.Models.Chain.ChainRegistry;
 
 namespace Buriza.Tests.Unit.Services;
 
@@ -19,10 +21,10 @@ namespace Buriza.Tests.Unit.Services;
 /// </summary>
 public class WalletManagerServiceAdvancedTests : IDisposable
 {
-    private readonly InMemoryWalletStorage _storage;
-    private readonly SessionService _sessionService;
-    private readonly Buriza.Core.Services.ChainRegistry _chainRegistry;
-    private readonly KeyService _keyService;
+    private readonly InMemoryPlatformStorage _platformStorage;
+    private readonly BurizaStorageService _storage;
+    private readonly MockAppStateService _appState;
+    private readonly BurizaChainProviderFactory _providerFactory;
     private readonly WalletManagerService _walletManager;
 
     private const string TestPassword = "TestPassword123!";
@@ -30,8 +32,9 @@ public class WalletManagerServiceAdvancedTests : IDisposable
 
     public WalletManagerServiceAdvancedTests()
     {
-        _storage = new InMemoryWalletStorage();
-        _sessionService = new SessionService();
+        _platformStorage = new InMemoryPlatformStorage();
+        _storage = new BurizaStorageService(_platformStorage, new NullBiometricService());
+        _appState = new MockAppStateService();
         ChainProviderSettings settings = new()
         {
             Cardano = new CardanoSettings
@@ -44,14 +47,14 @@ public class WalletManagerServiceAdvancedTests : IDisposable
                 PreviewApiKey = "test-preview-key"
             }
         };
-        _chainRegistry = new Buriza.Core.Services.ChainRegistry(settings, _sessionService);
-        _keyService = new KeyService(_chainRegistry);
-        _walletManager = new WalletManagerService(_storage, _chainRegistry, _keyService, _sessionService);
+        _providerFactory = new BurizaChainProviderFactory(settings, _appState);
+        _walletManager = new WalletManagerService(_storage, _providerFactory, _appState);
     }
 
     public void Dispose()
     {
         _walletManager.Dispose();
+        _providerFactory.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -64,14 +67,14 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
 
         // Clear session cache to simulate app restart
-        _sessionService.ClearCache();
-        Assert.False(_sessionService.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
+        _appState.ClearCache();
+        Assert.False(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
 
         // Act - Unlock the account (should repopulate cache from stored addresses)
         await _walletManager.UnlockAccountAsync(wallet.Id, 0, TestPassword);
 
         // Assert - Cache should be populated
-        Assert.True(_sessionService.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
+        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
     }
 
     [Fact]
@@ -81,14 +84,14 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
 
         // Cache should already be populated from import
-        Assert.True(_sessionService.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
-        string? originalAddress = _sessionService.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false);
+        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
+        string? originalAddress = _appState.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false);
 
         // Act - Unlock again (should be no-op since cache exists)
         await _walletManager.UnlockAccountAsync(wallet.Id, 0, TestPassword);
 
         // Assert - Same address should still be cached
-        Assert.Equal(originalAddress, _sessionService.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false));
+        Assert.Equal(originalAddress, _appState.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false));
     }
 
     [Fact]
@@ -96,7 +99,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _walletManager.UnlockAccountAsync(999, 0, TestPassword));
+            _walletManager.UnlockAccountAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), 0, TestPassword));
     }
 
     [Fact]
@@ -115,16 +118,16 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Arrange - Create wallet and add a new account
         BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
-        Buriza.Core.Models.WalletAccount newAccount = await _walletManager.CreateAccountAsync(wallet.Id, "Account 2");
+        BurizaWalletAccount newAccount = await _walletManager.CreateAccountAsync(wallet.Id, "Account 2");
 
         // New account should not have cached addresses yet
-        Assert.False(_sessionService.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, newAccount.Index));
+        Assert.False(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, newAccount.Index));
 
         // Act - Unlock the new account (should derive addresses since no chain data exists)
         await _walletManager.UnlockAccountAsync(wallet.Id, newAccount.Index, TestPassword);
 
         // Assert - Cache should be populated for new account
-        Assert.True(_sessionService.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, newAccount.Index));
+        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, newAccount.Index));
     }
 
     #endregion
@@ -181,7 +184,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _walletManager.SetActiveChainAsync(999, ChainRegistryData.CardanoMainnet));
+            _walletManager.SetActiveChainAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), ChainRegistryData.CardanoMainnet));
     }
 
     #endregion
@@ -218,7 +221,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     public async Task VerifyPassword_WithNonExistentWallet_ReturnsFalse()
     {
         // Act
-        bool result = await _storage.VerifyPasswordAsync(999, TestPassword);
+        bool result = await _storage.VerifyPasswordAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), TestPassword);
 
         // Assert
         Assert.False(result);
@@ -299,7 +302,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _walletManager.ExportMnemonicAsync(999, TestPassword, _ => { }));
+            _walletManager.ExportMnemonicAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), TestPassword, _ => { }));
     }
 
     [Fact]
@@ -328,14 +331,14 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Arrange
         BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
-        string? account0Address = _sessionService.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false);
+        string? account0Address = _appState.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false);
 
         // Act - Create second account and unlock it
-        Buriza.Core.Models.WalletAccount account1 = await _walletManager.CreateAccountAsync(wallet.Id, "Account 2");
+        BurizaWalletAccount account1 = await _walletManager.CreateAccountAsync(wallet.Id, "Account 2");
         await _walletManager.UnlockAccountAsync(wallet.Id, account1.Index, TestPassword);
 
         // Assert - Addresses should be different
-        string? account1Address = _sessionService.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 1, 0, false);
+        string? account1Address = _appState.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 1, 0, false);
         Assert.NotEqual(account0Address, account1Address);
         Assert.NotNull(account1Address);
     }
@@ -349,7 +352,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         await _walletManager.SetActiveAccountAsync(wallet.Id, 1);
 
         // Act
-        Buriza.Core.Models.WalletAccount? activeAccount = await _walletManager.GetActiveAccountAsync();
+        BurizaWalletAccount? activeAccount = await _walletManager.GetActiveAccountAsync();
 
         // Assert
         Assert.NotNull(activeAccount);
@@ -361,7 +364,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     public async Task GetActiveAccountAsync_WhenNoWallet_ReturnsNull()
     {
         // Act
-        Buriza.Core.Models.WalletAccount? activeAccount = await _walletManager.GetActiveAccountAsync();
+        BurizaWalletAccount? activeAccount = await _walletManager.GetActiveAccountAsync();
 
         // Assert
         Assert.Null(activeAccount);
@@ -437,8 +440,9 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     public void Dispose_CanBeCalledMultipleTimes()
     {
         // Arrange
-        InMemoryWalletStorage storage = new();
-        SessionService session = new();
+        InMemoryPlatformStorage platformStorage = new();
+        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        MockAppStateService appState = new();
         ChainProviderSettings settings = new()
         {
             Cardano = new CardanoSettings
@@ -451,14 +455,14 @@ public class WalletManagerServiceAdvancedTests : IDisposable
                 PreviewApiKey = "test-key"
             }
         };
-        Buriza.Core.Services.ChainRegistry registry = new(settings, session);
-        KeyService keyService = new(registry);
-        WalletManagerService manager = new(storage, registry, keyService, session);
+        BurizaChainProviderFactory factory = new(settings, appState);
+        WalletManagerService manager = new(storage, factory, appState);
 
         // Act & Assert - Should not throw
         manager.Dispose();
         manager.Dispose();
         manager.Dispose();
+        factory.Dispose();
     }
 
     #endregion
@@ -472,15 +476,15 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet1 = await _walletManager.CreateFromMnemonicAsync("Wallet 1", TestMnemonic, TestPassword);
         BurizaWallet wallet2 = await _walletManager.CreateFromMnemonicAsync("Wallet 2", TestMnemonic, TestPassword);
 
-        Assert.True(_sessionService.HasCachedAddresses(wallet1.Id, ChainRegistryData.CardanoMainnet, 0));
-        Assert.True(_sessionService.HasCachedAddresses(wallet2.Id, ChainRegistryData.CardanoMainnet, 0));
+        Assert.True(_appState.HasCachedAddresses(wallet1.Id, ChainRegistryData.CardanoMainnet, 0));
+        Assert.True(_appState.HasCachedAddresses(wallet2.Id, ChainRegistryData.CardanoMainnet, 0));
 
         // Act
         await _walletManager.DeleteAsync(wallet1.Id);
 
         // Assert - Only wallet1's cache should be cleared
-        Assert.False(_sessionService.HasCachedAddresses(wallet1.Id, ChainRegistryData.CardanoMainnet, 0));
-        Assert.True(_sessionService.HasCachedAddresses(wallet2.Id, ChainRegistryData.CardanoMainnet, 0));
+        Assert.False(_appState.HasCachedAddresses(wallet1.Id, ChainRegistryData.CardanoMainnet, 0));
+        Assert.True(_appState.HasCachedAddresses(wallet2.Id, ChainRegistryData.CardanoMainnet, 0));
     }
 
     [Fact]
@@ -490,7 +494,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
 
         // Assert - Should be able to get cached address immediately
-        string? cachedAddress = _sessionService.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false);
+        string? cachedAddress = _appState.GetCachedAddress(wallet.Id, ChainRegistryData.CardanoMainnet, 0, 0, false);
         string? primaryAddress = wallet.GetAddressInfo()?.ReceiveAddress;
 
         Assert.NotNull(cachedAddress);

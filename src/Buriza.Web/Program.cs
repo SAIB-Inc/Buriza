@@ -1,8 +1,10 @@
 using Buriza.Core.Interfaces;
-using Buriza.Core.Interfaces.Chain;
+using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
+using Buriza.Data.Models;
+using Buriza.Data.Services;
 using Buriza.UI.Services;
 using Buriza.UI.Storage;
 using Microsoft.AspNetCore.Components.Web;
@@ -25,24 +27,21 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
 
-builder.Services.AddScoped<AppStateService>();
+builder.Services.AddSingleton<AppStateService>();
+builder.Services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<AppStateService>());
 builder.Services.AddScoped<JavaScriptBridgeService>();
 builder.Services.AddScoped<BurizaSnackbarService>();
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Storage providers
-builder.Services.AddScoped<IStorageProvider, BrowserStorageProvider>();
-builder.Services.AddScoped<ISecureStorageProvider, BrowserStorageProvider>();
-builder.Services.AddScoped<IWalletStorage, WalletStorageService>();
+// Platform storage
+builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
 
 // Buriza.Core services
-builder.Services.AddSingleton<IChainRegistry, ChainRegistry>();
-builder.Services.AddSingleton<ISessionService, SessionService>();
-builder.Services.AddSingleton<IKeyService, KeyService>();
+builder.Services.AddSingleton<ChainProviderSettings>();
+builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
+builder.Services.AddSingleton<IBiometricService, NullBiometricService>();
+builder.Services.AddScoped<BurizaStorageService>();
 builder.Services.AddScoped<IWalletManager, WalletManagerService>();
-
-// Web platform: Password-only authentication
-// No biometrics or PIN - use IWalletStorage.UnlockVaultAsync() directly
 
 await builder.Build().RunAsync();

@@ -2,7 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Buriza.Core.Crypto;
-using Buriza.Core.Models;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 
 namespace Buriza.Tests.Unit.Models;
 
@@ -10,7 +11,7 @@ public class EncryptedVaultSerializationTests
 {
     private const string TestMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestPassword = "TestPassword123!";
-    private const int TestWalletId = 1;
+    private static readonly Guid TestWalletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
     private static byte[] ToBytes(string s) => Encoding.UTF8.GetBytes(s);
 
@@ -93,7 +94,7 @@ public class EncryptedVaultSerializationTests
             "Data": "dGVzdGRhdGE=",
             "Iv": "dGVzdGl2MTIz",
             "Salt": "dGVzdHNhbHQxMjM0NTY3ODkwMTIzNDU2Nzg5MDEy",
-            "WalletId": 42,
+            "WalletId": "00000000-0000-0000-0000-00000000002a",
             "CreatedAt": "2024-01-27T12:00:00Z"
         }
         """;
@@ -107,7 +108,7 @@ public class EncryptedVaultSerializationTests
         Assert.Equal("dGVzdGRhdGE=", vault.Data);
         Assert.Equal("dGVzdGl2MTIz", vault.Iv);
         Assert.Equal("dGVzdHNhbHQxMjM0NTY3ODkwMTIzNDU2Nzg5MDEy", vault.Salt);
-        Assert.Equal(42, vault.WalletId);
+        Assert.Equal(Guid.Parse("00000000-0000-0000-0000-00000000002a"), vault.WalletId);
     }
 
     [Fact]
@@ -149,8 +150,10 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_WithDifferentWalletIds_SerializeCorrectly()
     {
         // Arrange
-        EncryptedVault vault1 = VaultEncryption.Encrypt(1, ToBytes(TestMnemonic), TestPassword);
-        EncryptedVault vault2 = VaultEncryption.Encrypt(999, ToBytes(TestMnemonic), TestPassword);
+        Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-0000000003e7");
+        EncryptedVault vault1 = VaultEncryption.Encrypt(walletId1, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault2 = VaultEncryption.Encrypt(walletId2, ToBytes(TestMnemonic), TestPassword);
 
         // Act
         string json1 = JsonSerializer.Serialize(vault1);
@@ -162,8 +165,8 @@ public class EncryptedVaultSerializationTests
         // Assert
         Assert.NotNull(restored1);
         Assert.NotNull(restored2);
-        Assert.Equal(1, restored1.WalletId);
-        Assert.Equal(999, restored2.WalletId);
+        Assert.Equal(walletId1, restored1.WalletId);
+        Assert.Equal(walletId2, restored2.WalletId);
     }
 
     [Fact]
@@ -192,7 +195,7 @@ public class EncryptedVaultSerializationTests
             "data": "dGVzdGRhdGE=",
             "iv": "dGVzdGl2MTIz",
             "salt": "dGVzdHNhbHQxMjM0NTY3ODkwMTIzNDU2Nzg5MDEy",
-            "walletId": 42,
+            "walletId": "00000000-0000-0000-0000-00000000002a",
             "createdAt": "2024-01-27T12:00:00Z"
         }
         """;
@@ -204,7 +207,7 @@ public class EncryptedVaultSerializationTests
         // Assert
         Assert.NotNull(vault);
         Assert.Equal(1, vault.Version);
-        Assert.Equal(42, vault.WalletId);
+        Assert.Equal(Guid.Parse("00000000-0000-0000-0000-00000000002a"), vault.WalletId);
     }
 
     [Fact]
@@ -221,7 +224,7 @@ public class EncryptedVaultSerializationTests
         // Arrange
         const string mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
         const string password = "MyWalletPassword!";
-        const int walletId = 1;
+        Guid walletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
         // Act - Create vault (what CreateVaultAsync does)
         EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(mnemonic), password);

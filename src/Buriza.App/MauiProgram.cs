@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
 using Buriza.UI.Services;
 using Buriza.Core.Interfaces;
-using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
+using Buriza.Data.Models;
+using Buriza.Data.Services;
 using Buriza.App.Storage;
 using Buriza.App.Services.Security;
 
@@ -50,20 +51,15 @@ public static class MauiProgram
 		// MAUI Essentials
 		builder.Services.AddSingleton(Preferences.Default);
 
-		// Storage providers
-		builder.Services.AddSingleton<IStorageProvider, MauiStorageProvider>();
-		builder.Services.AddSingleton<ISecureStorageProvider, MauiStorageProvider>();
-		builder.Services.AddSingleton<IWalletStorage, WalletStorageService>();
+		// Platform storage
+		builder.Services.AddSingleton<IPlatformStorage, MauiPlatformStorage>();
 
 		// Buriza.Core services
-		builder.Services.AddSingleton<IChainRegistry, ChainRegistry>();
-		builder.Services.AddSingleton<ISessionService, SessionService>();
-		builder.Services.AddSingleton<IKeyService, KeyService>();
-		builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
-
-		// Authentication services
+		builder.Services.AddSingleton<ChainProviderSettings>();
+		builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
 		builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
-		builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+		builder.Services.AddSingleton<BurizaStorageService>();
+		builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
 
 		return builder.Build();
 	}

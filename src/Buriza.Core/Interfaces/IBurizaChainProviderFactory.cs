@@ -1,0 +1,27 @@
+using Buriza.Core.Interfaces.Chain;
+using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Enums;
+
+namespace Buriza.Core.Interfaces;
+
+/// <summary>
+/// Factory for creating chain providers and key services.
+/// Provides unified access to chain configuration.
+/// </summary>
+public interface IBurizaChainProviderFactory : IDisposable
+{
+    /// <summary>Creates a provider for the specified chain using current settings (for network operations).</summary>
+    IBurizaChainProvider CreateProvider(ChainInfo chainInfo);
+
+    /// <summary>Creates a provider with explicit endpoint/apiKey (for validation).</summary>
+    IBurizaChainProvider CreateProvider(string endpoint, string? apiKey = null);
+
+    /// <summary>Creates a key service for the specified chain (for key derivation).</summary>
+    IKeyService CreateKeyService(ChainInfo chainInfo);
+
+    /// <summary>Gets the list of supported chain types.</summary>
+    IReadOnlyList<ChainType> GetSupportedChains();
+
+    /// <summary>Validates connection to the specified endpoint.</summary>
+    Task<bool> ValidateConnectionAsync(string endpoint, string? apiKey = null, CancellationToken ct = default);
+}

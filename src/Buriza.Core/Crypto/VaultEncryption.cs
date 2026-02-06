@@ -1,7 +1,8 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
-using Buriza.Core.Models;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 using Konscious.Security.Cryptography;
 
 namespace Buriza.Core.Crypto;
@@ -16,7 +17,7 @@ public static class VaultEncryption
     /// Encrypts plaintext using Argon2id key derivation and AES-256-GCM.
     /// </summary>
     public static EncryptedVault Encrypt(
-        int walletId,
+        Guid walletId,
         ReadOnlySpan<byte> plaintext,
         string password,
         VaultPurpose purpose = VaultPurpose.Mnemonic,
@@ -176,17 +177,17 @@ public static class VaultEncryption
     /// - Version confusion attacks (version)
     /// </summary>
     /// <remarks>
-    /// Binary format (12 bytes total):
+    /// Binary format (24 bytes total):
     /// [0-3]   version (int32 LE)
-    /// [4-7]   walletId (int32 LE)
-    /// [8-11]  purpose (int32 LE)
+    /// [4-19]  walletId (Guid, 16 bytes)
+    /// [20-23] purpose (int32 LE)
     /// </remarks>
-    private static byte[] BuildAad(int version, int walletId, VaultPurpose purpose)
+    private static byte[] BuildAad(int version, Guid walletId, VaultPurpose purpose)
     {
-        byte[] aad = new byte[12];
+        byte[] aad = new byte[24];
         BinaryPrimitives.WriteInt32LittleEndian(aad.AsSpan(0), version);
-        BinaryPrimitives.WriteInt32LittleEndian(aad.AsSpan(4), walletId);
-        BinaryPrimitives.WriteInt32LittleEndian(aad.AsSpan(8), (int)purpose);
+        walletId.TryWriteBytes(aad.AsSpan(4));
+        BinaryPrimitives.WriteInt32LittleEndian(aad.AsSpan(20), (int)purpose);
         return aad;
     }
 }

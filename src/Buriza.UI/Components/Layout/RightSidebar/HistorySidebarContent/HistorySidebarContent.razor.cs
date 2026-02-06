@@ -1,5 +1,5 @@
+using Buriza.Core.Models.Transaction;
 using Buriza.UI.Data.Dummy;
-using Buriza.Data.Models.Common;
 using Microsoft.AspNetCore.Components;
 
 namespace Buriza.UI.Components.Layout;
