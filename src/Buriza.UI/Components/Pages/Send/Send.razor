@@ -75,13 +75,11 @@
                     }
                     else
                     {
-                        <div class="flex items-center justify-between bg-[var(--mud-palette-dark)] !py-2 !px-4 rounded-[8px]">
+                        <div class="relative flex items-center justify-between">
                             <BurizaTextField 
-                                Label="Recipient Address" 
-                                HelperText="Add multiple recipients by clicking the + button above"
-                                Class="[&_.mud-input-slot]:!py-[2px] [&_input]:!text-sm [&_.mud-input-slot]:!pl-0 !bg-transparent"
+                                Label="Enter Recipient Address"
                             />
-                            <div class="flex items-center justify-end !gap-2">
+                            <div class="!absolute right-3 top-[50%] translate-y-[-50%] !p-0 flex items-center justify-end !gap-2">
                                 <MudIconButton
                                     Icon="@BurizaIcons.AddressBookIcon"
                                     Class="!p-0"
