@@ -5,10 +5,60 @@
 @namespace Buriza.UI.Components.Common
 
 <div>
+    @*Desktop*@
+    <header class="max-lg:hidden !px-6 !py-3 bg-[var(--mud-palette-drawer-background)] rounded-[16px] flex items-center justify-between">
+        <div>
+            <MudImage
+                Alt="Buriza Logo"
+                Src="@(AppStateService.IsDarkMode ? Logos.BurizaDark : Logos.BurizaLight)"
+                Class="!w-32.5"
+            />
+        </div>
+        <div class="flex items-center !gap-8">
+            <div>
+                <MudIconButton
+                    Icon="@(AppStateService.IsDarkMode ? BurizaIcons.LightModeIcon : BurizaIcons.DarkModeIcon)"
+                    OnClick="@ToggleTheme"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                />
+            </div>
+            <div class="flex items-center !gap-4">
+                <div class="max-w-[48px] max-h-[48px] overflow-hidden rounded-full cursor-pointer" @onclick="OpenManageDrawer">
+                    <MudImage
+                        Alt="nft profile"
+                        Src="@Nfts.Nft1"
+                        Class="!w-full aspect-square"
+                    />
+                </div>
+                <div class="w-full">
+                    <div class="[&_.mud-select]:!w-full [&_.mud-input]:!pr-0">
+                        <BurizaSelect TItem="string"
+                            Variant="Variant.Outlined"
+                            Value="@("Account01")"
+                            AdornmentIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                            ToStringFunc="@(item => item)"
+                            Class="[&_.mud-input]:!gap-2 [&_input]:!py-[12px] [&_.mud-input-slot]:!py-0 [&_.mud-input-slot]:!px-0 border-none! [&_.mud-input-slot]:!font-bold [&_.mud-input-slot]:text-[var(--mud-palette-text-primary)]! [&_.mud-icon-root]:text-[var(--mud-palette-text-primary)]!"
+                        >
+                            <MudSelectItem Value="@("Account01")">Account01</MudSelectItem>
+                            <MudSelectItem Value="@("Account02")">Account02</MudSelectItem>
+                            <MudSelectItem Value="@("Account03")">Account03</MudSelectItem>
+                        </BurizaSelect>
+                    </div>
+                    <div class="flex items-center !gap-2">
+                        <MudText Class="!text-xs text-[var(--mud-palette-text-secondary)]!">
+                            addr1q9rvp...az138441s15a
+                        </MudText>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    @*Mobile Navigation*@
     <header class="max-[376px]:bottom-3 fixed w-[calc(100%-32px)] h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg bg-[var(--mud-palette-appbar-background)]/80 shadow-xl! z-100 grid grid-cols-5 max-w-[738px] lg:hidden">
         @*Receive*@
         <MudLink
-            Href="@Routes.Receive"
+            Href="@Routes.Onboard"
             Class="flex flex-col items-center justify-center gap-1 !text-[var(--mud-palette-text-primary)] hover:text-[var(--mud-palette-primary)]"
         >
             <MudIcon

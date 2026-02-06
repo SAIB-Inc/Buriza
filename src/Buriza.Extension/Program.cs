@@ -7,16 +7,27 @@ using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
 using Buriza.Extension;
-using Buriza.UI.Storage;
+using Buriza.UI.Components;
 using MudBlazor.Services;
 using Buriza.UI.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+    config.SnackbarConfiguration.PreventDuplicates = false;
+    config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 5000;
+    config.SnackbarConfiguration.HideTransitionDuration = 300;
+    config.SnackbarConfiguration.ShowTransitionDuration = 300;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 
 builder.Services.AddScoped<AppStateService>();
 builder.Services.AddScoped<JavaScriptBridgeService>();
+builder.Services.AddScoped<BurizaSnackbarService>();
 
 builder.UseBrowserExtension(browserExtension =>
 {

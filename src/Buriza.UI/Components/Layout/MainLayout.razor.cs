@@ -28,6 +28,39 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             }
         },
 
+        Shadows = new Shadow()
+        {
+            Elevation = new string[]
+            {
+                "none",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)",
+                "0px 1px 3px 1px rgba(0, 0, 0, 0.15)"
+            }
+        },
+
         PaletteDark = new PaletteDark()
         {
             Background = "#10131B",
@@ -45,6 +78,8 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SecondaryDarken = "#001A42",
             SecondaryContrastText = "#AEC6FF",
             Tertiary = "#00173D",
+            TertiaryLighten = "#4D4D4D",
+            TertiaryDarken = "#164174",
             TextPrimary = "#E0E2ED",
             TextSecondary = "#8490B1",
             GrayLighter = "#AFAFAF",
@@ -62,6 +97,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
             SuccessDarken = "#002116",
+            SuccessContrastText = "#FAF9FF",
             Error = "#FF5449",
             Info = "#00B286",
             InfoLighten = "#1C1F27",
@@ -84,6 +120,8 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             Secondary = "#0057C0",
             SecondaryContrastText = "#324E83",
             Tertiary = "#FEFCFF",
+            TertiaryLighten = "#4D4D4D",
+            TertiaryDarken = "#164174",
             TextPrimary = "#181B23",
             TextSecondary = "#515E7C",
             GrayLighter = "#AFAFAF",
@@ -101,6 +139,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SuccessLighten = "#77FBAF",
             Success = "#00A663",
             SuccessDarken = "#005AC4",
+            SuccessContrastText = "#FAF9FF",
             Error = "#BA1A1A",
             Info = "#51DDAE",
             InfoLighten = "#FFFFFF",

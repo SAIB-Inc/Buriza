@@ -14,13 +14,13 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<main class="@($"{(AppStateService.IsDarkMode ? "bg-[url(/_content/Buriza.UI/images/background/background_dark_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_dark.webp)]" : "bg-[url(/_content/Buriza.UI/images/background/background_light_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_light.webp)]")} bg-auto bg-center bg-no-repeat")">
+<main class="@($"{(IsOnRoute(Routes.Onboard, Routes.Splash) ? "" : "md:!pt-4 md:!px-4")} {(AppStateService.IsDarkMode ? "bg-[url(/_content/Buriza.UI/images/background/background_dark_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_dark.webp)]" : "bg-[url(/_content/Buriza.UI/images/background/background_light_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_light.webp)]")} bg-auto bg-center bg-no-repeat")">
     @if (!IsHeaderHidden)
     {
         <BurizaHeader />
     }
-    <div class="items-between justify-between w-full md:!gap-4 md:h-screen md:flex mx-auto md:!px-4 md:!pb-8 xl:!gap-8">
-        <div class="flex-1 min-w-0 relative md:!pt-6">
+    <div class="@($"items-between justify-between w-full md:!gap-4 {(IsOnRoute(Routes.Onboard, Routes.Splash) ? "h-screen md:!pb-0" : "md:h-[calc(100vh-94px)] md:!pb-4")} md:flex mx-auto xl:!gap-3")">
+        <div class="flex-1 min-w-0 relative md:!pt-4">
             <MudDrawerContainer Class="@($"relative {(IsOnRoute(Routes.Onboard, Routes.Splash) ? "hidden" : "max-lg:hidden")}")">
                 <MudDrawer 
                     @bind-Open="@AppStateService.IsSidebarOpen" 
@@ -31,7 +31,7 @@
                     MiniWidth="80px"
                     Class="!h-full !shadow-sm !bg-[var(--mud-palette-drawer-background)] !overflow-visible [&_.mud-drawer-content]:overflow-hidden !rounded-[16px] !py-6 flex flex-col items-between [&_.mud-drawer-content]:justify-between"
                 >
-                    <div class="absolute -right-3 top-10">
+                    <div class="absolute -right-3 top-8">
                         <MudIconButton
                             Icon="@BurizaIcons.ChevronLeftIcon"
                             aria-label="open"
@@ -40,22 +40,7 @@
                         />
                     </div>
                     <div>
-                        <div class="!px-3 flex items-center">
-                            <div>
-                                <MudIcon
-                                    Icon="@BurizaIcons.BurizaSymbolIcon"
-                                    Class="!text-[58px] !text-[var(--mud-palette-primary)]"
-                                />
-                            </div>
-                            <div>
-                                <MudImage
-                                    Alt="Buriza Logo"
-                                    Src="@(AppStateService.IsDarkMode ? Logos.BurizaWordmarkDark : Logos.BurizaWordmarkLight)"
-                                    Class="@($"!min-w-30 !max-w-30 flex-shrink-0 !-ml-2 transition-opacity duration-300 {(AppStateService.IsSidebarOpen ? "opacity-100" : "opacity-0")}")"
-                                />
-                            </div>
-                        </div>
-                        <MudNavMenu Class="!mt-10 !space-y-3 flex flex-col items-center justify-center !px-5 !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
+                        <MudNavMenu Class="!space-y-3 flex flex-col items-center justify-center !px-5 !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
                             <BurizaNavLink Icon="@BurizaIcons.AssetIcon" Href="@Routes.Home">Assets</BurizaNavLink>
                             <BurizaNavLink Icon="@BurizaIcons.History2Icon" Href="@Routes.History">History</BurizaNavLink>
                             <BurizaNavLink Icon="@BurizaIcons.StakingSymbolIcon" Href="@Routes.Staking">Staking</BurizaNavLink>
