@@ -58,7 +58,7 @@ public partial class BurizaTextField
         [&_.mud-input-label]:!mb-[4px]
         [&_.mud-input-helper-text]:!text-[var(--mud-palette-dark-lighten)]
         [&_.mud-input-control-helper-container]:!pl-4
-        [&_input]:!text-base [&_input]:!caret-blue-500 [&_input]:!text-base [&_input]:!pt-[24px] [&_input]:!pb-[8px] [&_input::placeholder]:!text-[var(--mud-palette-dark-lighten)] 
+        [&_input]:!text-base [&_input]:!caret-blue-500 [&_input]:!text-base [&_input]:!pt-[24px] [&_input]:!pb-[8px] 
         {Class}
     """;
 }
