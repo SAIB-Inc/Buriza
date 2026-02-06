@@ -27,4 +27,9 @@ public partial class SelectAssetSection : ComponentBase, IDisposable
     {
         AppStateService.OnChanged -= StateHasChanged;
     }
+
+    private void HandleSelectAsset()
+    {
+        AppStateService.SetDrawerContent(DrawerContentType.Send); 
+    }
 }
