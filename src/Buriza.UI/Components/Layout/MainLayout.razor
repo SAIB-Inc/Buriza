@@ -98,7 +98,7 @@
     Variant="@DrawerVariant.Temporary"
     Anchor="Anchor.End"
     Width="460px"
-    Class="max-md:!hidden !bg-[var(--mud-palette-background)] !fixed"
+    Class="max-md:!hidden !bg-[var(--mud-palette-background)] !fixed rounded-l-3xl"
 >
     <MudDrawerHeader Class="items-center justify-between !mb-6 !px-4 !pt-8">
         @if (AppStateService.CurrentDrawerContent != TransactionStatus)
@@ -134,14 +134,6 @@
                         Icon="@(AppStateService.IsReceiveAdvancedMode ? BurizaIcons.CloseSymbolIcon : BurizaIcons.AdvancedSettings2Icon)"
                         Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                         OnClick="@(AppStateService.IsReceiveAdvancedMode ? (() => AppStateService.IsReceiveAdvancedMode = false) : HandleAdvancedModeToggle)"
-                    />
-                }
-                else if (AppStateService.CurrentDrawerContent != Send || !AppStateService.IsSendConfirmed)
-                {
-                    <MudIconButton
-                        Icon="@BurizaIcons.CloseSymbolIcon"
-                        Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                        OnClick="@(() => AppStateService.IsFilterDrawerOpen = false)"
                     />
                 }
             </div>
