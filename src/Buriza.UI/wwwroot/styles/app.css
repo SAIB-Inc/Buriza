@@ -16,7 +16,15 @@
     --card-wallet-text: #003828;
     --card-wallet-chip: #002116;
     --card-wallet-subtext: #00173D;
-    --card-wallet-overlay: #B5E6FF4D
+    --card-wallet-overlay: #B5E6FF4D;
+    --dapp-type-defi: #AEC6FF;
+    --dapp-type-nft: #D7494B;
+    --dapp-type-gaming: #C671FE;
+    --dapp-type-governance: #49D789;
+    --dapp-type-social: #A0D749;
+    --dapp-type-bridge: #FF4D9A;
+    --dapp-type-infrastructure: #FFEF72;
+    --dapp-type-realfi: #6D8AFF;
 }
 
 * {

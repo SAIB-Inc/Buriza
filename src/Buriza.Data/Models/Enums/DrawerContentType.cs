@@ -5,6 +5,7 @@ public enum DrawerContentType
     None,
     Summary,
     AuthorizeDapp,
+    ConnectedApps,
     Receive,
     Send,
     SelectAsset,

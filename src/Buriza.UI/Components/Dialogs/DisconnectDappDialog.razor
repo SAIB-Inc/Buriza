@@ -1,0 +1,44 @@
+@using Buriza.UI.Components.Common
+@namespace Buriza.UI.Components.Dialogs
+
+<MudDialog Class="!bg-[var(--mud-palette-background)] !rounded-[16px] !p-6" ActionsClass="!justify-between !px-0 !pt-6 !pb-0">
+    <DialogContent>
+        <div class="w-full flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full bg-[#FF5449] flex items-center justify-center mb-4">
+                <MudIcon Icon="@Icons.Material.Rounded.PriorityHigh" Class="!text-lg !text-[#242320]" />
+            </div>
+        </div>
+        <div class="flex flex-col items-center !text-center !gap-3">
+            <MudText Class="!text-xl !font-semibold !text-[var(--mud-palette-text-primary)]">
+                Disconnect dApp
+            </MudText>
+            <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !leading-relaxed">
+                If you disconnect now, you'll need to authorize this DApp again before you can reconnect and continue using its features.
+            </MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <BurizaButton
+            Class="!flex-1 bg-[#32353D]! text-[#E0E2ED]!"
+            OnClick="Cancel"
+        >
+            Cancel
+        </BurizaButton>
+        <BurizaButton
+            Color="Color.Primary"
+            Class="!flex-1"
+            OnClick="Disconnect"
+        >
+            Disconnect
+        </BurizaButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Disconnect() => MudDialog.Close(DialogResult.Ok(true));
+}
