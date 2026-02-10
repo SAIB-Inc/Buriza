@@ -25,7 +25,8 @@ public static class TransactionHistoryData
                     new TransactionAsset(Tokens.Hosky, "HOSKY", -100.00m, 106.33m)
                 ],
                 CollateralAda: 433.00m,
-                TransactionFeeAda: 0.034m
+                TransactionFeeAda: 0.034m,
+                Category: TransactionCategory.Contract
             ),
             
             new TransactionHistory(
@@ -42,7 +43,8 @@ public static class TransactionHistoryData
                     new TransactionAsset(Tokens.Angel, "ANGEL", 125.00m, 166.38m)
                 ],
                 CollateralAda: 0m,
-                TransactionFeeAda: 0.021m
+                TransactionFeeAda: 0.021m,
+                Category: TransactionCategory.Mint
             ),
 
             new TransactionHistory(
@@ -57,9 +59,10 @@ public static class TransactionHistoryData
                     new TransactionAsset(Tokens.Snek, "SNEK", 350.00m, 87.25m)
                 ],
                 CollateralAda: 150.00m,
-                TransactionFeeAda: 0.035m
+                TransactionFeeAda: 0.035m,
+                Category: TransactionCategory.Mint
             ),
-            
+
             new TransactionHistory(
                 TransactionId: "8e1f2a3b...4c5d6e",
                 Timestamp: DateTime.Now.AddHours(-5),
@@ -72,9 +75,10 @@ public static class TransactionHistoryData
                     new TransactionAsset(Tokens.Nado, "NADO", -120.30m, 102.95m)
                 ],
                 CollateralAda: 125.00m,
-                TransactionFeeAda: 0.028m
+                TransactionFeeAda: 0.028m,
+                Category: TransactionCategory.Contract
             ),
-            
+
             new TransactionHistory(
                 TransactionId: "7d8e9f0a...1b2c3d",
                 Timestamp: DateTime.Now.AddDays(-1).AddHours(-3),
@@ -160,7 +164,8 @@ public static class TransactionHistoryData
                     new TransactionAsset(Tokens.Usdc, "USDC", -100.00m, 100.30m)
                 ],
                 CollateralAda: 100.00m,
-                TransactionFeeAda: 0.031m
+                TransactionFeeAda: 0.031m,
+                Category: TransactionCategory.Mint
             ),
 
             new TransactionHistory(

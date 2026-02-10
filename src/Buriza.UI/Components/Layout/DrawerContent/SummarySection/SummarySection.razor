@@ -1,136 +1,338 @@
 @using Buriza.UI.Resources
 @namespace Buriza.UI.Components.Layout
 
-<div class="w-full !px-4">
-    <div class="w-full !mb-3">
-        <MudText Class="!text-center !font-medium">
-            Summary of your activity
-        </MudText>
-    </div>
-    <MudCard
-        Class="!bg-[var(--mud-palette-background-gray)] !p-4 !rounded-[12px] !gap-6 shadow-sm!"
-    >
-        <div class="!space-y-4">
-            <div class="w-full flex items-center justify-between">
+<div class="w-full !px-4 flex-1 md:!pb-4">
+    <div class="w-full !mb-3 space-y-4!">
+        <div>
+            <MudText Class="!font-medium !text-sm !text-[var(--mud-palette-text-primary)]">
+                Spend Information
+            </MudText>
+        </div>
+        <div class="!space-y-1">
+            <div class="flex items-center justify-between">
                 <div>
-                    <MudText Class="!text-sm">
+                    <MudText Class="!text-xs !font-medium !text-[var(--mud-palette-text-secondary)]">
                         Transaction ID:
                     </MudText>
                 </div>
-                <div class="flex items-center justify-end !gap-2">
-                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                <div>
+                    <MudText Class="!text-sm !font-medium !text-[var(--mud-palette-text-primary)]">
                         9f7a...1b93d2
                     </MudText>
-                    <MudIconButton
-                        Icon="@BurizaIcons.CopySymbolIcon"
-                        Class="!p-0 [&_.mud-icon-root]:!text-lg [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]/60"
-                    />
+
                 </div>
             </div>
-            <div class="w-full flex items-center justify-between">
-                <MudText Class="!text-sm">
+            <div class="flex items-center justify-between">
+                <MudText Class="!text-xs !font-medium !text-[var(--mud-palette-text-secondary)]">
                     Timestamp:
                 </MudText>
-                <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)] !font-medium">
+                <MudText Class="!font-medium !text-sm !text-[var(--mud-palette-text-primary)]">
                     03/07/2025 16:17:20
                 </MudText>
             </div>
         </div>
-        <div class="!space-y-2">
-            <div class="w-full bg-[var(--mud-palette-background)] rounded-[8px] !px-3 !py-[10px]">
-                <MudText Class="!text-sm">
-                    <span class="!text-[var(--mud-palette-text-secondary)]">From:</span>
-                    <span>addr1q...8r7z4lgcqrqt9uu</span>
-                </MudText>
-            </div>
-            <div class="w-full bg-[var(--mud-palette-background)] rounded-[8px] !px-3 !py-[10px]">
-                <MudText Class="!text-sm">
-                    <span class="!text-[var(--mud-palette-text-secondary)]">To:</span>
-                    <span>addr1q...17xpubmzsrqt9jp</span>
-                </MudText>
-            </div>
+    </div>
+    @*Assets*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-background-gray)] border border-[var(--mud-palette-table-lines)] !p-4 !rounded-[12px] shadow-sm!"
+    >
+        <div class="flex items-center justify-between cursor-pointer" @onclick="() => IsAssetsExpanded = !IsAssetsExpanded">
+            <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm">
+                Assets (4)
+            </MudText>
+            <MudIcon
+                Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                Class="@($"!text-[var(--mud-palette-text-secondary)] !transition-transform !duration-200 {(IsAssetsExpanded ? "!rotate-180" : "")}")"
+            />
         </div>
-        <div class="border border-[var(--mud-palette-table-lines)] !p-3 !rounded-[8px] !space-y-3">
-            <div>
-                <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
-                    Assets
-                </MudText>
-            </div>
+        <MudCollapse Expanded="IsAssetsExpanded">
+        <div class="!space-y-3 !pt-4">
             <div class="w-full flex items-center justify-between">
                 <div class="flex items-center !gap-2">
-                    <div class="rounded-full overflow-hidden">
-                        <MudImage
-                            Alt=""
-                            Src="@Tokens.Snek"
-                            Class="!w-8 aspect-square"
-                        />
-                    </div>
-                    <div>
-                        <MudText Class="!font-semibold !text-sm">
-                            SNEK
-                        </MudText>
-                    </div>
+                    <MudImage Alt="SNEK" Src="@Tokens.Snek" Class="!w-8 !h-8 !min-w-8 !rounded-full object-cover" />
+                    <MudText Class="!font-semibold !text-sm">
+                        SNEK
+                    </MudText>
                 </div>
                 <div>
-                    <MudText Class="!text-end !text-sm !font-semibold">
-                        -551.28
+                    <MudText>
+                        <span class="!font-bold !text-[var(--mud-palette-error)]">
+                            -2.28
+                        </span>
+                        <span class="text-[var(--mud-palette-text-secondary)] !text-xs">
+                            ≈ $199.02
+                        </span>
                     </MudText>
                 </div>
             </div>
             <div class="w-full flex items-center justify-between">
                 <div class="flex items-center !gap-2">
-                    <div class="rounded-full overflow-hidden">
-                        <MudImage
-                            Alt=""
-                            Src="@Tokens.Ada"
-                            Class="!w-8 aspect-square"
-                        />
-                    </div>
-                    <div>
-                        <MudText Class="!font-semibold !text-sm">
-                            ADA
-                        </MudText>
-                    </div>
+                    <MudImage Alt="HOSKY" Src="@Tokens.Hosky" Class="!w-8 !h-8 !min-w-8 !rounded-full object-cover" />
+                    <MudText Class="!font-semibold !text-sm">
+                        HOSKY
+                    </MudText>
                 </div>
                 <div>
-                    <MudText Class="!text-end !text-sm !font-semibold">
-                        -1,551.28
+                    <MudText>
+                        <span class="!font-bold !text-[var(--mud-palette-error)]">
+                            -1,000,000
+                        </span>
+                        <span class="text-[var(--mud-palette-text-secondary)] !text-xs">
+                            ≈ $0.50
+                        </span>
+                    </MudText>
+                </div>
+            </div>
+            <div class="w-full flex items-center justify-between">
+                <div class="flex items-center !gap-2">
+                    <MudImage Alt="ADA" Src="@Tokens.Ada" Class="!w-8 !h-8 !min-w-8 !rounded-full object-cover" />
+                    <MudText Class="!font-semibold !text-sm">
+                        ADA
+                    </MudText>
+                </div>
+                <div>
+                    <MudText>
+                        <span class="!font-bold !text-[var(--mud-palette-error)]">
+                            -10.63
+                        </span>
+                        <span class="text-[var(--mud-palette-text-secondary)] !text-xs">
+                            ≈ $8.50
+                        </span>
+                    </MudText>
+                </div>
+            </div>
+            <div class="w-full flex items-center justify-between">
+                <div class="flex items-center !gap-2">
+                    <MudImage Alt="ANGELS" Src="@Tokens.Angel" Class="!w-8 !h-8 !min-w-8 !rounded-full object-cover" />
+                    <MudText Class="!font-semibold !text-sm">
+                        ANGELS
+                    </MudText>
+                </div>
+                <div>
+                    <MudText>
+                        <span class="!font-bold !text-[var(--mud-palette-error)]">
+                            -500
+                        </span>
+                        <span class="text-[var(--mud-palette-text-secondary)] !text-xs">
+                            ≈ $12.75
+                        </span>
                     </MudText>
                 </div>
             </div>
         </div>
-        <div>
-            <div>
-                <MudText Class="!text-[11px]">
-                    Additional Information
-                </MudText>
+        </MudCollapse>
+    </MudCard>
+    @*Mint Information*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-drawer-background)] !p-4 !rounded-[12px] !shadow-none !mt-3"
+    >
+        <div class="flex items-center justify-between cursor-pointer" @onclick="() => IsMintInfoExpanded = !IsMintInfoExpanded">
+            <MudText Class="!text-sm !font-medium">
+                Mint Information
+            </MudText>
+            <MudIcon
+                Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                Class="@($"!text-[var(--mud-palette-text-secondary)] !transition-transform !duration-200 {(IsMintInfoExpanded ? "!rotate-180" : "")}")"
+            />
+        </div>
+        <MudCollapse Expanded="IsMintInfoExpanded">
+            <div class="flex flex-col !gap-3 !pt-3">
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Input
+                    </MudText>
+                    <div class="flex items-center !gap-1">
+                        <div>
+                            <MudText Class="!text-sm !font-bold !text-[var(--mud-palette-error)]">
+                                -
+                            </MudText>
+                        </div>
+                        <div class="flex -space-x-2!">
+                            <MudImage Alt="SNEK" Src="@Tokens.Snek" Class="!w-6 !h-6 !min-w-6 !rounded-full object-cover border-2 border-[var(--mud-palette-drawer-background)]" />
+                            <MudImage Alt="ADA" Src="@Tokens.Ada" Class="!w-6 !h-6 !min-w-6 !rounded-full object-cover border-2 border-[var(--mud-palette-drawer-background)]" />
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Output
+                    </MudText>
+                    <div class="flex items-center !gap-1">
+                        <div>
+                            <MudText Class="!text-sm !font-bold !text-[var(--mud-palette-success)]">
+                                +
+                            </MudText>
+                        </div>
+                        <div class="flex -space-x-2!">
+                            <MudImage Alt="HOSKY" Src="@Tokens.Hosky" Class="!w-6 !h-6 !min-w-6 !rounded-full object-cover border-2 border-[var(--mud-palette-drawer-background)]" />
+                            <MudImage Alt="ANGELS" Src="@Tokens.Angel" Class="!w-6 !h-6 !min-w-6 !rounded-full object-cover border-2 border-[var(--mud-palette-drawer-background)]" />
+                            <MudImage Alt="ADA" Src="@Tokens.Ada" Class="!w-6 !h-6 !min-w-6 !rounded-full object-cover border-2 border-[var(--mud-palette-drawer-background)]" />
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="!space-y-2 !mt-4">
-                <div class="w-full flex items-center justify-between">
-                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
-                        Collateral
+        </MudCollapse>
+    </MudCard>
+    @*Rewards and Withdrawals*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-drawer-background)] !p-4 !rounded-[12px] !shadow-none !mt-3"
+    >
+        <div class="flex items-center justify-between cursor-pointer" @onclick="() => IsRewardsExpanded = !IsRewardsExpanded">
+            <MudText Class="!text-sm !font-medium">
+                Rewards and Withdrawals
+            </MudText>
+            <MudIcon
+                Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                Class="@($"!text-[var(--mud-palette-text-secondary)] !transition-transform !duration-200 {(IsRewardsExpanded ? "!rotate-180" : "")}")"
+            />
+        </div>
+        <MudCollapse Expanded="IsRewardsExpanded">
+            <div class="flex flex-col !gap-2 !pt-3">
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Reward:
                     </MudText>
-                    <MudText Class="!text-sm !font-medium">
-                        ₳433.00
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        1.234 ADA
                     </MudText>
                 </div>
-                <div class="w-full flex items-center justify-between">
-                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
-                        Expires by
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Stake Address:
                     </MudText>
-                    <MudText Class="!text-sm !font-medium">
-                        No limit
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        stake1...7xq2m
                     </MudText>
                 </div>
-                <div class="w-full flex items-center justify-between">
-                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
-                        Transaction fee
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Epoch:
                     </MudText>
-                    <MudText Class="!text-sm !font-medium">
-                        ₳0.034
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        482
                     </MudText>
                 </div>
             </div>
+        </MudCollapse>
+    </MudCard>
+    @*Certificates*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-drawer-background)] !p-4 !rounded-[12px] !shadow-none !mt-3"
+    >
+        <div class="flex items-center justify-between">
+            <MudText Class="!text-sm !font-medium">
+                Certificates
+            </MudText>
+            <div class="flex items-center !gap-1">
+                <MudTooltip Text="Staking Delegate">
+                    <div class="bg-[var(--mud-palette-info-darken)] border-2 border-[var(--mud-palette-info-contrasttext)] !rounded-full w-9 h-9">
+                        <MudImage Alt="Staking" Src="@Certificates.StakingCertificate" Class="!w-8 !h-8 !min-w-8 object-cover" />
+                    </div>
+                </MudTooltip>
+                <MudTooltip Text="DRep Delegation">
+                    <div class="bg-[var(--mud-palette-info-darken)] border-2 border-[var(--mud-palette-info-contrasttext)] !rounded-full w-9 h-9">
+                        <MudImage Alt="DRep" Src="@Certificates.DrepCertificate" Class="!w-8 !h-8 !min-w-8 !rounded-full object-cover" />
+                    </div>
+                </MudTooltip>
+                <MudTooltip Text="Pool Creation">
+                    <div class="bg-[var(--mud-palette-info-darken)] border-2 border-[var(--mud-palette-info-contrasttext)] !rounded-full w-9 h-9">
+                        <MudImage Alt="Pool" Src="@Certificates.PoolCertificate" Class="!w-8 !h-8 !min-w-8 !rounded-full object-cover" />
+                    </div>
+                </MudTooltip>
+            </div>
+        </div>
+    </MudCard>
+    @*Additional Information*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-drawer-background)] !p-4 !rounded-[12px] !shadow-none !mt-3"
+    >
+        <div class="flex items-center justify-between cursor-pointer" @onclick="() => IsAdditionalInfoExpanded = !IsAdditionalInfoExpanded">
+            <MudText Class="!text-sm !font-medium">
+                Additional Information
+            </MudText>
+            <MudIcon
+                Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                Class="@($"!text-[var(--mud-palette-text-secondary)] !transition-transform !duration-200 {(IsAdditionalInfoExpanded ? "!rotate-180" : "")}")"
+            />
+        </div>
+        <MudCollapse Expanded="IsAdditionalInfoExpanded">
+            <div class="flex flex-col !gap-2 !pt-3">
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        No. of Recipients:
+                    </MudText>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        3
+                    </MudText>
+                </div>
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Invalid Before:
+                    </MudText>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        93,339,539
+                    </MudText>
+                </div>
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Expires After:
+                    </MudText>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        93,340,139
+                    </MudText>
+                </div>
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Fees:
+                    </MudText>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        0.63 ADA
+                    </MudText>
+                </div>
+                <div class="flex items-center justify-between">
+                    <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
+                        Collateral:
+                    </MudText>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                        10.00 ADA
+                    </MudText>
+                </div>
+            </div>
+        </MudCollapse>
+    </MudCard>
+    @*Raw Data (CBOR)*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-drawer-background)] !p-4 !rounded-[12px] !shadow-none !mt-3"
+    >
+        <div class="flex items-center justify-between cursor-pointer" @onclick="() => IsRawDataExpanded = !IsRawDataExpanded">
+            <MudText Class="!text-sm !font-medium">
+                Raw Data (CBOR)
+            </MudText>
+            <MudIcon
+                Icon="@Icons.Material.Filled.KeyboardArrowDown"
+                Class="@($"!text-[var(--mud-palette-text-secondary)] !transition-transform !duration-200 {(IsRawDataExpanded ? "!rotate-180" : "")}")"
+            />
+        </div>
+        <MudCollapse Expanded="IsRawDataExpanded">
+            <div class="!rounded-[8px] bg-[var(--mud-palette-gray-default)] !p-4 !mt-3">
+                <MudText Class="!text-sm !break-all !leading-relaxed line-clamp-5 inline">AB2D4ACF1D900C48DA8271A467EFBC2B140CD17F6E4270364E8EBDE201821A00227608A1581C6BC39BAFC188D1AC97182256D270EF34630525CCA26B5E8C33A983A0A144534E454B1A000136FD028201D818590112D87D81D87990D87981D87981581C233A826FAF79196851D5871816DEB61BCD96EC6001718EDEBC8D8E65...</MudText><MudIconButton
+                    Icon="@BurizaIcons.CopySymbolIcon"
+                    Class="!p-0 !inline-flex !align-middle !ml-1 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]"
+                />
+            </div>
+        </MudCollapse>
+    </MudCard>
+    @*Total net value*@
+    <MudCard
+        Class="!bg-[var(--mud-palette-drawer-background)] !p-4 !rounded-[12px] !gap-3 !shadow-none !mt-3"
+    >
+        <div class="flex items-center justify-between">
+            <MudText Class="!text-sm !font-medium">
+                Total Net Value
+            </MudText>
+            <MudText Class="!font-bold !text-[var(--mud-palette-error)]">
+                -$199.02
+            </MudText>
         </div>
     </MudCard>
 </div>

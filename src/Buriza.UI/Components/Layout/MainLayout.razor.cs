@@ -109,6 +109,8 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             ErrorLighten = "#F87171",
             Info = "#51DDAE",
             InfoLighten = "#1C1F27",
+            InfoDarken = "#006FEF",
+            InfoContrastText = "#D7E9FF",
             Warning = "#FF9C39",
             WarningLighten = "#D8E2FF",
             LinesDefault = "#181B23",
@@ -153,6 +155,8 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             Error = "#BA1A1A",
             Info = "#51DDAE",
             InfoLighten = "#FFFFFF",
+            InfoDarken = "#006FEF",
+            InfoContrastText = "#D7E9FF",
             Warning = "#FF9C39",
             LinesDefault = "#E6E7F3",
             LinesInputs = "#ECEDF8"
@@ -174,7 +178,13 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
 
     protected string DrawerTitle => AppStateService.CurrentDrawerContent switch
     {
-        Summary => "Sent",
+        Summary => AppStateService.SummaryTransactionType switch
+        {
+            TransactionType.Sent => "Sent",
+            TransactionType.Received => "Received",
+            TransactionType.Mixed => "Mixed",
+            _ => "Summary"
+        },
         AuthorizeDapp => "Authorize App",
         Receive => AppStateService.IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
         Send => AppStateService.IsSendConfirmed ? "Summary" : "Send Assets",
@@ -187,6 +197,23 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             : "Manage",
         DrawerContentType.Filter => "Filter",
         _ => "Details"
+    };
+
+    protected static string GetCategoryLabel(TransactionCategory category) => category switch
+    {
+        TransactionCategory.Contract => "Contract",
+        TransactionCategory.Mint => "Mint",
+        TransactionCategory.Delegation => "Delegation",
+        TransactionCategory.Withdrawal => "Withdrawal",
+        TransactionCategory.Governance => "Governance",
+        _ => ""
+    };
+
+    protected static string GetCategoryChipClass(TransactionCategory category) => category switch
+    {
+        TransactionCategory.Contract => "!bg-[var(--mud-palette-secondary-lighten)]",
+        TransactionCategory.Mint => "!bg-[var(--mud-palette-secondary-darken)]",
+        _ => "!bg-[var(--mud-palette-secondary)]"
     };
 
     protected void ToggleSidebar()

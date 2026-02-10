@@ -36,6 +36,8 @@ public partial class History
     protected async Task HandleTransactionClick(TransactionHistory transaction)
     {
         SelectedTransaction = transaction;
+        AppStateService.SummaryTransactionType = transaction.Type;
+        AppStateService.SummaryTransactionCategory = transaction.Category;
         int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
 
         if (screenWidth >= 1024)
@@ -85,6 +87,23 @@ public partial class History
         TransactionType.Received => "Received",
         TransactionType.Mixed => "Mixed",
         _ => "Unknown"
+    };
+
+    protected static string GetCategoryLabel(TransactionCategory category) => category switch
+    {
+        TransactionCategory.Contract => "Contract",
+        TransactionCategory.Mint => "Mint",
+        TransactionCategory.Delegation => "Delegation",
+        TransactionCategory.Withdrawal => "Withdrawal",
+        TransactionCategory.Governance => "Governance",
+        _ => ""
+    };
+
+    protected static string GetCategoryChipClass(TransactionCategory category) => category switch
+    {
+        TransactionCategory.Contract => "!bg-[var(--mud-palette-secondary-lighten)]",
+        TransactionCategory.Mint => "!bg-[var(--mud-palette-secondary-darken)]",
+        _ => "!bg-[var(--mud-palette-secondary)]"
     };
 
     protected void HandleFilterClick()
