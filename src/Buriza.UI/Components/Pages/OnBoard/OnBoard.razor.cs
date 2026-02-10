@@ -13,11 +13,79 @@ public partial class OnBoard
     [Inject]
     public required AppStateService AppStateService { get; set; }
 
-    protected int PhraseLength { get; set; } = 24;
+    [Inject]
+    public required BurizaSnackbarService BurizaSnackbar { get; set; }
+
+    [Inject]
+    public required JavaScriptBridgeService JsBridge { get; set; }
+
+    private int _phraseLength = 24;
+    private int _displayedPhraseLength = 24;
+    private bool _isPhraseTransitioning = false;
+    protected bool IsPhraseTransitioning => _isPhraseTransitioning;
+    protected int DisplayedPhraseLength => _displayedPhraseLength;
+
+
+    protected int PhraseLength
+    {
+        get => _phraseLength;
+        set
+        {
+            if (_phraseLength != value)
+            {
+                _phraseLength = value;
+                _ = TransitionPhraseAsync();
+            }
+        }
+    }
+
+    private async Task TransitionPhraseAsync()
+    {
+        // Fade out
+        _isPhraseTransitioning = true;
+        StateHasChanged();
+
+        // Wait for fade out animation to complete
+        await Task.Delay(200);
+
+        // Update displayed length and phrase after fade out
+        _displayedPhraseLength = _phraseLength;
+        RecoveryPhrase = _phrasesByLength[_phraseLength];
+
+        // Fade in
+        _isPhraseTransitioning = false;
+        StateHasChanged();
+    }
     protected MudCarousel<object>? _carousel;
     protected bool IsLastSlide => _carousel != null && _carousel.SelectedIndex == _carousel.Items.Count - 1;
-    protected List<string> RecoveryPhrase = ["random", "quack", "taught", "light", "short", "hard", "help", "please", "earth", "cake", "control", "guard", "trust", "frost", "echo", "swim", "give", "seen", "eyes", "wade", "ice", "explain", "water", "geese"];
+    protected List<string> RecoveryPhrase = [];
+    private List<string> _importedPhraseWords = [];
+    protected List<string> ImportedPhraseWords => _importedPhraseWords;
+
+    private readonly Dictionary<int, List<string>> _phrasesByLength = new()
+    {
+        [12] = ["army", "bright", "coral", "dream", "elite", "frost", "grape", "hover", "ivory", "jewel", "karma", "lunar"],
+        [15] = ["abandon", "bicycle", "captain", "dolphin", "eclipse", "fortune", "galaxy", "harmony", "impulse", "journey", "kitchen", "liberty", "machine", "nucleus", "october"],
+        [24] = ["elephant", "quack", "taught", "light", "short", "hard", "help", "please", "earth", "cake", "control", "guard", "trust", "frost", "echo", "swim", "give", "seen", "eyes", "wade", "ice", "explain", "water", "geese"]
+    };
     
+    private bool _isImportMode = false;
+    protected bool IsImportMode => _isImportMode;
+
+    private bool _useFaceId = false;
+    protected bool UseFaceId
+    {
+        get => _useFaceId;
+        set
+        {
+            if (_useFaceId != value)
+            {
+                _useFaceId = value;
+                StateHasChanged();
+            }
+        }
+    }
+
     private int _currentSlide = 0;
     protected int CurrentSlide 
     { 
@@ -45,22 +113,27 @@ public partial class OnBoard
         0 => "Create New Wallet",
         1 => "Next",
         2 => "Next",
-        3 => "Save Wallet",
-        4 => "Continue",
+        3 => "Next",
+        4 => "Next",
         5 => "Continue",
         _ => "Next"
     };
 
     protected bool ShowSecondaryButton => CurrentSlide <= 2;
 
+    protected static string GetStepLabel(int step) => step switch
+    {
+        1 => "Save Phrase",
+        2 => "Verify",
+        3 => "Name Wallet",
+        4 => "Password",
+        _ => string.Empty
+    };
+
     protected override void OnInitialized()
     {
         AppStateService.CurrentSidebarContent = SidebarContentType.None;
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        base.OnAfterRender(firstRender);
+        RecoveryPhrase = _phrasesByLength[_phraseLength];
     }
 
     private void OnSlideChanged(int newIndex)
@@ -84,17 +157,90 @@ public partial class OnBoard
         }
     }
 
-    private void OnSecondaryButtonClicked()
+    private void OnGoBackClicked()
     {
-        // TODO: Implement secondary button actions
-    }
+        // In import mode, skip the "Save This Phrase" slide when going back
+        if (_isImportMode && CurrentSlide == 2)
+        {
+            _isImportMode = false;
+            _carousel?.MoveTo(0);
+            if (_carousel != null)
+            {
+                CurrentSlide = _carousel.SelectedIndex;
+            }
+            return;
+        }
 
-    private void OnBackButtonClicked()
-    {
         _carousel?.Previous();
         if (_carousel != null)
         {
             CurrentSlide = _carousel.SelectedIndex;
         }
     }
+
+    private async Task OnCopyPhraseClicked()
+    {
+        var phrase = string.Join(" ", RecoveryPhrase);
+        await JsBridge.CopyToClipboardAsync(phrase);
+        BurizaSnackbar.Show("Recovery phrase copied to clipboard", Severity.Success);
+    }
+
+    private async Task OnPastePhraseClicked()
+    {
+        try
+        {
+            var clipboardText = await JsBridge.ReadFromClipboardAsync();
+            if (!string.IsNullOrWhiteSpace(clipboardText))
+            {
+                var words = clipboardText.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                _importedPhraseWords = words.ToList();
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            BurizaSnackbar.Show("Unable to read from clipboard", Severity.Error);
+        }
+    }
+
+    private void OnCreateNewWalletClicked()
+    {
+        _isImportMode = false;
+        // Go to slide 2 (Save This Phrase)
+        _carousel?.MoveTo(1);
+        if (_carousel != null)
+        {
+            CurrentSlide = _carousel.SelectedIndex;
+        }
+    }
+
+    private void OnImportFromSeedClicked()
+    {
+        _isImportMode = true;
+        // Go to slide 3 (Recovery Phrase import)
+        _carousel?.MoveTo(2);
+        if (_carousel != null)
+        {
+            CurrentSlide = _carousel.SelectedIndex;
+        }
+    }
+
+    private void OnFinishClicked()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task OnSecondaryButtonClicked() => await (CurrentSlide switch
+    {
+        0 => Task.Run(OnImportFromSeedClicked),
+        1 => OnCopyPhraseClicked(),
+        2 => OnPastePhraseClicked(),
+        _ => Task.CompletedTask
+    });
+
+    private void OnPrimaryButtonClicked() => (CurrentSlide switch
+    {
+        0 => (Action)OnCreateNewWalletClicked,
+        _ => OnNextButtonClicked
+    })();
 }

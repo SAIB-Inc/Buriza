@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using MudBlazor;
 using MudBlazor.Services;
 using Buriza.UI.Services;
 
@@ -23,9 +24,20 @@ public static class MauiProgram
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
 #endif
-		builder.Services.AddMudServices();
+		builder.Services.AddMudServices(config =>
+		{
+			config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+			config.SnackbarConfiguration.PreventDuplicates = false;
+			config.SnackbarConfiguration.NewestOnTop = false;
+			config.SnackbarConfiguration.ShowCloseIcon = true;
+			config.SnackbarConfiguration.VisibleStateDuration = 5000;
+			config.SnackbarConfiguration.HideTransitionDuration = 300;
+			config.SnackbarConfiguration.ShowTransitionDuration = 300;
+			config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+		});
 		builder.Services.AddSingleton<AppStateService>();
 		builder.Services.AddScoped<JavaScriptBridgeService>();
+		builder.Services.AddScoped<BurizaSnackbarService>();
 
 		return builder.Build();
 	}
