@@ -43,6 +43,10 @@ Split responsibilities into two layers:
 │               ├── MauiPlatformStorage (iOS/Android/etc)         │
 │               └── [Future: SqlPlatformStorage]                  │
 │                                                                 │
+│  IPlatformSecureStorage (Low-Level Secure Store)                │
+│       ├── MauiPlatformStorage (Keychain/Keystore)               │
+│       └── NullPlatformSecureStorage (Web/Extension)             │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -72,7 +76,24 @@ public interface IPlatformStorage
 
 ### IStorageProvider / ISecureStorageProvider (Compatibility Interfaces)
 
-`BurizaStorageService` implements both to keep existing DI and tests stable. The secure provider routes through the same `IPlatformStorage` because all sensitive data is already encrypted by `VaultEncryption`.
+`BurizaStorageService` implements both to keep existing DI and tests stable.
+
+### IPlatformSecureStorage (Low-Level Secure Store)
+
+```csharp
+public interface IPlatformSecureStorage
+{
+    Task<string?> GetAsync(string key, CancellationToken ct = default);
+    Task SetAsync(string key, string value, CancellationToken ct = default);
+    Task RemoveAsync(string key, CancellationToken ct = default);
+    Task<bool> ExistsAsync(string key, CancellationToken ct = default);
+}
+```
+
+### Storage Modes
+
+- **VaultEncryption (Web/Extension)**: mnemonic is encrypted and stored in `IPlatformStorage`.
+- **DirectSecure (MAUI/Desktop)**: mnemonic is stored directly in `IPlatformSecureStorage`. Password/PIN are verifiers.
 
 ---
 

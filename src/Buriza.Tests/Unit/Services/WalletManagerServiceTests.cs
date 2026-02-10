@@ -91,9 +91,16 @@ public class WalletManagerServiceTests : IDisposable
         BurizaWalletAccount? account = wallet.GetActiveAccount();
         Assert.NotNull(account);
 
-        ChainAddressData? chainData = account.GetChainData(ChainType.Cardano);
-        Assert.NotNull(chainData);
-        Assert.False(string.IsNullOrEmpty(chainData.ReceiveAddress));
+        ChainAddressData? mainnetData = account.GetChainData(ChainType.Cardano, NetworkType.Mainnet);
+        ChainAddressData? previewData = account.GetChainData(ChainType.Cardano, NetworkType.Preview);
+        ChainAddressData? preprodData = account.GetChainData(ChainType.Cardano, NetworkType.Preprod);
+
+        Assert.NotNull(mainnetData);
+        Assert.NotNull(previewData);
+        Assert.NotNull(preprodData);
+        Assert.False(string.IsNullOrEmpty(mainnetData.ReceiveAddress));
+        Assert.False(string.IsNullOrEmpty(previewData.ReceiveAddress));
+        Assert.False(string.IsNullOrEmpty(preprodData.ReceiveAddress));
     }
 
     [Fact]
@@ -104,6 +111,8 @@ public class WalletManagerServiceTests : IDisposable
 
         // Assert
         Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
+        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoPreview, 0));
+        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoPreprod, 0));
     }
 
     [Fact]
@@ -298,7 +307,7 @@ public class WalletManagerServiceTests : IDisposable
         BurizaWalletAccount? account = wallet.GetActiveAccount();
         Assert.NotNull(account);
 
-        ChainAddressData? chainData = account.GetChainData(ChainType.Cardano);
+        ChainAddressData? chainData = account.GetChainData(ChainType.Cardano, NetworkType.Mainnet);
         Assert.NotNull(chainData);
         Assert.False(string.IsNullOrEmpty(chainData.ReceiveAddress));
         Assert.StartsWith("addr1", chainData.ReceiveAddress); // Mainnet address

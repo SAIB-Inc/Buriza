@@ -112,11 +112,17 @@ EncryptedVault {
     Data: base64       // Ciphertext || AuthTag
     Salt: base64       // 32-byte Argon2id salt
     Iv: base64         // 12-byte AES-GCM nonce
-    WalletId: int      // Bound via AAD
+    WalletId: Guid     // Bound via AAD
     Purpose: enum      // Mnemonic, PinProtectedPassword, ApiKey
     CreatedAt: datetime
 }
 ```
+
+## Direct Secure Storage (MAUI/Desktop)
+
+In DirectSecure mode, the mnemonic is stored directly in platform secure storage (Keychain/Keystore/SecureStorage).
+Passwords and PINs act as unlock gates and are stored as Argon2id verifiers in secure storage.
+This mode relies on OS-level protection for confidentiality.
 
 ### Associated Authenticated Data (AAD)
 

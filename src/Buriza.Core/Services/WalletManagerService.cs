@@ -68,17 +68,31 @@ public class WalletManagerService(
 
         Guid newId = Guid.NewGuid();
 
-        // Derive only the first receive address (passing bytes directly)
-        IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
-        string receiveAddress = await keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, 0, 0, false, ct);
-        _appState.CacheAddress(newId, chainInfo, 0, 0, false, receiveAddress);
+        IReadOnlyList<ChainInfo> initialChains = GetInitialChainInfos(chainInfo);
+        Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>> chainDataByChain = [];
 
-        ChainAddressData chainData = new()
+        foreach (ChainInfo info in initialChains)
         {
-            Chain = chainInfo.Chain,
-            ReceiveAddress = receiveAddress,
-            LastSyncedAt = DateTime.UtcNow
-        };
+            IKeyService keyService = _providerFactory.CreateKeyService(info);
+            string receiveAddress = await keyService.DeriveAddressAsync(mnemonicBytes, info, 0, 0, false, ct);
+            _appState.CacheAddress(newId, info, 0, 0, false, receiveAddress);
+
+            ChainAddressData chainData = new()
+            {
+                Chain = info.Chain,
+                Network = info.Network,
+                ReceiveAddress = receiveAddress,
+                LastSyncedAt = DateTime.UtcNow
+            };
+
+            if (!chainDataByChain.TryGetValue(info.Chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
+            {
+                perNetwork = [];
+                chainDataByChain[info.Chain] = perNetwork;
+            }
+
+            perNetwork[info.Network] = chainData;
+        }
 
         BurizaWallet wallet = new()
         {
@@ -93,7 +107,7 @@ public class WalletManagerService(
                 {
                     Index = 0,
                     Name = string.Format(DefaultAccountName, 1),
-                    ChainData = new Dictionary<ChainType, ChainAddressData> { [chainInfo.Chain] = chainData }
+                    ChainData = chainDataByChain
                 }
             ]
         };
@@ -180,7 +194,7 @@ public class WalletManagerService(
             ?? throw new InvalidOperationException("No active account");
 
         // Derive addresses for this chain if needed
-        if (account.GetChainData(chainInfo.Chain) == null)
+        if (account.GetChainData(chainInfo.Chain, chainInfo.Network) == null)
         {
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password is required to derive addresses for a new chain", nameof(password));
@@ -197,6 +211,7 @@ public class WalletManagerService(
         }
 
         wallet.ActiveChain = chainInfo.Chain;
+        wallet.Network = chainInfo.Network;
         wallet.LastAccessedAt = DateTime.UtcNow;
         await _storage.SaveWalletAsync(wallet, ct);
 
@@ -252,7 +267,7 @@ public class WalletManagerService(
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
         ChainInfo chainInfo = GetChainInfo(wallet);
-        ChainAddressData? existingData = account.GetChainData(chainInfo.Chain);
+        ChainAddressData? existingData = account.GetChainData(chainInfo.Chain, chainInfo.Network);
 
         // If chain data exists, just repopulate cache if needed
         if (existingData != null)
@@ -327,10 +342,16 @@ public class WalletManagerService(
                     ChainAddressData chainData = new()
                     {
                         Chain = chainInfo.Chain,
+                        Network = chainInfo.Network,
                         ReceiveAddress = address,
                         LastSyncedAt = DateTime.UtcNow
                     };
-                    account.ChainData[chainInfo.Chain] = chainData;
+                    if (!account.ChainData.TryGetValue(chainInfo.Chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
+                    {
+                        perNetwork = [];
+                        account.ChainData[chainInfo.Chain] = perNetwork;
+                    }
+                    perNetwork[chainInfo.Network] = chainData;
 
                     wallet.Accounts.Add(account);
                     discoveredAccounts.Add(account);
@@ -372,8 +393,8 @@ public class WalletManagerService(
 
         // Otherwise get from stored wallet data
         BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
-        ChainAddressData chainData = account.GetChainData(chainInfo.Chain)
-            ?? throw new InvalidOperationException($"Account {accountIndex} has no data for chain {chainInfo.Chain}. Call UnlockAccountAsync first.");
+        ChainAddressData chainData = account.GetChainData(chainInfo.Chain, chainInfo.Network)
+            ?? throw new InvalidOperationException($"Account {accountIndex} has no data for chain {chainInfo.Chain} {chainInfo.Network}. Call UnlockAccountAsync first.");
 
         return chainData.ReceiveAddress;
     }
@@ -383,7 +404,7 @@ public class WalletManagerService(
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         ChainInfo chainInfo = GetChainInfo(wallet);
         BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
-        ChainAddressData? chainData = account.GetChainData(chainInfo.Chain);
+        ChainAddressData? chainData = account.GetChainData(chainInfo.Chain, chainInfo.Network);
 
         // Return cached staking address if available
         if (!string.IsNullOrEmpty(chainData?.StakingAddress))
@@ -571,6 +592,21 @@ public class WalletManagerService(
     private static ChainInfo GetChainInfo(BurizaWallet wallet)
         => ChainRegistry.Get(wallet.ActiveChain, wallet.Network);
 
+    private static IReadOnlyList<ChainInfo> GetInitialChainInfos(ChainInfo chainInfo)
+    {
+        if (chainInfo.Chain == ChainType.Cardano)
+        {
+            return
+            [
+                ChainRegistry.CardanoMainnet,
+                ChainRegistry.CardanoPreview,
+                ChainRegistry.CardanoPreprod
+            ];
+        }
+
+        return [chainInfo];
+    }
+
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainInfo chainInfo, byte[] mnemonicBytes, CancellationToken ct)
     {
         IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
@@ -580,13 +616,19 @@ public class WalletManagerService(
         ChainAddressData chainData = new()
         {
             Chain = chainInfo.Chain,
+            Network = chainInfo.Network,
             ReceiveAddress = receiveAddress,
             LastSyncedAt = DateTime.UtcNow
         };
 
         BurizaWalletAccount account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex)
             ?? throw new InvalidOperationException($"Account {accountIndex} not found in wallet {wallet.Id}");
-        account.ChainData[chainInfo.Chain] = chainData;
+        if (!account.ChainData.TryGetValue(chainInfo.Chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
+        {
+            perNetwork = [];
+            account.ChainData[chainInfo.Chain] = perNetwork;
+        }
+        perNetwork[chainInfo.Network] = chainData;
 
         await _storage.SaveWalletAsync(wallet, ct);
     }

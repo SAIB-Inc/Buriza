@@ -175,6 +175,20 @@ public class BurizaWalletTests
     }
 
     [Fact]
+    public void GetAddressInfo_WithNetworkWithoutData_ReturnsNull()
+    {
+        // Arrange
+        BurizaWallet wallet = CreateWalletWithAddress();
+        wallet.Network = NetworkType.Preview;
+
+        // Act
+        ChainAddressData? result = wallet.GetAddressInfo();
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public void GetAddressInfo_WithSpecificAccountIndex_ReturnsCorrectData()
     {
         // Arrange
@@ -183,6 +197,7 @@ public class BurizaWalletTests
             Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test" },
             ActiveChain = ChainType.Cardano,
+            Network = NetworkType.Mainnet,
             ActiveAccountIndex = 0,
             Accounts =
             [
@@ -190,12 +205,16 @@ public class BurizaWalletTests
                 {
                     Index = 0,
                     Name = "Account 0",
-                    ChainData = new Dictionary<ChainType, ChainAddressData>
+                    ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
                     {
-                        [ChainType.Cardano] = new ChainAddressData
+                        [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
                         {
-                            Chain = ChainType.Cardano,
-                            ReceiveAddress = "addr_acc0"
+                            [NetworkType.Mainnet] = new ChainAddressData
+                            {
+                                Chain = ChainType.Cardano,
+                                Network = NetworkType.Mainnet,
+                                ReceiveAddress = "addr_acc0"
+                            }
                         }
                     }
                 },
@@ -203,12 +222,16 @@ public class BurizaWalletTests
                 {
                     Index = 1,
                     Name = "Account 1",
-                    ChainData = new Dictionary<ChainType, ChainAddressData>
+                    ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
                     {
-                        [ChainType.Cardano] = new ChainAddressData
+                        [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
                         {
-                            Chain = ChainType.Cardano,
-                            ReceiveAddress = "addr_acc1"
+                            [NetworkType.Mainnet] = new ChainAddressData
+                            {
+                                Chain = ChainType.Cardano,
+                                Network = NetworkType.Mainnet,
+                                ReceiveAddress = "addr_acc1"
+                            }
                         }
                     }
                 }
@@ -383,6 +406,7 @@ public class BurizaWalletTests
         ChainAddressData cardanoData = new()
         {
             Chain = ChainType.Cardano,
+            Network = NetworkType.Mainnet,
             ReceiveAddress = "addr_test1..."
         };
 
@@ -390,14 +414,17 @@ public class BurizaWalletTests
         {
             Index = 0,
             Name = "Test",
-            ChainData = new Dictionary<ChainType, ChainAddressData>
+            ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
             {
-                [ChainType.Cardano] = cardanoData
+                [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
+                {
+                    [NetworkType.Mainnet] = cardanoData
+                }
             }
         };
 
         // Act
-        ChainAddressData? result = account.GetChainData(ChainType.Cardano);
+        ChainAddressData? result = account.GetChainData(ChainType.Cardano, NetworkType.Mainnet);
 
         // Assert
         Assert.NotNull(result);
@@ -412,7 +439,7 @@ public class BurizaWalletTests
         BurizaWalletAccount account = new() { Index = 0, Name = "Test" };
 
         // Act
-        ChainAddressData? result = account.GetChainData(ChainType.Cardano);
+        ChainAddressData? result = account.GetChainData(ChainType.Cardano, NetworkType.Mainnet);
 
         // Assert
         Assert.Null(result);
@@ -429,11 +456,13 @@ public class BurizaWalletTests
         ChainAddressData data = new()
         {
             Chain = ChainType.Cardano,
+            Network = NetworkType.Mainnet,
             ReceiveAddress = "addr_test1qz..."
         };
 
         // Assert
         Assert.Equal(ChainType.Cardano, data.Chain);
+        Assert.Equal(NetworkType.Mainnet, data.Network);
         Assert.Equal("addr_test1qz...", data.ReceiveAddress);
     }
 
@@ -444,6 +473,7 @@ public class BurizaWalletTests
         ChainAddressData data = new()
         {
             Chain = ChainType.Cardano,
+            Network = NetworkType.Mainnet,
             ReceiveAddress = "addr_test1qz..."
         };
 
@@ -462,6 +492,7 @@ public class BurizaWalletTests
             Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test Wallet", Avatar = "test.png" },
             ActiveChain = ChainType.Cardano,
+            Network = NetworkType.Mainnet,
             ActiveAccountIndex = 0,
             Accounts =
             [
@@ -469,12 +500,16 @@ public class BurizaWalletTests
                 {
                     Index = 0,
                     Name = "Account 0",
-                    ChainData = new Dictionary<ChainType, ChainAddressData>
+                    ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
                     {
-                        [ChainType.Cardano] = new ChainAddressData
+                        [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
                         {
-                            Chain = ChainType.Cardano,
-                            ReceiveAddress = "addr_test1qz..."
+                            [NetworkType.Mainnet] = new ChainAddressData
+                            {
+                                Chain = ChainType.Cardano,
+                                Network = NetworkType.Mainnet,
+                                ReceiveAddress = "addr_test1qz..."
+                            }
                         }
                     }
                 }

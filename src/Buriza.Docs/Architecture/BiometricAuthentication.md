@@ -2,14 +2,14 @@
 
 ## Overview
 
-Buriza supports biometric authentication on MAUI platforms (iOS, Android, macOS, Windows) as a convenience layer on top of password-based encryption. The biometric system stores the user's password securely using platform-native APIs, allowing quick wallet unlock without typing the full password.
+Buriza supports biometric authentication on MAUI platforms (iOS, Android, macOS, Windows). In DirectSecure mode, the mnemonic is stored directly in platform secure storage, and biometrics unlock that secure item. Password/PIN act as local unlock gates via verifiers.
 
 ## Authentication Methods by Platform
 
 | Platform | Password | Biometrics | PIN |
 |----------|----------|------------|-----|
 | **MAUI (iOS)** | Yes | Face ID, Touch ID | Yes |
-| **MAUI (Android)** | Yes | Fingerprint, Face | Yes |
+| **MAUI (Android)** | Yes | Fingerprint, Face, Iris | Yes |
 | **MAUI (macOS)** | Yes | Touch ID | Yes |
 | **MAUI (Windows)** | Yes | Windows Hello | Yes |
 | **Web** | Yes | No | No |
@@ -28,21 +28,22 @@ Buriza supports biometric authentication on MAUI platforms (iOS, Android, macOS,
 │                    BIOMETRIC AUTHENTICATION FLOW                    │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  User Password ──► Vault (Argon2id + AES-256-GCM)                  │
+│  [DirectSecure Mode - MAUI/Desktop]                                 │
+│  Mnemonic ──► SecureStorage (Keychain/Keystore)                     │
 │       │                                                             │
 │       ▼                                                             │
 │  [Enable Biometric]                                                 │
 │       │                                                             │
-│       ├─► iOS: Keychain + LocalAuthentication                      │
-│       ├─► macOS: Keychain + LocalAuthentication                    │
-│       ├─► Android: Keystore + BiometricPrompt                      │
-│       └─► Windows: Credential Locker + Windows Hello               │
+│       ├─► iOS/macOS: Keychain + LocalAuthentication                 │
+│       ├─► Android: Keystore + BiometricPrompt                       │
+│       └─► Windows: Credential Locker + Windows Hello                │
 │                                                                     │
-│  [Unlock with Biometric]                                           │
+│  [Unlock with Biometric]                                            │
 │       │                                                             │
-│       ├─► Authenticate with Face ID / Touch ID / Fingerprint       │
-│       ├─► Retrieve stored password from secure storage             │
-│       └─► Use password to decrypt vault                            │
+│       └─► Retrieve seed from secure storage                         │
+│                                                                     │
+│  [VaultEncryption Mode - Web/Extension]                             │
+│  Mnemonic ──► Vault (Argon2id + AES-256-GCM) in localStorage         │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -56,6 +57,7 @@ Platform-specific biometric abstraction. Implemented per-platform in MAUI.
 ```csharp
 public interface IBiometricService
 {
+    Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
     Task<bool> IsAvailableAsync(CancellationToken ct = default);
     Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default);
     Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default);
@@ -66,34 +68,7 @@ public interface IBiometricService
 }
 ```
 
-### IAuthenticationService
-
-Higher-level authentication service supporting password, PIN, and biometrics.
-
-```csharp
-public interface IAuthenticationService
-{
-    // Biometric
-    Task<bool> IsBiometricAvailableAsync(CancellationToken ct = default);
-    Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default);
-    Task<bool> IsBiometricEnabledAsync(int walletId, CancellationToken ct = default);
-    Task EnableBiometricAsync(int walletId, string password, CancellationToken ct = default);
-    Task DisableBiometricAsync(int walletId, CancellationToken ct = default);
-    Task<byte[]> AuthenticateWithBiometricAsync(int walletId, string reason, CancellationToken ct = default);
-
-    // PIN
-    Task<bool> IsPinEnabledAsync(int walletId, CancellationToken ct = default);
-    Task EnablePinAsync(int walletId, string pin, string password, CancellationToken ct = default);
-    Task DisablePinAsync(int walletId, CancellationToken ct = default);
-    Task<byte[]> AuthenticateWithPinAsync(int walletId, string pin, CancellationToken ct = default);
-    Task ChangePinAsync(int walletId, string oldPin, string newPin, CancellationToken ct = default);
-
-    // Lockout
-    Task<int> GetFailedAttemptsAsync(int walletId, CancellationToken ct = default);
-    Task ResetFailedAttemptsAsync(int walletId, CancellationToken ct = default);
-    Task<DateTime?> GetLockoutEndTimeAsync(int walletId, CancellationToken ct = default);
-}
-```
+Biometric enable/disable and PIN/password flows are handled in `BurizaStorageService`.
 
 ## Platform Implementations
 

@@ -29,7 +29,7 @@ public class BurizaWallet : IWallet
     public required WalletProfile Profile { get; set; }
 
     /// <summary>Network this wallet operates on (Mainnet, Preprod, Preview).</summary>
-    public NetworkType Network { get; init; } = NetworkType.Mainnet;
+    public NetworkType Network { get; set; } = NetworkType.Mainnet;
 
     /// <summary>Current active chain for this wallet.</summary>
     public ChainType ActiveChain { get; set; } = ChainType.Cardano;
@@ -57,7 +57,7 @@ public class BurizaWallet : IWallet
             ? Accounts.FirstOrDefault(a => a.Index == accountIndex.Value)
             : GetActiveAccount();
 
-        return account?.GetChainData(ActiveChain);
+        return account?.GetChainData(ActiveChain, Network);
     }
 
     #endregion
@@ -280,13 +280,17 @@ public class BurizaWalletAccount
     /// <summary>Account name (e.g., "Savings", "Trading").</summary>
     public required string Name { get; set; }
 
-    /// <summary>Chain-specific address data, keyed by ChainType.</summary>
-    public Dictionary<ChainType, ChainAddressData> ChainData { get; set; } = [];
+    /// <summary>Chain-specific address data, keyed by ChainType and Network.</summary>
+    public Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>> ChainData { get; set; } = [];
 
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 
-    public ChainAddressData? GetChainData(ChainType chain) =>
-        ChainData.TryGetValue(chain, out ChainAddressData? data) ? data : null;
+    public ChainAddressData? GetChainData(ChainType chain, NetworkType network)
+    {
+        if (!ChainData.TryGetValue(chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
+            return null;
+        return perNetwork.TryGetValue(network, out ChainAddressData? data) ? data : null;
+    }
 }
 
 /// <summary>
@@ -296,6 +300,7 @@ public class BurizaWalletAccount
 public class ChainAddressData
 {
     public required ChainType Chain { get; init; }
+    public required NetworkType Network { get; init; }
 
     /// <summary>Primary receive address (index 0, role 0).</summary>
     public required string ReceiveAddress { get; set; }

@@ -4,6 +4,8 @@ using Android.Runtime;
 using AndroidX.Biometric;
 using AndroidX.Core.Content;
 using Buriza.Core.Interfaces.Security;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 using Java.Util.Concurrent;
 using Xamarin.Google.Crypto.Tink;
 using Xamarin.Google.Crypto.Tink.Aead;

@@ -2,6 +2,8 @@
 using Windows.Security.Credentials;
 using Windows.Security.Credentials.UI;
 using Buriza.Core.Interfaces.Security;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 
 namespace Buriza.App.Services.Security;
 
