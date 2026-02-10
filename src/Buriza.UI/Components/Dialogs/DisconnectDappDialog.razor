@@ -33,12 +33,3 @@
         </BurizaButton>
     </DialogActions>
 </MudDialog>
-
-@code {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = null!;
-
-    private void Cancel() => MudDialog.Cancel();
-
-    private void Disconnect() => MudDialog.Close(DialogResult.Ok(true));
-}

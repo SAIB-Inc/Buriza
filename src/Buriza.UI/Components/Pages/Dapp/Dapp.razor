@@ -112,19 +112,8 @@
                         />
                     }
                 </div>
-                <div class="max-md:hidden w-full flex items-center justify-between !py-3">
-                    <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">
-                        Showing <span Class="w-[48px] h-[38px] rounded-[6px] inline-flex mx-1 !text-white items-center justify-center border border-[var(--mud-palette-overlay-light)]">@CurrentPage</span> of @TotalPages
-                    </MudText>
-                    <MudPagination
-                        Count="@TotalPages"
-                        @bind-Selected="@CurrentPage"
-                        Rectangular="true"
-                        Variant="Variant.Filled"
-                        Class="[&_.mud-pagination-item]:!bg-transparent [&_.mud-icon-button-label]:!text-[var(--mud-palette-dark-lighten)] [&_.mud-pagination-item]:!min-w-8 [&_.mud-pagination-item]:!h-8 [&_.mud-button-filled-default]:!bg-[var(--mud-palette-overlay-light)] [&_.mud-pagination-item]:!text-[var(--mud-palette-text-secondary)] [&_.mud-pagination-item.mud-selected]:!text-white gap-0! [&_.mud-button-root]:!mx-[2px] [&_.mud-button-root:disabled]:!opacity-30"
-                        BoundaryCount="1"
-                        MiddleCount="1"
-                    />
+                <div class="max-md:hidden">
+                    <BurizaPagination Count="@TotalPages" @bind-Selected="@CurrentPage" />
                 </div>
             </div>
             <div class="w-full max-md:!px-4">
@@ -144,7 +133,7 @@
                         </BurizaButton>
                     }
                 </div>
-                <div class="flex items-start !gap-[35px] !mt-4 overflow-x-auto">
+                <div class="flex items-start !gap-[35px] !pt-4 overflow-y-visible overflow-x-auto">
                     @foreach (var dapp in VisibleConnectedApps)
                     {
                         <div class="group flex flex-col items-center !gap-2 flex-shrink-0 cursor-pointer">
