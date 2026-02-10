@@ -165,7 +165,19 @@ public Task<string?> GetSecureAsync(string key, CancellationToken ct = default)
 
 **Impact:** XSS in the Blazor app or any injected script can read encrypted vault blobs from localStorage. While the vaults are encrypted, the attacker can exfiltrate them for offline brute-force. On MAUI, `MauiPlatformStorage` should ideally use platform secure storage (Keychain/Keystore) for vault data, but the current abstraction doesn't distinguish.
 
-**Recommendation:** For web: Accept this as a known limitation and document it. Ensure CSP headers are strict. For MAUI: Consider using platform-native secure storage (iOS Keychain, Android Keystore) for vault keys specifically, or at minimum document the threat model.
+**Recommendation:** For web: Accept this as a known limitation and document it. Ensure CSP headers are strict. For MAUI: Use platform-native secure storage (Keychain/Keystore) for mnemonic storage and store password/PIN verifiers in secure storage. Document that passwords/PINs gate access rather than encrypting the seed in this mode.
+
+---
+
+### Direct Secure Storage (MAUI / Desktop)
+
+In MAUI/desktop builds, the mnemonic seed is stored directly in platform secure storage (Keychain/Keystore/SecureStorage).
+Passwords and PINs do **not** encrypt the seed in this mode — they act as a local unlock gate verified via an Argon2id
+verifier stored in secure storage. This means:
+
+- Seed confidentiality is provided by OS secure storage.
+- Password/PIN changes update the verifier only.
+- If the device secure storage is compromised, the password alone does not provide extra encryption.
 
 ---
 

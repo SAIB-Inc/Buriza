@@ -1,5 +1,8 @@
 using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
+using Buriza.Core.Models.Config;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Services;
 using Buriza.UI.Extensions;
 using Buriza.UI.Services;
 using Buriza.UI.Storage;
@@ -31,7 +34,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 // Platform storage
 builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
-builder.Services.AddScoped<IPlatformSecureStorage, BrowserPlatformStorage>();
+builder.Services.AddScoped<IPlatformSecureStorage, NullPlatformSecureStorage>();
+builder.Services.AddSingleton(new BurizaStorageOptions { Mode = StorageMode.VaultEncryption });
 
 // Buriza services
 builder.Services.AddSingleton<IBiometricService, NullBiometricService>();

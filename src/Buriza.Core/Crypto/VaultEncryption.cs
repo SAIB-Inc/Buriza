@@ -55,7 +55,8 @@ public static class VaultEncryption
         if (combined.Length < options.TagSize)
             throw new CryptographicException("Invalid vault data: ciphertext too short");
 
-        byte[] key = DeriveKey(Encoding.UTF8.GetBytes(password), salt, options);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        byte[] key = DeriveKey(passwordBytes, salt, options);
 
         // Split combined into ciphertext + tag using span slicing
         ReadOnlySpan<byte> combinedSpan = combined;

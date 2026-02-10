@@ -61,11 +61,17 @@ public static class StorageKeys
     /// <summary>Gets the storage key for a wallet's authentication type (password/pin/biometric).</summary>
     public static string AuthType(Guid walletId) => $"buriza_auth_type_{walletId:N}";
 
+    /// <summary>Gets the storage key for a wallet's authentication type HMAC.</summary>
+    public static string AuthTypeHmac(Guid walletId) => $"buriza_auth_type_hmac_{walletId:N}";
+
     /// <summary>Gets the secure storage key for HMAC-protected lockout state.</summary>
     public static string LockoutState(Guid walletId) => $"buriza_lockout_state_{walletId:N}";
 
     /// <summary>Key for storing the lockout HMAC key (installation scoped).</summary>
     public const string LockoutKey = "buriza_lockout_hmac_key";
+
+    /// <summary>Key for storing the auth-type HMAC key (installation scoped).</summary>
+    public const string AuthTypeKey = "buriza_auth_type_hmac_key";
 
     #endregion
 

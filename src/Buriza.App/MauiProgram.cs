@@ -7,6 +7,8 @@ using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.App.Storage;
 using Buriza.App.Services.Security;
+using Buriza.Core.Models.Config;
+using Buriza.Core.Models.Enums;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Buriza.App;
@@ -53,6 +55,7 @@ public static class MauiProgram
 
 		// Buriza services
 		builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
+		builder.Services.AddSingleton(new BurizaStorageOptions { Mode = StorageMode.DirectSecure });
 		builder.Services.AddBurizaServices(ServiceLifetime.Singleton);
 
 		return builder.Build();
