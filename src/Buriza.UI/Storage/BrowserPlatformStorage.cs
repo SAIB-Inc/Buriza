@@ -7,7 +7,7 @@ namespace Buriza.UI.Storage;
 /// Browser storage for Blazor WebAssembly (Web and Extension).
 /// Uses localStorage (Web) or chrome.storage.local (Extension) via JS interop.
 /// </summary>
-public class BrowserPlatformStorage(IJSRuntime js) : IPlatformStorage
+public class BrowserPlatformStorage(IJSRuntime js) : IPlatformStorage, IPlatformSecureStorage
 {
     public async Task<string?> GetAsync(string key, CancellationToken ct = default)
         => await js.InvokeAsync<string?>("buriza.storage.get", ct, key);

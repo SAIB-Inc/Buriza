@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Services;
+using Buriza.Tests.Mocks;
 
 namespace Buriza.Tests.Integration.Storage;
 
@@ -21,7 +22,7 @@ public class VaultEncryptionIntegrationTests
 
     public VaultEncryptionIntegrationTests()
     {
-        _walletStorage = new BurizaStorageService(_storage, new NullBiometricService());
+        _walletStorage = new BurizaStorageService(_storage, new InMemorySecureStorage(), new NullBiometricService());
     }
 
     #region Create and Unlock Roundtrip

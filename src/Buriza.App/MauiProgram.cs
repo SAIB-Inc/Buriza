@@ -49,6 +49,7 @@ public static class MauiProgram
 
 		// Platform storage
 		builder.Services.AddSingleton<IPlatformStorage, MauiPlatformStorage>();
+		builder.Services.AddSingleton<IPlatformSecureStorage, MauiSecureStorage>();
 
 		// Buriza services
 		builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();

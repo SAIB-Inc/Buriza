@@ -12,5 +12,11 @@ public enum VaultPurpose
     ApiKey = 1,
 
     /// <summary>PIN-encrypted wallet password.</summary>
-    PinProtectedPassword = 2
+    PinProtectedPassword = 2,
+
+    /// <summary>Biometric-encrypted wallet seed (uses biometric-protected key).</summary>
+    BiometricSeed = 3,
+
+    /// <summary>PIN-encrypted wallet seed.</summary>
+    PinProtectedSeed = 4
 }

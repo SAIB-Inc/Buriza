@@ -31,6 +31,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 // Platform storage
 builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
+builder.Services.AddScoped<IPlatformSecureStorage, BrowserPlatformStorage>();
 
 // Buriza services
 builder.Services.AddSingleton<IBiometricService, NullBiometricService>();

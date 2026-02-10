@@ -33,7 +33,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     public WalletManagerServiceAdvancedTests()
     {
         _platformStorage = new InMemoryPlatformStorage();
-        _storage = new BurizaStorageService(_platformStorage, new NullBiometricService());
+        _storage = new BurizaStorageService(_platformStorage, new InMemorySecureStorage(), new NullBiometricService());
         _appState = new MockAppStateService();
         ChainProviderSettings settings = new()
         {
@@ -441,7 +441,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Arrange
         InMemoryPlatformStorage platformStorage = new();
-        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
         MockAppStateService appState = new();
         ChainProviderSettings settings = new()
         {

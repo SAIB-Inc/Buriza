@@ -22,50 +22,7 @@ public static class VaultEncryption
         string password,
         VaultPurpose purpose = VaultPurpose.Mnemonic,
         KeyDerivationOptions? options = null)
-    {
-        options ??= KeyDerivationOptions.Default;
-
-        byte[] salt = RandomNumberGenerator.GetBytes(options.SaltSize);
-        byte[] iv = RandomNumberGenerator.GetBytes(options.IvSize);
-        byte[] key = DeriveKey(password, salt, options);
-
-        byte[] ciphertext = new byte[plaintext.Length];
-        byte[] tag = new byte[options.TagSize];
-        byte[] combined = new byte[ciphertext.Length + tag.Length];
-
-        // AAD binds ciphertext to wallet context - prevents swap/confusion attacks
-        byte[] aad = BuildAad(version: 1, walletId, purpose);
-
-        try
-        {
-            using AesGcm aes = new(key, options.TagSize);
-            aes.Encrypt(iv, plaintext, ciphertext, tag, aad);
-
-            // Combine ciphertext + tag using span slicing
-            ciphertext.CopyTo(combined.AsSpan());
-            tag.CopyTo(combined.AsSpan(ciphertext.Length));
-
-            return new EncryptedVault
-            {
-                Data = Convert.ToBase64String(combined),
-                Salt = Convert.ToBase64String(salt),
-                Iv = Convert.ToBase64String(iv),
-                WalletId = walletId,
-                Purpose = purpose,
-                CreatedAt = DateTime.UtcNow
-            };
-        }
-        finally
-        {
-            // Zero all cryptographic material (defense-in-depth)
-            CryptographicOperations.ZeroMemory(key);
-            CryptographicOperations.ZeroMemory(salt);
-            CryptographicOperations.ZeroMemory(iv);
-            CryptographicOperations.ZeroMemory(ciphertext);
-            CryptographicOperations.ZeroMemory(tag);
-            CryptographicOperations.ZeroMemory(combined);
-        }
-    }
+        => EncryptInternal(walletId, plaintext, Encoding.UTF8.GetBytes(password), purpose, options);
 
     /// <summary>
     /// Decrypts the vault and returns the plaintext as bytes.
@@ -98,7 +55,7 @@ public static class VaultEncryption
         if (combined.Length < options.TagSize)
             throw new CryptographicException("Invalid vault data: ciphertext too short");
 
-        byte[] key = DeriveKey(password, salt, options);
+        byte[] key = DeriveKey(Encoding.UTF8.GetBytes(password), salt, options);
 
         // Split combined into ciphertext + tag using span slicing
         ReadOnlySpan<byte> combinedSpan = combined;
@@ -186,6 +143,17 @@ public static class VaultEncryption
     }
 
     /// <summary>
+    /// Encrypts plaintext using Argon2id key derivation and AES-256-GCM with password bytes.
+    /// </summary>
+    public static EncryptedVault Encrypt(
+        Guid walletId,
+        ReadOnlySpan<byte> plaintext,
+        ReadOnlySpan<byte> passwordBytes,
+        VaultPurpose purpose = VaultPurpose.Mnemonic,
+        KeyDerivationOptions? options = null)
+        => EncryptInternal(walletId, plaintext, passwordBytes.ToArray(), purpose, options);
+
+    /// <summary>
     /// Verifies if the password is correct for the vault without returning the plaintext.
     /// </summary>
     public static bool VerifyPassword(EncryptedVault vault, string password)
@@ -205,25 +173,6 @@ public static class VaultEncryption
     /// <summary>
     /// Derives a key using Argon2id with the specified parameters.
     /// </summary>
-    private static byte[] DeriveKey(string password, byte[] salt, KeyDerivationOptions options)
-    {
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-        try
-        {
-            using Argon2id argon2 = new(passwordBytes);
-            argon2.Salt = salt;
-            argon2.MemorySize = options.MemoryCost;
-            argon2.Iterations = options.TimeCost;
-            argon2.DegreeOfParallelism = options.Parallelism;
-
-            return argon2.GetBytes(options.KeyLength / 8);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(passwordBytes);
-        }
-    }
-
     private static byte[] DeriveKey(ReadOnlySpan<byte> passwordBytes, byte[] salt, KeyDerivationOptions options)
     {
         byte[] passwordCopy = passwordBytes.ToArray();
@@ -240,6 +189,55 @@ public static class VaultEncryption
         finally
         {
             CryptographicOperations.ZeroMemory(passwordCopy);
+        }
+    }
+
+    private static EncryptedVault EncryptInternal(
+        Guid walletId,
+        ReadOnlySpan<byte> plaintext,
+        byte[] passwordBytes,
+        VaultPurpose purpose,
+        KeyDerivationOptions? options)
+    {
+        options ??= KeyDerivationOptions.Default;
+
+        byte[] salt = RandomNumberGenerator.GetBytes(options.SaltSize);
+        byte[] iv = RandomNumberGenerator.GetBytes(options.IvSize);
+        byte[] key = DeriveKey(passwordBytes, salt, options);
+
+        byte[] ciphertext = new byte[plaintext.Length];
+        byte[] tag = new byte[options.TagSize];
+        byte[] combined = new byte[ciphertext.Length + tag.Length];
+
+        byte[] aad = BuildAad(version: 1, walletId, purpose);
+
+        try
+        {
+            using AesGcm aes = new(key, options.TagSize);
+            aes.Encrypt(iv, plaintext, ciphertext, tag, aad);
+
+            ciphertext.CopyTo(combined.AsSpan());
+            tag.CopyTo(combined.AsSpan(ciphertext.Length));
+
+            return new EncryptedVault
+            {
+                Data = Convert.ToBase64String(combined),
+                Salt = Convert.ToBase64String(salt),
+                Iv = Convert.ToBase64String(iv),
+                WalletId = walletId,
+                Purpose = purpose,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(salt);
+            CryptographicOperations.ZeroMemory(iv);
+            CryptographicOperations.ZeroMemory(ciphertext);
+            CryptographicOperations.ZeroMemory(tag);
+            CryptographicOperations.ZeroMemory(combined);
         }
     }
 

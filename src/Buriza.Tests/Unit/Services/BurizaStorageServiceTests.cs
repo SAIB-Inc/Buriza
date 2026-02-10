@@ -16,7 +16,7 @@ public class BurizaStorageServiceTests
     public async Task UnlockVaultAsync_RepeatedFailures_TriggersLockout()
     {
         InMemoryPlatformStorage platformStorage = new();
-        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         Guid walletId = Guid.NewGuid();
         await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), "correct");
@@ -33,7 +33,7 @@ public class BurizaStorageServiceTests
     public async Task EnablePinAsync_TooShort_Throws()
     {
         InMemoryPlatformStorage platformStorage = new();
-        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         Guid walletId = Guid.NewGuid();
         await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), "correct");
@@ -45,7 +45,7 @@ public class BurizaStorageServiceTests
     public async Task UnlockCustomApiKeyAsync_InvalidMetadata_Throws()
     {
         InMemoryPlatformStorage platformStorage = new();
-        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         ChainInfo chainInfo = ChainRegistry.CardanoMainnet;
         string password = "correct";
@@ -62,7 +62,7 @@ public class BurizaStorageServiceTests
     public async Task SaveCustomApiKeyAsync_BindsPurposeAndChain()
     {
         InMemoryPlatformStorage platformStorage = new();
-        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         ChainInfo chainInfo = ChainRegistry.CardanoMainnet;
         string password = "correct";
@@ -88,7 +88,7 @@ public class BurizaStorageServiceTests
         InMemoryPlatformStorage platformStorage = new();
         await platformStorage.SetAsync(StorageKeys.Wallets, "{not json");
 
-        BurizaStorageService storage = new(platformStorage, new NullBiometricService());
+        BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => storage.LoadAllWalletsAsync());
     }
