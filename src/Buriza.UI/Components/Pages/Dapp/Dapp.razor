@@ -31,10 +31,23 @@
             />
         </div>
     </div>
-    <div class="max-md:!px-4 max-md:!pb-8 max-md:!mx-auto max-[376px]:!pt-3 max-[376px]:!gap-2 max-[376px]:!pb-4 h-full md:h-auto md:flex-1 md:min-h-0 w-full flex flex-col items-center !pt-16 !gap-3 md:!p-6 md:overflow-y-auto">
-        @if(!ShowAuthorization)
+    <div class="max-md:!px-0 max-md:!pb-8 max-md:!mx-auto max-[376px]:!pt-3 max-[376px]:!gap-2 max-[376px]:!pb-4 h-full md:h-auto md:flex-1 md:min-h-0 w-full flex flex-col items-center !pt-16 !gap-3 md:!p-6 md:overflow-y-auto">
+        @if(!ShowAuthorization && !ShowConnectedApps)
         {
-            <div class="w-full">
+            <div class="max-md:!px-4 w-full flex items-center justify-between md:hidden">
+                <div>
+                    <MudText Class="!text-[22px] !font-medium">
+                        dApps
+                    </MudText>
+                </div>
+                <div>
+                    <MudIconButton
+                        Icon="@BurizaIcons.FilterSymbolIcon"
+                        Class="shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:!text-[18px] md:[&_.mud-icon-root]:!text-[24px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9 md:!w-12 md:!h-12"
+                    />
+                </div>
+            </div>
+            <div class="max-md:!px-4 w-full">
                 <div class="!mb-6 overflow-x-auto">
                     <MudToggleGroup T="string" Value="@SelectedCategory" Outlined="false" ValueChanged="OnCategoryChanged" Class="!flex !flex-nowrap !gap-2 !w-max !overflow-visible">
                         @foreach (var category in Categories)
@@ -45,10 +58,10 @@
                         }
                     </MudToggleGroup>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 content-start !gap-3 h-[390px] md:h-[560px]">
+                <div class="grid grid-cols-2 content-start !gap-3 h-[390px] sm:grid-cols-3 sm:h-max  lg:min-h-[560px] xl:grid-cols-4">
                     @foreach (var dapp in PagedDapps)
                     {
-                        <MudCard Class="!bg-[#272A32] !rounded-[12px] !shadow-none cursor-pointer !p-3 md:!p-4" @onclick="OnDappCardClicked">
+                        <MudCard Class="!bg-[var(--mud-palette-overlay-light)] !rounded-[12px] !shadow-none cursor-pointer !p-3 md:!p-4" @onclick="OnDappCardClicked">
                             <div class="w-full flex justify-between items-start! md:items-center md:!mb-3">
                                 <div class="flex items-center !gap-2 md:!gap-3">
                                     <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
@@ -59,20 +72,22 @@
                                         />
                                     </div>
                                     <div class="min-w-0">
-                                        <MudText Class="!font-semibold !text-sm md:!text-base max-md:truncate max-md:max-w-[70px]">
+                                        <MudText Class="!font-semibold !text-sm md:!text-base max-md:truncate max-sm:max-w-[70px]">
                                             @dapp.Title
                                         </MudText>
-                                        <div class="max-w-[80px] md:hidden">
-                                            <MudChip T="string" Size="Size.Small" Class="!bg-transparent !text-[10px] !rounded-full !px-2 h-[16px]! !border [&_.mud-chip-content]:!truncate [&_.mud-chip-content]:!block" Style="@($"border-color: {GetDappTypeColor(dapp.Type)}; color: {GetDappTypeColor(dapp.Type)};")">
+                                        <div class="max-sm:max-w-[80px] md:hidden">
+                                            <MudChip T="string" Size="Size.Small" Class="max-sm:h-[16px]! max-sm:!text-[10px] max-sm:[&_.mud-chip-content]:!block max-sm:[&_.mud-chip-content]:!truncate !bg-transparent !rounded-full !px-2 !border" Style="@($"border-color: {GetDappTypeColor(dapp.Type)}; color: {GetDappTypeColor(dapp.Type)};")">
                                                 @dapp.Type
                                             </MudChip>
                                         </div>
                                     </div>
                                 </div>
-                                <MudIconButton
-                                    Icon="@BurizaIcons.FavoriteSymbolIcon"
-                                    Class="!p-0 [&_.mud-icon-root]:!text-white [&_.mud-icon-root]:!text-xl md:[&_.mud-icon-root]:!text-2xl"
-                                />
+                                <div>
+                                    <MudIconButton
+                                        Icon="@BurizaIcons.FavoriteSymbolIcon"
+                                        Class="!p-0 [&_.mud-icon-root]:!text-white [&_.mud-icon-root]:!text-xl md:[&_.mud-icon-root]:!text-2xl"
+                                    />
+                                </div>
                             </div>
                             <div class="max-md:hidden md:!mb-3">
                                 <MudChip T="string" Size="Size.Small" Class="!bg-transparent !text-xs !rounded-full !px-3 !border" Style="@($"border-color: {GetDappTypeColor(dapp.Type)}; color: {GetDappTypeColor(dapp.Type)};")">
@@ -92,7 +107,7 @@
                     {
                         var page = i;
                         <div
-                            class="@($"h-2 rounded-full cursor-pointer transition-all {(CurrentPage == page ? "w-[35px] bg-[#4F8EFF]" : "w-[14px] bg-[#363942]")}")"
+                            class="@($"h-2 rounded-full cursor-pointer transition-all {(CurrentPage == page ? "w-[35px] bg-[var(--mud-palette-primary)]" : "w-[14px] bg-[var(--mud-palette-tertiary-lighten)]/40")}")"
                             @onclick="() => CurrentPage = page"
                         />
                     }
@@ -112,7 +127,7 @@
                     />
                 </div>
             </div>
-            <div class="w-full">
+            <div class="w-full max-md:!px-4">
                 <div class="flex items-center justify-between">
                     <MudText Class="!font-medium !text-base sm:!text-2xl">
                         Connected dApps
@@ -133,7 +148,7 @@
                     @foreach (var dapp in VisibleConnectedApps)
                     {
                         <div class="group flex flex-col items-center !gap-2 flex-shrink-0 cursor-pointer">
-                            <div class="relative w-16 h-16 bg-[#272A32] rounded-[8px] flex items-center justify-center">
+                            <div class="relative w-16 h-16 bg-[var(--mud-palette-overlay-light)] rounded-[8px] flex items-center justify-center">
                                 <MudImage
                                     Alt="@dapp.Title"
                                     Src="@dapp.Icon"
@@ -144,7 +159,7 @@
                                     <MudIcon Icon="@Icons.Material.Filled.Remove" Class="!text-xs !text-white" />
                                 </div>
                             </div>
-                            <MudText Class="!text-xs !text-[#E8EFFB] text-center w-16 truncate">
+                            <MudText Class="!text-xs !text-[var(--mud-palette-text-primary)] text-center w-16 truncate">
                                 @dapp.Title
                             </MudText>
                         </div>
@@ -152,34 +167,82 @@
                 </div>
             </div>
         }
-        else
-        {            
-            <div class="max-[376px]:min-h-[calc(100vh-98px)]  w-full h-[calc(100vh-212px)] flex flex-col items-center justify-between">
-                <div class="w-full flex items-center justify-between">
-                    <div class="flex items-center">
-                        <div>
-                            <MudIconButton
-                                Icon="@BurizaIcons.ChevronRightIcon"
-                                Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                                OnClick="() => ShowAuthorization = false"
-                            />
-                        </div>
-                        <div>
-                            <MudText Class="!text-[22px] !font-medium">
-                                Authorize App
-                            </MudText>
-                        </div>
-                    </div>
+        else if (ShowConnectedApps)
+        {
+            <div class="max-[376px]:min-h-[calc(100vh-98px)] w-full h-[calc(100vh-146px)]">
+                <div class="max-md:!px-4 w-full flex items-center !mb-4 gap-[10px]">
                     <div>
                         <MudIconButton
-                            Icon="@BurizaIcons.CloseSymbolIcon"
-                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                            Icon="@BurizaIcons.ChevronRightIcon"
+                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
+                            OnClick="() => ShowConnectedApps = false"
+                        />
+                    </div>
+                    <div>
+                        <MudText Class="!text-[22px] !font-medium">
+                            Connected dApps
+                        </MudText>
+                    </div>
+                </div>
+                <div class="max-md:!px-4 grid !gap-3 overflow-y-auto h-[calc(100%-50px)] !pb-8">
+                    @foreach (var dapp in ConnectedApps)
+                    {
+                        <MudCard Class="!bg-[var(--mud-palette-overlay-light)] !rounded-[12px] !p-4 !shadow-none !gap-[11px]">
+                            <div class="w-full flex items-center justify-between">
+                                <div class="flex items-center !gap-3">
+                                    <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                                        <MudImage
+                                            Alt="@dapp.Title"
+                                            Src="@dapp.Icon"
+                                            Class="!w-10 !h-10 !min-w-10 !min-h-10 object-cover"
+                                        />
+                                    </div>
+                                    <MudText Class="!font-semibold">
+                                        @dapp.Title
+                                    </MudText>
+                                </div>
+                                <div>
+                                    <MudIconButton
+                                        Icon="@BurizaIcons.DeleteSymbolIcon"
+                                        Class="!p-0 !w-6 !h-6 [&_.mud-icon-root]:!text-2xl [&_.mud-icon-root]:!text-white"
+                                        OnClick="() => OnDisconnectDappClicked(dapp)"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <MudChip T="string" Size="Size.Small" Class="!bg-transparent !text-xs !rounded-full !px-3 !border" Style="@($"border-color: {GetDappTypeColor(dapp.Type)}; color: {GetDappTypeColor(dapp.Type)};")">
+                                    @dapp.Type
+                                </MudChip>
+                            </div>
+                            <div>
+                                <MudText Class="!text-[var(--mud-palette-gray-dark)] !leading-relaxed !text-xs sm:!text-sm">
+                                    @dapp.Description
+                                </MudText>
+                            </div>
+                        </MudCard>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="max-md:!px-4 max-[376px]:min-h-[calc(100vh-98px)] w-full h-[calc(100vh-212px)] flex flex-col items-center justify-between">
+                <div class="w-full flex items-center gap-[10px]">
+                    <div>
+                        <MudIconButton
+                            Icon="@BurizaIcons.ChevronRightIcon"
+                            Class="[&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] !p-0"
                             OnClick="() => ShowAuthorization = false"
                         />
                     </div>
+                    <div>
+                        <MudText Class="!text-[22px] !font-medium">
+                            Authorize App
+                        </MudText>
+                    </div>
                 </div>
                 <div class="w-full">
-                    <div class="max-[376px]:!gap-3 w-full flex flex-col items-center justify-center !text-center !gap-6">
+                    <div class="w-full flex flex-col items-center justify-center !text-center !gap-6">
                         <div>
                             <MudImage
                                 Alt="DexHunter Logo"
@@ -188,7 +251,7 @@
                             />
                         </div>
                         <div>
-                            <MudText Class="!font-bold !text-2xl">
+                            <MudText Class="!font-bold !text-2xl !text-[var(--mud-palette-text-primary)]">
                                 DexHunter
                             </MudText>
                             <MudText Class="!text-xl !text-[var(--mud-palette-text-secondary)]">
@@ -196,45 +259,44 @@
                             </MudText>
                         </div>
                     </div>
-                    <div class="relative rounded-[12px] border border-[#414754] !p-4 !mt-6 !space-y-3">
+                    <div class="!mt-10 !rounded-[12px] !p-3 !bg-[var(--mud-palette-warning-darken)] w-max mx-auto flex items-center !gap-3">
+                        <div class="w-6 h-6 min-w-6 rounded-full bg-[var(--mud-palette-warning-lighten)] flex items-center justify-center">
+                            <MudIcon Icon="@Icons.Material.Rounded.PriorityHigh" Class="!text-sm !text-[var(--mud-palette-warning)]" />
+                        </div>
+                        <MudText Class="!text-xs !font-medium !text-[var(--mud-palette-warning-lighten)]">
+                            Verify the source before granting access to your assets
+                        </MudText>
+                    </div>
+                    <div class="relative rounded-[12px] border border-[var(--mud-palette-divider)] !p-6 !mt-10 !space-y-3">
                         <div class="absolute -top-3 left-3 !bg-[var(--mud-palette-background)] !px-2">
-                            <MudText Class="!text-sm">
+                            <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold">
                                 Allow this site to:
                             </MudText>
                         </div>
-                        <MudListItem
-                            T="string"
-                            Disabled="true"
-                            Text="See which network the wallet is connected to" 
-                            Icon="@Icons.Material.Outlined.CheckCircle"
-                            Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-                        />
-                        <MudListItem
-                            T="string"
-                            Disabled="true"
-                            Text="See your wallet UTXOs" 
-                            Icon="@Icons.Material.Outlined.CheckCircle"
-                            Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-                        />
-                        <MudListItem
-                            T="string"
-                            Disabled="true"
-                            Text="See your wallet balance" 
-                            Icon="@Icons.Material.Outlined.CheckCircle"
-                            Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-                        />
-                        <MudListItem
-                            T="string"
-                            Disabled="true"
-                            Text="See your wallet different addresses, including reward account" 
-                            Icon="@Icons.Material.Outlined.CheckCircle"
-                            Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-                        />
+                        <div class="flex items-start !gap-2">
+                            <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                            <MudText Class="!text-sm">See which network the wallet is connected to</MudText>
+                        </div>
+                        <div class="flex items-start !gap-2">
+                            <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                            <MudText Class="!text-sm">See your wallet UTXOs</MudText>
+                        </div>
+                        <div class="flex items-start !gap-2">
+                            <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                            <MudText Class="!text-sm">See your wallet balance</MudText>
+                        </div>
+                        <div class="flex items-start !gap-2">
+                            <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                            <MudText Class="!text-sm">See your wallet different addresses, including reward account</MudText>
+                        </div>
                     </div>
-                    <div>
+                    <div class="!mt-6">
+                        <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-[10px]">
+                            Notice: By authorizing, you grant this application read-access to your wallet's public data. Your private keys will remain secure, but your financial privacy will be visible to this dapp.
+                        </MudText>
                     </div>
                 </div>
-                <div class="max-[376px]: w-full">
+                <div class="w-full">
                     <BurizaButton
                         Variant="Variant.Filled"
                         Color="Color.Primary"

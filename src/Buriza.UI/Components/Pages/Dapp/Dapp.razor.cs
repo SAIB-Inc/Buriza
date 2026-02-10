@@ -18,9 +18,8 @@ public partial class Dapp
     [Inject]
     public required IDialogService DialogService { get; set; }
 
-    protected int ExpandedCard = 1;
-    protected int ExpandedDesktopSlide = 0;
     protected bool ShowAuthorization = false;
+    protected bool ShowConnectedApps = false;
     protected string SelectedCategory = "All";
     protected int CurrentPage = 1;
     protected int PageSize = 10;
@@ -41,27 +40,35 @@ public partial class Dapp
         ConnectedApps = DappData.GetAllDapps();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
+
+            PageSize = screenWidth switch
+            {
+                >= 1280 => 12,
+                >= 768 => 9,
+                >= 640 => 12,
+                _ => 10
+            };
+
+            StateHasChanged();
+        }
+    }
+
     protected void OnCategoryChanged(string category)
     {
         SelectedCategory = category;
         Dapps = DappData.GetDappsByCategory(category);
     }
 
-    protected void ExpandCard(int cardIndex)
-    {
-        ExpandedCard = cardIndex;
-    }
-    
-    protected void ExpandDesktopSlide(int slideIndex)
-    {
-        ExpandedDesktopSlide = slideIndex;
-    }
-    
     protected async Task OnDappCardClicked()
     {
         int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
 
-        if (screenWidth >= 1024)
+        if (screenWidth >= 768)
         {
             AppStateService.SetDrawerContent(DrawerContentType.AuthorizeDapp);
         }
@@ -71,9 +78,18 @@ public partial class Dapp
         }
     }
 
-    protected void OnSeeAllConnectedAppsClicked()
+    protected async Task OnSeeAllConnectedAppsClicked()
     {
-        AppStateService.SetDrawerContent(DrawerContentType.ConnectedApps);
+        int screenWidth = await JavaScriptBridgeService.GetScreenWidthAsync();
+
+        if (screenWidth >= 1024)
+        {
+            AppStateService.SetDrawerContent(DrawerContentType.ConnectedApps);
+        }
+        else
+        {
+            ShowConnectedApps = true;
+        }
     }
 
     protected async Task OnDisconnectDappClicked(DappInfo dapp)
