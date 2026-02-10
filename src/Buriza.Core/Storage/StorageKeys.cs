@@ -49,6 +49,9 @@ public static class StorageKeys
     /// <summary>Gets the secure storage key for HMAC-protected lockout state.</summary>
     public static string LockoutState(Guid walletId) => $"buriza_lockout_state_{walletId:N}";
 
+    /// <summary>Key for storing the lockout HMAC key (installation scoped).</summary>
+    public const string LockoutKey = "buriza_lockout_hmac_key";
+
     #endregion
 
     #region MAUI Key Tracking

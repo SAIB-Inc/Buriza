@@ -1,16 +1,13 @@
-using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
-using Buriza.Core.Interfaces.Wallet;
-using Buriza.Core.Services;
-using Buriza.Data.Models;
-using Buriza.Data.Services;
+using Buriza.UI.Extensions;
 using Buriza.UI.Services;
 using Buriza.UI.Storage;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<Buriza.UI.Components.App>("#app");
@@ -27,8 +24,6 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
 
-builder.Services.AddSingleton<AppStateService>();
-builder.Services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<AppStateService>());
 builder.Services.AddScoped<JavaScriptBridgeService>();
 builder.Services.AddScoped<BurizaSnackbarService>();
 
@@ -37,11 +32,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 // Platform storage
 builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
 
-// Buriza.Core services
-builder.Services.AddSingleton<ChainProviderSettings>();
-builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
+// Buriza services
 builder.Services.AddSingleton<IBiometricService, NullBiometricService>();
-builder.Services.AddScoped<BurizaStorageService>();
-builder.Services.AddScoped<IWalletManager, WalletManagerService>();
+builder.Services.AddBurizaServices(ServiceLifetime.Scoped);
 
 await builder.Build().RunAsync();

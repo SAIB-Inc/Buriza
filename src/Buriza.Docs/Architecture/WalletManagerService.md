@@ -127,7 +127,7 @@ public interface IWalletStorage
     // Secure Vault
     Task<bool> HasVaultAsync(int walletId, CancellationToken ct = default);
     Task CreateVaultAsync(int walletId, byte[] mnemonic, string password, CancellationToken ct = default);
-    Task<byte[]> UnlockVaultAsync(int walletId, string password, CancellationToken ct = default);
+    Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default);
     Task DeleteVaultAsync(int walletId, CancellationToken ct = default);
     Task<bool> VerifyPasswordAsync(int walletId, string password, CancellationToken ct = default);
     Task ChangePasswordAsync(int walletId, string oldPassword, string newPassword, CancellationToken ct = default);

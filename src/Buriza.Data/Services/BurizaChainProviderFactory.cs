@@ -25,13 +25,13 @@ public class BurizaChainProviderFactory(
     {
         // Try custom config from app state first, then fall back to settings
         ServiceConfig? customConfig = _appState?.GetChainConfig(chainInfo);
-        string? endpoint = customConfig?.Endpoint ?? GetDefaultEndpoint(chainInfo);
-        string? apiKey = customConfig?.ApiKey ?? GetDefaultApiKey(chainInfo);
+        string? endpoint = Normalize(customConfig?.Endpoint) ?? GetDefaultEndpoint(chainInfo);
+        string? apiKey = Normalize(customConfig?.ApiKey) ?? GetDefaultApiKey(chainInfo);
 
         if (string.IsNullOrEmpty(endpoint))
             throw new InvalidOperationException($"No endpoint configured for {chainInfo.Chain} {chainInfo.Network}");
 
-        return new BurizaU5CProvider(endpoint, apiKey);
+        return new BurizaU5CProvider(endpoint, apiKey, chainInfo.Network);
     }
 
     public IBurizaChainProvider CreateProvider(string endpoint, string? apiKey = null)
@@ -95,6 +95,9 @@ public class BurizaChainProviderFactory(
             _ => null
         };
     }
+
+    private static string? Normalize(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value;
 
     public void Dispose()
     {

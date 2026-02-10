@@ -131,6 +131,61 @@ public static class VaultEncryption
     }
 
     /// <summary>
+    /// Decrypts the vault using password bytes and returns the plaintext as bytes.
+    /// IMPORTANT: Caller MUST zero the returned bytes after use with CryptographicOperations.ZeroMemory()
+    /// </summary>
+    public static byte[] Decrypt(EncryptedVault vault, ReadOnlySpan<byte> passwordBytes)
+    {
+        if (string.IsNullOrEmpty(vault.Salt) || string.IsNullOrEmpty(vault.Iv) || string.IsNullOrEmpty(vault.Data))
+            throw new CryptographicException("Invalid vault: missing required fields");
+
+        if (vault.Version != 1)
+            throw new NotSupportedException($"Vault version {vault.Version} is not supported");
+
+        byte[] salt, iv, combined;
+        try
+        {
+            salt = Convert.FromBase64String(vault.Salt);
+            iv = Convert.FromBase64String(vault.Iv);
+            combined = Convert.FromBase64String(vault.Data);
+        }
+        catch (FormatException ex)
+        {
+            throw new CryptographicException("Invalid vault: malformed Base64 data", ex);
+        }
+
+        KeyDerivationOptions options = KeyDerivationOptions.Default;
+
+        if (combined.Length < options.TagSize)
+            throw new CryptographicException("Invalid vault data: ciphertext too short");
+
+        byte[] key = DeriveKey(passwordBytes, salt, options);
+
+        ReadOnlySpan<byte> combinedSpan = combined;
+        byte[] ciphertext = combinedSpan[..^options.TagSize].ToArray();
+        byte[] tag = combinedSpan[^options.TagSize..].ToArray();
+
+        byte[] plaintext = new byte[ciphertext.Length];
+        byte[] aad = BuildAad(vault.Version, vault.WalletId, vault.Purpose);
+
+        try
+        {
+            using AesGcm aes = new(key, options.TagSize);
+            aes.Decrypt(iv, ciphertext, tag, plaintext, aad);
+            return plaintext;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(key);
+            CryptographicOperations.ZeroMemory(salt);
+            CryptographicOperations.ZeroMemory(iv);
+            CryptographicOperations.ZeroMemory(combined);
+            CryptographicOperations.ZeroMemory(ciphertext);
+            CryptographicOperations.ZeroMemory(tag);
+        }
+    }
+
+    /// <summary>
     /// Verifies if the password is correct for the vault without returning the plaintext.
     /// </summary>
     public static bool VerifyPassword(EncryptedVault vault, string password)
@@ -166,6 +221,25 @@ public static class VaultEncryption
         finally
         {
             CryptographicOperations.ZeroMemory(passwordBytes);
+        }
+    }
+
+    private static byte[] DeriveKey(ReadOnlySpan<byte> passwordBytes, byte[] salt, KeyDerivationOptions options)
+    {
+        byte[] passwordCopy = passwordBytes.ToArray();
+        try
+        {
+            using Argon2id argon2 = new(passwordCopy);
+            argon2.Salt = salt;
+            argon2.MemorySize = options.MemoryCost;
+            argon2.Iterations = options.TimeCost;
+            argon2.DegreeOfParallelism = options.Parallelism;
+
+            return argon2.GetBytes(options.KeyLength / 8);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordCopy);
         }
     }
 

@@ -185,7 +185,7 @@ public class WalletManagerService(
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password is required to derive addresses for a new chain", nameof(password));
 
-            byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
+            byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
             try
             {
                 await DeriveAndSaveChainDataAsync(wallet, account.Index, chainInfo, mnemonicBytes, ct);
@@ -263,7 +263,7 @@ public class WalletManagerService(
         }
 
         // Derive new addresses
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
         try
         {
             await DeriveAndSaveChainDataAsync(wallet, accountIndex, chainInfo, mnemonicBytes, ct);
@@ -296,7 +296,7 @@ public class WalletManagerService(
         int consecutiveEmpty = 0;
         int accountIndex = 0;
 
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
         try
         {
             while (consecutiveEmpty < accountGapLimit && accountIndex < MaxAccountDiscoveryLimit)
@@ -393,7 +393,7 @@ public class WalletManagerService(
         if (string.IsNullOrEmpty(password))
             throw new ArgumentException("Password required to derive staking address", nameof(password));
 
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
         try
         {
             IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
@@ -434,7 +434,7 @@ public class WalletManagerService(
         ChainInfo chainInfo = GetChainInfo(wallet);
         IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
         PrivateKey? privateKey = null;
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
         try
         {
             privateKey = await keyService.DerivePrivateKeyAsync(mnemonicBytes, chainInfo, accountIndex, addressIndex, ct: ct);
@@ -452,10 +452,18 @@ public class WalletManagerService(
     public async Task ExportMnemonicAsync(Guid walletId, string password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default)
     {
         await GetWalletOrThrowAsync(walletId, ct);
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, ct);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
         try
         {
-            onMnemonic(Encoding.UTF8.GetString(mnemonicBytes));
+            char[] mnemonicChars = Encoding.UTF8.GetChars(mnemonicBytes);
+            try
+            {
+                onMnemonic(mnemonicChars);
+            }
+            finally
+            {
+                Array.Clear(mnemonicChars);
+            }
         }
         finally
         {
@@ -482,25 +490,28 @@ public class WalletManagerService(
                 throw new ArgumentException("Endpoint must use HTTP or HTTPS", nameof(endpoint));
         }
 
+        string? normalizedEndpoint = string.IsNullOrWhiteSpace(endpoint) ? null : endpoint;
+        string? normalizedApiKey = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey;
+
         // Save config metadata (endpoint, name)
         CustomProviderConfig config = new()
         {
             Chain = chainInfo.Chain,
             Network = chainInfo.Network,
-            Endpoint = endpoint,
-            HasCustomApiKey = !string.IsNullOrEmpty(apiKey),
+            Endpoint = normalizedEndpoint,
+            HasCustomApiKey = !string.IsNullOrEmpty(normalizedApiKey),
             Name = name
         };
         await _storage.SaveCustomProviderConfigAsync(config, ct);
 
         // Save encrypted API key if provided
-        if (!string.IsNullOrEmpty(apiKey))
-            await _storage.SaveCustomApiKeyAsync(chainInfo, apiKey, password, ct);
+        if (!string.IsNullOrEmpty(normalizedApiKey))
+            await _storage.SaveCustomApiKeyAsync(chainInfo, normalizedApiKey, password, ct);
         else
             await _storage.DeleteCustomApiKeyAsync(chainInfo, ct);
 
         // Cache in session for immediate use
-        _appState.SetChainConfig(chainInfo, new ServiceConfig(endpoint, apiKey));
+        _appState.SetChainConfig(chainInfo, new ServiceConfig(normalizedEndpoint, normalizedApiKey));
     }
 
     public async Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
@@ -514,6 +525,7 @@ public class WalletManagerService(
         CustomProviderConfig? config = await _storage.GetCustomProviderConfigAsync(chainInfo, ct);
         if (config == null) return;
 
+        string? endpoint = string.IsNullOrWhiteSpace(config.Endpoint) ? null : config.Endpoint;
         string? apiKey = null;
         if (config.HasCustomApiKey)
         {
@@ -531,7 +543,7 @@ public class WalletManagerService(
             }
         }
 
-        _appState.SetChainConfig(chainInfo, new ServiceConfig(config.Endpoint, apiKey));
+        _appState.SetChainConfig(chainInfo, new ServiceConfig(endpoint, apiKey));
     }
 
     #endregion

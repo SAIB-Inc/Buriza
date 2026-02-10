@@ -1,16 +1,13 @@
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
+using Buriza.UI.Extensions;
 using Buriza.UI.Services;
-using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
-using Buriza.Core.Interfaces.Wallet;
-using Buriza.Core.Services;
-using Buriza.Data.Models;
-using Buriza.Data.Services;
 using Buriza.App.Storage;
 using Buriza.App.Services.Security;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Buriza.App;
 
@@ -44,7 +41,6 @@ public static class MauiProgram
 			config.SnackbarConfiguration.ShowTransitionDuration = 300;
 			config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 		});
-		builder.Services.AddSingleton<AppStateService>();
 		builder.Services.AddScoped<JavaScriptBridgeService>();
 		builder.Services.AddScoped<BurizaSnackbarService>();
 
@@ -54,12 +50,9 @@ public static class MauiProgram
 		// Platform storage
 		builder.Services.AddSingleton<IPlatformStorage, MauiPlatformStorage>();
 
-		// Buriza.Core services
-		builder.Services.AddSingleton<ChainProviderSettings>();
-		builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
+		// Buriza services
 		builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
-		builder.Services.AddSingleton<BurizaStorageService>();
-		builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
+		builder.Services.AddBurizaServices(ServiceLifetime.Singleton);
 
 		return builder.Build();
 	}

@@ -24,6 +24,10 @@ public class BurizaStorageService(
 {
     private readonly IPlatformStorage _storage = platformStorage;
     private readonly IBiometricService _biometricService = biometricService;
+    private const int MinPinLength = 6;
+    private const int MaxFailedAttemptsBeforeLockout = 5;
+    private static readonly TimeSpan BaseLockoutDuration = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan MaxLockoutDuration = TimeSpan.FromHours(1);
 
     #region IStorageProvider Implementation
 
@@ -49,7 +53,8 @@ public class BurizaStorageService(
 
     #region ISecureStorageProvider Implementation
 
-    // Secure storage uses the same platform storage - data is encrypted by VaultEncryption
+    // Routes to same IPlatformStorage backend (Preferences on MAUI, localStorage on Web).
+    // Data confidentiality relies on VaultEncryption (Argon2id + AES-256-GCM), not the storage layer.
     public Task<string?> GetSecureAsync(string key, CancellationToken ct = default)
         => _storage.GetAsync(key, ct);
 
@@ -167,7 +172,7 @@ public class BurizaStorageService(
         await SetJsonAsync(StorageKeys.Vault(walletId), vault, ct);
     }
 
-    public async Task<byte[]> UnlockVaultAsync(Guid walletId, string password, CancellationToken ct = default)
+    private async Task<byte[]> UnlockVaultWithPasswordAsync(Guid walletId, string password, CancellationToken ct = default)
     {
         EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
             ?? throw new InvalidOperationException("Vault not found");
@@ -176,34 +181,71 @@ public class BurizaStorageService(
     }
 
     /// <summary>
-    /// Unlocks vault using biometric authentication.
-    /// Retrieves password from secure enclave, then decrypts vault.
+    /// Unlocks vault based on the configured authentication type.
+    /// If Password: uses provided passwordOrPin. If Pin: uses provided passwordOrPin.
+    /// If Biometric: uses biometricReason prompt.
     /// </summary>
-    public async Task<byte[]> UnlockVaultWithBiometricAsync(Guid walletId, string reason, CancellationToken ct = default)
+    public async Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default)
     {
-        byte[] passwordBytes = await AuthenticateWithBiometricAsync(walletId, reason, ct);
+        await EnsureNotLockedAsync(walletId, ct);
+
+        AuthenticationType authType = await GetAuthTypeAsync(walletId, ct);
+
         try
         {
-            string password = Encoding.UTF8.GetString(passwordBytes);
-            return await UnlockVaultAsync(walletId, password, ct);
+            switch (authType)
+            {
+                case AuthenticationType.Biometric:
+                {
+                    byte[] passwordBytes = await AuthenticateWithBiometricAsync(
+                        walletId,
+                        biometricReason ?? "Unlock your wallet",
+                        ct);
+                    byte[] mnemonic = await UnlockWithPasswordBytesAsync(passwordBytes, walletId, ct);
+                    await ResetLockoutStateAsync(walletId, ct);
+                    return mnemonic;
+                }
+                case AuthenticationType.Pin:
+                {
+                    string pin = passwordOrPin ?? throw new ArgumentException("PIN required", nameof(passwordOrPin));
+                    if (!IsValidPin(pin))
+                    {
+                        await RegisterFailedAttemptAsync(walletId, ct);
+                        throw new ArgumentException("PIN must be at least 6 digits.", nameof(passwordOrPin));
+                    }
+
+                    byte[] passwordBytes = await AuthenticateWithPinAsync(walletId, pin, ct);
+                    byte[] mnemonic = await UnlockWithPasswordBytesAsync(passwordBytes, walletId, ct);
+                    await ResetLockoutStateAsync(walletId, ct);
+                    return mnemonic;
+                }
+                default:
+                {
+                    string password = passwordOrPin ?? throw new ArgumentException("Password required", nameof(passwordOrPin));
+                    byte[] mnemonic = await UnlockVaultWithPasswordAsync(walletId, password, ct);
+                    await ResetLockoutStateAsync(walletId, ct);
+                    return mnemonic;
+                }
+            }
         }
-        finally
+        catch (CryptographicException)
         {
-            CryptographicOperations.ZeroMemory(passwordBytes);
+            await RegisterFailedAttemptAsync(walletId, ct);
+            throw;
         }
     }
 
     /// <summary>
-    /// Unlocks vault using PIN authentication.
-    /// Decrypts password from PIN vault, then decrypts main vault.
+    /// Unlocks vault using biometric authentication.
+    /// Retrieves password from secure enclave, then decrypts vault.
     /// </summary>
-    public async Task<byte[]> UnlockVaultWithPinAsync(Guid walletId, string pin, CancellationToken ct = default)
+    private async Task<byte[]> UnlockWithPasswordBytesAsync(byte[] passwordBytes, Guid walletId, CancellationToken ct)
     {
-        byte[] passwordBytes = await AuthenticateWithPinAsync(walletId, pin, ct);
         try
         {
-            string password = Encoding.UTF8.GetString(passwordBytes);
-            return await UnlockVaultAsync(walletId, password, ct);
+            EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
+                ?? throw new InvalidOperationException("Vault not found");
+            return VaultEncryption.Decrypt(vault, passwordBytes);
         }
         finally
         {
@@ -213,16 +255,44 @@ public class BurizaStorageService(
 
     public async Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default)
     {
+        await EnsureNotLockedAsync(walletId, ct);
+
         EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
-        return vault is not null && VaultEncryption.VerifyPassword(vault, password);
+        if (vault is null) return false;
+
+        bool ok = VaultEncryption.VerifyPassword(vault, password);
+        if (ok)
+            await ResetLockoutStateAsync(walletId, ct);
+        else
+            await RegisterFailedAttemptAsync(walletId, ct);
+        return ok;
     }
 
     public async Task ChangePasswordAsync(Guid walletId, string oldPassword, string newPassword, CancellationToken ct = default)
     {
-        byte[] mnemonicBytes = await UnlockVaultAsync(walletId, oldPassword, ct);
+        await EnsureNotLockedAsync(walletId, ct);
+
+        byte[] mnemonicBytes;
+        try
+        {
+            mnemonicBytes = await UnlockVaultWithPasswordAsync(walletId, oldPassword, ct);
+        }
+        catch (CryptographicException)
+        {
+            await RegisterFailedAttemptAsync(walletId, ct);
+            throw;
+        }
         try
         {
             await CreateVaultAsync(walletId, mnemonicBytes, newPassword, ct);
+
+            // Invalidate PIN/biometric — they store the old password and are now stale.
+            // User must re-enroll after password change.
+            await _storage.RemoveAsync(StorageKeys.PinVault(walletId), ct);
+            await _biometricService.RemoveSecureAsync(StorageKeys.BiometricKey(walletId), ct);
+            await SetAuthTypeAsync(walletId, AuthenticationType.Password, ct);
+
+            await ResetLockoutStateAsync(walletId, ct);
         }
         finally
         {
@@ -290,6 +360,9 @@ public class BurizaStorageService(
 
     public async Task EnablePinAsync(Guid walletId, string pin, string password, CancellationToken ct = default)
     {
+        if (!IsValidPin(pin))
+            throw new ArgumentException("PIN must be at least 6 digits.", nameof(pin));
+
         if (!await VerifyPasswordAsync(walletId, password, ct))
             throw new CryptographicException("Invalid password");
 
@@ -314,6 +387,9 @@ public class BurizaStorageService(
 
     public async Task<byte[]> AuthenticateWithPinAsync(Guid walletId, string pin, CancellationToken ct = default)
     {
+        if (!IsValidPin(pin))
+            throw new ArgumentException("PIN must be at least 6 digits.", nameof(pin));
+
         EncryptedVault pinVault = await GetJsonAsync<EncryptedVault>(StorageKeys.PinVault(walletId), ct)
             ?? throw new InvalidOperationException("PIN not enabled");
 
@@ -322,11 +398,26 @@ public class BurizaStorageService(
 
     public async Task ChangePinAsync(Guid walletId, string oldPin, string newPin, CancellationToken ct = default)
     {
-        byte[] passwordBytes = await AuthenticateWithPinAsync(walletId, oldPin, ct);
+        if (!IsValidPin(newPin))
+            throw new ArgumentException("PIN must be at least 6 digits.", nameof(newPin));
+
+        await EnsureNotLockedAsync(walletId, ct);
+
+        byte[] passwordBytes;
+        try
+        {
+            passwordBytes = await AuthenticateWithPinAsync(walletId, oldPin, ct);
+        }
+        catch (CryptographicException)
+        {
+            await RegisterFailedAttemptAsync(walletId, ct);
+            throw;
+        }
         try
         {
             EncryptedVault newPinVault = VaultEncryption.Encrypt(walletId, passwordBytes, newPin, VaultPurpose.PinProtectedPassword);
             await SetJsonAsync(StorageKeys.PinVault(walletId), newPinVault, ct);
+            await ResetLockoutStateAsync(walletId, ct);
         }
         finally
         {
@@ -368,7 +459,8 @@ public class BurizaStorageService(
         byte[] apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
         try
         {
-            EncryptedVault vault = VaultEncryption.Encrypt(Guid.Empty, apiKeyBytes, password);
+            Guid vaultId = DeriveApiKeyVaultId(chainInfo);
+            EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, password, VaultPurpose.ApiKey);
             string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
             await SetJsonAsync(key, vault, ct);
 
@@ -392,6 +484,10 @@ public class BurizaStorageService(
         if (vault is null)
             return null;
 
+        Guid expectedId = DeriveApiKeyVaultId(chainInfo);
+        if (vault.Purpose != VaultPurpose.ApiKey || vault.WalletId != expectedId)
+            throw new CryptographicException("Invalid API key vault metadata");
+
         return VaultEncryption.Decrypt(vault, password);
     }
 
@@ -413,6 +509,158 @@ public class BurizaStorageService(
 
     private static string GetCustomConfigKey(ChainType chain, NetworkType network)
         => $"{(int)chain}:{(int)network}";
+
+    #endregion
+
+    #region Lockout
+
+    private async Task EnsureNotLockedAsync(Guid walletId, CancellationToken ct)
+    {
+        LockoutState? state = await TryGetLockoutStateAsync(walletId, ct);
+        if (state?.LockoutEndUtc is null) return;
+
+        if (state.LockoutEndUtc > DateTime.UtcNow)
+            throw new InvalidOperationException($"Wallet locked until {state.LockoutEndUtc:O}");
+
+        await ResetLockoutStateAsync(walletId, ct);
+    }
+
+    private async Task RegisterFailedAttemptAsync(Guid walletId, CancellationToken ct)
+    {
+        LockoutState? state = await TryGetLockoutStateAsync(walletId, ct);
+        int failedAttempts = (state?.FailedAttempts ?? 0) + 1;
+        DateTime? lockoutEndUtc = null;
+
+        if (failedAttempts >= MaxFailedAttemptsBeforeLockout)
+        {
+            int exponent = failedAttempts - MaxFailedAttemptsBeforeLockout;
+            double scale = Math.Pow(2, Math.Min(exponent, 6));
+            TimeSpan duration = TimeSpan.FromSeconds(BaseLockoutDuration.TotalSeconds * scale);
+            if (duration > MaxLockoutDuration)
+                duration = MaxLockoutDuration;
+
+            lockoutEndUtc = DateTime.UtcNow.Add(duration);
+        }
+
+        await SaveLockoutStateAsync(walletId, failedAttempts, lockoutEndUtc, ct);
+    }
+
+    private Task ResetLockoutStateAsync(Guid walletId, CancellationToken ct)
+        => _storage.RemoveAsync(StorageKeys.LockoutState(walletId), ct);
+
+    private async Task<LockoutState?> TryGetLockoutStateAsync(Guid walletId, CancellationToken ct)
+    {
+        string? json = await _storage.GetAsync(StorageKeys.LockoutState(walletId), ct);
+        if (string.IsNullOrEmpty(json)) return null;
+
+        LockoutState? state;
+        try
+        {
+            state = JsonSerializer.Deserialize<LockoutState>(json);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        if (state is null || string.IsNullOrEmpty(state.Hmac))
+            return await TamperedLockoutStateAsync(walletId, ct);
+
+        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
+        string expected = ComputeLockoutHmac(hmacKey, state.FailedAttempts, state.LockoutEndUtc, state.UpdatedAtUtc);
+        try
+        {
+            if (!CryptographicOperations.FixedTimeEquals(Convert.FromBase64String(state.Hmac), Convert.FromBase64String(expected)))
+            {
+                return await TamperedLockoutStateAsync(walletId, ct);
+            }
+        }
+        catch (FormatException)
+        {
+            return await TamperedLockoutStateAsync(walletId, ct);
+        }
+
+        return state;
+    }
+
+    private async Task<LockoutState> TamperedLockoutStateAsync(Guid walletId, CancellationToken ct)
+    {
+        DateTime updatedAtUtc = DateTime.UtcNow;
+        DateTime lockoutEndUtc = updatedAtUtc.Add(BaseLockoutDuration);
+        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
+        string hmac = ComputeLockoutHmac(hmacKey, MaxFailedAttemptsBeforeLockout, lockoutEndUtc, updatedAtUtc);
+
+        LockoutState state = new()
+        {
+            FailedAttempts = MaxFailedAttemptsBeforeLockout,
+            LockoutEndUtc = lockoutEndUtc,
+            UpdatedAtUtc = updatedAtUtc,
+            Hmac = hmac
+        };
+
+        string json = JsonSerializer.Serialize(state);
+        await _storage.SetAsync(StorageKeys.LockoutState(walletId), json, ct);
+        return state;
+    }
+
+    private async Task SaveLockoutStateAsync(Guid walletId, int failedAttempts, DateTime? lockoutEndUtc, CancellationToken ct)
+    {
+        DateTime updatedAtUtc = DateTime.UtcNow;
+        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
+        string hmac = ComputeLockoutHmac(hmacKey, failedAttempts, lockoutEndUtc, updatedAtUtc);
+
+        LockoutState state = new()
+        {
+            FailedAttempts = failedAttempts,
+            LockoutEndUtc = lockoutEndUtc,
+            UpdatedAtUtc = updatedAtUtc,
+            Hmac = hmac
+        };
+
+        string json = JsonSerializer.Serialize(state);
+        await _storage.SetAsync(StorageKeys.LockoutState(walletId), json, ct);
+    }
+
+    private async Task<byte[]> GetOrCreateLockoutKeyAsync(CancellationToken ct)
+    {
+        string? keyBase64 = await _storage.GetAsync(StorageKeys.LockoutKey, ct);
+        if (string.IsNullOrEmpty(keyBase64))
+        {
+            byte[] key = RandomNumberGenerator.GetBytes(32);
+            await _storage.SetAsync(StorageKeys.LockoutKey, Convert.ToBase64String(key), ct);
+            return key;
+        }
+
+        return Convert.FromBase64String(keyBase64);
+    }
+
+    private static string ComputeLockoutHmac(byte[] key, int failedAttempts, DateTime? lockoutEndUtc, DateTime updatedAtUtc)
+    {
+        string payload = $"{failedAttempts}|{lockoutEndUtc?.Ticks ?? 0}|{updatedAtUtc.Ticks}";
+        byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
+        using HMACSHA256 hmac = new(key);
+        return Convert.ToBase64String(hmac.ComputeHash(payloadBytes));
+    }
+
+    private static bool IsValidPin(string pin)
+    {
+        if (pin.Length < MinPinLength) return false;
+        foreach (char c in pin)
+        {
+            if (c < '0' || c > '9') return false;
+        }
+        return true;
+    }
+
+    private static Guid DeriveApiKeyVaultId(ChainInfo chainInfo)
+    {
+        string input = $"apikey|{(int)chainInfo.Chain}|{(int)chainInfo.Network}";
+        byte[] bytes = Encoding.UTF8.GetBytes(input);
+        byte[] hash = SHA256.HashData(bytes);
+        Span<byte> guidBytes = stackalloc byte[16];
+        hash.AsSpan(0, 16).CopyTo(guidBytes);
+        return new Guid(guidBytes);
+    }
 
     #endregion
 
@@ -453,9 +701,9 @@ public class BurizaStorageService(
         {
             return JsonSerializer.Deserialize<T>(json);
         }
-        catch
+        catch (JsonException ex)
         {
-            return default;
+            throw new InvalidOperationException($"Failed to deserialize storage key '{key}'.", ex);
         }
     }
 

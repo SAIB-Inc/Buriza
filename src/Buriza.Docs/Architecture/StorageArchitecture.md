@@ -35,25 +35,20 @@ Split responsibilities into two layers:
 │                     STORAGE ARCHITECTURE                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  IWalletStorage (High-Level Business API)                       │
+│  BurizaStorageService (High-Level Business API)                 │
+│       │   - implements IStorageProvider + ISecureStorageProvider │
 │       │                                                         │
-│       └── WalletStorageService (SINGLE Implementation)          │
-│               │                                                 │
-│               ├── IStorageProvider (General Data)               │
-│               │       ├── BrowserStorageProvider (Web/Extension)│
-│               │       ├── MauiStorageProvider (iOS/Android/etc) │
-│               │       └── [Future: SqlStorageProvider]          │
-│               │                                                 │
-│               └── ISecureStorageProvider (Sensitive Data)       │
-│                       ├── BrowserStorageProvider (same)         │
-│                       └── MauiStorageProvider (same)            │
+│       └── IPlatformStorage (Low-Level Key-Value)                │
+│               ├── BrowserPlatformStorage (Web/Extension)        │
+│               ├── MauiPlatformStorage (iOS/Android/etc)         │
+│               └── [Future: SqlPlatformStorage]                  │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Benefits:**
-- Single `WalletStorageService` with all business logic (~250 lines)
-- Platform providers are minimal (~50-125 lines each)
+- Single `BurizaStorageService` with all business logic
+- Platform providers are minimal and only do raw get/set
 - Easy to add new storage backends
 - Consistent behavior across all platforms
 
@@ -61,10 +56,10 @@ Split responsibilities into two layers:
 
 ## Interface Definitions
 
-### IStorageProvider (Low-Level Key-Value)
+### IPlatformStorage (Low-Level Key-Value)
 
 ```csharp
-public interface IStorageProvider
+public interface IPlatformStorage
 {
     Task<string?> GetAsync(string key, CancellationToken ct = default);
     Task SetAsync(string key, string value, CancellationToken ct = default);
@@ -75,27 +70,15 @@ public interface IStorageProvider
 }
 ```
 
-### ISecureStorageProvider (Sensitive Data)
+### IStorageProvider / ISecureStorageProvider (Compatibility Interfaces)
 
-```csharp
-public interface ISecureStorageProvider
-{
-    Task<string?> GetSecureAsync(string key, CancellationToken ct = default);
-    Task SetSecureAsync(string key, string value, CancellationToken ct = default);
-    Task RemoveSecureAsync(string key, CancellationToken ct = default);
-}
-```
-
-**Why two interfaces?**
-- MAUI has distinct APIs: `IPreferences` (general) vs `SecureStorage` (Keychain/Keystore)
-- Web uses same storage for both (data is already encrypted by VaultEncryption)
-- Explicit separation of sensitive data handling
+`BurizaStorageService` implements both to keep existing DI and tests stable. The secure provider routes through the same `IPlatformStorage` because all sensitive data is already encrypted by `VaultEncryption`.
 
 ---
 
 ## Web & Extension: Feature Detection
 
-Web and Extension share the same `BrowserStorageProvider` but use different underlying storage APIs. The JavaScript bridge auto-detects the environment:
+Web and Extension share the same `BrowserPlatformStorage` but use different underlying storage APIs. The JavaScript bridge auto-detects the environment:
 
 ```javascript
 // storage.js - Auto-detects environment
@@ -132,7 +115,7 @@ window.buriza.storage = (() => {
 │                  FEATURE DETECTION FLOW                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  BrowserStorageProvider (C#)                                    │
+│  BrowserPlatformStorage (C#)                                    │
 │       │                                                         │
 │       └── JSInterop: buriza.storage.get/set/remove              │
 │               │                                                 │
@@ -152,21 +135,14 @@ window.buriza.storage = (() => {
 ### C# Provider (Shared by Web & Extension)
 
 ```csharp
-// Buriza.UI/Storage/BrowserStorageProvider.cs
-public class BrowserStorageProvider(IJSRuntime js) : IStorageProvider, ISecureStorageProvider
+// Buriza.UI/Storage/BrowserPlatformStorage.cs
+public class BrowserPlatformStorage(IJSRuntime js) : IPlatformStorage
 {
     public async Task<string?> GetAsync(string key, CancellationToken ct = default)
         => await js.InvokeAsync<string?>("buriza.storage.get", ct, key);
 
     public async Task SetAsync(string key, string value, CancellationToken ct = default)
         => await js.InvokeVoidAsync("buriza.storage.set", ct, key, value);
-
-    // ISecureStorageProvider - same storage (data already encrypted)
-    public Task<string?> GetSecureAsync(string key, CancellationToken ct = default)
-        => GetAsync(key, ct);
-
-    public Task SetSecureAsync(string key, string value, CancellationToken ct = default)
-        => SetAsync(key, value, ct);
 }
 ```
 
@@ -174,14 +150,14 @@ public class BrowserStorageProvider(IJSRuntime js) : IStorageProvider, ISecureSt
 
 | Aspect | Web | Extension |
 |:-------|:----|:----------|
-| C# Code | `BrowserStorageProvider` | `BrowserStorageProvider` |
+| C# Code | `BrowserPlatformStorage` | `BrowserPlatformStorage` |
 | JS Bridge | `buriza.storage.*` | `buriza.storage.*` |
 | Actual Storage | `localStorage` | `chrome.storage.local` |
 | Detection | Automatic (JS) | Automatic (JS) |
 
 Same C# code, same JS API, different underlying storage. The JavaScript layer handles the platform difference.
 
-### Why BrowserStorageProvider Lives in Buriza.UI
+### Why BrowserPlatformStorage Lives in Buriza.UI
 
 We considered three options:
 
@@ -218,7 +194,7 @@ MAUI Blazor Hybrid embeds a `BlazorWebView` that runs Blazor components inside a
 │  │  │           Buriza.UI (Razor Components)           │  │  │
 │  │  │                                                  │  │  │
 │  │  │  @inject IWalletManager WalletManager            │  │  │
-│  │  │  @inject IWalletStorage WalletStorage            │  │  │
+│  │  │  @inject BurizaStorageService WalletStorage            │  │  │
 │  │  │                                                  │  │  │
 │  │  │  (Same components as Web & Extension!)           │  │  │
 │  │  │                                                  │  │  │
@@ -230,15 +206,11 @@ MAUI Blazor Hybrid embeds a `BlazorWebView` that runs Blazor components inside a
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │              MAUI Service Container                    │  │
 │  │                                                        │  │
-│  │  IWalletStorage ──► WalletStorageService               │  │
+│  │  BurizaStorageService                                  │  │
 │  │         │                                              │  │
-│  │         ├── IStorageProvider ──► MauiStorageProvider   │  │
-│  │         │         │                                    │  │
-│  │         │         └──► IPreferences (platform API)     │  │
-│  │         │                                              │  │
-│  │         └── ISecureStorageProvider ──► MauiStorageProvider
+│  │         └── IPlatformStorage ──► MauiPlatformStorage    │  │
 │  │                   │                                    │  │
-│  │                   └──► SecureStorage (Keychain/etc)    │  │
+│  │                   └──► IPreferences (platform API)     │  │
 │  │                                                        │  │
 │  └────────────────────────────────────────────────────────┘  │
 │                                                              │
@@ -254,10 +226,9 @@ MAUI Blazor Hybrid embeds a `BlazorWebView` that runs Blazor components inside a
 ### MAUI Provider
 
 ```csharp
-// Buriza.App/Storage/MauiStorageProvider.cs
-public class MauiStorageProvider(IPreferences preferences) : IStorageProvider, ISecureStorageProvider
+// Buriza.App/Storage/MauiPlatformStorage.cs
+public class MauiPlatformStorage(IPreferences preferences) : IPlatformStorage
 {
-    // IStorageProvider - Uses IPreferences (general data)
     public Task<string?> GetAsync(string key, CancellationToken ct = default)
     {
         string? value = preferences.Get<string?>(key, null);
@@ -267,18 +238,8 @@ public class MauiStorageProvider(IPreferences preferences) : IStorageProvider, I
     public Task SetAsync(string key, string value, CancellationToken ct = default)
     {
         preferences.Set(key, value);
-        TrackKey(key);  // For GetKeysAsync support
-        return Task.CompletedTask;
-    }
-
-    // ISecureStorageProvider - Uses SecureStorage (sensitive data)
-    public async Task<string?> GetSecureAsync(string key, CancellationToken ct = default)
-        => await SecureStorage.Default.GetAsync(key);
-
-    public async Task SetSecureAsync(string key, string value, CancellationToken ct = default)
-    {
-        await SecureStorage.Default.SetAsync(key, value);
         TrackKey(key);
+        return Task.CompletedTask;
     }
 }
 ```
@@ -313,24 +274,21 @@ public Task<IReadOnlyList<string>> GetKeysAsync(string prefix, CancellationToken
 ### Web (Program.cs)
 
 ```csharp
-// Storage providers
-builder.Services.AddScoped<IStorageProvider, BrowserStorageProvider>();
-builder.Services.AddScoped<ISecureStorageProvider, BrowserStorageProvider>();
-builder.Services.AddScoped<IWalletStorage, WalletStorageService>();
+// Platform storage + biometric
+builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
+builder.Services.AddSingleton<IBiometricService, NullBiometricService>();
 
-// Core services
-builder.Services.AddSingleton<IChainRegistry, ChainRegistry>();
-builder.Services.AddSingleton<ISessionService, SessionService>();
-builder.Services.AddScoped<IWalletManager, WalletManagerService>();
+// Buriza services
+builder.Services.AddBurizaServices(ServiceLifetime.Scoped);
 ```
 
 ### Extension (Program.cs)
 
 ```csharp
-// Same as Web - BrowserStorageProvider auto-detects chrome.storage.local
-builder.Services.AddScoped<IStorageProvider, BrowserStorageProvider>();
-builder.Services.AddScoped<ISecureStorageProvider, BrowserStorageProvider>();
-builder.Services.AddScoped<IWalletStorage, WalletStorageService>();
+// Same as Web - BrowserPlatformStorage auto-detects chrome.storage.local
+builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
+builder.Services.AddSingleton<IBiometricService, NullBiometricService>();
+builder.Services.AddBurizaServices(ServiceLifetime.Scoped);
 ```
 
 ### MAUI (MauiProgram.cs)
@@ -339,15 +297,12 @@ builder.Services.AddScoped<IWalletStorage, WalletStorageService>();
 // MAUI Essentials
 builder.Services.AddSingleton(Preferences.Default);
 
-// Storage providers - use native APIs
-builder.Services.AddSingleton<IStorageProvider, MauiStorageProvider>();
-builder.Services.AddSingleton<ISecureStorageProvider, MauiStorageProvider>();
-builder.Services.AddSingleton<IWalletStorage, WalletStorageService>();
+// Platform storage + biometric
+builder.Services.AddSingleton<IPlatformStorage, MauiPlatformStorage>();
+builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
 
-// Core services (Singleton for MAUI since app lifecycle differs)
-builder.Services.AddSingleton<IChainRegistry, ChainRegistry>();
-builder.Services.AddSingleton<ISessionService, SessionService>();
-builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
+// Buriza services (Singleton for MAUI since app lifecycle differs)
+builder.Services.AddBurizaServices(ServiceLifetime.Singleton);
 ```
 
 ### Why Different Lifetimes?
@@ -383,7 +338,7 @@ The key benefit: **Buriza.UI works unchanged across all platforms.**
 
 ```razor
 @* Works in Web, Extension, AND MAUI *@
-@inject IWalletStorage Storage
+@inject BurizaStorageService Storage
 @inject IWalletManager WalletManager
 
 <MudButton OnClick="CreateWallet">Create Wallet</MudButton>
@@ -400,7 +355,7 @@ The key benefit: **Buriza.UI works unchanged across all platforms.**
 The Razor component doesn't know (or care) whether:
 - It's running in a browser with localStorage
 - It's running in a browser extension with chrome.storage.local
-- It's running in MAUI with Keychain/Keystore
+- It's running in MAUI with Preferences
 
 DI handles the platform difference at startup.
 
@@ -411,8 +366,8 @@ DI handles the platform difference at startup.
 ### Adding SQL Storage
 
 ```csharp
-// Future: SqlStorageProvider
-public class SqlStorageProvider(SqliteConnection connection) : IStorageProvider
+// Future: SqlPlatformStorage
+public class SqlPlatformStorage(SqliteConnection connection) : IPlatformStorage
 {
     public async Task<string?> GetAsync(string key, CancellationToken ct)
     {
@@ -423,18 +378,18 @@ public class SqlStorageProvider(SqliteConnection connection) : IStorageProvider
     }
 }
 
-// Registration (no changes to WalletStorageService needed!)
-builder.Services.AddSingleton<IStorageProvider, SqlStorageProvider>();
-builder.Services.AddSingleton<IWalletStorage, WalletStorageService>();
+// Registration (no changes to BurizaStorageService needed!)
+builder.Services.AddSingleton<IPlatformStorage, SqlPlatformStorage>();
+builder.Services.AddSingleton<BurizaStorageService, BurizaStorageService>();
 ```
 
 ### Adding Cloud Sync
 
 ```csharp
-// Future: CloudSyncStorageProvider
-public class CloudSyncStorageProvider(
-    IStorageProvider local,
-    CloudClient cloud) : IStorageProvider
+// Future: CloudSyncPlatformStorage
+public class CloudSyncPlatformStorage(
+    IPlatformStorage local,
+    CloudClient cloud) : IPlatformStorage
 {
     public async Task<string?> GetAsync(string key, CancellationToken ct)
     {
@@ -460,26 +415,27 @@ public class CloudSyncStorageProvider(
 src/
 ├── Buriza.Core/                        # ⚠️ PURE .NET - NO PLATFORM DEPENDENCIES
 │   ├── Interfaces/Storage/
-│   │   ├── IStorageProvider.cs         # Low-level key-value
-│   │   ├── ISecureStorageProvider.cs   # Secure storage
-│   │   └── IWalletStorage.cs           # High-level business API
+│   │   ├── IPlatformStorage.cs         # Low-level key-value
+│   │   ├── IStorageProvider.cs         # Compatibility abstraction
+│   │   ├── ISecureStorageProvider.cs   # Compatibility abstraction
+│   │   └── BurizaStorageService.cs     # High-level business API
 │   ├── Extensions/
 │   │   └── StorageProviderExtensions.cs # JSON helpers
 │   └── Services/
-│       └── WalletStorageService.cs     # Unified implementation
+│       └── BurizaStorageService.cs     # Unified implementation
 │
 ├── Buriza.UI/                          # Shared Blazor components
 │   ├── Storage/
-│   │   └── BrowserStorageProvider.cs   # Web/Extension (JS interop)*
+│   │   └── BrowserPlatformStorage.cs   # Web/Extension (JS interop)*
 │   └── wwwroot/scripts/
 │       └── storage.js                  # JS bridge (auto-detection)
 │
-│   * Pragmatic placement: BrowserStorageProvider lives in UI because
+│   * Pragmatic placement: BrowserPlatformStorage lives in UI because
 │     both Web and Extension already reference it, and it needs IJSRuntime.
 │
 ├── Buriza.App/                         # MAUI app + native provider
 │   └── Storage/
-│       └── MauiStorageProvider.cs      # MAUI (IPreferences + SecureStorage)
+│       └── MauiPlatformStorage.cs      # MAUI (IPreferences)
 │
 ├── Buriza.Web/
 │   └── Program.cs                      # Web DI registration
@@ -491,8 +447,8 @@ src/
 ### Why Buriza.Core Has No Platform Dependencies
 
 `Buriza.Core` contains:
-- Interfaces (`IStorageProvider`, `ISecureStorageProvider`, `IWalletStorage`)
-- Business logic (`WalletStorageService`, `VaultEncryption`)
+- Interfaces (`IPlatformStorage`, `IStorageProvider`, `ISecureStorageProvider`)
+- Business logic (`BurizaStorageService`, `VaultEncryption`)
 - Models (`BurizaWallet`, `EncryptedVault`)
 
 It does **NOT** contain:
@@ -501,7 +457,7 @@ It does **NOT** contain:
 - Platform-specific code
 
 This means:
-1. **Testable** - Unit test with mock `IStorageProvider`, no browser/device needed
+1. **Testable** - Unit test with mock `IPlatformStorage`, no browser/device needed
 2. **Portable** - Can be used in console apps, servers, or any .NET project
 3. **Stable** - No breaking changes from platform SDK updates
 
@@ -511,12 +467,12 @@ This means:
 
 | Component | Location | Purpose |
 |:----------|:---------|:--------|
-| `IStorageProvider` | Buriza.Core | Low-level key-value abstraction |
-| `ISecureStorageProvider` | Buriza.Core | Sensitive data abstraction |
-| `IWalletStorage` | Buriza.Core | High-level business API |
-| `WalletStorageService` | Buriza.Core | Single implementation of IWalletStorage |
-| `BrowserStorageProvider` | Buriza.UI | Web + Extension (JS interop) |
-| `MauiStorageProvider` | Buriza.App | MAUI (native APIs) |
+| `IPlatformStorage` | Buriza.Core | Low-level key-value abstraction |
+| `IStorageProvider` | Buriza.Core | Compatibility abstraction |
+| `ISecureStorageProvider` | Buriza.Core | Compatibility abstraction |
+| `BurizaStorageService` | Buriza.Core | High-level business API |
+| `BrowserPlatformStorage` | Buriza.UI | Web + Extension (JS interop) |
+| `MauiPlatformStorage` | Buriza.App | MAUI (native APIs) |
 | `storage.js` | Buriza.UI | Auto-detects localStorage vs chrome.storage |
 
 **Key Design Principles:**
@@ -530,5 +486,3 @@ This allows:
 - Platform-specific optimizations where needed
 - Future backends without changing existing code
 - Unit testing without platform emulators
-
-dotnet build src/Buriza.App/Buriza.App.csproj -f net10.0-android -p:AndroidSdkDirectory=/Users/windss/android-sdk 2>&1 | tail -40

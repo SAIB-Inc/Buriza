@@ -2,8 +2,8 @@ namespace Buriza.Core.Interfaces.Storage;
 
 /// <summary>
 /// Secure storage provider for sensitive data like encrypted vaults.
-/// On MAUI: Uses platform Keychain/Keystore for hardware-backed security.
-/// On Web: Uses same storage as IStorageProvider (data is already encrypted by VaultEncryption).
+/// All implementations route to IPlatformStorage (Preferences on MAUI, localStorage on Web).
+/// Data confidentiality relies on VaultEncryption (Argon2id + AES-256-GCM), not the storage backend.
 /// </summary>
 public interface ISecureStorageProvider
 {

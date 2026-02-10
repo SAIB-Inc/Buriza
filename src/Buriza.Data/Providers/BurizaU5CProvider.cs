@@ -5,9 +5,10 @@ using Chrysalis.Network.Cbor.LocalStateQuery;
 using Chrysalis.Tx.Models;
 using Chrysalis.Tx.Models.Cbor;
 using Chrysalis.Tx.Providers;
-using Chrysalis.Wallet.Models.Enums;
 using CborMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
+using BurizaNetworkType = Buriza.Core.Models.Enums.NetworkType;
+using ChrysalisNetworkType = Chrysalis.Wallet.Models.Enums.NetworkType;
 
 namespace Buriza.Data.Providers;
 
@@ -21,13 +22,15 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
     private bool _disposed;
 
     /// <summary>Gets the network type for this provider.</summary>
-    public NetworkType NetworkType { get; }
+    public BurizaNetworkType NetworkType { get; }
+
+    ChrysalisNetworkType ICardanoDataProvider.NetworkType => MapNetworkType(NetworkType);
 
 
-    public BurizaU5CProvider(string endpoint, string? apiKey = null, NetworkType networkType = NetworkType.Mainnet)
+    public BurizaU5CProvider(string endpoint, string? apiKey = null, BurizaNetworkType networkType = BurizaNetworkType.Mainnet)
     {
         NetworkType = networkType;
-        _provider = new U5CProvider(endpoint, apiKey, networkType);
+        _provider = new U5CProvider(endpoint, apiKey, MapNetworkType(networkType));
     }
 
     #region IBurizaChainProvider
@@ -84,4 +87,7 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
         _provider.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    private static ChrysalisNetworkType MapNetworkType(BurizaNetworkType networkType)
+        => networkType == BurizaNetworkType.Mainnet ? ChrysalisNetworkType.Mainnet : ChrysalisNetworkType.Testnet;
 }
