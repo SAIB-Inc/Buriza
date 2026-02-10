@@ -7,7 +7,6 @@ using Chrysalis.Cbor.Types.Cardano.Core.Header;
 using Chrysalis.Cbor.Types.Cardano.Core.Protocol;
 using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
 using Chrysalis.Tx.Models;
-using Chrysalis.Tx.Providers;
 using Chrysalis.Tx.Models.Cbor;
 using Chrysalis.Wallet.Models.Enums;
 using Google.Protobuf;

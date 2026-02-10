@@ -91,3 +91,4 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
     private static ChrysalisNetworkType MapNetworkType(BurizaNetworkType networkType)
         => networkType == BurizaNetworkType.Mainnet ? ChrysalisNetworkType.Mainnet : ChrysalisNetworkType.Testnet;
 }
+

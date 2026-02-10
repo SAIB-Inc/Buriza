@@ -11,9 +11,11 @@ using Chrysalis.Tx.Builders;
 using Chrysalis.Tx.Extensions;
 using Chrysalis.Tx.Models;
 using Chrysalis.Wallet.Models.Keys;
+using Chrysalis.Cbor.Types.Cardano.Core.Protocol;
 using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using ChrysalisTransaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 using ChrysalisTransactionOutput = Chrysalis.Cbor.Types.Cardano.Core.Transaction.TransactionOutput;
+using Chrysalis.Network.Cbor.LocalStateQuery;
 
 namespace Buriza.Core.Models.Wallet;
 
@@ -102,6 +104,12 @@ public class BurizaWallet : IWallet
         if (string.IsNullOrEmpty(address)) return [];
 
         return await provider.GetTransactionHistoryAsync(address, limit, ct);
+    }
+
+    public Task<ProtocolParams> GetProtocolParametersAsync(CancellationToken ct = default)
+    {
+        IBurizaChainProvider provider = EnsureProvider();
+        return provider.GetParametersAsync(ct);
     }
 
     #endregion
