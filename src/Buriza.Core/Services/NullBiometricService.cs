@@ -14,6 +14,13 @@ public class NullBiometricService : IBiometricService
     public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
         => Task.FromResult<BiometricType?>(BiometricType.NotAvailable);
 
+    public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+        => Task.FromResult(new DeviceCapabilities(
+            SupportsBiometric: false,
+            BiometricTypes: Array.Empty<BiometricType>(),
+            SupportsPin: true,
+            SupportsPassword: true));
+
     public Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
         => Task.FromResult(BiometricResult.Failed(BiometricError.NotAvailable, "Biometric not available on this platform"));
 

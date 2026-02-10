@@ -29,6 +29,9 @@ public class PlatformBiometricService : IBiometricService
     public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
         => _platformService.GetBiometricTypeAsync(ct);
 
+    public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+        => _platformService.GetCapabilitiesAsync(ct);
+
     public Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
         => _platformService.AuthenticateAsync(reason, ct);
 
@@ -55,6 +58,13 @@ internal class NullBiometricService : IBiometricService
 
     public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
         => Task.FromResult<BiometricType?>(null);
+
+    public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+        => Task.FromResult(new DeviceCapabilities(
+            SupportsBiometric: false,
+            BiometricTypes: Array.Empty<BiometricType>(),
+            SupportsPin: true,
+            SupportsPassword: true));
 
     public Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
         => Task.FromResult(BiometricResult.Failed(BiometricError.NotAvailable, "Biometrics not supported on this platform"));

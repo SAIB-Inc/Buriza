@@ -75,17 +75,7 @@ public class BurizaStorageService(
 
     public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
     {
-        bool supportsBiometric = await _biometricService.IsAvailableAsync(ct);
-        BiometricType biometricType = supportsBiometric
-            ? await _biometricService.GetBiometricTypeAsync(ct) ?? BiometricType.NotAvailable
-            : BiometricType.NotAvailable;
-
-        return new DeviceCapabilities(
-            SupportsBiometric: supportsBiometric,
-            BiometricType: biometricType,
-            SupportsPin: true,
-            SupportsPassword: true
-        );
+        return await _biometricService.GetCapabilitiesAsync(ct);
     }
 
     #endregion

@@ -43,6 +43,24 @@ public class WindowsBiometricService : IBiometricService
         return BiometricType.WindowsHello;
     }
 
+    public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+    {
+        bool supportsBiometric = await IsAvailableAsync(ct);
+        List<BiometricType> types = [];
+        if (supportsBiometric)
+        {
+            BiometricType biometricType = await GetBiometricTypeAsync(ct) ?? BiometricType.NotAvailable;
+            if (biometricType != BiometricType.NotAvailable)
+                types.Add(biometricType);
+        }
+
+        return new DeviceCapabilities(
+            SupportsBiometric: supportsBiometric,
+            BiometricTypes: types,
+            SupportsPin: true,
+            SupportsPassword: true);
+    }
+
     public async Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
     {
         try

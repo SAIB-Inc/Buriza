@@ -29,6 +29,24 @@ public class AppleBiometricService : IBiometricService
         return Task.FromResult(context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, out _));
     }
 
+    public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+    {
+        bool supportsBiometric = await IsAvailableAsync(ct);
+        List<BiometricType> types = [];
+        if (supportsBiometric)
+        {
+            BiometricType biometricType = await GetBiometricTypeAsync(ct) ?? BiometricType.NotAvailable;
+            if (biometricType != BiometricType.NotAvailable)
+                types.Add(biometricType);
+        }
+
+        return new DeviceCapabilities(
+            SupportsBiometric: supportsBiometric,
+            BiometricTypes: types,
+            SupportsPin: true,
+            SupportsPassword: true);
+    }
+
     public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
     {
         using LAContext context = new();
@@ -39,7 +57,7 @@ public class AppleBiometricService : IBiometricService
         {
             LABiometryType.FaceId => BiometricType.FaceId,
             LABiometryType.TouchId => BiometricType.TouchId,
-            _ when (int)context.BiometryType == 4 => BiometricType.FaceId, // OpticId (Vision Pro)
+            _ when (int)context.BiometryType == 4 => BiometricType.OpticId, // OpticId (Vision Pro)
             _ => BiometricType.Unknown
         };
         return Task.FromResult<BiometricType?>(biometricType);

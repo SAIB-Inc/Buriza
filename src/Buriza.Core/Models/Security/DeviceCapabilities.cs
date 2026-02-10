@@ -4,7 +4,7 @@ namespace Buriza.Core.Models.Security;
 
 public record DeviceCapabilities(
     bool SupportsBiometric,
-    BiometricType BiometricType,
+    IReadOnlyList<BiometricType> BiometricTypes,
     bool SupportsPin,
     bool SupportsPassword
 );

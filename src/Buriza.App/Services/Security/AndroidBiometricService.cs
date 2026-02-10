@@ -54,6 +54,41 @@ public class AndroidBiometricService : IBiometricService
         return Task.FromResult(result == BiometricManager.BiometricSuccess);
     }
 
+    public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+    {
+        bool supportsBiometric = await IsAvailableAsync(ct);
+        List<BiometricType> types = [];
+        if (supportsBiometric)
+        {
+            Context? context = Platform.CurrentActivity ?? Platform.AppContext;
+            Android.Content.PM.PackageManager? pm = context.PackageManager;
+            if (pm != null)
+            {
+                bool hasFingerprint = pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureFingerprint);
+                bool hasFace = OperatingSystem.IsAndroidVersionAtLeast(29)
+                    && pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureFace);
+                bool hasIris = OperatingSystem.IsAndroidVersionAtLeast(29)
+                    && pm.HasSystemFeature(Android.Content.PM.PackageManager.FeatureIris);
+
+                if (hasFingerprint)
+                    types.Add(BiometricType.Fingerprint);
+                if (hasFace)
+                    types.Add(BiometricType.FaceRecognition);
+                if (hasIris)
+                    types.Add(BiometricType.Iris);
+            }
+
+            if (types.Count == 0)
+                types.Add(BiometricType.Unknown);
+        }
+
+        return new DeviceCapabilities(
+            SupportsBiometric: supportsBiometric,
+            BiometricTypes: types,
+            SupportsPin: true,
+            SupportsPassword: true);
+    }
+
     public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
     {
         Context? context = Platform.CurrentActivity ?? Platform.AppContext;

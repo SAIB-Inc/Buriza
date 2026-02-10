@@ -1,4 +1,5 @@
 using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 
 namespace Buriza.Core.Interfaces.Security;
 
@@ -9,6 +10,7 @@ namespace Buriza.Core.Interfaces.Security;
 /// </summary>
 public interface IBiometricService
 {
+    Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
     /// <summary>
     /// Gets whether biometric hardware is available on this device.
     /// </summary>

@@ -4,6 +4,7 @@ using MudBlazor.Services;
 using Buriza.UI.Extensions;
 using Buriza.UI.Services;
 using Buriza.Core.Interfaces.Security;
+using Buriza.Core.Services;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.App.Storage;
 using Buriza.App.Services.Security;
@@ -51,10 +52,11 @@ public static class MauiProgram
 
 		// Platform storage
 		builder.Services.AddSingleton<IPlatformStorage, MauiPlatformStorage>();
-		builder.Services.AddSingleton<IPlatformSecureStorage, MauiSecureStorage>();
+		builder.Services.AddSingleton<IPlatformSecureStorage, MauiPlatformStorage>();
 
 		// Buriza services
 		builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
+		builder.Services.AddSingleton<IDeviceSecurityService, DeviceSecurityService>();
 		builder.Services.AddSingleton(new BurizaStorageOptions { Mode = StorageMode.DirectSecure });
 		builder.Services.AddBurizaServices(ServiceLifetime.Singleton);
 
