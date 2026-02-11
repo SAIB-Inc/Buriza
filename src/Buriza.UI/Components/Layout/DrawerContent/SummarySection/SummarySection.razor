@@ -217,24 +217,30 @@
                     <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
                         Reward:
                     </MudText>
-                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
-                        1.234 ADA
+                    <MudText Class="!text-sm !text-[var(--mud-palette-success-lighten)] !font-semibold">
+                        + 1.234 ADA
                     </MudText>
                 </div>
                 <div class="flex items-center justify-between">
                     <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
                         Stake Address:
                     </MudText>
-                    <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
-                        stake1...7xq2m
-                    </MudText>
+                    <div class="flex items-center !gap-1">
+                        <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
+                            stake1...7xq2m
+                        </MudText>
+                        <MudIconButton
+                            Icon="@BurizaIcons.CopySymbolIcon"
+                            Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
+                        />
+                    </div>
                 </div>
                 <div class="flex items-center justify-between">
                     <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)]">
                         Epoch:
                     </MudText>
                     <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">
-                        482
+                        #482
                     </MudText>
                 </div>
             </div>

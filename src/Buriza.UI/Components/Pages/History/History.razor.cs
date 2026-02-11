@@ -13,7 +13,7 @@ public partial class History
 
     [Inject]
     public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
-    
+
     protected bool IsSummaryDisplayed { get; set; }
     protected bool IsSearchExpanded { get; set; }
     protected TransactionHistory? SelectedTransaction { get; set; }
@@ -22,11 +22,28 @@ public partial class History
     protected int CurrentPage { get; set; } = 1;
     protected int TotalPages { get; set; } = 4;
 
+    protected List<(string Type, string Value)> ActiveFilters { get; set; } =
+    [
+        ("Type", "Sent"),
+        ("Status", "Completed"),
+        ("Date", "Today")
+    ];
+
+    protected void RemoveFilter((string Type, string Value) filter)
+    {
+        ActiveFilters.Remove(filter);
+    }
+
+    protected void ClearAllFilters()
+    {
+        ActiveFilters.Clear();
+    }
+
     protected void ToggleSearch()
     {
         IsSearchExpanded = !IsSearchExpanded;
     }
-    
+
     protected override void OnInitialized()
     {
         AppStateService.CurrentSidebarContent = SidebarContentType.None;
@@ -50,17 +67,17 @@ public partial class History
             IsSummaryDisplayed = true;
         }
     }
-    
+
     protected string GetAmountDisplay(decimal amount, TransactionType type)
     {
         string prefix = type switch
         {
             TransactionType.Sent => "-",
-            TransactionType.Received => "+",
-            TransactionType.Mixed => amount >= 0 ? "+" : "-",
+            TransactionType.Received => "",
+            TransactionType.Mixed => amount >= 0 ? "" : "-",
             _ => ""
         };
-        return $"{prefix} ₳{Math.Abs(amount):F2}";
+        return $"{prefix} ₳ {Math.Abs(amount):F2}";
     }
 
     protected string GetBorderColorClass(TransactionType type) => type switch
@@ -106,6 +123,9 @@ public partial class History
         TransactionCategory.Mint => "!bg-[var(--mud-palette-secondary-darken)]",
         _ => "!bg-[var(--mud-palette-secondary)]"
     };
+
+    protected static string TruncateTxId(string txId) =>
+        txId.Length > 12 ? $"{txId[..6]}...{txId[^6..]}" : txId;
 
     protected void HandleFilterClick()
     {
