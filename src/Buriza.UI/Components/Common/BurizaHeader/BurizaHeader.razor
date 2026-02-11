@@ -14,11 +14,15 @@
                 Class="!w-32.5"
             />
         </div>
-        <div class="flex items-center !gap-8">
-            <div>
+        <div class="flex items-center !gap-4">
+            <div class="flex items-center !gap-4">
                 <MudIconButton
                     Icon="@(AppStateService.IsDarkMode ? BurizaIcons.LightModeIcon : BurizaIcons.DarkModeIcon)"
                     OnClick="@ToggleTheme"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                />
+                <MudIconButton
+                    Icon="@BurizaIcons.NotificationIcon"
                     Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                 />
             </div>
