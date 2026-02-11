@@ -358,11 +358,11 @@
                                 @foreach (TransactionHistory transaction in dateGroup.Value)
                                 {
                                     <div class="@($"w-full bg-[var(--mud-palette-dark-darken)] !py-3 !px-3 md:!px-4 border-l-[2px]! md:cursor-default cursor-pointer {GetBorderColorClass(transaction.Type)}")" @onclick="() => HandleTransactionClick(transaction)">
-                                        <div class="grid items-center gap-4 grid-cols-[auto_1fr_1fr] sm:grid-cols-[auto_1fr_1fr_5rem] md:grid-cols-[auto_1fr_1fr_1fr_5rem] lg:grid-cols-[auto_1fr_1fr_1fr_5rem_1fr]">
+                                        <div class="max-[386px]:!gap-2 grid items-center gap-4 grid-cols-[auto_1fr_1fr] sm:grid-cols-[auto_1fr_1fr_5rem] md:grid-cols-[auto_1fr_1fr_1fr_5rem] lg:grid-cols-[auto_1fr_1fr_1fr_5rem_1fr]">
                                             @* Column 1: Transaction Hash with Copy *@
                                             <div class="w-max">
                                                 <div class="flex items-center !gap-2">
-                                                    <MudText Class="max-[430px]:!text-xs !text-sm !text-[var(--mud-palette-text-secondary)] truncate">
+                                                    <MudText Class="max-[386px]:!text-[10px] max-[430px]:!text-xs !text-sm !text-[var(--mud-palette-text-secondary)] truncate">
                                                         @transaction.TransactionId
                                                     </MudText>
                                                     <MudIconButton
@@ -371,7 +371,7 @@
                                                     />
                                                 </div>
                                                 <div class="lg:hidden">
-                                                    <MudText Class="!text-sm !text-[var(--mud-palette-text-secondary)]">
+                                                    <MudText Class="max-[386px]:!text-[10px] !text-sm !text-[var(--mud-palette-text-secondary)]">
                                                         @transaction.Timestamp.ToString("HH:mm")
                                                     </MudText>
                                                 </div>
@@ -385,12 +385,13 @@
                                             @* Column 3: Stacked Asset Images (max 4 + overflow indicator) *@
                                             <div class="flex items-center">
                                                 @{
-                                                    var displayedAssets = transaction.Assets.Take(4).ToList();
-                                                    var remainingCount = transaction.Assets.Count - 4;
+                                                    List<TransactionAsset> displayedAssets = transaction.Assets.Take(4).ToList();
+                                                    int remainingCount = transaction.Assets.Count - 4;
+                                                    int smallRemainingCount = transaction.Assets.Count - 2;
                                                 }
-                                                @foreach (var (asset, index) in displayedAssets.Select((a, i) => (a, i)))
+                                                @foreach ((TransactionAsset asset, int index) in displayedAssets.Select((a, i) => (a, i)))
                                                 {
-                                                    <div class="@($"w-[28px] h-[28px] sm:w-8 sm:h-8 rounded-full overflow-hidden border-2 border-[var(--mud-palette-drawer-background)] {(index > 0 ? "-ml-2!" : "")}")" style="z-index: @(displayedAssets.Count + 1 - index)">
+                                                    <div class="@($"w-[28px] h-[28px] sm:w-8 sm:h-8 rounded-full overflow-hidden border-2 border-[var(--mud-palette-drawer-background)] {(index > 0 ? "-ml-2!" : "")} {(index >= 2 ? "max-[386px]:!hidden" : "")}")" style="z-index: @(displayedAssets.Count + 1 - index)">
                                                         <MudImage
                                                             Alt="@asset.AssetName"
                                                             Src="@asset.AssetIcon"
@@ -400,9 +401,17 @@
                                                 }
                                                 @if (remainingCount > 0)
                                                 {
-                                                    <div class="w-[22px] h-[22px] sm:w-8 sm:h-8 rounded-full border-2 border-[var(--mud-palette-drawer-background)] -ml-2! bg-[var(--mud-palette-action-default)] flex items-center justify-center" style="z-index: 0">
+                                                    <div class="max-[386px]:!hidden w-[22px] h-[22px] sm:w-8 sm:h-8 rounded-full border-2 border-[var(--mud-palette-drawer-background)] -ml-2! bg-[var(--mud-palette-action-default)] flex items-center justify-center" style="z-index: 0">
                                                         <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)] !font-medium">
                                                             +@remainingCount
+                                                        </MudText>
+                                                    </div>
+                                                }
+                                                @if (smallRemainingCount > 0)
+                                                {
+                                                    <div class="hidden max-[386px]:!flex w-[22px] h-[22px] rounded-full border-2 border-[var(--mud-palette-drawer-background)] -ml-2! bg-[var(--mud-palette-action-default)] items-center justify-center" style="z-index: 0">
+                                                        <MudText Class="!text-xs !text-[var(--mud-palette-text-secondary)] !font-medium">
+                                                            +@smallRemainingCount
                                                         </MudText>
                                                     </div>
                                                 }
@@ -441,19 +450,8 @@
                 </div>
                 <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[var(--mud-palette-background)] to-transparent pointer-events-none rounded-b-[12px] md:from-[var(--mud-palette-drawer-background)]"></div>
                 </div>
-                <div class="max-md:hidden w-full flex items-center justify-between !px-6 !py-3">
-                    <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">
-                        Showing <span Class="w-[48px] h-[38px] rounded-[6px] inline-flex mx-1 !text-white items-center justify-center border border-[var(--mud-palette-overlay-light)]">@CurrentPage</span> of @TotalPages
-                    </MudText>
-                    <MudPagination
-                        Count="@TotalPages"
-                        @bind-Selected="@CurrentPage"
-                        Rectangular="true"
-                        Variant="Variant.Filled"
-                        Class="[&_.mud-pagination-item]:!bg-transparent [&_.mud-icon-button-label]:!text-[var(--mud-palette-dark-lighten)] [&_.mud-pagination-item]:!min-w-8 [&_.mud-pagination-item]:!h-8 [&_.mud-button-filled-default]:!bg-[var(--mud-palette-overlay-light)] [&_.mud-pagination-item]:!text-[var(--mud-palette-text-secondary)] [&_.mud-pagination-item.mud-selected]:!text-white gap-0! [&_.mud-button-root]:!mx-[2px] [&_.mud-button-root:disabled]:!opacity-30"
-                        BoundaryCount="1"
-                        MiddleCount="1"
-                    />
+                <div class="max-md:hidden !px-6">
+                    <BurizaPagination Count="@TotalPages" @bind-Selected="@CurrentPage" />
                 </div>
             }
             else

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 
-namespace Buriza.UI.Components.Common;
+namespace Buriza.UI.Components.Dialogs;
 
-public partial class BurizaDialog
+public partial class BurizaBaseDialog
 {
     [Parameter]
     public string Title { get; set; } = string.Empty;
