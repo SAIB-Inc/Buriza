@@ -6,5 +6,6 @@ namespace Buriza.Core.Models.Enums;
 public enum TransactionType
 {
     Sent,
-    Received
+    Received,
+    Mixed
 }
