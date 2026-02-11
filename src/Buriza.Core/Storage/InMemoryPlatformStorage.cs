@@ -2,7 +2,7 @@ using Buriza.Core.Interfaces.Storage;
 
 namespace Buriza.Core.Storage;
 
-public sealed class InMemoryPlatformStorage : IPlatformStorage
+public sealed class InMemoryPlatformStorage : IStorageProvider
 {
     private readonly Dictionary<string, string> _values = new(StringComparer.Ordinal);
 

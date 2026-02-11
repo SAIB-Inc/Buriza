@@ -19,6 +19,8 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
     private readonly NetworkType _networkType = network switch
     {
         BurizaNetworkType.Mainnet => NetworkType.Mainnet,
+        BurizaNetworkType.Preprod => NetworkType.Preprod,
+        BurizaNetworkType.Preview => NetworkType.Testnet,
         _ => NetworkType.Testnet
     };
 

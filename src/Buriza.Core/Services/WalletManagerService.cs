@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
+using Buriza.Core.Storage;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
@@ -14,13 +15,11 @@ using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 namespace Buriza.Core.Services;
 
 public class WalletManagerService(
-    BurizaStorageService storage,
-    IBurizaChainProviderFactory providerFactory,
-    IBurizaAppStateService appState) : IWalletManager, IDisposable
+    BurizaStorageBase storage,
+    IBurizaChainProviderFactory providerFactory) : IWalletManager, IDisposable
 {
-    private readonly BurizaStorageService _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+    private readonly BurizaStorageBase _storage = storage ?? throw new ArgumentNullException(nameof(storage));
     private readonly IBurizaChainProviderFactory _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
-    private readonly IBurizaAppStateService _appState = appState ?? throw new ArgumentNullException(nameof(appState));
     private bool _disposed;
 
     #region Wallet Lifecycle
@@ -75,8 +74,6 @@ public class WalletManagerService(
         {
             IKeyService keyService = _providerFactory.CreateKeyService(info);
             string receiveAddress = await keyService.DeriveAddressAsync(mnemonicBytes, info, 0, 0, false, ct);
-            _appState.CacheAddress(newId, info, 0, 0, false, receiveAddress);
-
             ChainAddressData chainData = new()
             {
                 Chain = info.Chain,
@@ -160,8 +157,6 @@ public class WalletManagerService(
         _ = await GetWalletOrThrowAsync(walletId, ct);
 
         // Clear session cache for this wallet
-        _appState.ClearWalletCache(walletId);
-
         // Update active wallet if deleting the active one
         Guid? activeId = await _storage.GetActiveWalletIdAsync(ct);
         if (activeId == walletId)
@@ -271,11 +266,7 @@ public class WalletManagerService(
 
         // If chain data exists, just repopulate cache if needed
         if (existingData != null)
-        {
-            if (!_appState.HasCachedAddresses(walletId, chainInfo, accountIndex))
-                _appState.CacheAddress(walletId, chainInfo, accountIndex, 0, false, existingData.ReceiveAddress);
             return;
-        }
 
         // Derive new addresses
         byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
@@ -355,8 +346,6 @@ public class WalletManagerService(
 
                     wallet.Accounts.Add(account);
                     discoveredAccounts.Add(account);
-                    _appState.CacheAddress(walletId, chainInfo, accountIndex, 0, false, address);
-
                     consecutiveEmpty = 0;
                 }
                 else
@@ -387,11 +376,7 @@ public class WalletManagerService(
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         ChainInfo chainInfo = GetChainInfo(wallet);
 
-        // Try cache first
-        string? cached = _appState.GetCachedAddress(walletId, chainInfo, accountIndex, 0, false);
-        if (cached != null) return cached;
-
-        // Otherwise get from stored wallet data
+        // Get from stored wallet data
         BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
         ChainAddressData chainData = account.GetChainData(chainInfo.Chain, chainInfo.Network)
             ?? throw new InvalidOperationException($"Account {accountIndex} has no data for chain {chainInfo.Chain} {chainInfo.Network}. Call UnlockAccountAsync first.");
@@ -523,48 +508,27 @@ public class WalletManagerService(
             HasCustomApiKey = !string.IsNullOrEmpty(normalizedApiKey),
             Name = name
         };
-        await _storage.SaveCustomProviderConfigAsync(config, ct);
-
-        // Save encrypted API key if provided
-        if (!string.IsNullOrEmpty(normalizedApiKey))
-            await _storage.SaveCustomApiKeyAsync(chainInfo, normalizedApiKey, password, ct);
-        else
-            await _storage.DeleteCustomApiKeyAsync(chainInfo, ct);
+        await _storage.SaveCustomProviderConfigAsync(config, normalizedApiKey, password, ct);
 
         // Cache in session for immediate use
-        _appState.SetChainConfig(chainInfo, new ServiceConfig(normalizedEndpoint, normalizedApiKey));
+        _providerFactory.SetChainConfig(chainInfo, new ServiceConfig(normalizedEndpoint, normalizedApiKey));
     }
 
     public async Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         await _storage.DeleteCustomProviderConfigAsync(chainInfo, ct);
-        _appState.ClearChainConfig(chainInfo);
+        _providerFactory.ClearChainConfig(chainInfo);
     }
 
     public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, string password, CancellationToken ct = default)
     {
-        CustomProviderConfig? config = await _storage.GetCustomProviderConfigAsync(chainInfo, ct);
-        if (config == null) return;
+        (CustomProviderConfig Config, string? ApiKey)? result =
+            await _storage.GetCustomProviderConfigWithApiKeyAsync(chainInfo, password, ct);
+        if (result is null) return;
 
+        CustomProviderConfig config = result.Value.Config;
         string? endpoint = string.IsNullOrWhiteSpace(config.Endpoint) ? null : config.Endpoint;
-        string? apiKey = null;
-        if (config.HasCustomApiKey)
-        {
-            byte[]? apiKeyBytes = await _storage.UnlockCustomApiKeyAsync(chainInfo, password, ct);
-            if (apiKeyBytes != null)
-            {
-                try
-                {
-                    apiKey = Encoding.UTF8.GetString(apiKeyBytes);
-                }
-                finally
-                {
-                    CryptographicOperations.ZeroMemory(apiKeyBytes);
-                }
-            }
-        }
-
-        _appState.SetChainConfig(chainInfo, new ServiceConfig(endpoint, apiKey));
+        _providerFactory.SetChainConfig(chainInfo, new ServiceConfig(endpoint, result.Value.ApiKey));
     }
 
     #endregion
@@ -611,8 +575,6 @@ public class WalletManagerService(
     {
         IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
         string receiveAddress = await keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
-        _appState.CacheAddress(wallet.Id, chainInfo, accountIndex, 0, false, receiveAddress);
-
         ChainAddressData chainData = new()
         {
             Chain = chainInfo.Chain,

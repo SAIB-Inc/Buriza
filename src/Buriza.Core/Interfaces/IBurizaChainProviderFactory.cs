@@ -1,5 +1,6 @@
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
 
 namespace Buriza.Core.Interfaces;
@@ -24,4 +25,10 @@ public interface IBurizaChainProviderFactory : IDisposable
 
     /// <summary>Validates connection to the specified endpoint.</summary>
     Task<bool> ValidateConnectionAsync(string endpoint, string? apiKey = null, CancellationToken ct = default);
+
+    /// <summary>Sets a session-scoped chain configuration (custom endpoint/apiKey).</summary>
+    void SetChainConfig(ChainInfo chainInfo, ServiceConfig config);
+
+    /// <summary>Clears a session-scoped chain configuration.</summary>
+    void ClearChainConfig(ChainInfo chainInfo);
 }

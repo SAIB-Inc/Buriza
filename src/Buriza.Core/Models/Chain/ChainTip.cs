@@ -5,16 +5,3 @@ public record ChainTip(
     string Hash,
     ulong Timestamp
 );
-
-public enum TipAction
-{
-    Apply,
-    Undo,
-    Reset
-}
-
-public record TipEvent(
-    TipAction Action,
-    ulong Slot,
-    string Hash
-);

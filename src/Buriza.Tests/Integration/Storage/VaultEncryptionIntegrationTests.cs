@@ -1,13 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
-using Buriza.Core.Interfaces.Storage;
-using Buriza.Core.Services;
 using Buriza.Tests.Mocks;
 
 namespace Buriza.Tests.Integration.Storage;
 
 /// <summary>
-/// Integration tests for VaultEncryption through BurizaStorageService.
+/// Integration tests for VaultEncryption through TestWalletStorageService.
 /// Tests the full roundtrip: create vault -> unlock -> verify -> change password.
 /// </summary>
 public class VaultEncryptionIntegrationTests
@@ -18,11 +16,11 @@ public class VaultEncryptionIntegrationTests
     private static readonly Guid TestWalletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
     private readonly InMemoryPlatformStorage _storage = new();
-    private readonly BurizaStorageService _walletStorage;
+    private readonly TestWalletStorageService _walletStorage;
 
     public VaultEncryptionIntegrationTests()
     {
-        _walletStorage = new BurizaStorageService(_storage, new InMemorySecureStorage(), new NullBiometricService());
+        _walletStorage = new TestWalletStorageService(_storage);
     }
 
     #region Create and Unlock Roundtrip
@@ -284,47 +282,4 @@ public class VaultEncryptionIntegrationTests
     }
 
     #endregion
-}
-
-/// <summary>
-/// In-memory implementation of IPlatformStorage for testing.
-/// </summary>
-public class InMemoryPlatformStorage : IPlatformStorage
-{
-    private readonly Dictionary<string, string> _data = [];
-
-    public Task<string?> GetAsync(string key, CancellationToken ct = default)
-    {
-        _data.TryGetValue(key, out string? value);
-        return Task.FromResult(value);
-    }
-
-    public Task SetAsync(string key, string value, CancellationToken ct = default)
-    {
-        _data[key] = value;
-        return Task.CompletedTask;
-    }
-
-    public Task RemoveAsync(string key, CancellationToken ct = default)
-    {
-        _data.Remove(key);
-        return Task.CompletedTask;
-    }
-
-    public Task<bool> ExistsAsync(string key, CancellationToken ct = default)
-    {
-        return Task.FromResult(_data.ContainsKey(key));
-    }
-
-    public Task<IReadOnlyList<string>> GetKeysAsync(string prefix, CancellationToken ct = default)
-    {
-        return Task.FromResult<IReadOnlyList<string>>(
-            [.. _data.Keys.Where(k => k.StartsWith(prefix))]);
-    }
-
-    public Task ClearAsync(CancellationToken ct = default)
-    {
-        _data.Clear();
-        return Task.CompletedTask;
-    }
 }

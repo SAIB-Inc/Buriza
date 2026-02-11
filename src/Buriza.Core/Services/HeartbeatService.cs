@@ -1,4 +1,5 @@
 using Buriza.Core.Interfaces.Chain;
+using Buriza.Core.Models;
 using Buriza.Core.Models.Chain;
 using Microsoft.Extensions.Logging;
 
@@ -132,12 +133,3 @@ public class HeartbeatService : IDisposable
         GC.SuppressFinalize(this);
     }
 }
-
-/// <summary>
-/// Event arguments for heartbeat errors.
-/// </summary>
-public record HeartbeatErrorEventArgs(
-    Exception Exception,
-    string Message,
-    int ConsecutiveFailures,
-    bool IsFatal = false);

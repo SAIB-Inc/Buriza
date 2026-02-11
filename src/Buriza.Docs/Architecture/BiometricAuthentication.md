@@ -68,7 +68,7 @@ public interface IBiometricService
 }
 ```
 
-Biometric enable/disable and PIN/password flows are handled in `BurizaStorageService`.
+Biometric enable/disable and PIN/password flows are handled in `BurizaAppStorageService` (MAUI).
 
 ## Platform Implementations
 
@@ -218,25 +218,33 @@ src/
         └── PlatformBiometricService.cs  # Platform selector
 ```
 
-Note: biometric and PIN flows are implemented in `BurizaStorageService` (Buriza.Core). No separate authentication service exists.
+Note: biometric and PIN flows are implemented in `BurizaAppStorageService` (Buriza.App). Web/Extension use `BurizaWebStorageService` (password + vault only).
 
 ## Service Registration
 
 ### MauiProgram.cs (MAUI - Full Auth Support)
 
 ```csharp
-builder.Services.AddSingleton<MauiPlatformStorage>();
-builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
-builder.Services.AddSingleton(new BurizaStorageOptions { Mode = StorageMode.DirectSecure });
-builder.Services.AddBurizaServices(ServiceLifetime.Singleton);
+builder.Services.AddSingleton(Preferences.Default);
+builder.Services.AddSingleton<PlatformBiometricService>();
+builder.Services.AddSingleton<BurizaAppStorageService>();
+builder.Services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaAppStorageService>());
+builder.Services.AddSingleton<AppStateService>();
+builder.Services.AddSingleton<ChainProviderSettings>();
+builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
+builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
 ```
 
 ### Web/Extension Program.cs (Password Only)
 
 ```csharp
-builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
-builder.Services.AddSingleton<IBiometricService, NullBiometricService>();
-builder.Services.AddBurizaServices(ServiceLifetime.Scoped);
+builder.Services.AddScoped<BurizaWebStorageService>();
+builder.Services.AddScoped<BurizaWebStorageService>();
+builder.Services.AddScoped<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaWebStorageService>());
+builder.Services.AddSingleton<AppStateService>();
+builder.Services.AddSingleton<ChainProviderSettings>();
+builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
+builder.Services.AddScoped<IWalletManager, WalletManagerService>();
 ```
 
 ## Blazor Component Integration
@@ -245,8 +253,8 @@ builder.Services.AddBurizaServices(ServiceLifetime.Scoped);
 
 Blazor components in `Buriza.UI` are shared across all platforms. To handle platform differences:
 
-1. **MAUI**: Inject `BurizaStorageService` for biometric/PIN support
-2. **Web/Extension**: Use `BurizaStorageService` for password-only auth
+1. **MAUI**: Inject `BurizaAppStorageService` for biometric/PIN support
+2. **Web/Extension**: Inject `BurizaWebStorageService` for password-only auth
 
 ### Pattern 1: Optional Service Injection
 
@@ -254,7 +262,7 @@ Blazor components in `Buriza.UI` are shared across all platforms. To handle plat
 // UnlockPage.razor.cs
 public partial class UnlockPage
 {
-    [Inject] public required BurizaStorageService StorageService { get; set; }
+    [Inject] public required BurizaStorageBase StorageService { get; set; }
 
     protected bool HasBiometricSupport { get; set; }
     protected bool IsBiometricAvailable { get; set; }

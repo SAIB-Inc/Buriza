@@ -1,21 +1,11 @@
 using System.Net.Http.Json;
+using Buriza.Core.Interfaces.DataServices;
+using Buriza.Core.Models.DataServices;
 using Buriza.Core.Models.Enums;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace Buriza.Data.Services.DataServices;
-
-public interface ITokenMetadataService
-{
-    Task<TokenMetadata?> GetTokenMetadataAsync(string subject, CancellationToken ct = default);
-    Task<BatchTokenMetadataResponse?> GetBatchTokenMetadataAsync(
-        List<string> subjects,
-        int? limit = null,
-        string? searchText = null,
-        string? policyId = null,
-        CancellationToken ct = default);
-    Task<List<TokenMetadata>> GetWalletTokensAsync(List<string> subjects, CancellationToken ct = default);
-}
 
 /// <summary>
 /// Service for fetching token metadata from COMP or custom endpoint.
@@ -112,37 +102,4 @@ public class TokenMetadataService(
         if (!string.IsNullOrEmpty(apiKey))
             request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
     }
-}
-
-public class TokenMetadataServiceOptions
-{
-    public const string SectionName = "TokenMetadataService";
-
-    public int CacheDurationMinutes { get; set; } = 60;
-    public string BaseUrl { get; set; } = string.Empty;
-    public string ApiKey { get; set; } = string.Empty;
-}
-
-public class TokenMetadata
-{
-    public string Subject { get; set; } = string.Empty;
-    public string PolicyId { get; set; } = string.Empty;
-    public string? Name { get; set; }
-    public string? Ticker { get; set; }
-    public string? Logo { get; set; }
-    public string? Description { get; set; }
-    public int Decimals { get; set; }
-    public long? Quantity { get; set; }
-    public string? AssetName { get; set; }
-    public string? TokenType { get; set; }
-    public string? Policy { get; set; }
-    public string? Url { get; set; }
-    public bool HasOnChainData { get; set; }
-    public bool HasRegistryData { get; set; }
-}
-
-public class BatchTokenMetadataResponse
-{
-    public int Total { get; set; }
-    public List<TokenMetadata> Data { get; set; } = [];
 }

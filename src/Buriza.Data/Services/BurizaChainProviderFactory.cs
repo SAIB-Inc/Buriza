@@ -11,20 +11,18 @@ namespace Buriza.Data.Services;
 
 /// <summary>
 /// Factory for creating chain providers and key services.
-/// Reads custom config from IBurizaAppStateService, falls back to ChainProviderSettings.
+/// Uses session-scoped overrides, falls back to ChainProviderSettings.
 /// </summary>
 public class BurizaChainProviderFactory(
-    ChainProviderSettings settings,
-    IBurizaAppStateService? appState = null) : IBurizaChainProviderFactory
+    ChainProviderSettings settings) : IBurizaChainProviderFactory
 {
     private readonly ChainProviderSettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-    private readonly IBurizaAppStateService? _appState = appState;
+    private readonly Dictionary<string, ServiceConfig> _sessionConfigs = [];
     private bool _disposed;
 
     public IBurizaChainProvider CreateProvider(ChainInfo chainInfo)
     {
-        // Try custom config from app state first, then fall back to settings
-        ServiceConfig? customConfig = _appState?.GetChainConfig(chainInfo);
+        ServiceConfig? customConfig = GetSessionConfig(chainInfo);
         string? endpoint = Normalize(customConfig?.Endpoint) ?? GetDefaultEndpoint(chainInfo);
         string? apiKey = Normalize(customConfig?.ApiKey) ?? GetDefaultApiKey(chainInfo);
 
@@ -98,6 +96,22 @@ public class BurizaChainProviderFactory(
 
     private static string? Normalize(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value;
+
+    public void SetChainConfig(ChainInfo chainInfo, ServiceConfig config)
+    {
+        _sessionConfigs[GetConfigKey(chainInfo)] = config;
+    }
+
+    public void ClearChainConfig(ChainInfo chainInfo)
+    {
+        _sessionConfigs.Remove(GetConfigKey(chainInfo));
+    }
+
+    private ServiceConfig? GetSessionConfig(ChainInfo chainInfo)
+        => _sessionConfigs.TryGetValue(GetConfigKey(chainInfo), out ServiceConfig? config) ? config : null;
+
+    private static string GetConfigKey(ChainInfo chainInfo)
+        => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
 
     public void Dispose()
     {

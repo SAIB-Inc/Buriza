@@ -6,7 +6,7 @@ using Buriza.Core.Models.Enums;
 using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 using Buriza.Data.Services;
-using Buriza.Data.Services.DataServices;
+using Buriza.Core.Interfaces.DataServices;
 
 namespace Buriza.UI.Services;
 

@@ -5,7 +5,6 @@ using Buriza.Core.Models.Enums;
 using Buriza.Data.Models;
 using Buriza.Data.Providers;
 using Buriza.Data.Services;
-using Buriza.Tests.Mocks;
 
 namespace Buriza.Tests.Unit.Services;
 
@@ -24,7 +23,7 @@ public class BurizaChainProviderFactoryTests
             }
         };
 
-        BurizaChainProviderFactory factory = new(settings, new MockAppStateService());
+        BurizaChainProviderFactory factory = new(settings);
 
         using IBurizaChainProvider provider = factory.CreateProvider(ChainRegistry.CardanoPreprod);
 
@@ -43,10 +42,8 @@ public class BurizaChainProviderFactoryTests
             }
         };
 
-        MockAppStateService appState = new();
-        appState.SetChainConfig(ChainRegistry.CardanoMainnet, new ServiceConfig(string.Empty, null));
-
-        BurizaChainProviderFactory factory = new(settings, appState);
+        BurizaChainProviderFactory factory = new(settings);
+        factory.SetChainConfig(ChainRegistry.CardanoMainnet, new ServiceConfig(string.Empty, null));
 
         using IBurizaChainProvider provider = factory.CreateProvider(ChainRegistry.CardanoMainnet);
         Assert.NotNull(provider);
@@ -60,10 +57,8 @@ public class BurizaChainProviderFactoryTests
             Cardano = new CardanoSettings()
         };
 
-        MockAppStateService appState = new();
-        appState.SetChainConfig(ChainRegistry.CardanoMainnet, new ServiceConfig(string.Empty, null));
-
-        BurizaChainProviderFactory factory = new(settings, appState);
+        BurizaChainProviderFactory factory = new(settings);
+        factory.SetChainConfig(ChainRegistry.CardanoMainnet, new ServiceConfig(string.Empty, null));
 
         Assert.Throws<InvalidOperationException>(() => factory.CreateProvider(ChainRegistry.CardanoMainnet));
     }

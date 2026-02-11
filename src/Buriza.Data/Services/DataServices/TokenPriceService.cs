@@ -1,17 +1,11 @@
 using System.Net.Http.Json;
+using Buriza.Core.Interfaces.DataServices;
+using Buriza.Core.Models.DataServices;
 using Buriza.Core.Models.Enums;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace Buriza.Data.Services.DataServices;
-
-public interface ITokenPriceService
-{
-    Task<Dictionary<string, decimal>?> GetTokenPricesAsync(List<string> units, CancellationToken ct = default);
-    Task<decimal?> GetTokenPriceAsync(string unit, CancellationToken ct = default);
-    Task<TokenPriceChange?> GetPriceChangeAsync(string unit, string? timeframes = null, CancellationToken ct = default);
-    Task<decimal?> GetAdaPriceAsync(string quote = "USD", CancellationToken ct = default);
-}
 
 /// <summary>
 /// Service for fetching token prices from TapTools or custom endpoint.
@@ -121,31 +115,4 @@ public class TokenPriceService(
         if (!string.IsNullOrEmpty(apiKey))
             request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
     }
-}
-
-public class TokenPriceServiceOptions
-{
-    public const string SectionName = "TokenPriceService";
-
-    public int CacheDurationMinutes { get; set; } = 1;
-    public string BaseUrl { get; set; } = "https://openapi.taptools.io";
-    public string ApiKey { get; set; } = string.Empty;
-}
-
-public class TokenPriceChange
-{
-    public decimal? Chg5m { get; set; }
-    public decimal? Chg1h { get; set; }
-    public decimal? Chg4h { get; set; }
-    public decimal? Chg6h { get; set; }
-    public decimal? Chg24h { get; set; }
-    public decimal? Chg7d { get; set; }
-    public decimal? Chg30d { get; set; }
-    public decimal? Chg60d { get; set; }
-    public decimal? Chg90d { get; set; }
-}
-
-internal class QuoteResponse
-{
-    public decimal Price { get; set; }
 }

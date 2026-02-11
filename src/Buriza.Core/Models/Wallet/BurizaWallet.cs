@@ -3,7 +3,6 @@ using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
 using Chrysalis.Cbor.Extensions.Cardano.Core.Transaction;
-using Chrysalis.Tx.Providers;
 using Chrysalis.Cbor.Serialization;
 using Chrysalis.Cbor.Types.Cardano.Core.Common;
 using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
@@ -11,10 +10,8 @@ using Chrysalis.Tx.Builders;
 using Chrysalis.Tx.Extensions;
 using Chrysalis.Tx.Models;
 using Chrysalis.Wallet.Models.Keys;
-using Chrysalis.Cbor.Types.Cardano.Core.Protocol;
 using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using ChrysalisTransaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
-using ChrysalisTransactionOutput = Chrysalis.Cbor.Types.Cardano.Core.Transaction.TransactionOutput;
 using Chrysalis.Network.Cbor.LocalStateQuery;
 
 namespace Buriza.Core.Models.Wallet;
@@ -274,58 +271,4 @@ public class BurizaWallet : IWallet
 
     private IBurizaChainProvider EnsureProvider() =>
         Provider ?? throw new InvalidOperationException("Wallet is not connected to a provider. Use WalletManager to load the wallet.");
-}
-
-/// <summary>
-/// Account within an HD wallet (BIP-44 account level).
-/// m / purpose' / coin_type' / account' / ...
-/// </summary>
-public class BurizaWalletAccount
-{
-    /// <summary>BIP-44 account index (hardened).</summary>
-    public required int Index { get; init; }
-
-    /// <summary>Account name (e.g., "Savings", "Trading").</summary>
-    public required string Name { get; set; }
-
-    /// <summary>Chain-specific address data, keyed by ChainType and Network.</summary>
-    public Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>> ChainData { get; set; } = [];
-
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-
-    public ChainAddressData? GetChainData(ChainType chain, NetworkType network)
-    {
-        if (!ChainData.TryGetValue(chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
-            return null;
-        return perNetwork.TryGetValue(network, out ChainAddressData? data) ? data : null;
-    }
-}
-
-/// <summary>
-/// Chain-specific address data for an account.
-/// Stores only the primary receive address. Change addresses derived on-demand during tx build.
-/// </summary>
-public class ChainAddressData
-{
-    public required ChainType Chain { get; init; }
-    public required NetworkType Network { get; init; }
-
-    /// <summary>Primary receive address (index 0, role 0).</summary>
-    public required string ReceiveAddress { get; set; }
-
-    /// <summary>Staking/reward address (role 2, index 0). Null if not yet derived.</summary>
-    public string? StakingAddress { get; set; }
-
-    /// <summary>Last time this chain data was synced with the network.</summary>
-    public DateTime? LastSyncedAt { get; set; }
-}
-
-/// <summary>
-/// Global wallet profile for customization.
-/// </summary>
-public class WalletProfile
-{
-    public required string Name { get; set; }
-    public string? Label { get; set; }
-    public string? Avatar { get; set; }
 }

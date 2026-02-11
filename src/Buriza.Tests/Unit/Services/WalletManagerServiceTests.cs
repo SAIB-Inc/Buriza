@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
@@ -21,8 +20,7 @@ namespace Buriza.Tests.Unit.Services;
 public class WalletManagerServiceTests : IDisposable
 {
     private readonly InMemoryPlatformStorage _platformStorage;
-    private readonly BurizaStorageService _storage;
-    private readonly MockAppStateService _appState;
+    private readonly TestWalletStorageService _storage;
     private readonly BurizaChainProviderFactory _providerFactory;
     private readonly WalletManagerService _walletManager;
 
@@ -32,8 +30,7 @@ public class WalletManagerServiceTests : IDisposable
     public WalletManagerServiceTests()
     {
         _platformStorage = new InMemoryPlatformStorage();
-        _storage = new BurizaStorageService(_platformStorage, new InMemorySecureStorage(), new NullBiometricService());
-        _appState = new MockAppStateService();
+        _storage = new TestWalletStorageService(_platformStorage);
         ChainProviderSettings settings = new()
         {
             Cardano = new CardanoSettings
@@ -46,8 +43,8 @@ public class WalletManagerServiceTests : IDisposable
                 PreviewApiKey = "test-preview-key"
             }
         };
-        _providerFactory = new BurizaChainProviderFactory(settings, _appState);
-        _walletManager = new WalletManagerService(_storage, _providerFactory, _appState);
+        _providerFactory = new BurizaChainProviderFactory(settings);
+        _walletManager = new WalletManagerService(_storage, _providerFactory);
     }
 
     public void Dispose()
@@ -101,18 +98,6 @@ public class WalletManagerServiceTests : IDisposable
         Assert.False(string.IsNullOrEmpty(mainnetData.ReceiveAddress));
         Assert.False(string.IsNullOrEmpty(previewData.ReceiveAddress));
         Assert.False(string.IsNullOrEmpty(preprodData.ReceiveAddress));
-    }
-
-    [Fact]
-    public async Task CreateFromMnemonicAsync_CachesAddressesInSession()
-    {
-        // Act
-        BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
-
-        // Assert
-        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
-        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoPreview, 0));
-        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoPreprod, 0));
     }
 
     [Fact]
@@ -441,20 +426,6 @@ public class WalletManagerServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteAsync_ClearsSessionCache()
-    {
-        // Arrange
-        BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync("Test Wallet", TestMnemonic, TestPassword);
-        Assert.True(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
-
-        // Act
-        await _walletManager.DeleteAsync(wallet.Id);
-
-        // Assert
-        Assert.False(_appState.HasCachedAddresses(wallet.Id, ChainRegistryData.CardanoMainnet, 0));
-    }
-
-    [Fact]
     public async Task DeleteAsync_UpdatesActiveWallet()
     {
         // Arrange
@@ -553,23 +524,6 @@ public class WalletManagerServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SetCustomProviderConfigAsync_CachesInSession()
-    {
-        // Act
-        await _walletManager.SetCustomProviderConfigAsync(
-            ChainRegistryData.CardanoMainnet,
-            "https://custom.com",
-            "custom-key",
-            TestPassword);
-
-        // Assert
-        ServiceConfig? cached = _appState.GetChainConfig(ChainRegistryData.CardanoMainnet);
-        Assert.NotNull(cached);
-        Assert.Equal("https://custom.com", cached.Endpoint);
-        Assert.Equal("custom-key", cached.ApiKey);
-    }
-
-    [Fact]
     public async Task SetCustomProviderConfigAsync_WithInvalidUrl_ThrowsArgumentException()
     {
         // Act & Assert
@@ -623,7 +577,11 @@ public class WalletManagerServiceTests : IDisposable
 
         Assert.NotNull(config);
         Assert.False(config.HasCustomApiKey);
-        Assert.Null(_appState.GetChainConfig(ChainRegistryData.CardanoMainnet)?.ApiKey);
+
+        (CustomProviderConfig Config, string? ApiKey)? result =
+            await _storage.GetCustomProviderConfigWithApiKeyAsync(ChainRegistryData.CardanoMainnet, TestPassword);
+        Assert.NotNull(result);
+        Assert.Null(result?.ApiKey);
     }
 
     [Fact]
@@ -643,56 +601,6 @@ public class WalletManagerServiceTests : IDisposable
         CustomProviderConfig? config = await _walletManager.GetCustomProviderConfigAsync(
             ChainRegistryData.CardanoMainnet);
         Assert.Null(config);
-    }
-
-    [Fact]
-    public async Task ClearCustomProviderConfigAsync_ClearsSession()
-    {
-        // Arrange
-        await _walletManager.SetCustomProviderConfigAsync(
-            ChainRegistryData.CardanoMainnet,
-            "https://custom.com",
-            "custom-key",
-            TestPassword);
-
-        // Act
-        await _walletManager.ClearCustomProviderConfigAsync(ChainRegistryData.CardanoMainnet);
-
-        // Assert
-        Assert.Null(_appState.GetChainConfig(ChainRegistryData.CardanoMainnet));
-    }
-
-    [Fact]
-    public async Task LoadCustomProviderConfigAsync_LoadsConfigIntoSession()
-    {
-        // Arrange - Save config then clear session
-        await _walletManager.SetCustomProviderConfigAsync(
-            ChainRegistryData.CardanoMainnet,
-            "https://custom.com",
-            "custom-key",
-            TestPassword);
-
-        _appState.ClearCache();
-        Assert.Null(_appState.GetChainConfig(ChainRegistryData.CardanoMainnet));
-
-        // Act
-        await _walletManager.LoadCustomProviderConfigAsync(ChainRegistryData.CardanoMainnet, TestPassword);
-
-        // Assert
-        ServiceConfig? cached = _appState.GetChainConfig(ChainRegistryData.CardanoMainnet);
-        Assert.NotNull(cached);
-        Assert.Equal("https://custom.com", cached.Endpoint);
-        Assert.Equal("custom-key", cached.ApiKey);
-    }
-
-    [Fact]
-    public async Task LoadCustomProviderConfigAsync_WithNoConfig_DoesNothing()
-    {
-        // Act - Should not throw
-        await _walletManager.LoadCustomProviderConfigAsync(ChainRegistryData.CardanoMainnet, TestPassword);
-
-        // Assert
-        Assert.Null(_appState.GetChainConfig(ChainRegistryData.CardanoMainnet));
     }
 
     #endregion

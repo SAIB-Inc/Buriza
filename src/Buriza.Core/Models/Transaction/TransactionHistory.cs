@@ -13,10 +13,3 @@ public record TransactionHistory(
     decimal TransactionFeeAda,
     string? ExpiryInfo = "No limit"
 );
-
-public record TransactionAsset(
-    string AssetIcon,
-    string AssetName,
-    decimal Amount,
-    decimal UsdValue
-);

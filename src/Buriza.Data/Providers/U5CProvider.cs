@@ -34,7 +34,7 @@ public class U5CProvider : ICardanoDataProvider, IDisposable
 {
     private readonly GrpcChannel _channel;
     private readonly UtxorpcQuery.QueryService.QueryServiceClient _queryClient;
-    private readonly UtxorpcSync.SyncService.SyncServiceClient _syncClient;
+    private readonly SyncService.SyncServiceClient _syncClient;
     private readonly SubmitService.SubmitServiceClient _submitClient;
     private readonly GrpcMetadata _headers;
     private bool _disposed;
@@ -49,7 +49,7 @@ public class U5CProvider : ICardanoDataProvider, IDisposable
         NetworkType = networkType;
         _channel = GrpcChannel.ForAddress(endpoint);
         _queryClient = new UtxorpcQuery.QueryService.QueryServiceClient(_channel);
-        _syncClient = new UtxorpcSync.SyncService.SyncServiceClient(_channel);
+        _syncClient = new SyncService.SyncServiceClient(_channel);
         _submitClient = new SubmitService.SubmitServiceClient(_channel);
         _headers = BuildHeaders(apiKey);
     }

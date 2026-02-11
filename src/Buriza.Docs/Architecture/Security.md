@@ -79,24 +79,22 @@ Binary format (24 bytes):
 
 ---
 
-## Storage Modes
+## Storage Behavior (by platform)
 
-Buriza supports two storage modes via `BurizaStorageOptions.Mode`:
+### Web / Extension / CLI (vault encryption)
 
-### 1) VaultEncryption (Web / Extension / CLI)
-
-- Seed is **encrypted** (Argon2id + AES-GCM) and stored in `IPlatformStorage`.
+- Seed is **encrypted** (Argon2id + AES-GCM) and stored via `IStorageProvider`.
 - Password is required to decrypt the vault.
-- PIN / biometric can encrypt the password for convenience.
+- PIN/biometric not supported on web/extension.
 - No OS secure storage required.
 
-### 2) DirectSecure (MAUI / Desktop)
+### MAUI / Desktop (secure storage)
 
-- Seed is stored **directly** in `IPlatformSecureStorage` (Keychain/Keystore/etc.).
+- Seed is stored **directly** in SecureStorage (Keychain/Keystore/etc.) via `BurizaAppStorageService`.
 - Password verifier stored as `SecretVerifier` in secure storage.
 - PIN/biometric are convenience unlock methods that protect the password.
 
-**Note:** DirectSecure does **not** double-encrypt the seed; it relies on OS secure storage for confidentiality. Vault encryption is bypassed in this mode.
+**Note:** MAUI does **not** double-encrypt the seed; it relies on OS secure storage for confidentiality. Vault encryption is used for PIN/biometric flows.
 
 ---
 
@@ -202,4 +200,3 @@ Current limitations in the Cardano library:
 - Keep provider URLs trusted and pinned for production.
 - Avoid logging mnemonic or decrypted seed material.
 - Ensure biometric APIs are configured with the correct entitlements on Apple platforms.
-

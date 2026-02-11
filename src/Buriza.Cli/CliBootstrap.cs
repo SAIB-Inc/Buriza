@@ -1,10 +1,6 @@
 using Buriza.Cli.Services;
 using Buriza.Core.Interfaces;
-using Buriza.Core.Interfaces.Security;
-using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Interfaces.Wallet;
-using Buriza.Core.Models.Config;
-using Buriza.Core.Models.Enums;
 using Buriza.Core.Services;
 using Buriza.Core.Storage;
 using Buriza.Data.Models;
@@ -26,12 +22,8 @@ public static class CliBootstrap
             .AddEnvironmentVariables()
             .Build();
 
-        services.AddSingleton<IPlatformStorage, InMemoryPlatformStorage>();
-        services.AddSingleton<IPlatformSecureStorage, NullPlatformSecureStorage>();
-        services.AddSingleton<IBiometricService, NullBiometricService>();
-
-        services.AddSingleton(new BurizaStorageOptions { Mode = StorageMode.VaultEncryption });
-        services.AddSingleton<IBurizaAppStateService, CliAppStateService>();
+        services.AddSingleton<BurizaCliStorageService>();
+        services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaCliStorageService>());
 
         ChainProviderSettings settings = config
             .GetSection("ChainProviderSettings")
@@ -39,7 +31,6 @@ public static class CliBootstrap
         services.AddSingleton(settings);
 
         services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-        services.AddSingleton<BurizaStorageService>();
         services.AddSingleton<IWalletManager, WalletManagerService>();
 
         return services.BuildServiceProvider();

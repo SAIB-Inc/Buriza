@@ -1,6 +1,6 @@
 using Buriza.Core.Models.Enums;
 
-namespace Buriza.Data.Services.DataServices;
+namespace Buriza.Core.Interfaces.DataServices;
 
 /// <summary>
 /// Provides session-based custom endpoint and API key overrides for data services.

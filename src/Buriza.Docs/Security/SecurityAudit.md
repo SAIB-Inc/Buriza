@@ -6,6 +6,10 @@
 
 ---
 
+> **Note (2026-02-11):** This audit was written against the legacy `BurizaStorageService`/`IPlatformStorage` architecture.
+> The current code uses `BurizaStorageBase` with platform-specific implementations (`BurizaAppStorageService`,
+> `BurizaWebStorageService`, `BurizaCliStorageService`). Findings below may require re-validation against the new layout.
+
 ## Executive Summary
 
 Buriza.Core implements a cryptocurrency wallet with Argon2id + AES-256-GCM vault encryption, BIP-39/BIP-44/CIP-1852 HD key derivation, and multi-auth routing (password/PIN/biometric). The cryptographic foundations are solid and follow industry standards (RFC 9106, Bitwarden/KeePass patterns). Memory hygiene for secret material is generally good with consistent `CryptographicOperations.ZeroMemory` usage.
@@ -161,7 +165,7 @@ public Task<string?> GetSecureAsync(string key, CancellationToken ct = default)
     => _storage.GetAsync(key, ct);
 ```
 
-**Issue:** `ISecureStorageProvider` is implemented by delegating directly to `IPlatformStorage` — the same backend as `IStorageProvider`. On the web (BrowserPlatformStorage via JS interop), this means encrypted vaults sit in `localStorage` which is accessible to any JavaScript in the same origin.
+**Issue:** `ISecureStorageProvider` is implemented by delegating directly to `IPlatformStorage` — the same backend as `IStorageProvider`. On the web (BurizaWebStorageService via JS interop), this means encrypted vaults sit in `localStorage` which is accessible to any JavaScript in the same origin.
 
 **Impact:** XSS in the Blazor app or any injected script can read encrypted vault blobs from localStorage. While the vaults are encrypted, the attacker can exfiltrate them for offline brute-force. On MAUI, `MauiPlatformStorage` should ideally use platform secure storage (Keychain/Keystore) for vault data, but the current abstraction doesn't distinguish.
 
@@ -181,7 +185,7 @@ verifier stored in secure storage. This means:
 
 ---
 
-### H-5: `SaveCustomApiKeyAsync` Uses `Guid.Empty` as Wallet ID in AAD
+### H-5: API key vault metadata handling
 
 **File:** `BurizaStorageService.cs:387`
 ```csharp
@@ -204,7 +208,7 @@ EncryptedVault vault = VaultEncryption.Encrypt(Guid.Empty, apiKeyBytes, password
 // Missing: VaultPurpose.ApiKey parameter
 ```
 
-**Issue:** `SaveCustomApiKeyAsync` calls `VaultEncryption.Encrypt` without specifying `VaultPurpose.ApiKey`. The default is `VaultPurpose.Mnemonic`. This means the API key vault's AAD contains `purpose = Mnemonic` instead of `purpose = ApiKey`.
+**Issue:** API key vaults must always be created with `VaultPurpose.ApiKey` and include the correct wallet/chain metadata in AAD. If not, encrypted API keys can be mis-typed or swapped across contexts.
 
 **Contrast with `EnablePinAsync`** (line 315) which correctly passes `VaultPurpose.PinProtectedPassword`.
 

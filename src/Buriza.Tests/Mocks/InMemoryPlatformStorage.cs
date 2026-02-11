@@ -3,9 +3,9 @@ using Buriza.Core.Interfaces.Storage;
 namespace Buriza.Tests.Mocks;
 
 /// <summary>
-/// In-memory implementation of IPlatformStorage for testing.
+/// In-memory implementation of IStorageProvider for testing.
 /// </summary>
-public class InMemoryPlatformStorage : IPlatformStorage
+public class InMemoryPlatformStorage : IStorageProvider
 {
     private readonly Dictionary<string, string> _data = [];
 
@@ -35,7 +35,7 @@ public class InMemoryPlatformStorage : IPlatformStorage
     public Task<IReadOnlyList<string>> GetKeysAsync(string prefix, CancellationToken ct = default)
     {
         return Task.FromResult<IReadOnlyList<string>>(
-            [.. _data.Keys.Where(k => k.StartsWith(prefix))]);
+            [.. _data.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal))]);
     }
 
     public Task ClearAsync(CancellationToken ct = default)

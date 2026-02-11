@@ -4,7 +4,6 @@ using Buriza.Core.Models.Transaction;
 using Chrysalis.Network.Cbor.LocalStateQuery;
 using Chrysalis.Tx.Models;
 using Chrysalis.Tx.Models.Cbor;
-using Chrysalis.Tx.Providers;
 using CborMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 using BurizaNetworkType = Buriza.Core.Models.Enums.NetworkType;
@@ -89,6 +88,12 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
     }
 
     private static ChrysalisNetworkType MapNetworkType(BurizaNetworkType networkType)
-        => networkType == BurizaNetworkType.Mainnet ? ChrysalisNetworkType.Mainnet : ChrysalisNetworkType.Testnet;
+        => networkType switch
+        {
+            BurizaNetworkType.Mainnet => ChrysalisNetworkType.Mainnet,
+            BurizaNetworkType.Preprod => ChrysalisNetworkType.Testnet,
+            BurizaNetworkType.Preview => ChrysalisNetworkType.Testnet,
+            _ => ChrysalisNetworkType.Testnet
+        };
 }
 

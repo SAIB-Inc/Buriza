@@ -14,7 +14,7 @@ Buriza uses interface-based abstraction for multi-chain support. Current impleme
 - **Chrysalis.Tx** for transaction building/signing
 
 Wallet lifecycle and sensitive operations are centralized in `IWalletManager` (implemented by `WalletManagerService`).
-Storage, authentication, and PIN/biometric flows live in `BurizaStorageService`.
+Storage, authentication, and PIN/biometric flows live behind `BurizaStorageBase` (platform implementations in App/Web/CLI).
 
 ### Primary Responsibilities
 
@@ -24,7 +24,7 @@ Storage, authentication, and PIN/biometric flows live in `BurizaStorageService`.
 - Chain lifecycle (set active chain / network)
 - Sensitive operations (sign, export mnemonic)
 
-**BurizaStorageService**
+**BurizaStorageBase**
 - Seed vault encryption / decryption
 - Auth type (password / PIN / biometric)
 - PIN + biometric enable/disable
@@ -74,49 +74,38 @@ public interface IWalletManager
 }
 ```
 
-### BurizaStorageService (auth + storage)
+### BurizaStorageBase (auth + storage)
 
-`BurizaStorageService` owns:
+`BurizaStorageBase` owns:
 - Vault encryption (Argon2id + AES-256-GCM)
 - PIN / biometric enablement
 - Lockout policy
 - Auth type management
 - Wallet metadata persistence
 
-Storage is routed by `BurizaStorageOptions.Mode`:
-- **DirectSecure** (MAUI/Desktop): seed in `IPlatformSecureStorage`
-- **VaultEncryption** (Web/Extension/CLI): seed encrypted in `IPlatformStorage`
-
-### IBurizaAppStateService (cache)
-
-`IBurizaAppStateService` caches:
-- Derived addresses (per wallet/account/chain/network)
-- Decrypted provider configs (endpoint/API key) for runtime use
-
-This cache is **session-only**, not persisted.
+Platform behavior:
+- **MAUI**: seed stored in SecureStorage; PIN/biometric supported.
+- **Web/Extension**: vault encryption only (no secure storage).
+- **CLI**: vault encryption only (in-memory storage).
 
 ## File Structure (current)
 
 ```
 src/Buriza.Core/
 ├── Interfaces/
-│   ├── IBurizaAppStateService.cs
 │   ├── IBurizaChainProviderFactory.cs
 │   ├── Security/
 │   │   └── IBiometricService.cs
 │   ├── Storage/
-│   │   ├── IPlatformStorage.cs
-│   │   ├── IPlatformSecureStorage.cs
 │   │   ├── IStorageProvider.cs
-│   │   └── ISecureStorageProvider.cs
+│   │   └── BurizaStorageBase.cs
 │   └── Wallet/
 │       ├── IWallet.cs
 │       └── IWalletManager.cs
 ├── Services/
-│   ├── BurizaStorageService.cs
 │   ├── WalletManagerService.cs
 │   ├── HeartbeatService.cs
-│   └── NullPlatformSecureStorage.cs
+│   └── NullBiometricService.cs
 ├── Crypto/
 │   ├── VaultEncryption.cs
 │   └── KeyDerivationOptions.cs
@@ -147,10 +136,10 @@ src/Buriza.Core/
 1. `IWalletManager.CreateFromMnemonicAsync` validates mnemonic
 2. Derives receive address for active chain + all Cardano networks
 3. Stores wallet metadata
-4. Creates encrypted vault via `BurizaStorageService`
+4. Creates encrypted vault via `BurizaStorageBase`
 
 **Unlock**
-1. `BurizaStorageService.UnlockVaultAsync` uses auth type
+1. `BurizaStorageBase.UnlockVaultAsync` uses auth type
 2. Password / PIN / biometric returns mnemonic bytes
 3. Callers must zero the bytes after use
 
@@ -161,7 +150,7 @@ src/Buriza.Core/
 2. User confirms they saved the mnemonic
 3. UI calls `CreateFromMnemonicAsync(name, mnemonic, password)`
 4. `WalletManagerService` derives receive address for all Cardano networks (Mainnet/Preprod/Preview)
-5. `BurizaStorageService.CreateVaultAsync` persists vault (DirectSecure or VaultEncryption)
+5. `BurizaStorageBase.CreateVaultAsync` persists vault
 6. Wallet metadata is saved and set active
 
 #### Import Wallet (Password)
@@ -169,14 +158,14 @@ Same as create, except mnemonic is user-supplied.
 
 #### Enable PIN
 1. User supplies password + PIN
-2. `BurizaStorageService.EnablePinAsync` verifies password
+2. `BurizaStorageBase.EnablePinAsync` verifies password
 3. Stores PIN verifier in secure storage
 4. Stores encrypted password (VaultEncryption mode) or updates auth type (DirectSecure)
 5. Auth type set to PIN
 
 #### Enable Biometric
 1. User supplies password
-2. `BurizaStorageService.EnableBiometricAsync` verifies password
+2. `BurizaStorageBase.EnableBiometricAsync` verifies password
 3. DirectSecure: stores mnemonic in biometric secure storage
 4. VaultEncryption: stores biometric key in secure storage and biometric seed vault in normal storage
 5. Auth type set to Biometric
@@ -203,8 +192,7 @@ Same as create, except mnemonic is user-supplied.
 
 ## Notes
 
-- Authentication and secure storage are centralized in `BurizaStorageService`.
-- `IBurizaAppStateService` caches derived addresses and decrypted provider config.
+- Authentication and secure storage are centralized in `BurizaStorageBase`.
 - Web/Extension run in VaultEncryption mode; MAUI uses DirectSecure.
 
 ## Error Semantics
