@@ -90,11 +90,18 @@ public abstract class BurizaStorageBase : IStorageProvider
 
     /// <summary>Gets custom provider config for a chain.</summary>
     public abstract Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
-    /// <summary>Saves custom provider config and optional API key.</summary>
+    /// <summary>
+    /// Saves custom provider config and optional API key.
+    /// API key protection is platform-dependent:
+    /// password-encrypted vault (web/extension/CLI) or OS secure storage (MAUI/native).
+    /// </summary>
     public abstract Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, string password, CancellationToken ct = default);
     /// <summary>Deletes custom provider config for a chain.</summary>
     public abstract Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
-    /// <summary>Gets custom provider config along with decrypted API key if available.</summary>
+    /// <summary>
+    /// Gets custom provider config along with plaintext API key if available.
+    /// Implementations decrypt or unwrap from secure storage as needed.
+    /// </summary>
     public abstract Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
         string password,

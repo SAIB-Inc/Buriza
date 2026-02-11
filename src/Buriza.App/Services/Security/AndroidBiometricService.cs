@@ -273,6 +273,25 @@ public class AndroidBiometricService : IBiometricService
             if (keyStore.ContainsAlias(MasterKeyAlias))
                 return;
 
+            // Prefer StrongBox when available, then gracefully fallback.
+            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P && TryCreateMasterKey(strongBoxBacked: true))
+                return;
+
+            if (TryCreateMasterKey(strongBoxBacked: false))
+                return;
+
+            throw new InvalidOperationException("Failed to create Android Keystore master key");
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to create Android Keystore master key", ex);
+        }
+    }
+
+    private static bool TryCreateMasterKey(bool strongBoxBacked)
+    {
+        try
+        {
             KeyGenerator keyGenerator = KeyGenerator.GetInstance(
                 KeyProperties.KeyAlgorithmAes,
                 "AndroidKeyStore");
@@ -286,15 +305,17 @@ public class AndroidBiometricService : IBiometricService
             builder.SetKeySize(256);
             builder.SetUserAuthenticationRequired(true);
             builder.SetInvalidatedByBiometricEnrollment(true);
-            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P)
+
+            if (strongBoxBacked && Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P)
                 builder.SetIsStrongBoxBacked(true);
 
             keyGenerator.Init(builder.Build());
             keyGenerator.GenerateKey();
+            return true;
         }
-        catch (Exception ex)
+        catch
         {
-            throw new InvalidOperationException("Failed to create Android Keystore master key", ex);
+            return false;
         }
     }
 

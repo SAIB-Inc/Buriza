@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using MudBlazor;
 using MudBlazor.Services;
 using Buriza.UI.Services;
+using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
@@ -49,14 +51,19 @@ public static class MauiProgram
 
 		// MAUI Essentials
 		builder.Services.AddSingleton(Preferences.Default);
+		builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
 
 		// Buriza services
 		builder.Services.AddSingleton<PlatformBiometricService>();
+		builder.Services.AddSingleton<IBiometricService>(sp => sp.GetRequiredService<PlatformBiometricService>());
 		builder.Services.AddSingleton<BurizaAppStorageService>();
 		builder.Services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaAppStorageService>());
 		builder.Services.AddSingleton<AppStateService>();
 		builder.Services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<AppStateService>());
-		builder.Services.AddSingleton<ChainProviderSettings>();
+		ChainProviderSettings settings = builder.Configuration
+			.GetSection("ChainProviderSettings")
+			.Get<ChainProviderSettings>() ?? new ChainProviderSettings();
+		builder.Services.AddSingleton(settings);
 		builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
 		builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
 

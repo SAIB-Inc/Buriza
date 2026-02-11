@@ -456,7 +456,6 @@ public sealed class BurizaAppStorageService(
 
     public override async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, string password, CancellationToken ct = default)
     {
-        // MAUI stores API keys in SecureStorage; password is ignored for this platform.
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         string key = GetCustomConfigKey(config.Chain, config.Network);
         CustomProviderConfig updated = config with { HasCustomApiKey = !string.IsNullOrEmpty(apiKey) };
@@ -485,7 +484,6 @@ public sealed class BurizaAppStorageService(
         string password,
         CancellationToken ct = default)
     {
-        // MAUI stores API keys in SecureStorage; password is ignored for this platform.
         CustomProviderConfig? config = await GetCustomProviderConfigAsync(chainInfo, ct);
         if (config is null)
             return null;
@@ -548,13 +546,12 @@ public sealed class BurizaAppStorageService(
         }
         catch (JsonException)
         {
-            return null;
+            return await BuildTamperedLockoutStateAsync(walletId, ct);
         }
 
         if (state is null || string.IsNullOrEmpty(state.Hmac))
         {
-            await ResetLockoutStateAsync(walletId, ct);
-            return null;
+            return await BuildTamperedLockoutStateAsync(walletId, ct);
         }
 
         byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
@@ -563,16 +560,35 @@ public sealed class BurizaAppStorageService(
         {
             if (!CryptographicOperations.FixedTimeEquals(Convert.FromBase64String(state.Hmac), Convert.FromBase64String(expected)))
             {
-                await ResetLockoutStateAsync(walletId, ct);
-                return null;
+                return await BuildTamperedLockoutStateAsync(walletId, ct);
             }
         }
         catch (FormatException)
         {
-            await ResetLockoutStateAsync(walletId, ct);
-            return null;
+            return await BuildTamperedLockoutStateAsync(walletId, ct);
         }
 
+        return state;
+    }
+
+    private async Task<LockoutState> BuildTamperedLockoutStateAsync(Guid walletId, CancellationToken ct)
+    {
+        DateTime updatedAtUtc = DateTime.UtcNow;
+        DateTime lockoutEndUtc = updatedAtUtc.Add(MaxLockoutDuration);
+        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
+        int failedAttempts = MaxFailedAttemptsBeforeLockout + 6;
+        string hmac = ComputeLockoutHmac(hmacKey, failedAttempts, lockoutEndUtc, updatedAtUtc);
+
+        LockoutState state = new()
+        {
+            FailedAttempts = failedAttempts,
+            LockoutEndUtc = lockoutEndUtc,
+            UpdatedAtUtc = updatedAtUtc,
+            Hmac = hmac
+        };
+
+        string stateJson = JsonSerializer.Serialize(state);
+        await SetAsync(StorageKeys.LockoutState(walletId), stateJson, ct);
         return state;
     }
 
@@ -609,8 +625,17 @@ public sealed class BurizaAppStorageService(
             await SetSecureAsync(keyName, Convert.ToBase64String(key), ct);
             return key;
         }
-
-        return Convert.FromBase64String(secureKeyBase64);
+        try
+        {
+            return Convert.FromBase64String(secureKeyBase64);
+        }
+        catch (FormatException)
+        {
+            await RemoveSecureAsync(keyName, ct);
+            byte[] key = RandomNumberGenerator.GetBytes(32);
+            await SetSecureAsync(keyName, Convert.ToBase64String(key), ct);
+            return key;
+        }
     }
 
     #endregion

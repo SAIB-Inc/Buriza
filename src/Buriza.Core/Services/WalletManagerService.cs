@@ -509,17 +509,7 @@ public class WalletManagerService(
     /// <inheritdoc/>
     public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default)
     {
-        // Validate endpoint URL if provided - only allow HTTP/HTTPS schemes
-        if (!string.IsNullOrEmpty(endpoint))
-        {
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri))
-                throw new ArgumentException("Invalid endpoint URL", nameof(endpoint));
-
-            if (uri.Scheme != "http" && uri.Scheme != "https")
-                throw new ArgumentException("Endpoint must use HTTP or HTTPS", nameof(endpoint));
-        }
-
-        string? normalizedEndpoint = string.IsNullOrWhiteSpace(endpoint) ? null : endpoint;
+        string? normalizedEndpoint = ValidateAndNormalizeEndpoint(endpoint, nameof(endpoint));
         string? normalizedApiKey = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey;
 
         // Save config metadata (endpoint, name)
@@ -552,7 +542,18 @@ public class WalletManagerService(
         if (result is null) return;
 
         CustomProviderConfig config = result.Value.Config;
-        string? endpoint = string.IsNullOrWhiteSpace(config.Endpoint) ? null : config.Endpoint;
+        string? endpoint;
+        try
+        {
+            endpoint = ValidateAndNormalizeEndpoint(config.Endpoint, nameof(config.Endpoint));
+        }
+        catch (ArgumentException ex)
+        {
+            await _storage.DeleteCustomProviderConfigAsync(chainInfo, ct);
+            _providerFactory.ClearChainConfig(chainInfo);
+            throw new InvalidOperationException("Stored custom provider configuration is invalid and has been cleared.", ex);
+        }
+
         _providerFactory.SetChainConfig(chainInfo, new ServiceConfig(endpoint, result.Value.ApiKey));
     }
 
@@ -594,6 +595,23 @@ public class WalletManagerService(
         }
 
         return [chainInfo];
+    }
+
+    private static string? ValidateAndNormalizeEndpoint(string? endpoint, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint))
+            return null;
+
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri))
+            throw new ArgumentException("Invalid endpoint URL", paramName);
+
+        if (uri.Scheme != "http" && uri.Scheme != "https")
+            throw new ArgumentException("Endpoint must use HTTP or HTTPS", paramName);
+
+        if (uri.Scheme == "http" && !uri.IsLoopback)
+            throw new ArgumentException("HTTP endpoints are allowed only for localhost/loopback. Use HTTPS for remote providers.", paramName);
+
+        return endpoint;
     }
 
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainInfo chainInfo, byte[] mnemonicBytes, CancellationToken ct)

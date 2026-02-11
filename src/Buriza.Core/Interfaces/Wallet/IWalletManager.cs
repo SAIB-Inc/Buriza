@@ -148,7 +148,10 @@ public interface IWalletManager
     Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
 
     /// <summary>
-    /// Sets custom provider config. API key is encrypted with password.
+    /// Sets custom provider config.
+    /// API key protection is platform-dependent:
+    /// - Web/extension/CLI: API key is password-encrypted at rest.
+    /// - MAUI/native: API key is stored in OS secure storage.
     /// Pass null for apiKey to use default from appsettings.
     /// </summary>
     Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default);
