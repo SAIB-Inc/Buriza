@@ -11,6 +11,10 @@
     case DrawerContentType.AuthorizeDapp:
         <AuthorizeDappSection />
         break;
+
+    case DrawerContentType.ConnectedApps:
+        <ConnectedAppsSection />
+        break;
         
     case DrawerContentType.Receive:
         <ReceiveSection />
@@ -39,7 +43,11 @@
     case DrawerContentType.Manage:
         <ManageSection />
         break;
-        
+
+    case DrawerContentType.Filter:
+        <FilterSection />
+        break;
+
     default:
         <div></div>
         break;

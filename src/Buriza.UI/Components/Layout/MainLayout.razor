@@ -50,7 +50,6 @@
                     </div>
                     <div class="!space-y-3 !px-5">
                         <MudNavMenu Class="!mt-10 !space-y-3 flex flex-col items-center justify-center !text-[var(--mud-palette-text-primary)] [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!px-2 [&_.mud-nav-link]:!font-medium">
-                            <BurizaNavLink Icon="@BurizaIcons.NotificationIcon" Href="@Routes.Notifications">Notifications</BurizaNavLink>
                             <BurizaNavLink Icon="@BurizaIcons.SettingsSymbolIcon" OnClick="@HandleSettingsClick">Settings</BurizaNavLink>
                             <BurizaNavLink Icon="@BurizaIcons.HelpAndSupportIcon" Href="@Routes.Help">Help And Support</BurizaNavLink>
                         </MudNavMenu>
@@ -92,18 +91,19 @@
     </div>
 </main>
 
-<MudDrawer 
-    @bind-Open="@AppStateService.IsFilterDrawerOpen" 
-    Elevation="1" 
+<MudDrawer
+    @bind-Open="@AppStateService.IsFilterDrawerOpen"
+    Elevation="1"
     Variant="@DrawerVariant.Temporary"
-    Anchor="Anchor.End"
+    Anchor="@FilterDrawerAnchor"
     Width="460px"
-    Class="max-md:!hidden !bg-[var(--mud-palette-background)] !fixed"
+    Height="@(FilterDrawerAnchor == Anchor.Bottom ? "85vh" : null)"
+    Class="!bg-[var(--mud-palette-background)] max-md:!bg-[var(--mud-palette-dark-darken)] !fixed max-md:!rounded-t-[16px]"
 >
-    <MudDrawerHeader Class="items-center justify-between !mb-6 !px-4 !pt-8">
+    <MudDrawerHeader Class="max-md:min-h-11! max-md:!pb-0 relative items-center justify-between !px-4 sm:!mb-6 sm:!pt-8">
         @if (AppStateService.CurrentDrawerContent != TransactionStatus)
         {
-            <div class="flex items-center !gap-2">
+            <div Class="max-md:!hidden flex items-center !gap-2">
                 <MudIconButton
                     Icon="@BurizaIcons.ChevronRightIcon"
                     Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
@@ -112,8 +112,18 @@
                 <MudText Class="!text-[22px] !font-medium !text-[var(--mud-palette-text-primary)]">
                     @DrawerTitle
                 </MudText>
+                @if (AppStateService.CurrentDrawerContent == Summary && AppStateService.SummaryTransactionCategory != TransactionCategory.Default)
+                {
+                    <MudChip T="string"
+                        Size="Size.Small"
+                        Class="@($"!rounded-full !text-xs !font-medium !h-6 !px-2 !text-white {GetCategoryChipClass(AppStateService.SummaryTransactionCategory)}")"
+                        Variant="Variant.Filled">
+                        @GetCategoryLabel(AppStateService.SummaryTransactionCategory)
+                    </MudChip>
+                }
             </div>
-            <div>
+            <div class="absolute top-5 p-[2px]! w-1/3! bg-[var(--mud-palette-white)]/60! rounded-full! mx-auto transform left-1/2 -translate-x-1/2 md:!hidden"/>
+            <div Class="max-md:!hidden">
                 @if (AppStateService.CurrentDrawerContent == Send && !AppStateService.IsSendConfirmed)
                 {
                     <MudIconButton

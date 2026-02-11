@@ -20,7 +20,13 @@ public partial class BurizaTextField
     public string Value { get; set; } = string.Empty;
 
     [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
     public string Placeholder { get; set; } = string.Empty;
+
+    [Parameter]
+    public string HelperText { get; set; } = string.Empty;
 
     [Parameter]
     public string Icon { get; set; } = string.Empty;
@@ -32,7 +38,7 @@ public partial class BurizaTextField
     public Adornment Adornment { get; set; } = Adornment.End;
 
     [Parameter]
-    public Variant Variant { get; set; } = Variant.Outlined;
+    public Variant Variant { get; set; } = Variant.Filled;
 
     [Parameter]
     public Expression<Func<string>>? For { get; set; }
@@ -44,9 +50,15 @@ public partial class BurizaTextField
     public EventCallback<string> ValueChanged { get; set; }
 
     private string TextFieldClass => $"""
-        w-full !text-[var(--mud-palette-text-primary)] [&_.mud-input-outlined-border]:!border-none !rounded-[12px]
-        border border-gray-300 !bg-[var(--mud-palette-gray-default)] [&_input]:!pl-5 [&_.mud-input]:!pr-5 
-        [&_input::placeholder]:!opacity-100
+        w-full !text-[var(--mud-palette-text-primary)]
+        [&_.mud-input-control-input-container]:!bg-[var(--mud-palette-gray-darker)] [&_.mud-input-control-input-container]:!border-none [&_.mud-input-control-input-container]:!rounded-lg [&_.mud-input-control-input-container]:!rounded-lg
+        [&_.mud-input.mud-input-filled]:!bg-transparent
+        [&_.mud-input.mud-input-filled.mud-input-underline:before]:!border-b-0 
+        [&_.mud-input.mud-input-filled.mud-input-underline:after]:!border-b-0
+        [&_.mud-input-label]:!mb-[4px]
+        [&_.mud-input-helper-text]:!text-[var(--mud-palette-dark-lighten)]
+        [&_.mud-input-control-helper-container]:!pl-4
+        [&_input]:!text-base [&_input]:!caret-blue-500 [&_input]:!text-base [&_input]:!pt-[24px] [&_input]:!pb-[8px] 
         {Class}
     """;
 }

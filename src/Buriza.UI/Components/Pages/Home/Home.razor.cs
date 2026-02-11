@@ -12,6 +12,9 @@ public partial class Home : ComponentBase, IDisposable
 
     private bool IsCard2Expanded { get; set; } = false;
     private bool IsSearchExpanded { get; set; } = false;
+    private string SearchBarClass => IsSearchExpanded
+        ? "opacity-100 delay-200 rounded-full shadow-[var(--mud-elevation-1)]! !bg-[var(--mud-palette-overlay-light)] md:!h-12 md:[&_input]:!py-[14.5px] [&_.mud-icon-root]:!hidden md:[&_.mud-icon-root]:!inline-block"
+        : "opacity-0";
 
     private void ToggleSearch()
     {
