@@ -1,0 +1,44 @@
+@using Buriza.UI.Resources
+@using Buriza.UI.Data.Dummy
+@namespace Buriza.UI.Components.Layout
+
+<div class="w-full h-full !px-4 overflow-y-auto !pb-4">
+    <div class="grid !gap-4">
+        @foreach (var dapp in ConnectedApps)
+        {
+            <MudCard Class="!bg-[var(--mud-palette-overlay-light)] !rounded-[12px] !p-4 !shadow-none !gap-[11px]">
+                <div class="w-full flex items-center justify-between">
+                    <div class="flex items-center !gap-3">
+                        <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                            <MudImage
+                                Alt="@dapp.Title"
+                                Src="@dapp.Icon"
+                                Class="!w-10 !h-10 !min-w-10 !min-h-10 object-cover"
+                            />
+                        </div>
+                        <MudText Class="!font-semibold">
+                            @dapp.Title
+                        </MudText>
+                    </div>
+                    <div>
+                        <MudIconButton
+                            Icon="@BurizaIcons.DeleteSymbolIcon"
+                            Class="!p-0 !w-6 !h-6 [&_.mud-icon-root]:!text-2xl [&_.mud-icon-root]:!text-white"
+                            OnClick="() => OnDeleteDappClicked(dapp)"
+                        />
+                    </div>
+                </div>
+                <div>
+                    <MudChip T="string" Size="Size.Small" Class="!bg-transparent !text-xs !rounded-full !px-3 !border" Style="@($"border-color: {GetDappTypeColor(dapp.Type)}; color: {GetDappTypeColor(dapp.Type)};")">
+                        @dapp.Type
+                    </MudChip>
+                </div>
+                <div>
+                    <MudText Class="!text-sm !text-[var(--mud-palette-gray-dark)] !leading-relaxed">
+                        @dapp.Description
+                    </MudText>
+                </div>
+            </MudCard>
+        }
+    </div>
+</div>
