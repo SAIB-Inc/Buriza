@@ -106,15 +106,17 @@ SecRecord record = new(SecKind.GenericPassword)
 
 ### Android (AndroidBiometricService)
 
-Uses `BiometricPrompt` API:
+Uses `BiometricPrompt` and Google Tink AEAD:
 - Fingerprint sensors
 - Face recognition (where available)
-- `EncryptedSharedPreferences` with `MasterKey` for secure storage
+- Encrypted payloads stored in private SharedPreferences
 
 **Key Security Features:**
-- `BiometricManager.Authenticators.BiometricStrong` - Class 3 biometrics only (highest security level)
-- `MasterKey` with `AES256_GCM` scheme stored in Android Keystore (hardware-backed via StrongBox when available)
-- `EncryptedSharedPreferences` encrypts keys with AES-256-SIV and values with AES-256-GCM
+- `BiometricManager.Authenticators.BiometricStrong` (Class 3 biometrics)
+- Tink AEAD (`AES256_GCM`) for data encryption
+- Tink keyset protected by Android Keystore master key
+- Master key requires user authentication and is invalidated on biometric enrollment changes
+- StrongBox is preferred when available, with fallback to standard Keystore
 
 ```csharp
 // BiometricPrompt with strong authentication
@@ -125,15 +127,15 @@ BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
     .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong)
     .Build();
 
-// EncryptedSharedPreferences with Keystore-backed MasterKey
-MasterKey masterKey = new MasterKey.Builder(context)
-    .SetKeyScheme(MasterKey.KeyScheme.Aes256Gcm)
-    .Build();
-
-ISharedPreferences prefs = EncryptedSharedPreferences.Create(
-    context, PrefsFileName, masterKey,
-    EncryptedSharedPreferences.PrefKeyEncryptionScheme.Aes256Siv,
-    EncryptedSharedPreferences.PrefValueEncryptionScheme.Aes256Gcm);
+// Keystore-backed master key with auth + biometric enrollment binding
+KeyGenParameterSpec.Builder builder = new(
+    MasterKeyAlias,
+    KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt)
+    .SetBlockModes(KeyProperties.BlockModeGcm)
+    .SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone)
+    .SetKeySize(256)
+    .SetUserAuthenticationRequired(true)
+    .SetInvalidatedByBiometricEnrollment(true);
 ```
 
 **References:**
@@ -204,39 +206,37 @@ The password is encrypted before storage:
 src/
 ├── Buriza.Core/
 │   ├── Interfaces/Security/
-│   │   ├── IBiometricService.cs      # Platform biometric abstraction
-│   │   └── IAuthenticationService.cs # PIN/biometric auth service
+│   │   └── IBiometricService.cs      # Platform biometric abstraction
 │   └── Services/
-│       ├── AuthenticationService.cs  # IAuthenticationService implementation
 │       └── NullBiometricService.cs   # Null pattern for non-MAUI platforms
 │
 └── Buriza.App/
     └── Services/Security/
-        ├── AndroidBiometricService.cs   # Android BiometricPrompt + EncryptedSharedPreferences
+        ├── AndroidBiometricService.cs   # Android BiometricPrompt + Tink AEAD + Keystore
         ├── AppleBiometricService.cs     # iOS/macOS Keychain + LocalAuthentication
         ├── WindowsBiometricService.cs   # Windows Hello + PasswordVault
         └── PlatformBiometricService.cs  # Platform selector
 ```
 
-Note: `AuthenticationService` uses `IStorageProvider` and `ISecureStorageProvider` for persistence (PIN vaults, lockout state). No separate `IAuthenticationStorage` interface exists.
+Note: biometric and PIN flows are implemented in `BurizaStorageService` (Buriza.Core). No separate authentication service exists.
 
 ## Service Registration
 
 ### MauiProgram.cs (MAUI - Full Auth Support)
 
 ```csharp
-// Authentication services (biometrics + PIN + password)
-builder.Services.AddSingleton<IAuthenticationStorage, AuthenticationStorage>();
+builder.Services.AddSingleton<MauiPlatformStorage>();
 builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
-builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton(new BurizaStorageOptions { Mode = StorageMode.DirectSecure });
+builder.Services.AddBurizaServices(ServiceLifetime.Singleton);
 ```
 
 ### Web/Extension Program.cs (Password Only)
 
 ```csharp
-// No authentication services registered
-// Use IWalletStorage.UnlockVaultAsync(walletId, password) directly
-// No biometrics or PIN support on browser platforms
+builder.Services.AddScoped<IPlatformStorage, BrowserPlatformStorage>();
+builder.Services.AddSingleton<IBiometricService, NullBiometricService>();
+builder.Services.AddBurizaServices(ServiceLifetime.Scoped);
 ```
 
 ## Blazor Component Integration
@@ -245,8 +245,8 @@ builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 
 Blazor components in `Buriza.UI` are shared across all platforms. To handle platform differences:
 
-1. **MAUI**: Inject `IAuthenticationService` for biometric/PIN support
-2. **Web/Extension**: Use `IWalletStorage` directly for password-only auth
+1. **MAUI**: Inject `BurizaStorageService` for biometric/PIN support
+2. **Web/Extension**: Use `BurizaStorageService` for password-only auth
 
 ### Pattern 1: Optional Service Injection
 
@@ -254,37 +254,31 @@ Blazor components in `Buriza.UI` are shared across all platforms. To handle plat
 // UnlockPage.razor.cs
 public partial class UnlockPage
 {
-    [Inject] public required IWalletStorage WalletStorage { get; set; }
+    [Inject] public required BurizaStorageService StorageService { get; set; }
 
-    // Optional - only available on MAUI
-    [Inject] public IAuthenticationService? AuthService { get; set; }
-
-    protected bool HasBiometricSupport => AuthService != null;
+    protected bool HasBiometricSupport { get; set; }
     protected bool IsBiometricAvailable { get; set; }
     protected bool IsBiometricEnabled { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthService != null)
-        {
-            IsBiometricAvailable = await AuthService.IsBiometricAvailableAsync();
-            IsBiometricEnabled = await AuthService.IsBiometricEnabledAsync(WalletId);
-        }
+        var capabilities = await StorageService.GetCapabilitiesAsync();
+        HasBiometricSupport = capabilities.SupportsBiometric;
+        IsBiometricAvailable = capabilities.SupportsBiometric;
+        IsBiometricEnabled = await StorageService.IsBiometricEnabledAsync(WalletId);
     }
 
     private async Task UnlockWithPasswordAsync(string password)
     {
         // Works on ALL platforms
-        byte[] mnemonic = await WalletStorage.UnlockVaultAsync(WalletId, password);
+        byte[] mnemonic = await StorageService.UnlockVaultAsync(WalletId, password);
         // ... use mnemonic
     }
 
     private async Task UnlockWithBiometricAsync()
     {
         // Only available on MAUI
-        if (AuthService == null) return;
-
-        byte[] passwordBytes = await AuthService.AuthenticateWithBiometricAsync(
+        byte[] passwordBytes = await StorageService.AuthenticateWithBiometricAsync(
             WalletId, "Unlock your wallet");
         try
         {
@@ -386,19 +380,19 @@ public partial class UnlockPage
 
 ```csharp
 // Check if biometric is available
-if (await _authService.IsBiometricAvailableAsync())
+if ((await _storageService.GetCapabilitiesAsync()).SupportsBiometric)
 {
-    var type = await _authService.GetBiometricTypeAsync();
+    var type = await _storageService.GetBiometricTypeAsync();
     // Show "Enable Face ID" or "Enable Fingerprint" option
 }
 
 // Enable biometric for a wallet
-await _authService.EnableBiometricAsync(walletId, password);
+await _storageService.EnableBiometricAsync(walletId, password);
 
 // Unlock wallet with biometric
-if (await _authService.IsBiometricEnabledAsync(walletId))
+if (await _storageService.IsBiometricEnabledAsync(walletId))
 {
-    byte[] passwordBytes = await _authService.AuthenticateWithBiometricAsync(
+    byte[] passwordBytes = await _storageService.AuthenticateWithBiometricAsync(
         walletId, "Unlock your wallet");
     try
     {
@@ -421,6 +415,8 @@ public enum BiometricType
     TouchId,         // iOS/macOS Touch ID
     Fingerprint,     // Android Fingerprint
     FaceRecognition, // Android Face Recognition
+    Iris,            // Android Iris
+    OpticId,         // visionOS Optic ID
     WindowsHello,    // Windows Hello
     Unknown          // Generic biometric
 }
