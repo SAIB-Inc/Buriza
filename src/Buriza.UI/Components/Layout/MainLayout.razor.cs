@@ -113,6 +113,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             InfoContrastText = "#D7E9FF",
             Warning = "#FF9C39",
             WarningLighten = "#D8E2FF",
+            WarningDarken = "#242320",
             LinesDefault = "#181B23",
             LinesInputs = "#1C1F27",
             ActionDefault = "#2A2E38"
@@ -157,7 +158,9 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             InfoLighten = "#FFFFFF",
             InfoDarken = "#006FEF",
             InfoContrastText = "#D7E9FF",
+            WarningLighten = "#FFDD57",
             Warning = "#FF9C39",
+            WarningDarken = "#242320",
             LinesDefault = "#E6E7F3",
             LinesInputs = "#ECEDF8"
         }
@@ -186,6 +189,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             _ => "Summary"
         },
         AuthorizeDapp => "Authorize App",
+        ConnectedApps => "Connected dApps (10)",
         Receive => AppStateService.IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
         Send => AppStateService.IsSendConfirmed ? "Summary" : "Send Assets",
         SelectAsset => "Select Assets",
