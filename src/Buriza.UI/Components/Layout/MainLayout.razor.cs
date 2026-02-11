@@ -101,7 +101,9 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             Error = "#FF5449",
             Info = "#00B286",
             InfoLighten = "#1C1F27",
+            WarningLighten = "#FFDD57",
             Warning = "#FF9C39",
+            WarningDarken = "#242320",
             LinesDefault = "#181B23",
             LinesInputs = "#1C1F27"
         },
@@ -143,7 +145,9 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             Error = "#BA1A1A",
             Info = "#51DDAE",
             InfoLighten = "#FFFFFF",
+            WarningLighten = "#FFDD57",
             Warning = "#FF9C39",
+            WarningDarken = "#242320",
             LinesDefault = "#E6E7F3",
             LinesInputs = "#ECEDF8"
         }
@@ -166,6 +170,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         Summary => "Sent",
         AuthorizeDapp => "Authorize App",
+        ConnectedApps => "Connected dApps (10)",
         Receive => AppStateService.IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
         Send => AppStateService.IsSendConfirmed ? "Summary" : "Send Assets",
         SelectAsset => "Select Assets",

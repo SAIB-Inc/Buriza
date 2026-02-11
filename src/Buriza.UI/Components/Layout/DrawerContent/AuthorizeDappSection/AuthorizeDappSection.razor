@@ -21,42 +21,41 @@
                 </MudText>
             </div>
         </div>
-        <div class="relative rounded-[12px] border border-[#414754] !p-4 !mt-6 !space-y-3">
+        <div class="!mt-10 !rounded-[12px] !p-3 !bg-[var(--mud-palette-warning-darken)] w-max mx-auto flex items-center !gap-3">
+            <div class="w-6 h-6 min-w-6 rounded-full bg-[var(--mud-palette-warning-lighten)] flex items-center justify-center">
+                <MudIcon Icon="@Icons.Material.Rounded.PriorityHigh" Class="!text-sm !text-[var(--mud-palette-warning-darken)]" />
+            </div>
+            <MudText Class="!text-xs !font-medium !text-[var(--mud-palette-warning-lighten)]">
+                Verify the source before granting access to your assets
+            </MudText>
+        </div>
+        <div class="relative rounded-[12px] border border-[var(--mud-palette-divider)] !p-6 !mt-10 !space-y-3">
             <div class="absolute -top-3 left-3 !bg-[var(--mud-palette-background)] !px-2">
-                <MudText Class="!text-sm">
+                <MudText Class="!text-[var(--mud-palette-text-primary)] !font-semibold">
                     Allow this site to:
                 </MudText>
             </div>
-            <MudListItem
-                T="string"
-                Disabled="true"
-                Text="See which network the wallet is connected to" 
-                Icon="@Icons.Material.Outlined.CheckCircle"
-                Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-            />
-            <MudListItem
-                T="string"
-                Disabled="true"
-                Text="See your wallet UTXOs" 
-                Icon="@Icons.Material.Outlined.CheckCircle"
-                Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-            />
-            <MudListItem
-                T="string"
-                Disabled="true"
-                Text="See your wallet balance" 
-                Icon="@Icons.Material.Outlined.CheckCircle"
-                Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-            />
-            <MudListItem
-                T="string"
-                Disabled="true"
-                Text="See your wallet different addresses, including reward account" 
-                Icon="@Icons.Material.Outlined.CheckCircle"
-                Class="p-0! !text-[var(--mud-palette-text-secondary)] [&_.mud-list-item-icon]:min-w-auto! gap-2! [&_.mud-list-item-icon_.mud-icon-root]:!text-[var(--mud-palette-primary)] [&_.mud-list-item-icon_.mud-icon-root]:!text-xl [&_.mud-list-item-text>p]:text-sm!" 
-            />
+            <div class="flex items-start !gap-2">
+                <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">See which network the wallet is connected to</MudText>
+            </div>
+            <div class="flex items-start !gap-2">
+                <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">See your wallet UTXOs</MudText>
+            </div>
+            <div class="flex items-start !gap-2">
+                <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">See your wallet balance</MudText>
+            </div>
+            <div class="flex items-start !gap-2">
+                <MudImage Alt="" Src="@Misc.DiamondBlue" Class="!w-5 !h-5 !min-w-5 !mt-[1px]" />
+                <MudText Class="!text-sm !text-[var(--mud-palette-text-primary)]">See your wallet different addresses, including reward account</MudText>
+            </div>
         </div>
-        <div>
+        <div class="!mt-6">
+            <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-xs">
+                Notice: By authorizing, you grant this application read-access to your wallet’s public data. Your private keys will remain secure, but your financial privacy will be visible to this dapp.
+            </MudText>
         </div>
     </div>
     <div class="w-full">
