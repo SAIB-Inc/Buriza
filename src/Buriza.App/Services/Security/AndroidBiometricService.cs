@@ -1,6 +1,7 @@
 #if ANDROID
 using Android.Content;
 using Android.Runtime;
+using Android.Security.Keystore;
 using AndroidX.Biometric;
 using AndroidX.Core.Content;
 using Buriza.Core.Interfaces.Security;
@@ -10,6 +11,8 @@ using Java.Util.Concurrent;
 using Xamarin.Google.Crypto.Tink;
 using Xamarin.Google.Crypto.Tink.Aead;
 using Xamarin.Google.Crypto.Tink.Integration.Android;
+using Java.Security;
+using Javax.Crypto;
 
 namespace Buriza.App.Services.Security;
 
@@ -35,6 +38,7 @@ public class AndroidBiometricService : IBiometricService
 {
     private const string KeysetName = "buriza_tink_keyset";
     private const string KeysetPrefName = "buriza_tink_prefs";
+    private const string MasterKeyAlias = "buriza_master_key";
     private const string MasterKeyUri = "android-keystore://buriza_master_key";
     private const string DataPrefName = "buriza_secure_data";
 
@@ -237,6 +241,8 @@ public class AndroidBiometricService : IBiometricService
 
             Context context = Platform.AppContext;
 
+            EnsureMasterKey();
+
             // Build AndroidKeysetManager - this manages the Tink keyset
             // The keyset is encrypted and stored in SharedPreferences
             // The encryption key for the keyset is stored in Android Keystore
@@ -255,6 +261,40 @@ public class AndroidBiometricService : IBiometricService
                 ?? throw new InvalidOperationException("Failed to create AEAD primitive");
 
             return _aead;
+        }
+    }
+
+    private static void EnsureMasterKey()
+    {
+        try
+        {
+            KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore");
+            keyStore.Load(null);
+            if (keyStore.ContainsAlias(MasterKeyAlias))
+                return;
+
+            KeyGenerator keyGenerator = KeyGenerator.GetInstance(
+                KeyProperties.KeyAlgorithmAes,
+                "AndroidKeyStore");
+
+            KeyGenParameterSpec.Builder builder = new(
+                MasterKeyAlias,
+                KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt);
+
+            builder.SetBlockModes(KeyProperties.BlockModeGcm);
+            builder.SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone);
+            builder.SetKeySize(256);
+            builder.SetUserAuthenticationRequired(true);
+            builder.SetInvalidatedByBiometricEnrollment(true);
+            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P)
+                builder.SetIsStrongBoxBacked(true);
+
+            keyGenerator.Init(builder.Build());
+            keyGenerator.GenerateKey();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to create Android Keystore master key", ex);
         }
     }
 

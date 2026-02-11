@@ -7,6 +7,7 @@ using Buriza.Core.Models.Security;
 using Buriza.Core.Services;
 using Buriza.Core.Storage;
 using Buriza.Tests.Mocks;
+using TestPlatformStorage = Buriza.Tests.Mocks.InMemoryPlatformStorage;
 
 namespace Buriza.Tests.Unit.Services;
 
@@ -15,7 +16,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task UnlockVaultAsync_RepeatedFailures_TriggersLockout()
     {
-        InMemoryPlatformStorage platformStorage = new();
+        TestPlatformStorage platformStorage = new();
         BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         Guid walletId = Guid.NewGuid();
@@ -32,7 +33,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task EnablePinAsync_TooShort_Throws()
     {
-        InMemoryPlatformStorage platformStorage = new();
+        TestPlatformStorage platformStorage = new();
         BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         Guid walletId = Guid.NewGuid();
@@ -44,7 +45,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task UnlockCustomApiKeyAsync_InvalidMetadata_Throws()
     {
-        InMemoryPlatformStorage platformStorage = new();
+        TestPlatformStorage platformStorage = new();
         BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         ChainInfo chainInfo = ChainRegistry.CardanoMainnet;
@@ -61,7 +62,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task SaveCustomApiKeyAsync_BindsPurposeAndChain()
     {
-        InMemoryPlatformStorage platformStorage = new();
+        TestPlatformStorage platformStorage = new();
         BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());
 
         ChainInfo chainInfo = ChainRegistry.CardanoMainnet;
@@ -85,7 +86,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task LoadAllWalletsAsync_InvalidJson_Throws()
     {
-        InMemoryPlatformStorage platformStorage = new();
+        TestPlatformStorage platformStorage = new();
         await platformStorage.SetAsync(StorageKeys.Wallets, "{not json");
 
         BurizaStorageService storage = new(platformStorage, new InMemorySecureStorage(), new NullBiometricService());

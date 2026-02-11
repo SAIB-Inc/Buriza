@@ -78,6 +78,7 @@ public static class VaultEncryption
         }
         finally
         {
+            CryptographicOperations.ZeroMemory(passwordBytes);
             // Zero all cryptographic material (defense-in-depth)
             CryptographicOperations.ZeroMemory(key);
             CryptographicOperations.ZeroMemory(salt);

@@ -765,7 +765,10 @@ public class BurizaStorageService(
         }
 
         if (state is null || string.IsNullOrEmpty(state.Hmac))
-            return await TamperedLockoutStateAsync(walletId, ct);
+        {
+            await ResetLockoutStateAsync(walletId, ct);
+            return null;
+        }
 
         byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
         string expected = ComputeLockoutHmac(hmacKey, state.FailedAttempts, state.LockoutEndUtc, state.UpdatedAtUtc);
@@ -773,34 +776,16 @@ public class BurizaStorageService(
         {
             if (!CryptographicOperations.FixedTimeEquals(Convert.FromBase64String(state.Hmac), Convert.FromBase64String(expected)))
             {
-                return await TamperedLockoutStateAsync(walletId, ct);
+                await ResetLockoutStateAsync(walletId, ct);
+                return null;
             }
         }
         catch (FormatException)
         {
-            return await TamperedLockoutStateAsync(walletId, ct);
+            await ResetLockoutStateAsync(walletId, ct);
+            return null;
         }
 
-        return state;
-    }
-
-    private async Task<LockoutState> TamperedLockoutStateAsync(Guid walletId, CancellationToken ct)
-    {
-        DateTime updatedAtUtc = DateTime.UtcNow;
-        DateTime lockoutEndUtc = updatedAtUtc.Add(BaseLockoutDuration);
-        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
-        string hmac = ComputeLockoutHmac(hmacKey, MaxFailedAttemptsBeforeLockout, lockoutEndUtc, updatedAtUtc);
-
-        LockoutState state = new()
-        {
-            FailedAttempts = MaxFailedAttemptsBeforeLockout,
-            LockoutEndUtc = lockoutEndUtc,
-            UpdatedAtUtc = updatedAtUtc,
-            Hmac = hmac
-        };
-
-        string json = JsonSerializer.Serialize(state);
-        await _storage.SetAsync(StorageKeys.LockoutState(walletId), json, ct);
         return state;
     }
 
@@ -823,29 +808,35 @@ public class BurizaStorageService(
     }
 
     private async Task<byte[]> GetOrCreateLockoutKeyAsync(CancellationToken ct)
-    {
-        string? keyBase64 = await _secureStorage!.GetAsync(StorageKeys.LockoutKey, ct);
-        if (string.IsNullOrEmpty(keyBase64))
-        {
-            byte[] key = RandomNumberGenerator.GetBytes(32);
-            await _secureStorage!.SetAsync(StorageKeys.LockoutKey, Convert.ToBase64String(key), ct);
-            return key;
-        }
-
-        return Convert.FromBase64String(keyBase64);
-    }
+        => await GetOrCreateHmacKeyAsync(StorageKeys.LockoutKey, ct);
 
     private async Task<byte[]> GetOrCreateAuthTypeKeyAsync(CancellationToken ct)
+        => await GetOrCreateHmacKeyAsync(StorageKeys.AuthTypeKey, ct);
+
+    private async Task<byte[]> GetOrCreateHmacKeyAsync(string keyName, CancellationToken ct)
     {
-        string? keyBase64 = await _secureStorage!.GetAsync(StorageKeys.AuthTypeKey, ct);
-        if (string.IsNullOrEmpty(keyBase64))
+        if (_secureStorage is NullPlatformSecureStorage)
+        {
+            string? keyBase64 = await _storage.GetAsync(keyName, ct);
+            if (string.IsNullOrEmpty(keyBase64))
+            {
+                byte[] key = RandomNumberGenerator.GetBytes(32);
+                await _storage.SetAsync(keyName, Convert.ToBase64String(key), ct);
+                return key;
+            }
+
+            return Convert.FromBase64String(keyBase64);
+        }
+
+        string? secureKeyBase64 = await _secureStorage!.GetAsync(keyName, ct);
+        if (string.IsNullOrEmpty(secureKeyBase64))
         {
             byte[] key = RandomNumberGenerator.GetBytes(32);
-            await _secureStorage!.SetAsync(StorageKeys.AuthTypeKey, Convert.ToBase64String(key), ct);
+            await _secureStorage!.SetAsync(keyName, Convert.ToBase64String(key), ct);
             return key;
         }
 
-        return Convert.FromBase64String(keyBase64);
+        return Convert.FromBase64String(secureKeyBase64);
     }
 
     private static string ComputeAuthTypeHmac(byte[] key, Guid walletId, string typeStr)
