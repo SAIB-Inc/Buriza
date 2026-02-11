@@ -11,5 +11,8 @@ public enum DrawerContentType
     TransactionStatus,
     Settings,
     NodeSettings,
-    Manage
+    Manage,
+    SwitchWallet,
+    SwitchAccount,
+    AccountSettings
 }

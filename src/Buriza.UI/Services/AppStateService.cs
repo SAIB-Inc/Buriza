@@ -145,6 +145,8 @@ public class AppStateService
         }
     }
 
+    public string SelectedWalletName { get; set; } = string.Empty;
+
     private SidebarContentType _currentSidebarContent = SidebarContentType.None;
     public SidebarContentType CurrentSidebarContent
     {

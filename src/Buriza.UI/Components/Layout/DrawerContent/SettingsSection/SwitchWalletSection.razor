@@ -1,0 +1,39 @@
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="flex flex-col !overflow-y-auto w-full !px-4 !pb-8 flex-1">
+    <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm">
+        @for (int i = 0; i < Wallets.Count; i++)
+        {
+            int index = i;
+            bool isFirst = index == 0;
+            bool isLast = index == Wallets.Count - 1;
+            bool isCurrent = Wallets[index].IsCurrent;
+
+            <MudNavLink
+                Class="@($"active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! {(isFirst ? "[&_.mud-nav-link]:!rounded-t-[16px]" : "")} {(isLast ? "[&_.mud-nav-link]:!rounded-b-[16px]" : "border-b border-b-[var(--mud-palette-divider)]")}")"
+                OnClick="@(() => HandleWalletClick(Wallets[index].Name))"
+            >
+                <div class="flex w-full items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-full w-8 h-8 bg-cover bg-center" style="background-image: url('@Wallets[index].Image')" />
+                        <MudText>@Wallets[index].Name</MudText>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        @if (isCurrent)
+                        {
+                            <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">Current</MudText>
+                            <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
+                        }
+                        else
+                        {
+                            <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
+                            <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-primary)]"/>
+                        }
+                    </div>
+                </div>
+            </MudNavLink>
+        }
+    </MudPaper>
+</div>

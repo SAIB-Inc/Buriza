@@ -1,0 +1,86 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="flex flex-col gap-6 !overflow-y-auto w-full !px-4 !pb-8 flex-1">
+    @*edit profile*@
+    <div class="!space-y-6">
+        <BurizaTextField
+            Label="Account Name"
+            Placeholder="Wallet 2"
+            Class="[&_.mud-input-control-input-container]:bg-[var(--mud-palette-drawer-background)]!"
+        />
+        <div>
+            <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH WALLET ICON</MudText>
+            <div class="grid grid-cols-5 !gap-3">
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile1')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile2')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile3')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile4')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile5')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile6')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile7')" />
+                <div class="w-18 h-18 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile8')" />
+            </div>
+        </div>
+    </div>
+
+    @*account list*@
+    <div>
+        <div>
+            <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH ACCOUNT</MudText>
+        </div>
+        <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm">
+            @for (int i = 0; i < Accounts.Count; i++)
+            {
+                int index = i;
+                bool isFirst = index == 0;
+                bool isLast = index == Accounts.Count - 1;
+
+                <MudNavLink
+                    Class="@($"active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! {(isFirst ? "[&_.mud-nav-link]:!rounded-t-[16px]" : "")} {(isLast ? "[&_.mud-nav-link]:!rounded-b-[16px]" : "border-b border-b-[var(--mud-palette-divider)]")}")"
+                >
+                    <div class="flex w-full justify-between">
+                        <div class="flex items-center gap-2">
+                            <div>
+                                <div class="rounded-full w-9 h-9 bg-cover bg-center" style="background-image: url('@Accounts[index].Image')" />
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center gap-2">
+                                    <MudText Class="!font-medium">@Accounts[index].Name</MudText>
+                                    <MudIconButton Icon="@BurizaIcons.EditIcon" Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-primary)]" OnClick="HandleAccountSettingsClick" />
+                                </div>
+                                <MudChip
+                                    T="string"
+                                    Class="!bg-[var(--buriza-chip-bg)] text-[var(--mud-palette-success-contrasttext)] !px-2 !py-1 !text-[12px] !font-semibold !m-0 [&_.mud-chip-content]:flex [&_.mud-chip-content]:items-center [&_.mud-chip-content]:gap-1 !h-[22px]"
+                                >
+                                    <span class="!text-[var(--mud-palette-primary-lighten)]">
+                                        @Accounts[index].Address
+                                    </span>
+                                    <span class="text-2xl">
+                                        &#183;
+                                    </span>
+                                    <span class="!text-[10px]">
+                                        @Accounts[index].DerivationPath
+                                    </span>
+                                </MudChip>
+                            </div>
+                        </div>
+                        <div class="">
+                            @if (index == 0)
+                            {
+                                <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">Current</MudText>
+                            }
+                            else
+                            {
+                                <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
+                            }
+                        </div>
+                    </div>
+                </MudNavLink>
+            }
+        </MudPaper>
+    </div>
+</div>

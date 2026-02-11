@@ -50,11 +50,7 @@
                     <div class="flex items-center !gap-3">
                         <div class="relative">
                             <div>
-                                <MudImage
-                                    Alt="Avatar"
-                                    Src="@Misc.Avatar"
-                                    Class="!w-[46px] aspect-square !rounded-full"
-                                />
+                                <div class="w-[46px] h-[46px] rounded-full bg-cover bg-center" style="background-image: url('@Profiles.Profile1')" />
                             </div>
                             @if(IsEditMode)
                             {
@@ -96,11 +92,7 @@
                                     <div class="flex items-center !gap-3">
                                         <div class="relative">
                                             <div>
-                                                <MudImage
-                                                    Alt="Avatar"
-                                                    Src="@wallet.Avatar"
-                                                    Class="!w-[46px] aspect-square !rounded-full"
-                                                />
+                                                <div class="w-[46px] h-[46px] rounded-full bg-cover bg-center" style="background-image: url('@wallet.Avatar')" />
                                             </div>
                                             <div class="absolute -right-1 -bottom-1 !p-1 rounded-full !bg-[var(--mud-palette-dark-darken)] flex items-center justify-center">
                                                 <MudIconButton
@@ -132,11 +124,7 @@
                                             <div class="max-[376px]:!p-[13px] !rounded-[8px] flex items-center justify-between !p-4 bg-[var(--mud-palette-overlay-light)] md:bg-[var(--mud-palette-gray-default)]">
                                                 <div class="flex items-center !gap-3">
                                                     <div>
-                                                        <MudImage
-                                                            Alt="Avatar"
-                                                            Src="@account.Avatar"
-                                                            Class="max-[376px]:!w-[36px] !w-[46px] aspect-square !rounded-full"
-                                                        />
+                                                        <div class="max-[376px]:w-[36px] max-[376px]:h-[36px] w-[46px] h-[46px] rounded-full bg-cover bg-center" style="background-image: url('@account.Avatar')" />
                                                     </div>
                                                     <div>
                                                         <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-xs !font-medium">

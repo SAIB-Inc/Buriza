@@ -172,6 +172,9 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         TransactionStatus => "Transaction Sent",
         Settings => "Settings",
         NodeSettings => "Node Settings",
+        SwitchWallet => "Switch Wallet (50)",
+        SwitchAccount => AppStateService.SelectedWalletName,
+        AccountSettings => "Account Settings",
         Manage => AppStateService.IsManageAccountFormVisible
             ? (AppStateService.IsManageEditMode ? "Edit Wallet" : "New Account")
             : "Manage",
@@ -195,6 +198,18 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             AppStateService.RequestResetSendConfirmation();
         }
         else if (AppStateService.CurrentDrawerContent == NodeSettings)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == SwitchWallet)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == SwitchAccount)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == AccountSettings)
         {
             AppStateService.SetDrawerContent(Settings);
         }
