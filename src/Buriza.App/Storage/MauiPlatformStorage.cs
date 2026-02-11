@@ -9,7 +9,9 @@ namespace Buriza.App.Storage;
 /// Uses IPreferences for all storage.
 /// BurizaStorageService handles secure storage routing via IBiometricService.
 /// </summary>
-public class MauiPlatformStorage(IPreferences preferences) : IPlatformStorage, IPlatformSecureStorage
+using CoreSecureStorage = Buriza.Core.Interfaces.Storage.IPlatformSecureStorage;
+
+public class MauiPlatformStorage(IPreferences preferences) : IPlatformStorage, CoreSecureStorage
 {
     private static readonly Lock _keyTrackingLock = new();
 
@@ -52,13 +54,13 @@ public class MauiPlatformStorage(IPreferences preferences) : IPlatformStorage, I
         return Task.CompletedTask;
     }
 
-    Task<string?> IPlatformSecureStorage.GetAsync(string key, CancellationToken ct)
+    Task<string?> CoreSecureStorage.GetAsync(string key, CancellationToken ct)
         => SecureStorage.Default.GetAsync(key);
 
-    Task IPlatformSecureStorage.SetAsync(string key, string value, CancellationToken ct)
+    Task CoreSecureStorage.SetAsync(string key, string value, CancellationToken ct)
         => SecureStorage.Default.SetAsync(key, value);
 
-    Task IPlatformSecureStorage.RemoveAsync(string key, CancellationToken ct)
+    Task CoreSecureStorage.RemoveAsync(string key, CancellationToken ct)
     {
         SecureStorage.Default.Remove(key);
         return Task.CompletedTask;
@@ -67,7 +69,7 @@ public class MauiPlatformStorage(IPreferences preferences) : IPlatformStorage, I
     public async Task<bool> ExistsAsync(string key, CancellationToken ct = default, bool secure = false)
         => secure ? !string.IsNullOrEmpty(await SecureStorage.Default.GetAsync(key)) : await ExistsAsync(key, ct);
 
-    Task<bool> IPlatformSecureStorage.ExistsAsync(string key, CancellationToken ct)
+    Task<bool> CoreSecureStorage.ExistsAsync(string key, CancellationToken ct)
         => ExistsAsync(key, ct, secure: true);
 
     #region Key Tracking (for GetKeysAsync support)
