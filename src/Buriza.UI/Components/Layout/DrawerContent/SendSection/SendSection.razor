@@ -5,13 +5,13 @@
 @namespace Buriza.UI.Components.Layout
 
 <div class="relative h-full flex flex-col justify-between items-center">
-    <div class="!mt-2 w-full h-full max-h-[calc(100vh-154px)] overflow-y-auto !space-y-4 !px-4 !pb-12">
+    <div class="w-full h-full max-h-[calc(100vh-154px)] overflow-y-auto !space-y-4 !px-4 !pb-12">
         @foreach (var recipient in recipients)
         {
             <MudCard
-                Class="!w-full !bg-[var(--mud-palette-drawer-background)] !rounded-[12px] !p-4 !gap-4 !shadow-[var(--mud-elevation-2)]"
+                Class="!w-full !bg-[var(--mud-palette-drawer-background)] !rounded-[12px] !p-4 !gap-3 !shadow-[var(--mud-elevation-2)]"
             >
-                <div class="!mt-2 flex items-center justify-between h-[24px]">
+                <div class="flex items-center justify-between h-[24px]">
                     <MudText Class="!text-sm">
                         Recipient @recipient.Id
                     </MudText>
@@ -115,7 +115,7 @@
                 <div class="!space-y-2">
                     @foreach (var entry in recipient.TokenEntries)
                     {
-                        <div class="rounded-[8px] !p-3 border border-[var(--mud-palette-table-lines)] relative">
+                        <div class="rounded-[8px] !p-3 bg-[var(--mud-palette-gray-default)] border border-[var(--send-token-card-border)] relative">
                             @if (recipient.TokenEntries.Count > 1)
                             {
                                 <div class="absolute -top-2 -right-2 ">
@@ -135,13 +135,13 @@
                                 <div class="flex items-center !gap-2">
                                     <BurizaButton 
                                         Variant="Variant.Outlined"
-                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--mud-palette-table-lines)]! bg-transparent! text-[10px]!"
+                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--light-border)]! bg-transparent! text-[10px]!"
                                     >
                                         HALF
                                     </BurizaButton>
                                     <BurizaButton
                                         Variant="Variant.Outlined"
-                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--mud-palette-table-lines)]! bg-transparent! text-[10px]!"
+                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--light-border)]! bg-transparent! text-[10px]!"
                                     >
                                         MAX
                                     </BurizaButton>
@@ -152,7 +152,7 @@
                                     <BurizaButton
                                         Variant="Variant.Outlined"
                                         OnClick="@HandleSelectAsset"
-                                        Class="!border-[var(--mud-palette-table-lines)] px-1! !h-9 text-[var(--mud-palette-text-primary)]!"
+                                        Class="!bg-transparent !border-[var(--light-border)] px-1! !h-9 text-[var(--mud-palette-text-primary)]!"
                                     >
                                         <div class="flex items-center justify-between !gap-2">
                                             <div class="flex items-center !gap-1">
@@ -197,7 +197,7 @@
                     }
                 </div>
             }
-            <div class="w-full flex items-center justify-center !mt-2">
+            <div class="w-full flex items-center justify-center">
                 @if(IsConfirmed)
                 {
                     <div class="w-full">
