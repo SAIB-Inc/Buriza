@@ -57,6 +57,10 @@
     background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
+.mud-tooltip {
+    color: var(--mud-palette-text-primary) !important;
+}
+
 @keyframes progress-fill {
     from {
         width: 0%;
