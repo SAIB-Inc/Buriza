@@ -349,7 +349,7 @@
                                 <MudText Class="max-[376px]:!text-xs !text-sm">@index.</MudText>
                                 <BurizaTextField
                                     Value="@wordValue"
-                                    Class="max-[376px]:[&_input]:!text-xs [&_input]:!text-sm [&_input]:!py-0 [&_input]:pl-1! [&_input]:!px-1 !bg-transparent [&_.mud-input-outlined-border]:!border-none [&_.mud-input]:pr-0!"
+                                    Class="max-[376px]:[&_input]:!text-xs [&_input]:!text-sm [&_input]:!py-0 [&_input]:pl-1! [&_input]:!px-1 [&_input]:pt-0! [&_input]:pb-0! [&_.mud-input-outlined-border]:!border-none [&_.mud-input]:pr-0! [&_input]:caret-[var(--mud-palette-text-primary)]!"
                                 />
                             </div>
                         }
@@ -446,7 +446,7 @@
                 <div class="w-full max-w-[420px]! sm:h-[444px]!">
                     <div>
                         <BurizaTextField
-                            Placeholder="Wallet name..."
+                            Label="Wallet Name"
                         />
                     </div>
                     <div class="max-sm:!mt-6 w-full h-full flex items-center justify-center">
@@ -523,10 +523,10 @@
                 <div class="w-full max-w-[420px]! sm:h-[444px]!">
                     <div class="!space-y-3">
                         <BurizaTextField
-                            Placeholder="Password"
+                            Label="Password"
                         />
                         <BurizaTextField
-                            Placeholder="Confirm Password"
+                            Label="Confirm Password"
                         />
                     </div>
                     <div class="w-full !mt-[36px]">
