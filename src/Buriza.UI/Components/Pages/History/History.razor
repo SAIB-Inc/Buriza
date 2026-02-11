@@ -40,9 +40,9 @@
             {
                 <div class="w-full flex items-center gap-[10px] justify-end md:justify-between relative">
                     @* Mobile: Expandable search with absolute positioning *@
-                    <div class="@($"{(IsSearchExpanded ? "w-[calc(100vw-76px)] md:w-[calc(100vw-88px)] z-10" : "w-0 z-0")} [&_input]:!px-3 [&_input]:!py-2 [&_input]:!text-sm absolute right-11 transition-all duration-300 lg:relative md:right-14 lg:right-0 lg:w-full lg:z-auto [&_.mud-input-control]:!mb-0") lg:hidden">
+                    <div class="@($"{(IsSearchExpanded ? "w-[calc(100vw-76px)] md:w-[calc(100vw-88px)] z-10" : "w-0 z-0")} [&_input]:!px-3 [&_input]:!text-sm absolute right-11 transition-all duration-300 lg:relative md:right-14 lg:right-0 lg:w-full lg:z-auto [&_.mud-input-control]:!mb-0") lg:hidden">
                         <BurizaSearchBar
-                            Class="shadow-[var(--mud-elevation-1)]! !bg-[var(--mud-palette-overlay-light)] !h-9 md:!h-12 md:[&_input]:!py-[14.5px] [&_.mud-icon-root]:!hidden lg:[&_.mud-icon-root]:!inline-block"
+                            Class="bg-transparent! !h-9 [&_input]:py-4! [&_input]:h-9! [&_.mud-icon-root]:!hidden"
                         />
                         <MudIconButton
                             OnClick="ToggleSearch"
@@ -330,13 +330,13 @@
                 <div class="max-md:hidden w-1/2 flex items-center gap-[10px] justify-end md:justify-between relative">
                     <div class="w-full">
                         <BurizaSearchBar
-                            Class="shadow-[var(--mud-elevation-1)]! !bg-[var(--mud-palette-overlay-light)] mb-0! w-full !h-12 md:[&_input]:!py-[14.5px] md:[&_.mud-icon-root]:!inline-block max-md:!hidden"
+                            Class="!bg-transparent mb-0! w-full md:[&_input]:!py-2 max-md:!hidden"
                         />
                     </div>
                     <div>
                         <MudIconButton
                             Icon="@BurizaIcons.FilterSymbolIcon"
-                            Class="shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:!text-[18px] md:[&_.mud-icon-root]:!text-[24px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9 md:!w-12 md:!h-12"
+                            Class="shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] rounded-full! [&_.mud-icon-root]:!text-[18px] md:[&_.mud-icon-root]:!text-[24px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9 md:!w-12 md:!h-12"
                             OnClick="HandleFilterClick"
                         />
                     </div>

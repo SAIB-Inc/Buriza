@@ -55,7 +55,7 @@
     </header>
 
     @*Mobile Navigation*@
-    <header class="@($"max-[376px]:bottom-3 fixed h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg shadow-xl! z-100 grid grid-cols-5 max-w-[738px] lg:hidden transition-all duration-300 ease-in-out {(IsPopupVisible || !IsBaseLinksVisible ? "w-20 bg-transparent shadow-none !p-0" : "w-[calc(100%-32px)] bg-[var(--mud-palette-appbar-background)]/80")}")">
+    <header class="@($"max-[376px]:bottom-3 fixed h-16 bottom-8 left-1/2 -translate-x-1/2 p-1! rounded-[16px] backdrop-blur-lg shadow-xl! z-100 grid grid-cols-5 max-w-[738px] lg:hidden transition-all duration-300 ease-in-out {(IsPopupVisible || !IsBaseLinksVisible ? "w-0 bg-transparent shadow-none !p-0" : "w-[calc(100%-32px)] bg-[var(--mud-palette-appbar-background)]/80")}")">
         @*Receive*@
         <MudLink
             Href="@Routes.Receive"
