@@ -41,9 +41,4 @@ public partial class FilterSection
     {
         SelectedStatus = string.Empty;
     }
-
-    private void HandleApply()
-    {
-        // TODO: Apply filters and close drawer
-    }
 }

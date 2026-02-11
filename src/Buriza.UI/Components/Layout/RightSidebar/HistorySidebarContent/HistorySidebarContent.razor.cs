@@ -27,7 +27,7 @@ public partial class HistorySidebarContent : ComponentBase
 
     protected string GetAmountDisplay(decimal amount, TransactionType type)
     {
-        var prefix = type switch
+        string prefix = type switch
         {
             TransactionType.Sent => "-",
             TransactionType.Received => "+",

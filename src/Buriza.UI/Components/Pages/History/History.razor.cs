@@ -42,6 +42,7 @@ public partial class History
 
         if (screenWidth >= 1024)
         {
+            AppStateService.CurrentDrawerContent = DrawerContentType.Summary;
             AppStateService.IsFilterDrawerOpen = true;
         }
         else
@@ -52,7 +53,7 @@ public partial class History
     
     protected string GetAmountDisplay(decimal amount, TransactionType type)
     {
-        var prefix = type switch
+        string prefix = type switch
         {
             TransactionType.Sent => "-",
             TransactionType.Received => "+",

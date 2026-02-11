@@ -44,8 +44,8 @@ public partial class BurizaHeader : IDisposable
 
     protected void HandleBurizaTap()
     {
-        var now = DateTime.Now;
-        var timeSinceLastTap = (now - _lastTapTime).TotalMilliseconds;
+        DateTime now = DateTime.Now;
+        double timeSinceLastTap = (now - _lastTapTime).TotalMilliseconds;
 
         // Cancel any pending single tap action
         _singleTapTimer?.Dispose();
