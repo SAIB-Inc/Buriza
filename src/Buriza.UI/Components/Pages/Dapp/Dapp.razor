@@ -52,7 +52,7 @@
                     <MudToggleGroup T="string" Value="@SelectedCategory" Outlined="false" ValueChanged="OnCategoryChanged" Class="!flex !flex-nowrap !gap-2 !w-max !overflow-visible">
                         @foreach (var category in Categories)
                         {
-                            <MudToggleItem Value="@category" Class="@($"!rounded-full !w-max !px-6 !py-2 !text-sm !font-medium !flex-shrink-0 {(SelectedCategory == category ? "!bg-[var(--mud-palette-primary)] !text-white" : "!bg-[var(--mud-palette-dark)] !text-[var(--mud-palette-text-secondary)]")}")">
+                            <MudToggleItem Value="@category" Class="@($"!rounded-full !w-max !px-6 !py-2 !text-sm !font-medium !capitalize !flex-shrink-0 {(SelectedCategory == category ? "!bg-[var(--mud-palette-primary)] !text-[#094DA7]" : "!bg-[var(--mud-palette-dark)] !text-[var(--mud-palette-text-primary)]")}")">
                                 @category
                             </MudToggleItem>
                         }

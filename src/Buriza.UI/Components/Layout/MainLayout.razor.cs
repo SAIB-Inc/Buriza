@@ -170,7 +170,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
     {
         Summary => "Sent",
         AuthorizeDapp => "Authorize App",
-        ConnectedApps => "Connected Apps",
+        ConnectedApps => "Connected dApps (10)",
         Receive => AppStateService.IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
         Send => AppStateService.IsSendConfirmed ? "Summary" : "Send Assets",
         SelectAsset => "Select Assets",
