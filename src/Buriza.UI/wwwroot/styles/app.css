@@ -16,7 +16,9 @@
     --card-wallet-text: #003828;
     --card-wallet-chip: #002116;
     --card-wallet-subtext: #00173D;
-    --card-wallet-overlay: #B5E6FF4D
+    --card-wallet-overlay: #B5E6FF4D;
+    --send-token-card-border: #1D212B;
+    --light-border: #3A4663;
 }
 
 * {
