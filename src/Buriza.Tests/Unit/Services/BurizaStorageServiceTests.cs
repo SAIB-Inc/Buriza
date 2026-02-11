@@ -7,7 +7,6 @@ using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Security;
 using Buriza.Core.Storage;
 using Buriza.Tests.Mocks;
-using TestPlatformStorage = Buriza.Tests.Mocks.InMemoryPlatformStorage;
 
 namespace Buriza.Tests.Unit.Services;
 
@@ -16,7 +15,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task UnlockVaultAsync_RepeatedFailures_TriggersLockout()
     {
-        TestPlatformStorage platformStorage = new();
+        InMemoryStorage platformStorage = new();
         TestWalletStorageService storage = new(platformStorage);
 
         Guid walletId = Guid.NewGuid();
@@ -33,7 +32,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task EnablePinAsync_TooShort_Throws()
     {
-        TestPlatformStorage platformStorage = new();
+        InMemoryStorage platformStorage = new();
         TestWalletStorageService storage = new(platformStorage);
 
         Guid walletId = Guid.NewGuid();
@@ -45,7 +44,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task GetCustomProviderConfigWithApiKeyAsync_InvalidMetadata_Throws()
     {
-        TestPlatformStorage platformStorage = new();
+        InMemoryStorage platformStorage = new();
         TestWalletStorageService storage = new(platformStorage);
 
         ChainInfo chainInfo = ChainRegistry.CardanoMainnet;
@@ -76,7 +75,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task SaveCustomProviderConfigAsync_BindsPurposeAndChain()
     {
-        TestPlatformStorage platformStorage = new();
+        InMemoryStorage platformStorage = new();
         TestWalletStorageService storage = new(platformStorage);
 
         ChainInfo chainInfo = ChainRegistry.CardanoMainnet;
@@ -107,7 +106,7 @@ public class BurizaStorageServiceTests
     [Fact]
     public async Task LoadAllWalletsAsync_InvalidJson_Throws()
     {
-        TestPlatformStorage platformStorage = new();
+        InMemoryStorage platformStorage = new();
         await platformStorage.SetAsync(StorageKeys.Wallets, "{not json");
 
         TestWalletStorageService storage = new(platformStorage);

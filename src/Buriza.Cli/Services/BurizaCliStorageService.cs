@@ -17,7 +17,7 @@ namespace Buriza.Cli.Services;
 /// </summary>
 public sealed class BurizaCliStorageService : BurizaStorageBase
 {
-    private readonly InMemoryPlatformStorage _storage = new();
+    private readonly InMemoryStorage _storage = new();
 
     #region IStorageProvider
 

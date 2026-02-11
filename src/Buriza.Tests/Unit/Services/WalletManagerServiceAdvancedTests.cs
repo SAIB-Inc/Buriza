@@ -4,6 +4,7 @@ using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Wallet;
 using Buriza.Core.Services;
+using Buriza.Core.Storage;
 using Buriza.Data.Models;
 using Buriza.Data.Services;
 using Buriza.Tests.Mocks;
@@ -21,7 +22,7 @@ namespace Buriza.Tests.Unit.Services;
 /// </summary>
 public class WalletManagerServiceAdvancedTests : IDisposable
 {
-    private readonly InMemoryPlatformStorage _platformStorage;
+    private readonly InMemoryStorage _platformStorage;
     private readonly TestWalletStorageService _storage;
     private readonly BurizaChainProviderFactory _providerFactory;
     private readonly WalletManagerService _walletManager;
@@ -31,7 +32,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
 
     public WalletManagerServiceAdvancedTests()
     {
-        _platformStorage = new InMemoryPlatformStorage();
+        _platformStorage = new InMemoryStorage();
         _storage = new TestWalletStorageService(_platformStorage);
         ChainProviderSettings settings = new()
         {
@@ -436,7 +437,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     public void Dispose_CanBeCalledMultipleTimes()
     {
         // Arrange
-        InMemoryPlatformStorage platformStorage = new();
+        InMemoryStorage platformStorage = new();
         TestWalletStorageService storage = new(platformStorage);
         ChainProviderSettings settings = new()
         {

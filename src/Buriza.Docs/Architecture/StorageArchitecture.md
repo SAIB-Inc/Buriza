@@ -62,7 +62,7 @@ The JS layer auto‑detects the environment and routes accordingly.
 
 ### CLI / Tests
 
-- `InMemoryPlatformStorage` for ephemeral storage (no persistence).
+- `InMemoryStorage` for ephemeral storage (no persistence).
 
 ---
 
@@ -114,7 +114,7 @@ services.AddSingleton<IWalletManager, WalletManagerService>();
 ### CLI
 
 ```csharp
-services.AddSingleton<IStorageProvider, InMemoryPlatformStorage>();
+services.AddSingleton<IStorageProvider, InMemoryStorage>();
 services.AddSingleton<BurizaCliStorageService>();
 services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaCliStorageService>());
 services.AddSingleton<ChainProviderSettings>();

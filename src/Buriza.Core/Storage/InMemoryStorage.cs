@@ -5,7 +5,7 @@ namespace Buriza.Core.Storage;
 /// <summary>
 /// In-memory storage for tests and ephemeral scenarios.
 /// </summary>
-public sealed class InMemoryPlatformStorage : IStorageProvider
+public sealed class InMemoryStorage : IStorageProvider
 {
     private readonly Dictionary<string, string> _values = new(StringComparer.Ordinal);
 

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Buriza.Core.Storage;
 using Buriza.Tests.Mocks;
 
 namespace Buriza.Tests.Integration.Storage;
@@ -15,7 +16,7 @@ public class VaultEncryptionIntegrationTests
     private const string NewPassword = "NewSecurePassword456!";
     private static readonly Guid TestWalletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
-    private readonly InMemoryPlatformStorage _storage = new();
+    private readonly InMemoryStorage _storage = new();
     private readonly TestWalletStorageService _walletStorage;
 
     public VaultEncryptionIntegrationTests()
