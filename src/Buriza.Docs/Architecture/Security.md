@@ -132,6 +132,9 @@ Lockout uses exponential backoff after repeated failures:
 
 Lockout state is HMAC protected. Tampering resets lockout state instead of enforcing it.
 
+**Platform note:** Lockout is enforced only on MAUI (SecureStorage-backed).  
+Web/Extension/CLI intentionally disable lockout because client-side storage cannot provide a trustworthy anchor against tampering.
+
 ---
 
 ## Verifier Payload vs Vault Encryption
