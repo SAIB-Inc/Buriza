@@ -19,7 +19,7 @@ public partial class ConnectedAppsSection : ComponentBase
 
     protected async Task OnDeleteDappClicked(DappInfo dapp)
     {
-        var options = new DialogOptions
+        DialogOptions options = new()
         {
             NoHeader = true,
             MaxWidth = MaxWidth.ExtraSmall,
@@ -27,8 +27,8 @@ public partial class ConnectedAppsSection : ComponentBase
             BackdropClick = true
         };
 
-        var dialog = await DialogService.ShowAsync<DisconnectDappDialog>(null, options);
-        var result = await dialog.Result;
+        IDialogReference dialog = await DialogService.ShowAsync<DisconnectDappDialog>(null, options);
+        DialogResult? result = await dialog.Result;
 
         if (result is { Canceled: false })
         {

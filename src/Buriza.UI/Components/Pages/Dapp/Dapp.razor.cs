@@ -94,7 +94,7 @@ public partial class Dapp
 
     protected async Task OnDisconnectDappClicked(DappInfo dapp)
     {
-        var options = new DialogOptions
+        DialogOptions options = new()
         {
             NoHeader = true,
             MaxWidth = MaxWidth.ExtraSmall,
@@ -102,8 +102,8 @@ public partial class Dapp
             BackdropClick = true
         };
 
-        var dialog = await DialogService.ShowAsync<DisconnectDappDialog>(null, options);
-        var result = await dialog.Result;
+        IDialogReference dialog = await DialogService.ShowAsync<DisconnectDappDialog>(null, options);
+        DialogResult? result = await dialog.Result;
 
         if (result is { Canceled: false })
         {

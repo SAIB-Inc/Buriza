@@ -5,8 +5,6 @@ public record DappInfo(
     string Type,
     string Description,
     string Icon,
-    string ThemePrimary,
-    string ThemeSecondary,
     bool IsFavorite = false
 );
 
@@ -21,8 +19,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "Advanced DEX aggregator for optimal swaps across Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/hunterdex.svg",
-                ThemePrimary: "!bg-[var(--dapp-hunterdex-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-hunterdex-secondary)]/40",
                 IsFavorite: true
             ),
             new DappInfo(
@@ -30,8 +26,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "NFT-backed lending and borrowing protocol",
                 Icon: "/_content/Buriza.UI/images/logos/levvy.svg",
-                ThemePrimary: "!bg-[var(--dapp-levvy-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-levvy-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -39,8 +33,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "Multi-pool decentralized exchange on Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/minswap.svg",
-                ThemePrimary: "!bg-[var(--dapp-minswap-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-minswap-secondary)]/40",
                 IsFavorite: true
             ),
             new DappInfo(
@@ -48,8 +40,6 @@ public static class DappData
                 Type: "Gaming",
                 Description: "Play-to-earn gaming platform with DeFi integration",
                 Icon: "/_content/Buriza.UI/images/logos/danzo.svg",
-                ThemePrimary: "!bg-[var(--dapp-danzo-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-danzo-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -57,8 +47,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "Native scalable DEX built for Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/splash.svg",
-                ThemePrimary: "!bg-[var(--dapp-hunterdex-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-hunterdex-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -66,8 +54,6 @@ public static class DappData
                 Type: "NFT",
                 Description: "The largest NFT marketplace on Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/jpgstore.svg",
-                ThemePrimary: "!bg-[var(--dapp-levvy-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-levvy-secondary)]/40",
                 IsFavorite: true
             ),
             new DappInfo(
@@ -75,8 +61,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "Decentralized lending and borrowing protocol",
                 Icon: "/_content/Buriza.UI/images/logos/splash.svg",
-                ThemePrimary: "!bg-[var(--dapp-minswap-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-minswap-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -84,8 +68,6 @@ public static class DappData
                 Type: "NFT",
                 Description: "No-code NFT minting and management platform",
                 Icon: "/_content/Buriza.UI/images/logos/indigo.svg",
-                ThemePrimary: "!bg-[var(--dapp-danzo-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-danzo-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -93,8 +75,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "Synthetic assets protocol on Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/indigo.svg",
-                ThemePrimary: "!bg-[var(--dapp-hunterdex-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-hunterdex-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -102,8 +82,6 @@ public static class DappData
                 Type: "Gaming",
                 Description: "Play-to-earn blockchain-based metaverse game",
                 Icon: "/_content/Buriza.UI/images/logos/splash.svg",
-                ThemePrimary: "!bg-[var(--dapp-levvy-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-levvy-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -111,8 +89,6 @@ public static class DappData
                 Type: "DeFi",
                 Description: "Order book and AMM hybrid DEX on Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/minswap.svg",
-                ThemePrimary: "!bg-[var(--dapp-minswap-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-minswap-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -120,8 +96,6 @@ public static class DappData
                 Type: "NFT",
                 Description: "Decentralized eBook and audiobook marketplace",
                 Icon: "/_content/Buriza.UI/images/logos/jpgstore.svg",
-                ThemePrimary: "!bg-[var(--dapp-danzo-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-danzo-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -129,8 +103,6 @@ public static class DappData
                 Type: "Governance",
                 Description: "DAO tooling and on-chain voting for Cardano communities",
                 Icon: "/_content/Buriza.UI/images/logos/indigo.svg",
-                ThemePrimary: "!bg-[var(--dapp-hunterdex-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-hunterdex-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -138,8 +110,6 @@ public static class DappData
                 Type: "Governance",
                 Description: "Token distribution and governance participation platform",
                 Icon: "/_content/Buriza.UI/images/logos/splash.svg",
-                ThemePrimary: "!bg-[var(--dapp-minswap-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-minswap-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -147,8 +117,6 @@ public static class DappData
                 Type: "Social",
                 Description: "Decentralized music streaming and artist royalties platform",
                 Icon: "/_content/Buriza.UI/images/logos/jpgstore.svg",
-                ThemePrimary: "!bg-[var(--dapp-levvy-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-levvy-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -156,8 +124,6 @@ public static class DappData
                 Type: "Bridge",
                 Description: "Cross-chain bridge connecting Cardano with other blockchains",
                 Icon: "/_content/Buriza.UI/images/logos/indigo.svg",
-                ThemePrimary: "!bg-[var(--dapp-danzo-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-danzo-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -165,8 +131,6 @@ public static class DappData
                 Type: "Bridge",
                 Description: "EVM sidechain bridge for Cardano interoperability",
                 Icon: "/_content/Buriza.UI/images/logos/splash.svg",
-                ThemePrimary: "!bg-[var(--dapp-hunterdex-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-hunterdex-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -174,8 +138,6 @@ public static class DappData
                 Type: "Infrastructure",
                 Description: "Decentralized oracle network for Cardano smart contracts",
                 Icon: "/_content/Buriza.UI/images/logos/jpgstore.svg",
-                ThemePrimary: "!bg-[var(--dapp-minswap-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-minswap-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -183,8 +145,6 @@ public static class DappData
                 Type: "Infrastructure",
                 Description: "API and developer tools for building on Cardano",
                 Icon: "/_content/Buriza.UI/images/logos/indigo.svg",
-                ThemePrimary: "!bg-[var(--dapp-levvy-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-levvy-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -192,8 +152,6 @@ public static class DappData
                 Type: "RealFi",
                 Description: "Real-world property financing through decentralized lending",
                 Icon: "/_content/Buriza.UI/images/logos/splash.svg",
-                ThemePrimary: "!bg-[var(--dapp-danzo-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-danzo-secondary)]/40",
                 IsFavorite: false
             ),
             new DappInfo(
@@ -201,8 +159,6 @@ public static class DappData
                 Type: "RealFi",
                 Description: "Decentralized mobile network and digital identity platform",
                 Icon: "/_content/Buriza.UI/images/logos/jpgstore.svg",
-                ThemePrimary: "!bg-[var(--dapp-hunterdex-primary)]",
-                ThemeSecondary: "bg-[var(--dapp-hunterdex-secondary)]/40",
                 IsFavorite: true
             )
         ];
