@@ -450,7 +450,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
                 PreviewApiKey = "test-key"
             }
         };
-        BurizaChainProviderFactory factory = new(settings);
+        BurizaChainProviderFactory factory = new(new TestAppStateService(), settings);
         WalletManagerService manager = new(storage, factory);
 
         // Act & Assert - Should not throw
