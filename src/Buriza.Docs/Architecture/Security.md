@@ -91,7 +91,7 @@ Binary format (24 bytes):
 ### MAUI / Desktop (secure storage)
 
 - Seed is stored **directly** in SecureStorage (Keychain/Keystore/etc.) via `BurizaAppStorageService`.
-- Password verifier stored as `SecretVerifier` in secure storage.
+- Password verifier stored as a `SecretVerifierPayload` (created by `VaultEncryption`) in secure storage.
 - PIN/biometric are convenience unlock methods that protect the password.
 
 **Note:** MAUI does **not** double-encrypt the seed; it relies on OS secure storage for confidentiality. Vault encryption is used for PIN/biometric flows.
@@ -134,16 +134,16 @@ Lockout state is HMAC protected. Tampering resets lockout state instead of enfor
 
 ---
 
-## SecretVerifier vs Vault Encryption
+## Verifier Payload vs Vault Encryption
 
 **VaultEncryption** protects *data at rest* (seed, API keys) using AES-GCM and a derived key.
 
-**SecretVerifier** is a one-way Argon2id hash used for password/PIN validation without decrypting a vault.
+`VaultEncryption.CreateSecretVerifier` returns a verifier payload (Argon2id hash) used for password/PIN validation without decrypting a vault.
 
 Why both?
 
 - VaultEncryption is for actual secret payloads.
-- SecretVerifier is for validating a secret when the payload is stored elsewhere (DirectSecure mode).
+- Verifier payload is for validating a secret when the payload is stored elsewhere (DirectSecure mode).
 
 ---
 

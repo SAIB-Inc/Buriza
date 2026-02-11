@@ -11,8 +11,12 @@ namespace Buriza.Core.Interfaces.Chain;
 /// </summary>
 public interface IKeyService
 {
+    /// <summary>Derives a receive/change address for an account.</summary>
     Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    /// <summary>Derives a staking/reward address for an account.</summary>
     Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default);
+    /// <summary>Derives a private key for an account/address.</summary>
     Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
+    /// <summary>Derives a public key for an account/address.</summary>
     Task<PublicKey> DerivePublicKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
 }

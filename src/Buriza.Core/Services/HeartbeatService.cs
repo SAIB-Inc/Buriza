@@ -5,14 +5,23 @@ using Microsoft.Extensions.Logging;
 
 namespace Buriza.Core.Services;
 
+/// <summary>
+/// Follows chain tip updates and exposes heartbeat events with backoff and retry.
+/// </summary>
 public class HeartbeatService : IDisposable
 {
+    /// <summary>Raised when a new tip is received.</summary>
     public event EventHandler? Beat;
+    /// <summary>Raised when the follow-tip stream encounters an error.</summary>
     public event EventHandler<HeartbeatErrorEventArgs>? Error;
 
+    /// <summary>Last observed slot.</summary>
     public ulong Slot { get; private set; }
+    /// <summary>Last observed block hash.</summary>
     public string Hash { get; private set; } = string.Empty;
+    /// <summary>Indicates if the service considers itself connected.</summary>
     public bool IsConnected { get; private set; }
+    /// <summary>Consecutive failure count for the current session.</summary>
     public int ConsecutiveFailures { get; private set; }
 
     private readonly IBurizaChainProvider _provider;
@@ -25,6 +34,9 @@ public class HeartbeatService : IDisposable
     private const int MaxDelayMs = 60000;
     private const double BackoffMultiplier = 2.0;
 
+    /// <summary>
+    /// Creates a heartbeat follower for a chain provider.
+    /// </summary>
     public HeartbeatService(IBurizaChainProvider provider, ILogger<HeartbeatService>? logger = null)
     {
         _provider = provider;
@@ -123,6 +135,7 @@ public class HeartbeatService : IDisposable
         }
     }
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed) return;

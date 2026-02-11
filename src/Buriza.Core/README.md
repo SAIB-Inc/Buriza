@@ -328,7 +328,7 @@ See [Usage.md](./Usage.md) for detailed examples including:
 
 ```csharp
 // Setup
-using var factory = new BurizaChainProviderFactory(settings);
+using var factory = new BurizaChainProviderFactory(appState, settings);
 var walletManager = new WalletManagerService(storage, factory);
 
 // Create wallet from existing mnemonic (uses default provider config)

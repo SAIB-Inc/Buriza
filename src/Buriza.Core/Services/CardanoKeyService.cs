@@ -26,6 +26,7 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
 
     #region Cardano CIP-1852 Derivation
 
+    /// <inheritdoc/>
     public Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = RestoreMnemonic(mnemonic);
@@ -38,6 +39,7 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
         return Task.FromResult(Address.FromPublicKeys(_networkType, AddressType.Base, paymentKey, stakingKey).ToBech32());
     }
 
+    /// <inheritdoc/>
     public Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default)
     {
         Mnemonic restored = RestoreMnemonic(mnemonic);
@@ -54,6 +56,7 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
         return Task.FromResult(new Address(addressBytes).ToBech32());
     }
 
+    /// <inheritdoc/>
     public Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = RestoreMnemonic(mnemonic);
@@ -62,6 +65,7 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
         return Task.FromResult(DeriveAddressKey(DeriveAccountKey(restored, accountIndex), role, addressIndex));
     }
 
+    /// <inheritdoc/>
     public Task<PublicKey> DerivePublicKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = RestoreMnemonic(mnemonic);

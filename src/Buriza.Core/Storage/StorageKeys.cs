@@ -80,5 +80,8 @@ public static class StorageKeys
     /// <summary>Key for storing the index of all tracked storage keys (MAUI only).</summary>
     public const string KeysIndex = "buriza_storage_keys_index";
 
+    /// <summary>Key for storing the index of all tracked secure storage keys (MAUI only).</summary>
+    public const string SecureKeysIndex = "buriza_secure_storage_keys_index";
+
     #endregion
 }

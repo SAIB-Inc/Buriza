@@ -43,7 +43,7 @@ public class WalletManagerServiceTests : IDisposable
                 PreviewApiKey = "test-preview-key"
             }
         };
-        _providerFactory = new BurizaChainProviderFactory(settings);
+        _providerFactory = new BurizaChainProviderFactory(new TestAppStateService(), settings);
         _walletManager = new WalletManagerService(_storage, _providerFactory);
     }
 

@@ -116,7 +116,8 @@ src/Buriza.Core/
 │   │   └── ChainAddressData.cs
 │   ├── Security/
 │   │   ├── EncryptedVault.cs
-│   │   ├── SecretVerifier.cs
+│   │   ├── VaultEncryption.cs (SecretVerifier helpers)
+│   │   ├── SecretVerifierPayload.cs
 │   │   └── LockoutState.cs
 │   ├── Chain/
 │   │   ├── ChainInfo.cs

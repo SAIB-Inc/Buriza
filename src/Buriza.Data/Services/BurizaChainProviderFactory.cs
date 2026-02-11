@@ -14,15 +14,16 @@ namespace Buriza.Data.Services;
 /// Uses session-scoped overrides, falls back to ChainProviderSettings.
 /// </summary>
 public class BurizaChainProviderFactory(
+    IBurizaAppStateService appState,
     ChainProviderSettings settings) : IBurizaChainProviderFactory
 {
+    private readonly IBurizaAppStateService _appState = appState ?? throw new ArgumentNullException(nameof(appState));
     private readonly ChainProviderSettings _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-    private readonly Dictionary<string, ServiceConfig> _sessionConfigs = [];
     private bool _disposed;
 
     public IBurizaChainProvider CreateProvider(ChainInfo chainInfo)
     {
-        ServiceConfig? customConfig = GetSessionConfig(chainInfo);
+        ServiceConfig? customConfig = _appState.GetChainConfig(chainInfo);
         string? endpoint = Normalize(customConfig?.Endpoint) ?? GetDefaultEndpoint(chainInfo);
         string? apiKey = Normalize(customConfig?.ApiKey) ?? GetDefaultApiKey(chainInfo);
 
@@ -99,19 +100,13 @@ public class BurizaChainProviderFactory(
 
     public void SetChainConfig(ChainInfo chainInfo, ServiceConfig config)
     {
-        _sessionConfigs[GetConfigKey(chainInfo)] = config;
+        _appState.SetChainConfig(chainInfo, config);
     }
 
     public void ClearChainConfig(ChainInfo chainInfo)
     {
-        _sessionConfigs.Remove(GetConfigKey(chainInfo));
+        _appState.ClearChainConfig(chainInfo);
     }
-
-    private ServiceConfig? GetSessionConfig(ChainInfo chainInfo)
-        => _sessionConfigs.TryGetValue(GetConfigKey(chainInfo), out ServiceConfig? config) ? config : null;
-
-    private static string GetConfigKey(ChainInfo chainInfo)
-        => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
 
     public void Dispose()
     {

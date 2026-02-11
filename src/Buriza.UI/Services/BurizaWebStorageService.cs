@@ -19,9 +19,6 @@ namespace Buriza.UI.Services;
 public sealed class BurizaWebStorageService(IJSRuntime js) : BurizaStorageBase
 {
     private readonly IJSRuntime _js = js;
-    private const int MaxFailedAttemptsBeforeLockout = 5;
-    private static readonly TimeSpan BaseLockoutDuration = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan MaxLockoutDuration = TimeSpan.FromHours(1);
 
     #region IStorageProvider
 
@@ -129,43 +126,22 @@ public sealed class BurizaWebStorageService(IJSRuntime js) : BurizaStorageBase
 
     public override async Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default)
     {
-        await EnsureNotLockedAsync(walletId, ct);
-
         string password = passwordOrPin ?? throw new ArgumentException("Password required", nameof(passwordOrPin));
-        try
-        {
-            EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
-                ?? throw new InvalidOperationException("Vault not found");
-            byte[] mnemonic = VaultEncryption.Decrypt(vault, password);
-            await ResetLockoutStateAsync(walletId, ct);
-            return mnemonic;
-        }
-        catch (CryptographicException)
-        {
-            await RegisterFailedAttemptAsync(walletId, ct);
-            throw;
-        }
+        EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
+            ?? throw new InvalidOperationException("Vault not found");
+        return VaultEncryption.Decrypt(vault, password);
     }
 
     public override async Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default)
     {
-        await EnsureNotLockedAsync(walletId, ct);
-
         EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
         if (vault is null) return false;
 
-        bool ok = VaultEncryption.VerifyPassword(vault, password);
-        if (ok)
-            await ResetLockoutStateAsync(walletId, ct);
-        else
-            await RegisterFailedAttemptAsync(walletId, ct);
-        return ok;
+        return VaultEncryption.VerifyPassword(vault, password);
     }
 
     public override async Task ChangePasswordAsync(Guid walletId, string oldPassword, string newPassword, CancellationToken ct = default)
     {
-        await EnsureNotLockedAsync(walletId, ct);
-
         byte[] mnemonicBytes;
         try
         {
@@ -173,16 +149,11 @@ public sealed class BurizaWebStorageService(IJSRuntime js) : BurizaStorageBase
                 ?? throw new InvalidOperationException("Vault not found");
             mnemonicBytes = VaultEncryption.Decrypt(vault, oldPassword);
         }
-        catch (CryptographicException)
-        {
-            await RegisterFailedAttemptAsync(walletId, ct);
-            throw;
-        }
+        catch (CryptographicException) { throw; }
 
         try
         {
             await CreateVaultAsync(walletId, mnemonicBytes, newPassword, ct);
-            await ResetLockoutStateAsync(walletId, ct);
         }
         finally
         {
@@ -316,112 +287,4 @@ public sealed class BurizaWebStorageService(IJSRuntime js) : BurizaStorageBase
 
     #endregion
 
-    #region Lockout
-
-    private async Task EnsureNotLockedAsync(Guid walletId, CancellationToken ct)
-    {
-        LockoutState? state = await TryGetLockoutStateAsync(walletId, ct);
-        if (state?.LockoutEndUtc is null) return;
-
-        if (state.LockoutEndUtc > DateTime.UtcNow)
-            throw new InvalidOperationException($"Wallet locked until {state.LockoutEndUtc:O}");
-
-        await ResetLockoutStateAsync(walletId, ct);
-    }
-
-    private async Task RegisterFailedAttemptAsync(Guid walletId, CancellationToken ct)
-    {
-        LockoutState? state = await TryGetLockoutStateAsync(walletId, ct);
-        int failedAttempts = (state?.FailedAttempts ?? 0) + 1;
-        DateTime? lockoutEndUtc = null;
-
-        if (failedAttempts >= MaxFailedAttemptsBeforeLockout)
-        {
-            int exponent = failedAttempts - MaxFailedAttemptsBeforeLockout;
-            double scale = Math.Pow(2, Math.Min(exponent, 6));
-            TimeSpan duration = TimeSpan.FromSeconds(BaseLockoutDuration.TotalSeconds * scale);
-            if (duration > MaxLockoutDuration)
-                duration = MaxLockoutDuration;
-
-            lockoutEndUtc = DateTime.UtcNow.Add(duration);
-        }
-
-        await SaveLockoutStateAsync(walletId, failedAttempts, lockoutEndUtc, ct);
-    }
-
-    private Task ResetLockoutStateAsync(Guid walletId, CancellationToken ct)
-        => RemoveAsync(StorageKeys.LockoutState(walletId), ct);
-
-    private async Task<LockoutState?> TryGetLockoutStateAsync(Guid walletId, CancellationToken ct)
-    {
-        string? json = await GetAsync(StorageKeys.LockoutState(walletId), ct);
-        if (string.IsNullOrEmpty(json)) return null;
-
-        LockoutState? state;
-        try
-        {
-            state = JsonSerializer.Deserialize<LockoutState>(json);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-
-        if (state is null || string.IsNullOrEmpty(state.Hmac))
-        {
-            await ResetLockoutStateAsync(walletId, ct);
-            return null;
-        }
-
-        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
-        string expected = ComputeLockoutHmac(hmacKey, state.FailedAttempts, state.LockoutEndUtc, state.UpdatedAtUtc);
-        try
-        {
-            if (!CryptographicOperations.FixedTimeEquals(Convert.FromBase64String(state.Hmac), Convert.FromBase64String(expected)))
-            {
-                await ResetLockoutStateAsync(walletId, ct);
-                return null;
-            }
-        }
-        catch (FormatException)
-        {
-            await ResetLockoutStateAsync(walletId, ct);
-            return null;
-        }
-
-        return state;
-    }
-
-    private async Task SaveLockoutStateAsync(Guid walletId, int failedAttempts, DateTime? lockoutEndUtc, CancellationToken ct)
-    {
-        DateTime updatedAtUtc = DateTime.UtcNow;
-        byte[] hmacKey = await GetOrCreateLockoutKeyAsync(ct);
-        string hmac = ComputeLockoutHmac(hmacKey, failedAttempts, lockoutEndUtc, updatedAtUtc);
-
-        LockoutState state = new()
-        {
-            FailedAttempts = failedAttempts,
-            LockoutEndUtc = lockoutEndUtc,
-            UpdatedAtUtc = updatedAtUtc,
-            Hmac = hmac
-        };
-
-        string json = JsonSerializer.Serialize(state);
-        await SetAsync(StorageKeys.LockoutState(walletId), json, ct);
-    }
-
-    private async Task<byte[]> GetOrCreateLockoutKeyAsync(CancellationToken ct)
-    {
-        string? keyBase64 = await GetAsync(StorageKeys.LockoutKey, ct);
-        if (string.IsNullOrEmpty(keyBase64))
-        {
-            byte[] key = RandomNumberGenerator.GetBytes(32);
-            await SetAsync(StorageKeys.LockoutKey, Convert.ToBase64String(key), ct);
-            return key;
-        }
-
-        return Convert.FromBase64String(keyBase64);
-    }
-
-    #endregion
 }

@@ -55,6 +55,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<BurizaAppStorageService>();
 		builder.Services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaAppStorageService>());
 		builder.Services.AddSingleton<AppStateService>();
+		builder.Services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<AppStateService>());
 		builder.Services.AddSingleton<ChainProviderSettings>();
 		builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
 		builder.Services.AddSingleton<IWalletManager, WalletManagerService>();

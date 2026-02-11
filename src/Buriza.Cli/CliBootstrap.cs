@@ -24,6 +24,8 @@ public static class CliBootstrap
 
         services.AddSingleton<BurizaCliStorageService>();
         services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaCliStorageService>());
+        services.AddSingleton<CliAppStateService>();
+        services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<CliAppStateService>());
 
         ChainProviderSettings settings = config
             .GetSection("ChainProviderSettings")

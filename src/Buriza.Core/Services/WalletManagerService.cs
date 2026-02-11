@@ -14,6 +14,7 @@ using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 
 namespace Buriza.Core.Services;
 
+/// <inheritdoc />
 public class WalletManagerService(
     BurizaStorageBase storage,
     IBurizaChainProviderFactory providerFactory) : IWalletManager, IDisposable
@@ -24,6 +25,7 @@ public class WalletManagerService(
 
     #region Wallet Lifecycle
 
+    /// <inheritdoc/>
     public void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic)
     {
         byte[] mnemonicBytes = MnemonicService.Generate(wordCount);
@@ -45,6 +47,7 @@ public class WalletManagerService(
         }
     }
 
+    /// <inheritdoc/>
     public async Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default)
     {
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
@@ -126,6 +129,7 @@ public class WalletManagerService(
         return wallet;
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default)
     {
         IReadOnlyList<BurizaWallet> wallets = await _storage.LoadAllWalletsAsync(ct);
@@ -134,6 +138,7 @@ public class WalletManagerService(
         return wallets;
     }
 
+    /// <inheritdoc/>
     public async Task<BurizaWallet?> GetActiveAsync(CancellationToken ct = default)
     {
         Guid? activeId = await _storage.GetActiveWalletIdAsync(ct);
@@ -145,12 +150,14 @@ public class WalletManagerService(
         return wallet;
     }
 
+    /// <inheritdoc/>
     public async Task SetActiveAsync(Guid walletId, CancellationToken ct = default)
     {
         _ = await GetWalletOrThrowAsync(walletId, ct);
         await _storage.SetActiveWalletIdAsync(walletId, ct);
     }
 
+    /// <inheritdoc/>
     public async Task DeleteAsync(Guid walletId, CancellationToken ct = default)
     {
         // Verify wallet exists
@@ -177,6 +184,7 @@ public class WalletManagerService(
 
     #region Chain Management
 
+    /// <inheritdoc/>
     public async Task SetActiveChainAsync(Guid walletId, ChainInfo chainInfo, string? password = null, CancellationToken ct = default)
     {
         // Validate chain is supported
@@ -213,6 +221,7 @@ public class WalletManagerService(
         AttachProvider(wallet);
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<ChainType> GetAvailableChains()
         => _providerFactory.GetSupportedChains();
 
@@ -220,6 +229,7 @@ public class WalletManagerService(
 
     #region Account Management
 
+    /// <inheritdoc/>
     public async Task<BurizaWalletAccount> CreateAccountAsync(Guid walletId, string name, int? accountIndex = null, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -241,12 +251,14 @@ public class WalletManagerService(
         return account;
     }
 
+    /// <inheritdoc/>
     public async Task<BurizaWalletAccount?> GetActiveAccountAsync(CancellationToken ct = default)
     {
         BurizaWallet? wallet = await GetActiveAsync(ct);
         return wallet?.GetActiveAccount();
     }
 
+    /// <inheritdoc/>
     public async Task SetActiveAccountAsync(Guid walletId, int accountIndex, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -257,6 +269,7 @@ public class WalletManagerService(
         await _storage.SaveWalletAsync(wallet, ct);
     }
 
+    /// <inheritdoc/>
     public async Task UnlockAccountAsync(Guid walletId, int accountIndex, string password, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -280,6 +293,7 @@ public class WalletManagerService(
         }
     }
 
+    /// <inheritdoc/>
     public async Task RenameAccountAsync(Guid walletId, int accountIndex, string newName, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -291,6 +305,7 @@ public class WalletManagerService(
     private const int MaxAccountDiscoveryLimit = 100;
     private const string DefaultAccountName = "Account {0}";
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, string password, int accountGapLimit = 5, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -371,6 +386,7 @@ public class WalletManagerService(
 
     #region Address Operations
 
+    /// <inheritdoc/>
     public async Task<string> GetReceiveAddressAsync(Guid walletId, int accountIndex = 0, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -384,6 +400,7 @@ public class WalletManagerService(
         return chainData.ReceiveAddress;
     }
 
+    /// <inheritdoc/>
     public async Task<string> GetStakingAddressAsync(Guid walletId, int accountIndex, string? password = null, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -424,9 +441,11 @@ public class WalletManagerService(
 
     #region Password Operations
 
+    /// <inheritdoc/>
     public Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default)
         => _storage.VerifyPasswordAsync(walletId, password, ct);
 
+    /// <inheritdoc/>
     public Task ChangePasswordAsync(Guid walletId, string currentPassword, string newPassword, CancellationToken ct = default)
         => _storage.ChangePasswordAsync(walletId, currentPassword, newPassword, ct);
 
@@ -434,6 +453,7 @@ public class WalletManagerService(
 
     #region Sensitive Operations (Requires Password)
 
+    /// <inheritdoc/>
     public async Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
@@ -455,6 +475,7 @@ public class WalletManagerService(
         }
     }
 
+    /// <inheritdoc/>
     public async Task ExportMnemonicAsync(Guid walletId, string password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default)
     {
         await GetWalletOrThrowAsync(walletId, ct);
@@ -481,9 +502,11 @@ public class WalletManagerService(
 
     #region Custom Provider Config
 
+    /// <inheritdoc/>
     public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
         => _storage.GetCustomProviderConfigAsync(chainInfo, ct);
 
+    /// <inheritdoc/>
     public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default)
     {
         // Validate endpoint URL if provided - only allow HTTP/HTTPS schemes
@@ -514,12 +537,14 @@ public class WalletManagerService(
         _providerFactory.SetChainConfig(chainInfo, new ServiceConfig(normalizedEndpoint, normalizedApiKey));
     }
 
+    /// <inheritdoc/>
     public async Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         await _storage.DeleteCustomProviderConfigAsync(chainInfo, ct);
         _providerFactory.ClearChainConfig(chainInfo);
     }
 
+    /// <inheritdoc/>
     public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, string password, CancellationToken ct = default)
     {
         (CustomProviderConfig Config, string? ApiKey)? result =
@@ -599,6 +624,7 @@ public class WalletManagerService(
 
     #region IDisposable
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed) return;

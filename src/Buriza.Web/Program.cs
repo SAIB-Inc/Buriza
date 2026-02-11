@@ -36,6 +36,7 @@ builder.Services.AddScoped<BurizaStorageBase>(sp => sp.GetRequiredService<Buriza
 
 // Buriza services
 builder.Services.AddSingleton<AppStateService>();
+builder.Services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<AppStateService>());
 builder.Services.AddSingleton<ChainProviderSettings>();
 builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
 builder.Services.AddScoped<IWalletManager, WalletManagerService>();

@@ -10,52 +10,91 @@ using Buriza.Core.Models.Wallet;
 
 namespace Buriza.Core.Storage;
 
+/// <summary>
+/// Unified storage contract for wallet data, vaults, and auth operations.
+/// Platform implementations provide the storage mechanisms.
+/// </summary>
 public abstract class BurizaStorageBase : IStorageProvider
 {
     // IStorageProvider surface
+    /// <inheritdoc/>
     public abstract Task<string?> GetAsync(string key, CancellationToken ct = default);
+    /// <inheritdoc/>
     public abstract Task SetAsync(string key, string value, CancellationToken ct = default);
+    /// <inheritdoc/>
     public abstract Task RemoveAsync(string key, CancellationToken ct = default);
+    /// <inheritdoc/>
     public abstract Task<bool> ExistsAsync(string key, CancellationToken ct = default);
+    /// <inheritdoc/>
     public abstract Task<IReadOnlyList<string>> GetKeysAsync(string prefix, CancellationToken ct = default);
+    /// <inheritdoc/>
     public abstract Task ClearAsync(CancellationToken ct = default);
 
     // Wallet storage surface
+    /// <summary>Returns device security capabilities (biometric/pin/password).</summary>
     public abstract Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
 
+    /// <summary>Gets the configured auth type for a wallet.</summary>
     public abstract Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Sets the configured auth type for a wallet.</summary>
     public abstract Task SetAuthTypeAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default);
 
+    /// <summary>Persists wallet metadata.</summary>
     public abstract Task SaveWalletAsync(BurizaWallet wallet, CancellationToken ct = default);
+    /// <summary>Loads a wallet by id, or null if not found.</summary>
     public abstract Task<BurizaWallet?> LoadWalletAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Loads all wallets.</summary>
     public abstract Task<IReadOnlyList<BurizaWallet>> LoadAllWalletsAsync(CancellationToken ct = default);
+    /// <summary>Deletes a wallet and associated storage.</summary>
     public abstract Task DeleteWalletAsync(Guid walletId, CancellationToken ct = default);
 
+    /// <summary>Gets the active wallet id, or null if none.</summary>
     public abstract Task<Guid?> GetActiveWalletIdAsync(CancellationToken ct = default);
+    /// <summary>Sets the active wallet id.</summary>
     public abstract Task SetActiveWalletIdAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Clears the active wallet id.</summary>
     public abstract Task ClearActiveWalletIdAsync(CancellationToken ct = default);
 
+    /// <summary>Returns true if the wallet has a stored vault/seed.</summary>
     public abstract Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Creates the vault/seed for a wallet.</summary>
     public abstract Task CreateVaultAsync(Guid walletId, byte[] mnemonic, string password, CancellationToken ct = default);
+    /// <summary>Unlocks the vault/seed using the configured auth type.</summary>
     public abstract Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default);
+    /// <summary>Verifies a password for the wallet.</summary>
     public abstract Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default);
+    /// <summary>Changes the wallet password.</summary>
     public abstract Task ChangePasswordAsync(Guid walletId, string oldPassword, string newPassword, CancellationToken ct = default);
+    /// <summary>Deletes the vault/seed and associated auth state.</summary>
     public abstract Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default);
 
+    /// <summary>Returns true if biometric auth is enabled for a wallet.</summary>
     public abstract Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Enables biometric auth for a wallet.</summary>
     public abstract Task EnableBiometricAsync(Guid walletId, string password, CancellationToken ct = default);
+    /// <summary>Disables biometric auth for a wallet.</summary>
     public abstract Task DisableBiometricAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Prompts biometric auth and returns the protected payload.</summary>
     public abstract Task<byte[]> AuthenticateWithBiometricAsync(Guid walletId, string reason, CancellationToken ct = default);
 
+    /// <summary>Returns true if PIN auth is enabled for a wallet.</summary>
     public abstract Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Enables PIN auth for a wallet.</summary>
     public abstract Task EnablePinAsync(Guid walletId, string pin, string password, CancellationToken ct = default);
+    /// <summary>Disables PIN auth for a wallet.</summary>
     public abstract Task DisablePinAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Authenticates with PIN and returns the protected payload.</summary>
     public abstract Task<byte[]> AuthenticateWithPinAsync(Guid walletId, string pin, CancellationToken ct = default);
+    /// <summary>Changes the wallet PIN.</summary>
     public abstract Task ChangePinAsync(Guid walletId, string oldPin, string newPin, CancellationToken ct = default);
 
+    /// <summary>Gets custom provider config for a chain.</summary>
     public abstract Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
+    /// <summary>Saves custom provider config and optional API key.</summary>
     public abstract Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, string password, CancellationToken ct = default);
+    /// <summary>Deletes custom provider config for a chain.</summary>
     public abstract Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
+    /// <summary>Gets custom provider config along with decrypted API key if available.</summary>
     public abstract Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
         string password,

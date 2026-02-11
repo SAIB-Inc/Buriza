@@ -10,6 +10,7 @@ namespace Buriza.Core.Interfaces.Security;
 /// </summary>
 public interface IBiometricService
 {
+    /// <summary>Gets device security capabilities (biometric types, PIN, password).</summary>
     Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
     /// <summary>
     /// Gets whether biometric hardware is available on this device.
@@ -53,51 +54,4 @@ public interface IBiometricService
     /// Checks if biometrically protected data exists for the given key.
     /// </summary>
     Task<bool> HasSecureDataAsync(string key, CancellationToken ct = default);
-}
-
-/// <summary>
-/// Result of a biometric authentication attempt.
-/// </summary>
-public record BiometricResult
-{
-    /// <summary>Whether authentication was successful.</summary>
-    public required bool Success { get; init; }
-
-    /// <summary>Error type if authentication failed.</summary>
-    public BiometricError? Error { get; init; }
-
-    /// <summary>Human-readable error message.</summary>
-    public string? ErrorMessage { get; init; }
-
-    public static BiometricResult Succeeded() => new() { Success = true };
-
-    public static BiometricResult Failed(BiometricError error, string? message = null) =>
-        new() { Success = false, Error = error, ErrorMessage = message };
-}
-
-/// <summary>
-/// Biometric authentication error types.
-/// </summary>
-public enum BiometricError
-{
-    /// <summary>User cancelled the authentication.</summary>
-    Cancelled,
-
-    /// <summary>Too many failed attempts, locked out.</summary>
-    LockedOut,
-
-    /// <summary>No biometric enrolled on device.</summary>
-    NotEnrolled,
-
-    /// <summary>Biometric hardware not available.</summary>
-    NotAvailable,
-
-    /// <summary>Authentication failed (wrong biometric).</summary>
-    Failed,
-
-    /// <summary>Passcode/PIN fallback required.</summary>
-    PasscodeRequired,
-
-    /// <summary>Unknown or platform-specific error.</summary>
-    Unknown
 }
