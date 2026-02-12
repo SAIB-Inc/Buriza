@@ -12,5 +12,6 @@ public enum DrawerContentType
     TransactionStatus,
     Settings,
     NodeSettings,
-    Manage
+    Manage,
+    Filter
 }

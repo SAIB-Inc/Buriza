@@ -3,18 +3,25 @@ using Buriza.UI.Services;
 using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 using MudBlazor;
 using static Buriza.Data.Models.Enums.DrawerContentType;
 
 namespace Buriza.UI.Components.Layout;
 
-public partial class MainLayout : LayoutComponentBase, IDisposable
+public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
 
     [Inject]
     public required NavigationManager Navigation { get; set; }
+
+    [Inject]
+    public required JavaScriptBridgeService JavaScriptBridgeService { get; set; }
+
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+    protected Anchor FilterDrawerAnchor { get; set; } = Anchor.End;
 
     protected bool IsHeaderHidden => IsOnRoute(Routes.TransactionSuccess, Routes.Onboard, Routes.Splash);
 
@@ -99,13 +106,17 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             SuccessDarken = "#002116",
             SuccessContrastText = "#FAF9FF",
             Error = "#FF5449",
-            Info = "#00B286",
+            ErrorLighten = "#F87171",
+            Info = "#51DDAE",
             InfoLighten = "#1C1F27",
-            WarningLighten = "#FFDD57",
+            InfoDarken = "#006FEF",
+            InfoContrastText = "#D7E9FF",
             Warning = "#FF9C39",
+            WarningLighten = "#D8E2FF",
             WarningDarken = "#242320",
             LinesDefault = "#181B23",
-            LinesInputs = "#1C1F27"
+            LinesInputs = "#1C1F27",
+            ActionDefault = "#2A2E38"
         },
 
         PaletteLight = new PaletteLight()
@@ -145,6 +156,8 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
             Error = "#BA1A1A",
             Info = "#51DDAE",
             InfoLighten = "#FFFFFF",
+            InfoDarken = "#006FEF",
+            InfoContrastText = "#D7E9FF",
             WarningLighten = "#FFDD57",
             Warning = "#FF9C39",
             WarningDarken = "#242320",
@@ -168,7 +181,13 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
 
     protected string DrawerTitle => AppStateService.CurrentDrawerContent switch
     {
-        Summary => "Sent",
+        Summary => AppStateService.SummaryTransactionType switch
+        {
+            TransactionType.Sent => "Sent",
+            TransactionType.Received => "Received",
+            TransactionType.Mixed => "Mixed",
+            _ => "Summary"
+        },
         AuthorizeDapp => "Authorize App",
         ConnectedApps => "Connected dApps (10)",
         Receive => AppStateService.IsReceiveAdvancedMode ? "Advanced Mode" : "Your Address",
@@ -180,7 +199,25 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         Manage => AppStateService.IsManageAccountFormVisible
             ? (AppStateService.IsManageEditMode ? "Edit Wallet" : "New Account")
             : "Manage",
+        DrawerContentType.Filter => "Filter",
         _ => "Details"
+    };
+
+    protected static string GetCategoryLabel(TransactionCategory category) => category switch
+    {
+        TransactionCategory.Contract => "Contract",
+        TransactionCategory.Mint => "Mint",
+        TransactionCategory.Delegation => "Delegation",
+        TransactionCategory.Withdrawal => "Withdrawal",
+        TransactionCategory.Governance => "Governance",
+        _ => ""
+    };
+
+    protected static string GetCategoryChipClass(TransactionCategory category) => category switch
+    {
+        TransactionCategory.Contract => "!bg-[var(--mud-palette-secondary-lighten)]",
+        TransactionCategory.Mint => "!bg-[var(--mud-palette-secondary-darken)]",
+        _ => "!bg-[var(--mud-palette-secondary)]"
     };
 
     protected void ToggleSidebar()
@@ -245,6 +282,23 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         SetContentForCurrentRoute();
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JavaScriptBridgeService.AttachWindowResizeEvent(_dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public Task OnResize(int width)
+    {
+        FilterDrawerAnchor = width < 768 ? Anchor.Bottom : Anchor.End;
+        _ = InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
     private async void HandleStateChanged()
     {
         await InvokeAsync(StateHasChanged);
@@ -279,7 +333,7 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         }
         else if (IsOnRoute(Routes.History))
         {
-            AppStateService.CurrentSidebarContent = SidebarContentType.Portfolio;
+            AppStateService.CurrentSidebarContent = SidebarContentType.None;
         }
         else
         {
@@ -287,9 +341,15 @@ public partial class MainLayout : LayoutComponentBase, IDisposable
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         AppStateService.OnChanged -= HandleStateChanged;
         Navigation.LocationChanged -= OnLocationChanged;
+
+        if (_dotNetRef != null)
+        {
+            await JavaScriptBridgeService.DetachWindowResizeEvent(_dotNetRef);
+            _dotNetRef.Dispose();
+        }
     }
 }
