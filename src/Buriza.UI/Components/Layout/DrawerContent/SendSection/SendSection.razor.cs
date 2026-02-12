@@ -97,7 +97,7 @@ public partial class SendSection : IDisposable
         AppStateService.SetDrawerContent(SelectAsset);
     }
 
-     private bool IsValidAddress(string address)
+    private bool IsValidAddress(string address)
     {
         // Check if address is valid (@TODO: Implement proper Cardano address validation)
         if (string.IsNullOrWhiteSpace(address)) return false;

@@ -73,4 +73,12 @@ public partial class Send
         ShowOverlay = false;
         Navigation.NavigateTo("/transaction/success");
     }
+
+    private bool IsValidAddress(string address)
+    {
+        // Check if address is valid (@TODO: Implement proper Cardano address validation)
+        if (string.IsNullOrWhiteSpace(address)) return false;
+        if (address.Length < 59) return false;
+        return address.StartsWith("addr1") || address.StartsWith("addr_test1");
+    }
 }
