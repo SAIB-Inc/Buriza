@@ -13,5 +13,8 @@ public enum DrawerContentType
     Settings,
     NodeSettings,
     Manage,
+    SwitchWallet,
+    SwitchAccount,
+    AccountSettings,
     Filter
 }
