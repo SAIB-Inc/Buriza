@@ -8,9 +8,9 @@
 @namespace Buriza.UI.Components.Layout
 
 <div class="relative !max-h-[calc(100vh-88px)] !gap-4 flex flex-col items-center !px-4 rounded-l-6">
-    <div class="w-full !space-y-4">
+    <div class="w-full">
         <BurizaTabs
-            Class="!w-full [&_.mud-tab-active]:!bg-transparent !text-[var(--mud-palette-text-primary)] [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
+            Class="!w-full !mb-4 [&_.mud-tab-active]:!bg-transparent !text-[var(--mud-palette-text-primary)] [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
             @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
         >
             <MudTabPanel 
@@ -27,8 +27,8 @@
             />
         </BurizaTabs>
         <BurizaSearchBar
-            Class="!mb-0 !h-10 !justify-center [&_input]:!p-0 "
-        ></BurizaSearchBar>
+            Class="!mb-0 !justify-center [&_input]:!p-0 "
+        />
     </div>
     <div class="relative min-h-0">
         <div class="!space-y-2 h-full max-h-[calc(100vh-208px)] w-full overflow-y-auto !rounded-[12px]">
@@ -44,7 +44,7 @@
                         PricePercentage="@asset.PricePercentage"
                         AssetAmount="@asset.AssetAmount"
                         UsdConversion="@asset.UsdConversion"
-                        Class="md:bg-[var(--mud-palette-drawer-background)]! md:[&_.asset-icon]:!w-[60px] md:[&_.asset-icon]:!h-[60px] md:hover:bg-[var(--mud-palette-gray-default)]! md:cursor-pointer md:transition-colors"
+                        Class="md:h-[74px] md:!py-2 md:bg-[var(--mud-palette-drawer-background)]! md:border! md:border-[var(--mud-palette-drawer-background)] md:[&_.asset-icon]:!w-[60px] md:[&_.asset-icon]:!h-[60px] md:hover:bg-[var(--mud-palette-gray-default)]! md:cursor-pointer md:transition-colors"
                     />
                 }
             }
@@ -53,6 +53,8 @@
                 @foreach (NftAsset nft in NftAssets)
                 {
                     <BurizaAssetCard
+                        IsSelected="@(SelectedAsset == nft.AssetName)"
+                        OnClick="@(() => SelectedAsset = nft.AssetName)"
                         AssetIcon="@nft.AssetIcon"
                         AssetName="@nft.AssetName"
                         PricePercentage="@nft.PricePercentage"

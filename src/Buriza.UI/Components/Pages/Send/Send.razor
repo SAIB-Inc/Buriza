@@ -16,7 +16,7 @@
                     <div>
                         <MudIconButton
                             Icon="@BurizaIcons.ChevronRightIcon"
-                            OnClick="() => IsConfirmed = false"
+                            OnClick="() => IsConfirmed = false" Href="/"
                             Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                         />
                     </div>
@@ -72,6 +72,7 @@
                                 @bind-Value="recipient.Address"                        
                                 Label="Enter Recipient Address"
                                 Immediate="true"
+                                Class="[&_input]:!pr-8"
                             />
                             <div class="!absolute right-3 top-[50%] translate-y-[-50%] !p-0 flex items-center justify-end !gap-2">
                                 @* <MudIconButton
