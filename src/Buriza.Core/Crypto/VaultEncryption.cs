@@ -267,14 +267,14 @@ public static class VaultEncryption
 
     /// <summary>
     /// Creates a password/PIN verifier using Argon2id-derived hash.
-    /// Used for DirectSecure flows to validate secrets without decrypting a vault.
+    /// Used for direct secure flows to validate secrets without decrypting stored seed data.
     /// </summary>
-    public static SecretVerifierPayload CreateSecretVerifier(string secret, KeyDerivationOptions? options = null)
+    public static SecretVerifierPayload CreateSecretVerifier(ReadOnlySpan<byte> secretBytes, KeyDerivationOptions? options = null)
     {
         options ??= KeyDerivationOptions.Default;
 
         byte[] salt = RandomNumberGenerator.GetBytes(options.SaltSize);
-        byte[] hash = DeriveSecretHash(secret, salt, options);
+        byte[] hash = DeriveSecretHash(secretBytes, salt, options);
 
         try
         {
@@ -297,10 +297,11 @@ public static class VaultEncryption
         }
     }
 
+
     /// <summary>
-    /// Verifies a password/PIN against a stored verifier payload.
+    /// Verifies secret bytes against a stored verifier payload.
     /// </summary>
-    public static bool VerifySecret(string secret, SecretVerifierPayload verifier, KeyDerivationOptions? options = null)
+    public static bool VerifySecret(ReadOnlySpan<byte> secretBytes, SecretVerifierPayload verifier, KeyDerivationOptions? options = null)
     {
         if (verifier.Version != 1)
             throw new NotSupportedException($"Verifier version {verifier.Version} is not supported");
@@ -331,7 +332,7 @@ public static class VaultEncryption
             throw new CryptographicException("Invalid verifier: malformed Base64 data", ex);
         }
 
-        byte[] actual = DeriveSecretHash(secret, salt, options);
+        byte[] actual = DeriveSecretHash(secretBytes, salt, options);
         try
         {
             return CryptographicOperations.FixedTimeEquals(expected, actual);
@@ -344,12 +345,12 @@ public static class VaultEncryption
         }
     }
 
-    private static byte[] DeriveSecretHash(string secret, byte[] salt, KeyDerivationOptions options)
+    private static byte[] DeriveSecretHash(ReadOnlySpan<byte> secretBytes, byte[] salt, KeyDerivationOptions options)
     {
-        byte[] secretBytes = Encoding.UTF8.GetBytes(secret);
+        byte[] secretCopy = secretBytes.ToArray();
         try
         {
-            using Argon2id argon2 = new(secretBytes)
+            using Argon2id argon2 = new(secretCopy)
             {
                 Salt = salt,
                 Iterations = options.TimeCost,
@@ -365,7 +366,7 @@ public static class VaultEncryption
         }
         finally
         {
-            CryptographicOperations.ZeroMemory(secretBytes);
+            CryptographicOperations.ZeroMemory(secretCopy);
         }
     }
 }

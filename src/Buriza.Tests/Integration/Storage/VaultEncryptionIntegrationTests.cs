@@ -33,7 +33,7 @@ public class VaultEncryptionIntegrationTests
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
 
         // Act
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
         byte[] decrypted = await _walletStorage.UnlockVaultAsync(TestWalletId, TestPassword);
 
         // Assert
@@ -49,7 +49,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(
@@ -66,7 +66,7 @@ public class VaultEncryptionIntegrationTests
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
 
         // Act
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
         bool hasVault = await _walletStorage.HasVaultAsync(TestWalletId);
 
         // Assert
@@ -95,7 +95,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
         bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, TestPassword);
@@ -112,7 +112,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
         bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, "WrongPassword!");
@@ -143,7 +143,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
         await _walletStorage.ChangePasswordAsync(TestWalletId, TestPassword, NewPassword);
@@ -162,7 +162,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
         await _walletStorage.ChangePasswordAsync(TestWalletId, TestPassword, NewPassword);
@@ -180,7 +180,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(
@@ -199,7 +199,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
         await _walletStorage.DeleteVaultAsync(TestWalletId);
@@ -217,7 +217,7 @@ public class VaultEncryptionIntegrationTests
     {
         // Arrange
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(TestMnemonic);
-        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, TestPassword);
+        await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
         await _walletStorage.DeleteVaultAsync(TestWalletId);
 
         // Act & Assert
@@ -244,8 +244,8 @@ public class VaultEncryptionIntegrationTests
         Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
 
         // Act
-        await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, "password1");
-        await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, "password2");
+        await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, Encoding.UTF8.GetBytes("password1"));
+        await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, Encoding.UTF8.GetBytes("password2"));
 
         byte[] decrypted1 = await _walletStorage.UnlockVaultAsync(walletId1, "password1");
         byte[] decrypted2 = await _walletStorage.UnlockVaultAsync(walletId2, "password2");
@@ -270,8 +270,8 @@ public class VaultEncryptionIntegrationTests
         Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
         Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
 
-        await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, "password1");
-        await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, "password2");
+        await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, Encoding.UTF8.GetBytes("password1"));
+        await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, Encoding.UTF8.GetBytes("password2"));
 
         // Act & Assert - password1 shouldn't work for wallet 2
         await Assert.ThrowsAnyAsync<CryptographicException>(

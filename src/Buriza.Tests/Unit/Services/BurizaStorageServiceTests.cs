@@ -19,7 +19,7 @@ public class BurizaStorageServiceTests
         TestWalletStorageService storage = new(platformStorage);
 
         Guid walletId = Guid.NewGuid();
-        await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), "correct");
+        await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), Encoding.UTF8.GetBytes("correct"));
 
         for (int i = 0; i < 5; i++)
         {
@@ -36,7 +36,7 @@ public class BurizaStorageServiceTests
         TestWalletStorageService storage = new(platformStorage);
 
         Guid walletId = Guid.NewGuid();
-        await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), "correct");
+        await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), Encoding.UTF8.GetBytes("correct"));
 
         await Assert.ThrowsAsync<ArgumentException>(() => storage.EnablePinAsync(walletId, "1234", "correct"));
     }

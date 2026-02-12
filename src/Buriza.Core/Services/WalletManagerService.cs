@@ -51,17 +51,35 @@ public class WalletManagerService(
     public async Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default)
     {
         byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
         try
         {
-            return await ImportFromBytesAsync(name, mnemonicBytes, password, chainInfo, ct);
+            return await CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes, chainInfo, ct);
         }
         finally
         {
             CryptographicOperations.ZeroMemory(mnemonicBytes);
+            CryptographicOperations.ZeroMemory(passwordBytes);
         }
     }
 
-    private async Task<BurizaWallet> ImportFromBytesAsync(string name, byte[] mnemonicBytes, string password, ChainInfo? chainInfo, CancellationToken ct)
+    /// <inheritdoc/>
+    public async Task<BurizaWallet> CreateFromMnemonicAsync(string name, ReadOnlyMemory<byte> mnemonicBytes, ReadOnlyMemory<byte> passwordBytes, ChainInfo? chainInfo = null, CancellationToken ct = default)
+    {
+        byte[] mnemonicCopy = mnemonicBytes.ToArray();
+        byte[] passwordCopy = passwordBytes.ToArray();
+        try
+        {
+            return await ImportFromBytesAsync(name, mnemonicCopy, passwordCopy, chainInfo, ct);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(mnemonicCopy);
+            CryptographicOperations.ZeroMemory(passwordCopy);
+        }
+    }
+
+    private async Task<BurizaWallet> ImportFromBytesAsync(string name, byte[] mnemonicBytes, byte[] passwordBytes, ChainInfo? chainInfo, CancellationToken ct)
     {
         chainInfo ??= ChainRegistry.CardanoMainnet;
 
@@ -112,7 +130,7 @@ public class WalletManagerService(
             ]
         };
 
-        await _storage.CreateVaultAsync(wallet.Id, mnemonicBytes, password, ct);
+        await _storage.CreateVaultAsync(wallet.Id, mnemonicBytes, passwordBytes, ct);
         try
         {
             await _storage.SaveWalletAsync(wallet, ct);

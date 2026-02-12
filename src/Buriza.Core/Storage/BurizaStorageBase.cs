@@ -58,7 +58,7 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// <summary>Returns true if the wallet has a stored vault/seed.</summary>
     public abstract Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default);
     /// <summary>Creates the vault/seed for a wallet.</summary>
-    public abstract Task CreateVaultAsync(Guid walletId, byte[] mnemonic, string password, CancellationToken ct = default);
+    public abstract Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default);
     /// <summary>Unlocks the vault/seed using the configured auth type.</summary>
     public abstract Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default);
     /// <summary>Verifies a password for the wallet.</summary>

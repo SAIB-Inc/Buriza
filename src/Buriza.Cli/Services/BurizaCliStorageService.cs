@@ -117,9 +117,9 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
         return !string.IsNullOrEmpty(json);
     }
 
-    public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, string password, CancellationToken ct = default)
+    public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
     {
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic, password);
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic, passwordBytes.Span);
         await SetJsonAsync(StorageKeys.Vault(walletId), vault, ct);
     }
 
@@ -152,7 +152,15 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
 
         try
         {
-            await CreateVaultAsync(walletId, mnemonicBytes, newPassword, ct);
+            byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
+            try
+            {
+                await CreateVaultAsync(walletId, mnemonicBytes, newPasswordBytes, ct);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(newPasswordBytes);
+            }
         }
         finally
         {

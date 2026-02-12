@@ -63,4 +63,60 @@ public class BurizaChainProviderFactoryTests
 
         Assert.Throws<InvalidOperationException>(() => factory.CreateProvider(ChainRegistry.CardanoMainnet));
     }
+
+    [Fact]
+    public void CreateProvider_WithAllowlist_AllowsConfiguredHost()
+    {
+        ChainProviderSettings settings = new()
+        {
+            Cardano = new CardanoSettings
+            {
+                MainnetEndpoint = "https://allowed.example.com",
+                AllowedEndpointHosts = ["allowed.example.com", "backup.example.com"]
+            }
+        };
+
+        BurizaChainProviderFactory factory = new(new TestAppStateService(), settings);
+
+        using IBurizaChainProvider provider = factory.CreateProvider(ChainRegistry.CardanoMainnet);
+        Assert.NotNull(provider);
+    }
+
+    [Fact]
+    public void CreateProvider_WithAllowlist_BlocksUnconfiguredHost()
+    {
+        ChainProviderSettings settings = new()
+        {
+            Cardano = new CardanoSettings
+            {
+                MainnetEndpoint = "https://blocked.example.com",
+                AllowedEndpointHosts = ["allowed.example.com"]
+            }
+        };
+
+        BurizaChainProviderFactory factory = new(new TestAppStateService(), settings);
+
+        InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+            factory.CreateProvider(ChainRegistry.CardanoMainnet));
+
+        Assert.Contains("allowlist", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CreateProvider_WithAllowlist_AllowsLoopbackHttp()
+    {
+        ChainProviderSettings settings = new()
+        {
+            Cardano = new CardanoSettings
+            {
+                MainnetEndpoint = "http://127.0.0.1:50051",
+                AllowedEndpointHosts = ["allowed.example.com"]
+            }
+        };
+
+        BurizaChainProviderFactory factory = new(new TestAppStateService(), settings);
+
+        using IBurizaChainProvider provider = factory.CreateProvider(ChainRegistry.CardanoMainnet);
+        Assert.NotNull(provider);
+    }
 }

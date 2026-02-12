@@ -30,6 +30,7 @@ public class BurizaChainProviderFactory(
         if (string.IsNullOrEmpty(endpoint))
             throw new InvalidOperationException($"No endpoint configured for {chainInfo.Chain} {chainInfo.Network}");
 
+        ValidateEndpointSecurity(endpoint);
         return new BurizaU5CProvider(endpoint, apiKey, chainInfo.Network);
     }
 
@@ -38,6 +39,7 @@ public class BurizaChainProviderFactory(
         if (string.IsNullOrEmpty(endpoint))
             throw new ArgumentException("Endpoint is required", nameof(endpoint));
 
+        ValidateEndpointSecurity(endpoint);
         return new BurizaU5CProvider(endpoint, apiKey);
     }
 
@@ -93,6 +95,33 @@ public class BurizaChainProviderFactory(
             },
             _ => null
         };
+    }
+
+    private void ValidateEndpointSecurity(string endpoint)
+    {
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri))
+            throw new InvalidOperationException("Invalid provider endpoint configured.");
+
+        if (uri.Scheme != "http" && uri.Scheme != "https")
+            throw new InvalidOperationException("Provider endpoint must use HTTP or HTTPS.");
+
+        if (uri.Scheme == "http" && !uri.IsLoopback)
+            throw new InvalidOperationException("HTTP endpoints are allowed only for localhost/loopback.");
+
+        List<string> allowedHosts = [.. _settings.Cardano?.AllowedEndpointHosts?
+            .Where(h => !string.IsNullOrWhiteSpace(h))
+            .Select(h => h.Trim()) ?? []];
+
+        // Allow local development regardless of allowlist.
+        if (uri.IsLoopback || allowedHosts.Count == 0)
+            return;
+
+        bool isAllowed = allowedHosts.Any(host =>
+            string.Equals(host, uri.Host, StringComparison.OrdinalIgnoreCase));
+
+        if (!isAllowed)
+            throw new InvalidOperationException(
+                $"Provider endpoint host '{uri.Host}' is not in the configured allowlist.");
     }
 
     private static string? Normalize(string? value)

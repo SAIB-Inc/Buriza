@@ -223,11 +223,11 @@ public sealed class BurizaAppStorageService(
         return !string.IsNullOrEmpty(seed);
     }
 
-    public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, string password, CancellationToken ct = default)
+        public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
     {
         string seed = Convert.ToBase64String(mnemonic);
         await SetSecureAsync(StorageKeys.SecureSeed(walletId), seed, ct);
-        SecretVerifierPayload verifier = VaultEncryption.CreateSecretVerifier(password);
+        SecretVerifierPayload verifier = VaultEncryption.CreateSecretVerifier(passwordBytes.Span);
         await SetSecureJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
         await SetAuthTypeAsync(walletId, AuthenticationType.Password, ct);
     }
@@ -236,7 +236,18 @@ public sealed class BurizaAppStorageService(
     {
         SecretVerifierPayload verifier = await GetSecureJsonAsync<SecretVerifierPayload>(StorageKeys.PasswordVerifier(walletId), ct)
             ?? throw new InvalidOperationException("Password verifier not found");
-        if (!VaultEncryption.VerifySecret(password, verifier))
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        bool passwordOk;
+        try
+        {
+            passwordOk = VaultEncryption.VerifySecret(passwordBytes, verifier);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
+
+        if (!passwordOk)
             throw new CryptographicException("Invalid password");
 
         string? seed = await GetSecureAsync(StorageKeys.SecureSeed(walletId), ct);
@@ -297,7 +308,16 @@ public sealed class BurizaAppStorageService(
 
         SecretVerifierPayload? verifier = await GetSecureJsonAsync<SecretVerifierPayload>(StorageKeys.PasswordVerifier(walletId), ct);
         if (verifier is null) return false;
-        bool okDirect = VaultEncryption.VerifySecret(password, verifier);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        bool okDirect;
+        try
+        {
+            okDirect = VaultEncryption.VerifySecret(passwordBytes, verifier);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         if (okDirect)
             await ResetLockoutStateAsync(walletId, ct);
         else
@@ -312,7 +332,16 @@ public sealed class BurizaAppStorageService(
         if (!await VerifyPasswordAsync(walletId, oldPassword, ct))
             throw new CryptographicException("Invalid password");
 
-        SecretVerifierPayload verifier = VaultEncryption.CreateSecretVerifier(newPassword);
+        byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
+        SecretVerifierPayload verifier;
+        try
+        {
+            verifier = VaultEncryption.CreateSecretVerifier(newPasswordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(newPasswordBytes);
+        }
         await SetSecureJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
         await ResetLockoutStateAsync(walletId, ct);
     }
@@ -394,7 +423,16 @@ public sealed class BurizaAppStorageService(
         if (!await VerifyPasswordAsync(walletId, password, ct))
             throw new CryptographicException("Invalid password");
 
-        SecretVerifierPayload verifier = VaultEncryption.CreateSecretVerifier(pin);
+        byte[] pinBytes = Encoding.UTF8.GetBytes(pin);
+        SecretVerifierPayload verifier;
+        try
+        {
+            verifier = VaultEncryption.CreateSecretVerifier(pinBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(pinBytes);
+        }
         await SetSecureJsonAsync(StorageKeys.PinVerifier(walletId), verifier, ct);
         await SetAuthTypeAsync(walletId, AuthenticationType.Pin, ct);
     }
@@ -413,7 +451,18 @@ public sealed class BurizaAppStorageService(
 
         SecretVerifierPayload verifier = await GetSecureJsonAsync<SecretVerifierPayload>(StorageKeys.PinVerifier(walletId), ct)
             ?? throw new InvalidOperationException("PIN not enabled");
-        if (!VaultEncryption.VerifySecret(pin, verifier))
+        byte[] pinBytes = Encoding.UTF8.GetBytes(pin);
+        bool pinOk;
+        try
+        {
+            pinOk = VaultEncryption.VerifySecret(pinBytes, verifier);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(pinBytes);
+        }
+
+        if (!pinOk)
             throw new CryptographicException("Invalid PIN");
 
         string? seed = await GetSecureAsync(StorageKeys.SecureSeed(walletId), ct);
@@ -432,13 +481,33 @@ public sealed class BurizaAppStorageService(
 
         SecretVerifierPayload verifier = await GetSecureJsonAsync<SecretVerifierPayload>(StorageKeys.PinVerifier(walletId), ct)
             ?? throw new InvalidOperationException("PIN not enabled");
-        if (!VaultEncryption.VerifySecret(oldPin, verifier))
+        byte[] oldPinBytes = Encoding.UTF8.GetBytes(oldPin);
+        bool oldPinOk;
+        try
+        {
+            oldPinOk = VaultEncryption.VerifySecret(oldPinBytes, verifier);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(oldPinBytes);
+        }
+
+        if (!oldPinOk)
         {
             await RegisterFailedAttemptAsync(walletId, ct);
             throw new CryptographicException("Invalid PIN");
         }
 
-        SecretVerifierPayload newVerifier = VaultEncryption.CreateSecretVerifier(newPin);
+        byte[] newPinBytes = Encoding.UTF8.GetBytes(newPin);
+        SecretVerifierPayload newVerifier;
+        try
+        {
+            newVerifier = VaultEncryption.CreateSecretVerifier(newPinBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(newPinBytes);
+        }
         await SetSecureJsonAsync(StorageKeys.PinVerifier(walletId), newVerifier, ct);
         await ResetLockoutStateAsync(walletId, ct);
     }

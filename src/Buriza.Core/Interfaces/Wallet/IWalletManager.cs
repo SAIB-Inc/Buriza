@@ -46,6 +46,9 @@ public interface IWalletManager
     /// </summary>
     Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default);
 
+    // Byte-first overload that avoids creating a long-lived mnemonic string in callers.
+    Task<BurizaWallet> CreateFromMnemonicAsync(string name, ReadOnlyMemory<byte> mnemonicBytes, ReadOnlyMemory<byte> passwordBytes, ChainInfo? chainInfo = null, CancellationToken ct = default);
+
     /// <summary>Gets all wallets.</summary>
     Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default);
 

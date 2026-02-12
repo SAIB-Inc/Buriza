@@ -12,4 +12,11 @@ public class CardanoSettings
     public string? MainnetEndpoint { get; set; }
     public string? PreprodEndpoint { get; set; }
     public string? PreviewEndpoint { get; set; }
+
+    /// <summary>
+    /// Optional hostname allowlist for provider endpoints.
+    /// When set, remote endpoints must match one of these hosts.
+    /// Loopback endpoints remain allowed for local development.
+    /// </summary>
+    public List<string>? AllowedEndpointHosts { get; set; }
 }
