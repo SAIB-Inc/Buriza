@@ -1,5 +1,7 @@
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Collections;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
@@ -229,12 +231,132 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             object? value = prop.GetValue(parameters);
             if (value is null)
                 continue;
-            table.AddRow(prop.Name, Markup.Escape(value.ToString() ?? string.Empty));
+            table.AddRow(prop.Name, Markup.Escape(FormatProtocolValue(value)));
         }
 
         AnsiConsole.Write(table);
         Pause();
     }
+
+    // Hide framework/CBOR metadata fields and render nested objects as structured JSON.
+    private static readonly HashSet<string> HiddenProtocolFields =
+    [
+        "Raw",
+        "CborTypeName",
+        "ConstrIndex",
+        "IsIndefinite"
+    ];
+    private const int CollectionPreviewLimit = 12;
+
+    private static string FormatProtocolValue(object value)
+    {
+        object? normalized = NormalizeProtocolValue(value, depth: 0);
+        if (normalized is null)
+            return string.Empty;
+
+        if (normalized is string text)
+            return text;
+
+        return JsonSerializer.Serialize(normalized);
+    }
+
+    private static object? NormalizeProtocolValue(object? value, int depth)
+    {
+        if (value is null)
+            return null;
+
+        if (depth > 8)
+            return "...";
+
+        Type type = value.GetType();
+        if (type.IsPrimitive || value is decimal || value is string || value is Guid || value is DateTime || value is DateTimeOffset || value is Enum)
+            return value;
+
+        if (value is byte[] bytes)
+            return $"[omitted {bytes.Length} bytes]";
+
+        if (value is IDictionary dictionary)
+            return NormalizeDictionary(dictionary, depth);
+
+        if (value is IEnumerable enumerable and not string)
+            return NormalizeEnumerable(enumerable, depth);
+
+        Dictionary<string, object?> map = [];
+        foreach (PropertyInfo property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (!property.CanRead || property.GetIndexParameters().Length > 0)
+                continue;
+            if (HiddenProtocolFields.Contains(property.Name))
+                continue;
+
+            object? propertyValue = property.GetValue(value);
+            if (propertyValue is null)
+                continue;
+
+            map[property.Name] = NormalizeProtocolValue(propertyValue, depth + 1);
+        }
+
+        return map.Count == 0 ? value.ToString() : map;
+    }
+
+    private static object NormalizeDictionary(IDictionary dictionary, int depth)
+    {
+        Dictionary<string, object?> output = [];
+        int totalCount = 0;
+        foreach (DictionaryEntry entry in dictionary)
+        {
+            totalCount++;
+            if (output.Count >= CollectionPreviewLimit)
+                continue;
+
+            string key = entry.Key?.ToString() ?? "<null>";
+            output[key] = NormalizeProtocolValue(entry.Value, depth + 1);
+        }
+
+        if (totalCount > CollectionPreviewLimit)
+        {
+            return new Dictionary<string, object?>
+            {
+                ["Count"] = totalCount,
+                ["Preview"] = output,
+                ["Truncated"] = true
+            };
+        }
+
+        return output;
+    }
+
+    private static object NormalizeEnumerable(IEnumerable enumerable, int depth)
+    {
+        List<object?> preview = [];
+        int totalCount = 0;
+
+        foreach (object? item in enumerable)
+        {
+            totalCount++;
+            if (preview.Count < CollectionPreviewLimit)
+                preview.Add(NormalizeProtocolValue(item, depth + 1));
+        }
+
+        if (totalCount > CollectionPreviewLimit)
+        {
+            bool allNumeric = preview.All(IsNumericLike);
+            if (allNumeric)
+                return $"[numeric collection omitted, count={totalCount}]";
+
+            return new Dictionary<string, object?>
+            {
+                ["Count"] = totalCount,
+                ["Preview"] = preview,
+                ["Truncated"] = true
+            };
+        }
+
+        return preview;
+    }
+
+    private static bool IsNumericLike(object? value)
+        => value is byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal;
 
     private async Task CreateWalletAsync()
     {
