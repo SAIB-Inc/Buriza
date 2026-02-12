@@ -238,8 +238,13 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
 
     private async Task CreateWalletAsync()
     {
-        string name = AnsiConsole.Ask<string>("Wallet name:");
-        string password = AnsiConsole.Prompt(new TextPrompt<string>("Password:").Secret());
+        string? name = PromptOptional("Wallet name");
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        string? password = PromptAndConfirmPassword("New password");
+        if (string.IsNullOrEmpty(password))
+            return;
 
         string mnemonic = "";
         _walletManager.GenerateMnemonic(24, span =>
@@ -261,9 +266,17 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
 
     private async Task ImportWalletAsync()
     {
-        string name = AnsiConsole.Ask<string>("Wallet name:");
-        string mnemonic = AnsiConsole.Ask<string>("Mnemonic:");
-        string password = AnsiConsole.Prompt(new TextPrompt<string>("Password:").Secret());
+        string? name = PromptOptional("Wallet name");
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        string? mnemonic = PromptOptional("Mnemonic");
+        if (string.IsNullOrWhiteSpace(mnemonic))
+            return;
+
+        string? password = PromptAndConfirmPassword("New password");
+        if (string.IsNullOrEmpty(password))
+            return;
 
         BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonic, password);
         await _walletManager.SetActiveChainAsync(wallet.Id, ChainRegistry.CardanoPreview, null);
@@ -714,6 +727,25 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             prompt.Secret();
         string value = AnsiConsole.Prompt(prompt);
         return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static string? PromptAndConfirmPassword(string label)
+    {
+        while (true)
+        {
+            string? password = PromptOptional(label, secret: true);
+            if (string.IsNullOrWhiteSpace(password))
+                return null;
+
+            string? confirm = PromptOptional("Confirm password", secret: true);
+            if (string.IsNullOrWhiteSpace(confirm))
+                return null;
+
+            if (password == confirm)
+                return password;
+
+            AnsiConsole.MarkupLine("[red]Passwords do not match.[/] Please try again.");
+        }
     }
 
     private async Task<string?> ResolveProviderEndpointAsync(BurizaWallet active)
