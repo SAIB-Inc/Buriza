@@ -1,8 +1,11 @@
 using Buriza.Core.Interfaces.Chain;
+using Buriza.Core.Interfaces;
+using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
 using NSubstitute;
+using System.Reflection;
 
 namespace Buriza.Tests.Unit.Models;
 
@@ -294,6 +297,44 @@ public class BurizaWalletTests
     }
 
     [Fact]
+    public async Task GetBalanceAsync_ResolvesProviderFromFactoryUsingCurrentNetwork()
+    {
+        // Arrange
+        BurizaWallet wallet = CreateWalletWithAddress();
+        wallet.Accounts[0].ChainData[ChainType.Cardano][NetworkType.Preprod] = new ChainAddressData
+        {
+            Chain = ChainType.Cardano,
+            Network = NetworkType.Preprod,
+            ReceiveAddress = "addr_test1preprod..."
+        };
+
+        IBurizaChainProvider mainnetProvider = Substitute.For<IBurizaChainProvider>();
+        IBurizaChainProvider preprodProvider = Substitute.For<IBurizaChainProvider>();
+        mainnetProvider.GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(1_000_000UL);
+        preprodProvider.GetBalanceAsync("addr_test1preprod...", Arg.Any<CancellationToken>()).Returns(2_000_000UL);
+
+        IBurizaChainProviderFactory factory = Substitute.For<IBurizaChainProviderFactory>();
+        factory.CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Mainnet))
+            .Returns(mainnetProvider);
+        factory.CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Preprod))
+            .Returns(preprodProvider);
+        AttachMockProviderFactory(wallet, factory);
+
+        // Act
+        wallet.Network = NetworkType.Mainnet;
+        ulong mainnetBalance = await wallet.GetBalanceAsync();
+
+        wallet.Network = NetworkType.Preprod;
+        ulong preprodBalance = await wallet.GetBalanceAsync();
+
+        // Assert
+        Assert.Equal(1_000_000UL, mainnetBalance);
+        Assert.Equal(2_000_000UL, preprodBalance);
+        factory.Received(1).CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Mainnet));
+        factory.Received(1).CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Preprod));
+    }
+
+    [Fact]
     public async Task GetUtxosAsync_WhenNoProvider_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -520,13 +561,18 @@ public class BurizaWalletTests
     private static IBurizaChainProvider AttachMockProvider(BurizaWallet wallet)
     {
         IBurizaChainProvider provider = Substitute.For<IBurizaChainProvider>();
-
-        // Use reflection to set internal Provider property
-        var providerProperty = typeof(BurizaWallet).GetProperty("Provider",
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-        providerProperty!.SetValue(wallet, provider);
-
+        IBurizaChainProviderFactory factory = Substitute.For<IBurizaChainProviderFactory>();
+        factory.CreateProvider(Arg.Any<ChainInfo>()).Returns(provider);
+        AttachMockProviderFactory(wallet, factory);
         return provider;
+    }
+
+    private static void AttachMockProviderFactory(BurizaWallet wallet, IBurizaChainProviderFactory factory)
+    {
+        // Internal runtime dependency; tests inject it via reflection.
+        FieldInfo? field = typeof(BurizaWallet).GetField("_chainProviderFactory",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        field!.SetValue(wallet, factory);
     }
 
     #endregion

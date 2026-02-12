@@ -1,7 +1,10 @@
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Interfaces.Wallet;
+using Buriza.Core.Interfaces;
+using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
+using System.Text.Json.Serialization;
 using Chrysalis.Cbor.Extensions.Cardano.Core.Transaction;
 using Chrysalis.Cbor.Serialization;
 using Chrysalis.Cbor.Types.Cardano.Core.Common;
@@ -20,8 +23,16 @@ namespace Buriza.Core.Models.Wallet;
 /// HD Wallet following BIP-39/BIP-44 standards.
 /// One wallet = one mnemonic seed that can derive keys for multiple chains.
 /// </summary>
-public class BurizaWallet : IWallet
+public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = null) : IWallet
 {
+    private IBurizaChainProviderFactory? _chainProviderFactory = chainProviderFactory;
+
+    // JSON storage rehydrates wallet metadata without runtime services.
+    // We still use the primary constructor for runtime factory injection,
+    // but deserialization must use a parameterless constructor.
+    [JsonConstructor]
+    public BurizaWallet() : this(null) { }
+
     public required Guid Id { get; init; }
 
     /// <summary>Wallet profile (name, label, avatar).</summary>
@@ -42,8 +53,8 @@ public class BurizaWallet : IWallet
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? LastAccessedAt { get; set; }
 
-    /// <summary>Chain provider for querying balance, assets, etc.</summary>
-    internal IBurizaChainProvider? Provider { get; set; }
+    internal void BindChainProviderFactory(IBurizaChainProviderFactory chainProviderFactory)
+        => _chainProviderFactory = chainProviderFactory ?? throw new ArgumentNullException(nameof(chainProviderFactory));
 
     #region Account & Address Helpers
 
@@ -214,7 +225,7 @@ public class BurizaWallet : IWallet
     }
 
     /// <summary>Gets the data provider cast to the specified type for chain-specific operations.</summary>
-    internal T? GetDataProvider<T>() where T : class => Provider as T;
+    internal T? GetDataProvider<T>() where T : class => EnsureProvider() as T;
 
     #endregion
 
@@ -269,6 +280,10 @@ public class BurizaWallet : IWallet
 
     #endregion
 
-    private IBurizaChainProvider EnsureProvider() =>
-        Provider ?? throw new InvalidOperationException("Wallet is not connected to a provider. Use WalletManager to load the wallet.");
+    private IBurizaChainProvider EnsureProvider()
+    {
+        IBurizaChainProviderFactory? factory = _chainProviderFactory ?? throw new InvalidOperationException("Wallet is not connected to a chain provider factory. Use WalletManager to load the wallet.");
+        ChainInfo chainInfo = ChainRegistry.Get(ActiveChain, Network);
+        return factory.CreateProvider(chainInfo);
+    }
 }

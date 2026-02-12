@@ -94,7 +94,7 @@ public class WalletManagerService(
             perNetwork[info.Network] = chainData;
         }
 
-        BurizaWallet wallet = new()
+        BurizaWallet wallet = new(_providerFactory)
         {
             Id = newId,
             Profile = new WalletProfile { Name = name },
@@ -125,7 +125,6 @@ public class WalletManagerService(
             throw;
         }
 
-        AttachProvider(wallet);
         return wallet;
     }
 
@@ -133,9 +132,7 @@ public class WalletManagerService(
     public async Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default)
     {
         IReadOnlyList<BurizaWallet> wallets = await _storage.LoadAllWalletsAsync(ct);
-        foreach (BurizaWallet wallet in wallets)
-            AttachProvider(wallet);
-        return wallets;
+        return BindRuntimeDependencies(wallets);
     }
 
     /// <inheritdoc/>
@@ -145,9 +142,7 @@ public class WalletManagerService(
         if (!activeId.HasValue) return null;
 
         BurizaWallet? wallet = await _storage.LoadWalletAsync(activeId.Value, ct);
-        if (wallet != null)
-            AttachProvider(wallet);
-        return wallet;
+        return wallet is null ? null : BindRuntimeDependencies(wallet);
     }
 
     /// <inheritdoc/>
@@ -218,7 +213,6 @@ public class WalletManagerService(
         wallet.LastAccessedAt = DateTime.UtcNow;
         await _storage.SaveWalletAsync(wallet, ct);
 
-        AttachProvider(wallet);
     }
 
     /// <inheritdoc/>
@@ -565,16 +559,27 @@ public class WalletManagerService(
     {
         BurizaWallet wallet = await _storage.LoadWalletAsync(walletId, ct)
             ?? throw new ArgumentException("Wallet not found", nameof(walletId));
-        AttachProvider(wallet);
-        return wallet;
+        return BindRuntimeDependencies(wallet);
     }
 
     private static BurizaWalletAccount GetAccountOrThrow(BurizaWallet wallet, int accountIndex)
         => wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex)
             ?? throw new ArgumentException($"Account {accountIndex} not found", nameof(accountIndex));
 
-    private void AttachProvider(BurizaWallet wallet)
-        => wallet.Provider = GetProviderForWallet(wallet);
+    // Wallet metadata is persisted as JSON, but runtime services (like provider factory)
+    // are not serializable. Rebind those dependencies after load before returning wallets.
+    private BurizaWallet BindRuntimeDependencies(BurizaWallet wallet)
+    {
+        wallet.BindChainProviderFactory(_providerFactory);
+        return wallet;
+    }
+
+    private IReadOnlyList<BurizaWallet> BindRuntimeDependencies(IReadOnlyList<BurizaWallet> wallets)
+    {
+        foreach (BurizaWallet wallet in wallets)
+            wallet.BindChainProviderFactory(_providerFactory);
+        return wallets;
+    }
 
     private IBurizaChainProvider GetProviderForWallet(BurizaWallet wallet)
         => _providerFactory.CreateProvider(GetChainInfo(wallet));
