@@ -44,7 +44,7 @@ public partial class SendSection : IDisposable
 
     private void AddRecipient()
     {
-        recipients.Add(new Recipient { Id = recipients.Count + 1 });
+        recipients.Add(new Recipient { Id = recipients.Count + 1, TokenEntries = [new TokenEntry { ImageSrc = Tokens.Ada }] });
         StateHasChanged();
     }
 
