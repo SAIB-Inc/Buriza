@@ -46,56 +46,59 @@
                 <div>
                     <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH ACCOUNT</MudText>
                 </div>
-                <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm h-[calc(100vh-470px)] overflow-y-auto !pb-12">
-                    @for (int i = 0; i < Accounts.Count; i++)
-                    {
-                        int index = i;
-                        bool isFirst = index == 0;
-                        bool isLast = index == Accounts.Count - 1;
+                <div class="relative">
+                    <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm h-[calc(100vh-470px)] overflow-y-auto !pb-20">
+                        @for (int i = 0; i < Accounts.Count; i++)
+                        {
+                            int index = i;
+                            bool isFirst = index == 0;
+                            bool isLast = index == Accounts.Count - 1;
 
-                        <MudNavLink
-                            Class="@($"active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! {(isFirst ? "[&_.mud-nav-link]:!rounded-t-[16px]" : "")} {(isLast ? "[&_.mud-nav-link]:!rounded-b-[16px]" : "border-b border-b-[var(--mud-palette-divider)]")}")"
-                        >
-                            <div class="flex w-full justify-between">
-                                <div class="flex items-center gap-2">
-                                    <div>
-                                        <div class="rounded-full w-9 h-9 bg-cover bg-center" style="background-image: url('@Accounts[index].Image')" />
-                                    </div>
-                                    <div class="flex flex-col gap-2">
-                                        <div class="flex items-center gap-2">
-                                            <MudText Class="!font-medium">@Accounts[index].Name</MudText>
-                                            <MudIconButton Icon="@BurizaIcons.EditIcon" Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-primary)]" OnClick="HandleAccountSettingsClick" />
+                            <MudNavLink
+                                Class="@($"active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! {(isFirst ? "[&_.mud-nav-link]:!rounded-t-[16px]" : "")} {(isLast ? "[&_.mud-nav-link]:!rounded-b-[16px]" : "border-b border-b-[var(--mud-palette-divider)]")}")"
+                            >
+                                <div class="flex w-full justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div>
+                                            <div class="rounded-full w-9 h-9 bg-cover bg-center" style="background-image: url('@Accounts[index].Image')" />
                                         </div>
-                                        <MudChip
-                                            T="string"
-                                            Class="!bg-[var(--buriza-chip-bg)] text-[var(--mud-palette-success-contrasttext)] !px-2 !py-1 !text-[12px] !font-semibold !m-0 [&_.mud-chip-content]:flex [&_.mud-chip-content]:items-center [&_.mud-chip-content]:gap-1 !h-[22px]"
-                                        >
-                                            <span class="!text-[var(--mud-palette-primary-lighten)]">
-                                                @Accounts[index].Address
-                                            </span>
-                                            <span class="text-2xl">
-                                                &#183;
-                                            </span>
-                                            <span class="!text-[10px]">
-                                                @Accounts[index].DerivationPath
-                                            </span>
-                                        </MudChip>
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-2">
+                                                <MudText Class="!font-medium">@Accounts[index].Name</MudText>
+                                                <MudIconButton Icon="@BurizaIcons.EditIcon" Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-primary)]" OnClick="HandleAccountSettingsClick" />
+                                            </div>
+                                            <MudChip
+                                                T="string"
+                                                Class="!bg-[var(--buriza-chip-bg)] text-[var(--mud-palette-success-contrasttext)] !px-2 !py-1 !text-[12px] !font-semibold !m-0 [&_.mud-chip-content]:flex [&_.mud-chip-content]:items-center [&_.mud-chip-content]:gap-1 !h-[22px]"
+                                            >
+                                                <span class="!text-[var(--mud-palette-primary-lighten)]">
+                                                    @Accounts[index].Address
+                                                </span>
+                                                <span class="text-2xl">
+                                                    &#183;
+                                                </span>
+                                                <span class="!text-[10px]">
+                                                    @Accounts[index].DerivationPath
+                                                </span>
+                                            </MudChip>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @if (index == 0)
+                                        {
+                                            <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">Current</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
+                                        }
                                     </div>
                                 </div>
-                                <div>
-                                    @if (index == 0)
-                                    {
-                                        <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">Current</MudText>
-                                    }
-                                    else
-                                    {
-                                        <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
-                                    }
-                                </div>
-                            </div>
-                        </MudNavLink>
-                    }
-                </MudPaper>
+                            </MudNavLink>
+                        }
+                    </MudPaper>
+                    <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[var(--mud-palette-background)] to-transparent rounded-b-[16px] pointer-events-none"></div>
+                </div>
             </div>
         </div>
     </div>

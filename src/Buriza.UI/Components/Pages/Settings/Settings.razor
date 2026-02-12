@@ -1,4 +1,5 @@
 @using Buriza.UI.Resources
+@using Buriza.UI.Components.Layout
 
 @page "/settings"
 
@@ -16,149 +17,11 @@
             </div>
         </div>
 
-        <div class="max-[376px]:min-h-[calc(100vh-118px)] max-[376px]:!pb-30 flex flex-col gap-y-6 !overflow-y-auto max-h-[calc(100vh-180px)] !rounded-[12px] !pb-18 !px-4">
-            @*profile*@
-            <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !p-4 !shadow-sm !overflow-hidden flex justify-between shrink-0">
-                <div class="flex items-center gap-2">
-                    <div>
-                        <div class="rounded-full w-[64px] h-[64px] bg-cover bg-center" style="background-image: url('@Profiles.Profile1')" />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex items-center gap-2">
-                            <MudText Class="!text-2xl !font-medium">Account 1</MudText>
-                            <MudIconButton Icon="@BurizaIcons.EditIcon" Class="!p-0 [&_.mud-icon-root]:!text-xl [&_.mud-icon-root]:!text-[var(--mud-palette-primary)]" OnClick="HandleAccountSettingsClick" />
-                        </div>
-                        <MudChip
-                            T="string"
-                            Class="!bg-[var(--buriza-chip-bg)] text-[var(--mud-palette-success-contrasttext)] !px-2 !py-1 !text-[12px] !font-semibold !m-0 [&_.mud-chip-content]:flex [&_.mud-chip-content]:items-center [&_.mud-chip-content]:gap-1 !h-[22px]"
-                        >
-                            <span class="!text-[var(--mud-palette-primary-lighten)]">
-                                addr1j...dfsph9
-                            </span>
-                            <span class="text-2xl">
-                                &#183;
-                            </span>
-                            <span>
-                                m/1852'/1815'/1'
-                            </span>
-                        </MudChip>
-                    </div>
-                </div>
-                <div>
-                    <MudIconButton Icon="@BurizaIcons.ReceiveSymbolIcon" Class="[&_.mud-icon-root]:!text-white p-0!" />
-                </div>
-            </MudPaper>
-
-            @*theme & currency*@
-            <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm">
-                <div class="flex items-center justify-between border-b border-b-[var(--mud-palette-divider)] !p-4">
-                    <div>
-                        <MudText>
-                            Theme
-                        </MudText>
-                    </div>
-                    <div>
-                        <MudSwitch
-                            @bind-Value="IsDarkMode"
-                            T="bool"
-                            Color="Color.Primary"
-                            Class="@($"!transition-all !duration-150 {(IsDarkMode ? "!bg-[var(--mud-palette-primary)] [&_.mud-switch-button]:!text-[var(--mud-palette-white)]" : "!bg-[var(--mud-palette-gray-default)] [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)]")} !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!w-[52px] [&_.mud-switch-span]:!h-[24px] [&_.mud-switch-track]:!bg-transparent [&_.mud-button-root]:!py-[2px]")"
-                        />
-                    </div>
-                </div>
-                <MudNavLink
-                    Class="active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!rounded-b-[16px] [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0!"
-                >
-                    <div class="flex w-full items-center justify-between">
-                        <MudText>Currency</MudText>
-                        <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
-                    </div>
-                </MudNavLink>
-            </MudPaper>
-
-            @*node & security*@
-            <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm">
-                <MudNavLink
-                    Class="active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!rounded-t-[16px] [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! border-b border-b-[var(--mud-palette-divider)]"
-                    OnClick="@HandleNodeClick"
-                >
-                    <div class="flex w-full items-center justify-between">
-                        <MudText>Custom Node</MudText>
-                        <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
-                    </div>
-                </MudNavLink>
-                <MudNavLink
-                    Class="active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!rounded-b-[16px] [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0!"
-                >
-                    <div class="flex w-full items-center justify-between">
-                        <MudText>Security</MudText>
-                        <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
-                    </div>
-                </MudNavLink>
-            </MudPaper>
-
-            @*switch wallet*@
-            <div class="flex flex-col gap-3">
-                <div class="w-full flex items-center justify-between">
-                    <MudText Class="!font-medium !text-[var(--mud-palette-divider)]">
-                        SWITCH WALLET (12)
-                    </MudText>
-                    <MudText Class="!text-sm !text-[var(--mud-palette-primary)] cursor-pointer" @onclick="HandleSeeAllWallets">
-                        See All
-                    </MudText>
-                </div>
-
-                <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm">
-                    @* Wallet 1 - Current *@
-                    <MudNavLink
-                        Class="active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!rounded-t-[16px] [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! border-b border-b-[var(--mud-palette-divider)]"
-                        OnClick="@(() => HandleSwitchAccount("Wallet 1"))"
-                    >
-                        <div class="flex w-full items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-full w-8 h-8 bg-cover bg-center" style="background-image: url('@Profiles.Profile1')" />
-                                <MudText>Wallet 1</MudText>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">Current</MudText>
-                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
-                            </div>
-                        </div>
-                    </MudNavLink>
-                    @* Wallet 2 *@
-                    <MudNavLink
-                        Class="active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! border-b border-b-[var(--mud-palette-divider)]"
-                        OnClick="@(() => HandleSwitchAccount("Wallet 2"))"
-                    >
-                        <div class="flex w-full items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-full w-8 h-8 bg-cover bg-center" style="background-image: url('@Profiles.Profile2')" />
-                                <MudText>Wallet 2</MudText>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
-                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-primary)]"/>
-                            </div>
-                        </div>
-                    </MudNavLink>
-                    @* Wallet 3 *@
-                    <MudNavLink
-                        Class="active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!rounded-b-[16px] [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0!"
-                        OnClick="@(() => HandleSwitchAccount("Wallet 3"))"
-                    >
-                        <div class="flex w-full items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-full w-8 h-8 bg-cover bg-center" style="background-image: url('@Profiles.Profile3')" />
-                                <MudText>Wallet 3</MudText>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
-                                <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-primary)]"/>
-                            </div>
-                        </div>
-                    </MudNavLink>
-                </MudPaper>
-            </div>
-        </div>
+        <SettingsSection
+            OnAccountSettingsClick="HandleAccountSettingsClick"
+            OnNodeClick="HandleNodeClick"
+            OnSeeAllWallets="HandleSeeAllWallets"
+            OnSwitchAccount="HandleSwitchAccount"
+        />
     </div>
 </section>

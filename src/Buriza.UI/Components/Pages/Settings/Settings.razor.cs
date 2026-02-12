@@ -1,6 +1,5 @@
 using Buriza.UI.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Buriza.UI.Components.Pages;
 
@@ -12,24 +11,22 @@ public partial class Settings
     [Inject]
     public required NavigationManager NavigationManager { get; set; }
 
-    protected bool IsDarkMode { get; set; } = true;
-
-    protected void HandleAccountSettingsClick()
+    private void HandleAccountSettingsClick()
     {
         NavigationManager.NavigateTo("/settings/account");
     }
 
-    protected void HandleNodeClick()
+    private void HandleNodeClick()
     {
         NavigationManager.NavigateTo("/settings/node");
     }
 
-    protected void HandleSeeAllWallets()
+    private void HandleSeeAllWallets()
     {
         NavigationManager.NavigateTo("/settings/wallets");
     }
 
-    protected void HandleSwitchAccount(string walletName)
+    private void HandleSwitchAccount(string walletName)
     {
         AppStateService.SelectedWalletName = walletName;
         NavigationManager.NavigateTo("/settings/wallet");

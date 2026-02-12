@@ -40,16 +40,23 @@
             <div class="flex items-center justify-between border-b border-b-[var(--mud-palette-divider)] !p-4">
                 <div>
                     <MudText>
-                        Theme
+                        Dark Mode
                     </MudText>
                 </div>
-                <div>
+                <div class="relative">
+                    <div class="absolute -right-2 -top-1">
+                        <MudImage Alt="blue diamond" Src="@Misc.DiamondBlue" Class="!w-[12px] !h-[12px] animate-shimmer" />
+                    </div>
                     <MudSwitch
                         @bind-Value="IsDarkMode"
                         T="bool"
                         Color="Color.Primary"
-                        Class="@($"!transition-all !duration-150 {(IsDarkMode ? "!bg-[var(--mud-palette-primary)] [&_.mud-switch-button]:!text-[var(--mud-palette-white)]" : "!bg-[var(--mud-palette-gray-default)] [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)]")} !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!w-[52px] [&_.mud-switch-span]:!h-[24px] [&_.mud-switch-track]:!bg-transparent [&_.mud-button-root]:!py-[2px]")"
+                        ThumbIcon="@(IsDarkMode ? BurizaIcons.DarkModeFilledIcon : BurizaIcons.LightModeFilledIcon)"
+                        Class="@($"!transition-all !duration-150 {(IsDarkMode ? "!bg-[var(--mud-palette-primary)] [&_.mud-switch-button]:!text-[var(--mud-palette-white)]" : "!bg-[var(--mud-palette-gray-default)] [&_.mud-switch-button]:!text-[var(--mud-palette-dark-lighten)]")} !border !border-[var(--mud-palette-dark-lighten)] rounded-full [&_.mud-button-root]:!p-[6px] [&_.mud-switch-span]:!w-[44px] [&_.mud-button-root]:!pl-[2px] [&_.mud-switch-span]:!h-[24px] [&_.mud-switch-track]:!bg-transparent [&_.mud-button-root]:!py-[2px] [&_.mud-switch-thumb-icon]:!w-[14px] [&_.mud-switch-thumb-icon]:!h-[14px] [&_.mud-icon-root]:!text-black")"
                     />
+                    <div class="absolute right-3 -bottom-3">
+                        <MudImage Alt="yellow diamond" Src="@Misc.DiamondYellow" Class="!w-[12px] !h-[12px] animate-shimmer" Style="animation-delay: 1s;" />
+                    </div>
                 </div>
             </div>
             <MudNavLink
