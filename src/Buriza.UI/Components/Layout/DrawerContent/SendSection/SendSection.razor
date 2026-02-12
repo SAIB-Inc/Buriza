@@ -36,14 +36,16 @@
             else
             {
                 <div class="relative flex items-center justify-between">
-                    <BurizaTextField 
+                    <BurizaTextField
+                        @bind-Value="recipient.Address"                        
                         Label="Enter Recipient Address"
+                        Immediate="true"
                     />
                     
-                    <MudIconButton
+                    @* <MudIconButton
                         Icon="@BurizaIcons.AddressBookIcon"
                         Class="!absolute right-3 top-[50%] translate-y-[-50%] !p-0"
-                    />
+                    /> *@
                 </div>
             }
             @if(IsConfirmed)
@@ -182,6 +184,7 @@
                                     <MudNumericField
                                         T="decimal"
                                         @bind-Value="entry.Amount"
+                                        Immediate="true"
                                         HideSpinButtons
                                         Variant="Variant.Outlined"
                                         Class="[&_.mud-input-outlined-border]:!border-none [&_.mud-input-control-helper-container]:hidden! [&_input]:!text-[var(--mud-palette-primary-lighten)] [&_input]:!font-black !h-full [&_.mud-input]:!w-full [&_.mud-input-control-input-container]:!h-full [&_.mud-input]:h-full !rounded-[8px] [&_.mud-input-helper-text]:text-[var(--mud-palette-gray-darker)]! [&_input]:text-right [&_input]:!text-[28px] [&_.mud-input-control-input-container]:items-end [mask-image:_linear-gradient(to_right,transparent_0,_black_40px,_black_calc(100%-0px),transparent_100%)] [&_input]:h-10! [&_input]:p-0!"
@@ -269,6 +272,7 @@
             Color="Color.Primary"
             Class="!w-full"
             OnClick="HandleSend"
+            Disabled="@(!IsConfirmed && recipients.Any(r => !r.TokenEntries.Any() || r.TokenEntries.Any(e => e.Amount <= 0) || !IsValidAddress(r.Address)))"
         >
             @(IsConfirmed ? "Send" : "Confirm")
         </BurizaButton>
