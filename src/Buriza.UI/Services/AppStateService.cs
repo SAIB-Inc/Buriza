@@ -147,6 +147,34 @@ public class AppStateService
 
     public string SelectedWalletName { get; set; } = string.Empty;
 
+    private TransactionType? _summaryTransactionType;
+    public TransactionType? SummaryTransactionType
+    {
+        get => _summaryTransactionType;
+        set
+        {
+            if (_summaryTransactionType != value)
+            {
+                _summaryTransactionType = value;
+                NotifyChanged();
+            }
+        }
+    }
+
+    private TransactionCategory _summaryTransactionCategory = TransactionCategory.Default;
+    public TransactionCategory SummaryTransactionCategory
+    {
+        get => _summaryTransactionCategory;
+        set
+        {
+            if (_summaryTransactionCategory != value)
+            {
+                _summaryTransactionCategory = value;
+                NotifyChanged();
+            }
+        }
+    }
+
     private SidebarContentType _currentSidebarContent = SidebarContentType.None;
     public SidebarContentType CurrentSidebarContent
     {

@@ -5,6 +5,7 @@ public enum DrawerContentType
     None,
     Summary,
     AuthorizeDapp,
+    ConnectedApps,
     Receive,
     Send,
     SelectAsset,
@@ -14,5 +15,6 @@ public enum DrawerContentType
     Manage,
     SwitchWallet,
     SwitchAccount,
-    AccountSettings
+    AccountSettings,
+    Filter
 }
