@@ -1,0 +1,15 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Dialogs
+
+<BurizaBaseDialog Title="Transaction Confirmation" OnClose="Cancel">
+    <DialogContent>
+        <div class="w-[379px]">
+            Please sign the transaction with your password
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Cancel">OK</MudButton>
+    </DialogActions>
+</BurizaBaseDialog>
