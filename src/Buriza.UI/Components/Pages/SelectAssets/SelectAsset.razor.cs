@@ -7,4 +7,6 @@ public partial class SelectAsset
 {
     [Inject]
     public required AppStateService AppStateService { get; set; }
+
+    private string SelectedAsset { get; set; } = string.Empty; 
 }

@@ -7,56 +7,73 @@
 
 @namespace Buriza.UI.Components.Layout
 
-<div class="relative !gap-6 !pb-8 flex flex-col items-center !px-4">
+<div class="relative !max-h-[calc(100vh-88px)] !gap-4 flex flex-col items-center !px-4 rounded-l-6">
     <div class="w-full">
-        <BurizaTabs
-            Class="!w-full [&_.mud-tab-active]:!bg-transparent !text-[var(--mud-palette-text-primary)] [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
-            @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
-        >
-            <MudTabPanel 
-                Text="Token" 
-                Icon="@BurizaIcons.TokenSymbolIcon"
-                Class="w-full bg-[var(--mud-palette-dark)]"
-                Style="border-radius: 30px 10px 10px 30px"
-            />
-            <MudTabPanel 
-                Text="NFT" 
-                Icon="@BurizaIcons.NftSymbolIcon"
-                Class="w-full bg-[var(--mud-palette-dark)]"
-                Style="border-radius: 10px 30px 30px 10px"
-            />
-        </BurizaTabs>
+            <BurizaTabs
+                Class="!w-full !mb-[10px] [&_.mud-tab]:!text-[14px] [&_.mud-tab_.mud-icon-root]:!text-[20px] [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full max-h-[48px]! [&_.mud-tabs-tabbar-inner]:min-h-[44px]! [&_.mud-tabs-scroll-button]:hidden"
+                @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
+            >                        
+                <MudTabPanel 
+                    Text="Token" 
+                    Icon="@BurizaIcons.TokenSymbolIcon"
+                    Class="w-full !min-w-[100px] max-xl:!gap-0"
+                />
+                <MudTabPanel 
+                    Text="NFT" 
+                    Icon="@BurizaIcons.NftSymbolIcon"                            Class="w-full !min-w-[100px] max-xl:!gap-0"
+                />
+            </BurizaTabs>
+        <BurizaSearchBar
+            Class="!mb-0 !justify-center [&_input]:!p-0 "
+        />
     </div>
-    <div class="!space-y-2 h-full max-h-[calc(100vh-208px)] w-full overflow-y-auto !rounded-[12px]">
-        @if(AppStateService.SelectedAssetType == AssetType.Token)
-        {
-            @foreach (TokenAsset asset in TokenAssets)
+    <div class="relative min-h-0">
+        <div class="!space-y-2 h-full max-h-[calc(100vh-208px)] w-full overflow-y-auto !rounded-[12px]">
+            @if(AppStateService.SelectedAssetType == AssetType.Token)
             {
-                <BurizaAssetCard
-                    AssetIcon="@asset.AssetIcon"
-                    AssetName="@asset.AssetName"
-                    PricePercentage="@asset.PricePercentage"
-                    AssetAmount="@asset.AssetAmount"
-                    UsdConversion="@asset.UsdConversion"
-                    Class="md:[&_.asset-icon]:!w-[44px] md:[&_.asset-icon]:!h-[44px]"
-                />
+                @foreach (TokenAsset asset in TokenAssets)
+                {
+                    <BurizaAssetCard
+                        IsSelected="@(SelectedAsset == asset.AssetName)"
+                        OnClick="@(() => SelectedAsset = asset.AssetName)"  
+                        AssetIcon="@asset.AssetIcon"
+                        AssetName="@asset.AssetName"
+                        PricePercentage="@asset.PricePercentage"
+                        AssetAmount="@asset.AssetAmount"
+                        UsdConversion="@asset.UsdConversion"
+                        Class="md:h-[74px] md:!py-2 md:bg-[var(--mud-palette-drawer-background)]! md:border! md:border-[var(--mud-palette-drawer-background)] md:[&_.asset-icon]:!w-[60px] md:[&_.asset-icon]:!h-[60px] md:hover:bg-[var(--mud-palette-gray-default)]! md:cursor-pointer md:transition-colors"
+                    />
+                }
             }
-        }
-        else
-        {
-            @foreach (NftAsset nft in NftAssets)
+            else
             {
-                <BurizaAssetCard
-                    AssetIcon="@nft.AssetIcon"
-                    AssetName="@nft.AssetName"
-                    PricePercentage="@nft.PricePercentage"
-                    AssetAmount="@nft.AssetAmount"
-                    UsdConversion="@nft.UsdConversion"
-                    AssetType="AssetType.NFT"
-                    CollectionName="@nft.CollectionName"
-                    Class="md:[&_.asset-icon]:!w-[44px] md:[&_.asset-icon]:!h-[44px]"
-                />
+                @foreach (NftAsset nft in NftAssets)
+                {
+                    <BurizaAssetCard
+                        IsSelected="@(SelectedAsset == nft.AssetName)"
+                        OnClick="@(() => SelectedAsset = nft.AssetName)"
+                        AssetIcon="@nft.AssetIcon"
+                        AssetName="@nft.AssetName"
+                        PricePercentage="@nft.PricePercentage"
+                        AssetAmount="@nft.AssetAmount"
+                        UsdConversion="@nft.UsdConversion"
+                        AssetType="AssetType.NFT"
+                        CollectionName="@nft.CollectionName"
+                        Class="md:bg-[var(--mud-palette-drawer-background)]! md:[&_.asset-icon]:!w-[60px] md:[&_.asset-icon]:!h-[60px] md:hover:bg-[var(--mud-palette-gray-default)]! md:cursor-pointer md:transition-colors"
+                    />
+                }
             }
-        }
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[var(--mud-palette-drawer-background)] to-transparent pointer-events-none rounded-b-[16px]"></div>    
+    </div>
+    
+    <div class="w-full pb-4">
+        <BurizaButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            OnClick="@HandleSelectAsset"
+        >
+            Select Asset
+        </BurizaButton>
     </div>
 </div>

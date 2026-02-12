@@ -5,13 +5,43 @@
 
 @namespace Buriza.UI.Components.Layout
 
-<div class="w-full h-full !px-4 !pb-8 flex flex-col items-center justify-between">
+<div class="w-full h-full !px-4 !pb-4 flex flex-col items-center justify-between">
     <div class="flex flex-col items-center justify-center !gap-4 flex-1">
-        <div>
+        <div class="relative">
+            <MudImage
+                Alt="blue diamond"
+                Src="@Misc.DiamondBlue"
+                Class="absolute top-[75px] left-[-50px] scale-[2]"
+            />
+            <MudImage
+                Alt="yellow diamond"
+                Src="@Misc.DiamondYellow"
+                Class="absolute top-[-7px] left-[-24px] scale-150"
+            />
+            <MudImage
+                Alt="blue diamond"
+                Src="@Misc.DiamondBlue"
+                Class="absolute top-[-42px] left-[25px] scale-150"
+            />
             <MudImage
                 Alt="Successful"
                 Src="@Mascots.Mascot6"
                 Class="!max-w-[120px] !w-full"
+            />
+            <MudImage
+                Alt="yellow diamond"
+                Src="@Misc.DiamondYellow"
+                Class="absolute top-[20px] right-[-52px] scale-[2]"
+            />
+            <MudImage
+                Alt="orange diamond"
+                Src="@Misc.DiamondOrange"
+                Class="absolute top-[-70px] right-[-10px]"
+            />
+            <MudImage
+                Alt="purple diamond"
+                Src="@Misc.DiamondPurple"
+                Class="absolute top-[100px] right-[-40px] scale-[2]"
             />
         </div>
         <div class="!text-center">
