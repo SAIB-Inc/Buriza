@@ -99,14 +99,10 @@ public class BurizaChainProviderFactory(
         => string.IsNullOrWhiteSpace(value) ? null : value;
 
     public void SetChainConfig(ChainInfo chainInfo, ServiceConfig config)
-    {
-        _appState.SetChainConfig(chainInfo, config);
-    }
+        => _appState.SetChainConfig(chainInfo, config);
 
     public void ClearChainConfig(ChainInfo chainInfo)
-    {
-        _appState.ClearChainConfig(chainInfo);
-    }
+        => _appState.ClearChainConfig(chainInfo);
 
     public void Dispose()
     {
