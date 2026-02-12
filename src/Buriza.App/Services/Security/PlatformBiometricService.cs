@@ -12,7 +12,7 @@ public class PlatformBiometricService : IBiometricService
 {
     private readonly IBiometricService _platformService;
 
-    public PlatformBiometricService()
+    public PlatformBiometricService(IBiometricService platformService)
     {
 #if IOS || MACCATALYST
         _platformService = new AppleBiometricService();
@@ -23,6 +23,7 @@ public class PlatformBiometricService : IBiometricService
 #else
         _platformService = new NullBiometricService();
 #endif
+        _platformService = platformService;
     }
 
     public Task<bool> IsAvailableAsync(CancellationToken ct = default)
