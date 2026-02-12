@@ -1,0 +1,116 @@
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@page "/settings/wallet"
+
+@namespace Buriza.UI.Components.Pages
+
+<PageTitle>Buriza</PageTitle>
+
+<section class="h-screen">
+    <div class="max-[376px]:!pt-4 max-[376px]:!pb-8 h-full container !mx-auto !px-4 !py-16 flex flex-col">
+        <div class="flex justify-between !mb-[25px]">
+            <div class="flex align-center">
+                <MudNavLink Href="/settings/wallets" Class="!size-fit !p-0 [&_a.mud-nav-link]:!p-0 [&_.mud-nav-link-text]:!m-0">
+                    <MudIcon Icon="@BurizaIcons.ChevronRightIcon" Class="mr-4 ml-1" />
+                </MudNavLink>
+                <MudText Class="!text-[22px] !font-medium">Wallet 1</MudText>
+            </div>
+        </div>
+
+        <div class="max-[376px]:min-h-[calc(100vh-112px)] min-h-[calc(100vh-202px)] flex flex-col flex-1 gap-6 !pb-12">
+            @*edit profile*@
+            <div class="!space-y-6">
+                <BurizaTextField
+                    Label="Wallet Name"
+                    Placeholder="Wallet 1"
+                    Class="[&_.mud-input-control-input-container]:bg-[var(--mud-palette-drawer-background)]!"
+                />
+                <div>
+                    <div>
+                        <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH WALLET ICON</MudText>
+                    </div>
+                    <div class="grid grid-cols-4 !gap-y-3 !gap-x-8">
+                        @for (int i = 0; i < WalletIcons.Count; i++)
+                        {
+                            int index = i;
+                            <div
+                                class="@($"relative w-[70px] h-[70px] aspect-square rounded-full bg-cover bg-center cursor-pointer {(SelectedWalletIconIndex == index ? "ring-2 ring-[var(--mud-palette-primary)] ring-offset-2 ring-offset-[var(--mud-palette-background)]" : "")}")"
+                                style="background-image: url('@WalletIcons[index]')"
+                                @onclick="() => SelectedWalletIconIndex = index"
+                            >
+                                @if (SelectedWalletIconIndex == index)
+                                {
+                                    <div class="absolute inset-0 rounded-full flex items-center justify-center" style="background-color: rgba(9, 26, 47, 0.8)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Style="color: var(--mud-palette-primary-lighten);" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @*account list*@
+            <div>
+                <div>
+                    <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH ACCOUNT</MudText>
+                </div>
+                <div class="relative">
+                    <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !shadow-sm h-[calc(100vh-470px)] overflow-y-auto !pb-20">
+                        @for (int i = 0; i < Accounts.Count; i++)
+                        {
+                            int index = i;
+                            bool isFirst = index == 0;
+                            bool isLast = index == Accounts.Count - 1;
+
+                            <MudNavLink
+                                Class="@($"active:!text-[var(--mud-palette-primary)] [&_.mud-nav-link]:!px-4 [&_.mud-nav-link]:!py-4 [&_.mud-nav-link-text]:ml-0! {(isFirst ? "[&_.mud-nav-link]:!rounded-t-[16px]" : "")} {(isLast ? "[&_.mud-nav-link]:!rounded-b-[16px]" : "border-b border-b-[var(--mud-palette-divider)]")}")"
+                            >
+                                <div class="flex w-full justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div>
+                                            <div class="rounded-full w-9 h-9 bg-cover bg-center" style="background-image: url('@Accounts[index].Image')" />
+                                        </div>
+                                        <div class="flex flex-col gap-2">
+                                            <div class="flex items-center gap-2">
+                                                <MudText Class="!font-medium">@Accounts[index].Name</MudText>
+                                                <MudIconButton Icon="@BurizaIcons.EditIcon" Class="!p-0 [&_.mud-icon-root]:!text-base [&_.mud-icon-root]:!text-[var(--mud-palette-primary)]" OnClick="HandleAccountSettingsClick" />
+                                            </div>
+                                            <MudChip
+                                                T="string"
+                                                Class="!bg-[var(--buriza-chip-bg)] text-[var(--mud-palette-success-contrasttext)] !px-2 !py-1 !text-[12px] !font-semibold !m-0 [&_.mud-chip-content]:flex [&_.mud-chip-content]:items-center [&_.mud-chip-content]:gap-1 !h-[22px]"
+                                            >
+                                                <span class="!text-[var(--mud-palette-primary-lighten)]">
+                                                    @Accounts[index].Address
+                                                </span>
+                                                <MudIconButton Icon="@BurizaIcons.CopySymbolIcon" Class="!p-0 !min-w-0 !min-h-0 [&_.mud-icon-root]:!text-sm [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]" />
+                                                <span class="text-2xl">
+                                                    &#183;
+                                                </span>
+                                                <span class="!text-[10px]">
+                                                    @Accounts[index].DerivationPath
+                                                </span>
+                                            </MudChip>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        @if (index == 0)
+                                        {
+                                            <MudText Class="!text-sm !text-[var(--mud-palette-dark-lighten)]">Current</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText Class="!text-sm !text-[var(--mud-palette-primary)]">Switch</MudText>
+                                        }
+                                    </div>
+                                </div>
+                            </MudNavLink>
+                        }
+                    </MudPaper>
+                    <div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[var(--mud-palette-background)] to-transparent rounded-b-[16px] pointer-events-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

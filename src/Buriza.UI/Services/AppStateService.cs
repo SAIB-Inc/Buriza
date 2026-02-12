@@ -145,6 +145,8 @@ public class AppStateService
         }
     }
 
+    public string SelectedWalletName { get; set; } = string.Empty;
+
     private TransactionType? _summaryTransactionType;
     public TransactionType? SummaryTransactionType
     {

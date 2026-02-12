@@ -38,6 +38,7 @@ public partial class BurizaButton
 
     private string ButtonClass => $"""
         !rounded-full !normal-case !font-medium !text-[var(--mud-palette-background)] h-10 w-full !text-sm !shadow-none
+        {(Disabled ? "!cursor-not-allowed !opacity-50 !text-[var(--mud-palette-dark-darken)]" : "")}
         {GetColorClass()}
         {Class}
     """;

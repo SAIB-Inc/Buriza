@@ -100,7 +100,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             DarkDarken = "#1C1F27",
             DarkContrastText = "#272A32",
             Divider = "#414754",
-            TableLines = "#23304B",
+            TableLines = "#B9C6E9",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
             SuccessDarken = "#002116",
@@ -196,6 +196,9 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
         TransactionStatus => "Transaction Sent",
         Settings => "Settings",
         NodeSettings => "Node Settings",
+        SwitchWallet => "Switch Wallet (50)",
+        SwitchAccount => AppStateService.SelectedWalletName,
+        AccountSettings => "Account Settings",
         Manage => AppStateService.IsManageAccountFormVisible
             ? (AppStateService.IsManageEditMode ? "Edit Wallet" : "New Account")
             : "Manage",
@@ -235,8 +238,21 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
         else if (AppStateService.CurrentDrawerContent == Send)
         {
             AppStateService.RequestResetSendConfirmation();
+            AppStateService.IsFilterDrawerOpen = false;
         }
         else if (AppStateService.CurrentDrawerContent == NodeSettings)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == SwitchWallet)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == SwitchAccount)
+        {
+            AppStateService.SetDrawerContent(Settings);
+        }
+        else if (AppStateService.CurrentDrawerContent == AccountSettings)
         {
             AppStateService.SetDrawerContent(Settings);
         }

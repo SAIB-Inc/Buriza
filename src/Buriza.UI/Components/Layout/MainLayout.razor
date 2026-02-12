@@ -132,12 +132,6 @@
                         OnClick="@HandleAddRecipient"
                     />
                 }
-                else if (AppStateService.CurrentDrawerContent == Settings || AppStateService.CurrentDrawerContent == NodeSettings)
-                {
-                    <div>
-                        <MudImage Alt="Avatar" Src="@Misc.Avatar" Class="!h-[30px] !ml-4"></MudImage>
-                    </div>
-                }
                 else if (AppStateService.CurrentDrawerContent == Receive)
                 {
                     <MudIconButton

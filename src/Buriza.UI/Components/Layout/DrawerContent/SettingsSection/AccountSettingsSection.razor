@@ -1,0 +1,68 @@
+@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
+@using Buriza.UI.Resources
+
+@namespace Buriza.UI.Components.Layout
+
+<div class="flex flex-col gap-6 !overflow-y-auto w-full !px-4 !pb-8 flex-1">
+    @*profile*@
+    <MudPaper Class="!bg-[var(--mud-palette-drawer-background)] !rounded-[16px] !p-4 !shadow-sm !overflow-hidden flex justify-between">
+        <div class="flex items-center gap-2">
+            <div>
+                <div class="rounded-full w-[64px] h-[64px] bg-cover bg-center" style="background-image: url('@Profiles.Profile1')" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                    <MudText Class="!text-2xl !font-medium">Account 1</MudText>
+                </div>
+                <MudChip
+                    T="string"
+                    Class="!bg-[var(--buriza-chip-bg)] text-[var(--mud-palette-success-contrasttext)] !px-2 !py-1 !text-[12px] !font-semibold !m-0 [&_.mud-chip-content]:flex [&_.mud-chip-content]:items-center [&_.mud-chip-content]:gap-1 !h-[22px]"
+                >
+                    <span class="!text-[var(--mud-palette-primary-lighten)]">
+                        addr1j...dfsph9
+                    </span>
+                    <MudIconButton Icon="@BurizaIcons.CopySymbolIcon" Class="!p-0 !min-w-0 !min-h-0 [&_.mud-icon-root]:!text-sm [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]" />
+                    <span class="text-2xl">
+                        &#183;
+                    </span>
+                    <span>
+                        m/1852'/1815'/1'
+                    </span>
+                </MudChip>
+            </div>
+        </div>
+        <div>
+            <MudIconButton Icon="@BurizaIcons.ReceiveSymbolIcon" Class="[&_.mud-icon-root]:!text-white p-0!" />
+        </div>
+    </MudPaper>
+
+    <div class="!space-y-6">
+        <BurizaTextField
+            Label="Account Name"
+            Placeholder="Account 1"
+            Class="[&_.mud-input-control-input-container]:bg-[var(--mud-palette-drawer-background)]!"
+        />
+        <div>
+            <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH ACCOUNT ICON</MudText>
+            <div class="grid grid-cols-4 !gap-3">
+                @for (int i = 0; i < NftIcons.Count; i++)
+                {
+                    int index = i;
+                    <div
+                        class="@($"relative w-[70px] h-[70px] aspect-square rounded-full bg-cover bg-center cursor-pointer {(SelectedNftIconIndex == index ? "ring-2 ring-[var(--mud-palette-primary)] ring-offset-2 ring-offset-[var(--mud-palette-background)]" : "")}")"
+                        style="background-image: url('@NftIcons[index]')"
+                        @onclick="() => SelectedNftIconIndex = index"
+                    >
+                        @if (SelectedNftIconIndex == index)
+                        {
+                            <div class="absolute inset-0 rounded-full flex items-center justify-center" style="background-color: rgba(9, 26, 47, 0.8)">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Style="color: var(--mud-palette-primary-lighten);" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

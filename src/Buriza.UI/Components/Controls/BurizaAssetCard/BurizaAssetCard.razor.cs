@@ -28,4 +28,10 @@ public partial class BurizaAssetCard
 
     [Parameter]
     public string CollectionName { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsSelected { get; set; } = false;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
 }
