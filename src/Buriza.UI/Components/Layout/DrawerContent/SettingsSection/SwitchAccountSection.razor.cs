@@ -10,6 +10,14 @@ public partial class SwitchAccountSection : ComponentBase
     [Inject]
     public required AppStateService AppStateService { get; set; }
 
+    protected int SelectedWalletIconIndex { get; set; } = 0;
+
+    protected List<string> WalletIcons { get; set; } =
+    [
+        Profiles.Profile1, Profiles.Profile2, Profiles.Profile3, Profiles.Profile4,
+        Profiles.Profile5, Profiles.Profile6, Profiles.Profile7, Profiles.Profile8,
+    ];
+
     protected void HandleAccountSettingsClick()
     {
         AppStateService.SetDrawerContent(AccountSettings);

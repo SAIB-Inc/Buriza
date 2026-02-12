@@ -100,7 +100,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             DarkDarken = "#1C1F27",
             DarkContrastText = "#272A32",
             Divider = "#414754",
-            TableLines = "#23304B",
+            TableLines = "#B9C6E9",
             SuccessLighten = "#71FAC9",
             Success = "#00B286",
             SuccessDarken = "#002116",

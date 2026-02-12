@@ -27,16 +27,26 @@
                     Class="[&_.mud-input-control-input-container]:bg-[var(--mud-palette-drawer-background)]!"
                 />
                 <div>
-                    <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH WALLET ICON</MudText>
-                    <div class="grid grid-cols-5 !gap-y-3 !gap-x-8">
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile1')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile2')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile3')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile4')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile5')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile6')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile7')" />
-                        <div class="w-14 h-14 aspect-square rounded-full bg-cover bg-center cursor-pointer" style="background-image: url('@Profiles.Profile8')" />
+                    <div>
+                        <MudText Class="!font-medium !mb-3 !text-[var(--mud-palette-divider)]">SWITCH WALLET ICON</MudText>
+                    </div>
+                    <div class="grid grid-cols-4 !gap-y-3 !gap-x-8">
+                        @for (int i = 0; i < WalletIcons.Count; i++)
+                        {
+                            int index = i;
+                            <div
+                                class="@($"relative w-[70px] h-[70px] aspect-square rounded-full bg-cover bg-center cursor-pointer {(SelectedWalletIconIndex == index ? "ring-2 ring-[var(--mud-palette-primary)] ring-offset-2 ring-offset-[var(--mud-palette-background)]" : "")}")"
+                                style="background-image: url('@WalletIcons[index]')"
+                                @onclick="() => SelectedWalletIconIndex = index"
+                            >
+                                @if (SelectedWalletIconIndex == index)
+                                {
+                                    <div class="absolute inset-0 rounded-full flex items-center justify-center" style="background-color: rgba(9, 26, 47, 0.8)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Style="color: var(--mud-palette-primary-lighten);" />
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -74,6 +84,7 @@
                                                 <span class="!text-[var(--mud-palette-primary-lighten)]">
                                                     @Accounts[index].Address
                                                 </span>
+                                                <MudIconButton Icon="@BurizaIcons.CopySymbolIcon" Class="!p-0 !min-w-0 !min-h-0 [&_.mud-icon-root]:!text-sm [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]" />
                                                 <span class="text-2xl">
                                                     &#183;
                                                 </span>

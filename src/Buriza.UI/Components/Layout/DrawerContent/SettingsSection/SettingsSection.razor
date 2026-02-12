@@ -21,6 +21,7 @@
                     <span class="!text-[var(--mud-palette-primary-lighten)]">
                         addr1j...dfsph9
                     </span>
+                    <MudIconButton Icon="@BurizaIcons.CopySymbolIcon" Class="!p-0 !min-w-0 !min-h-0 [&_.mud-icon-root]:!text-sm [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]" />
                     <span class="text-2xl">
                         &#183;
                     </span>
@@ -65,7 +66,10 @@
             >
                 <div class="flex w-full items-center justify-between">
                     <MudText>Currency</MudText>
-                    <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
+                    <div class="flex items-center gap-1">
+                        <MudText Style="color: var(--mud-palette-dark-lighten); font-size: 14px;">ADA</MudText>
+                        <MudIcon Icon="@BurizaIcons.ChevronLeftIcon" Class="!text-[var(--mud-palette-text-primary)]"/>
+                    </div>
                 </div>
             </MudNavLink>
         </MudPaper>
