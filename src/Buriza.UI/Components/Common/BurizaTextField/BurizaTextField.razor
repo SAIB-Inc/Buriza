@@ -1,7 +1,8 @@
 @namespace Buriza.UI.Components.Common
 
 <MudTextField T="string"
-    @bind-Value="Value"
+    Value="@Value"
+    ValueChanged="@ValueChanged"
     Label="@Label"
     Placeholder="@Placeholder"
     HelperText="@HelperText"

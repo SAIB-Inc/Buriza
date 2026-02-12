@@ -14,6 +14,8 @@ public partial class SelectAssetSection : ComponentBase, IDisposable
     protected List<TokenAsset> TokenAssets { get; set; } = [];
     protected List<NftAsset> NftAssets { get; set; } = [];
 
+    private string SelectedAsset { get; set; } = string.Empty; 
+
     protected override void OnInitialized()
     {
         AppStateService.OnChanged += StateHasChanged;
@@ -24,5 +26,10 @@ public partial class SelectAssetSection : ComponentBase, IDisposable
     public void Dispose()
     {
         AppStateService.OnChanged -= StateHasChanged;
+    }
+
+    private void HandleSelectAsset()
+    {
+        AppStateService.SetDrawerContent(DrawerContentType.Send); 
     }
 }

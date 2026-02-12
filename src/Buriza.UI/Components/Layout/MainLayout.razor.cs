@@ -235,6 +235,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
         else if (AppStateService.CurrentDrawerContent == Send)
         {
             AppStateService.RequestResetSendConfirmation();
+            AppStateService.IsFilterDrawerOpen = false;
         }
         else if (AppStateService.CurrentDrawerContent == NodeSettings)
         {
