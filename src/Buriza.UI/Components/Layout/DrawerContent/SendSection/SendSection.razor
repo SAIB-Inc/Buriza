@@ -19,7 +19,7 @@
                     {
                         <MudIconButton
                             Icon="@BurizaIcons.DeleteSymbolIcon"
-                            Class="!p-0"
+                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)]"
                             OnClick="() => RemoveRecipient(recipient)"
                         />
                     }
@@ -135,13 +135,13 @@
                                 <div class="flex items-center !gap-2">
                                     <BurizaButton 
                                         Variant="Variant.Outlined"
-                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--light-border)]! bg-transparent! text-[10px]!"
+                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6!  bg-transparent! border-[var(--light-border)]! text-[10px]! text-[var(--mud-palette-text-primary)]! font-semibold!"
                                     >
                                         HALF
                                     </BurizaButton>
                                     <BurizaButton
                                         Variant="Variant.Outlined"
-                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! text-[var(--mud-palette-text-primary)]! border-[var(--light-border)]! bg-transparent! text-[10px]!"
+                                        Class="rounded-[5px]! px-1! min-w-10! w-max! h-6! bg-transparent! border-[var(--light-border)]! text-[10px]! font-semibold! text-[var(--mud-palette-text-primary)]!"
                                     >
                                         MAX
                                     </BurizaButton>
@@ -187,7 +187,7 @@
                                         Immediate="true"
                                         HideSpinButtons
                                         Variant="Variant.Outlined"
-                                        Class="[&_.mud-input-outlined-border]:!border-none [&_.mud-input-control-helper-container]:hidden! [&_input]:!text-[var(--mud-palette-primary-lighten)] [&_input]:!font-black !h-full [&_.mud-input]:!w-full [&_.mud-input-control-input-container]:!h-full [&_.mud-input]:h-full !rounded-[8px] [&_.mud-input-helper-text]:text-[var(--mud-palette-gray-darker)]! [&_input]:text-right [&_input]:!text-[28px] [&_.mud-input-control-input-container]:items-end [mask-image:_linear-gradient(to_right,transparent_0,_black_40px,_black_calc(100%-0px),transparent_100%)] [&_input]:h-10! [&_input]:p-0!"
+                                        Class="[&_.mud-input-outlined-border]:!border-none [&_.mud-input-control-helper-container]:hidden! [&_input]:!text-[var(--mud-palette-primary-lighten)] [&_input]:!font-black !h-full [&_.mud-input]:!w-full [&_.mud-input-control-input-container]:!h-full [&_.mud-input]:h-full !rounded-[8px] [&_.mud-input-helper-text]:text-[var(--mud-palette-gray-darker)]! [&_input]:text-right [&_input]:!text-[28px] [&_input]:!font-semibold [&_.mud-input-control-input-container]:items-end [mask-image:_linear-gradient(to_right,transparent_0,_black_40px,_black_calc(100%-0px),transparent_100%)] [&_input]:h-10! [&_input]:p-0!"
                                     />
                                     <MudText Class="!mt-2 !font-light !text-[11px] !w-max !text-[var(--mud-palette-text-secondary)] !font-light">
                                         $0.00

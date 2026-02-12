@@ -9,23 +9,20 @@
 
 <div class="relative !max-h-[calc(100vh-88px)] !gap-4 flex flex-col items-center !px-4 rounded-l-6">
     <div class="w-full">
-        <BurizaTabs
-            Class="!w-full !mb-4 [&_.mud-tab-active]:!bg-transparent !text-[var(--mud-palette-text-primary)] [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full"
-            @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
-        >
-            <MudTabPanel 
-                Text="Token" 
-                Icon="@BurizaIcons.TokenSymbolIcon"
-                Class="w-full bg-[var(--mud-palette-dark)]"
-                Style="border-radius: 30px 10px 10px 30px"
-            />
-            <MudTabPanel 
-                Text="NFT" 
-                Icon="@BurizaIcons.NftSymbolIcon"
-                Class="w-full bg-[var(--mud-palette-dark)]"
-                Style="border-radius: 10px 30px 30px 10px"
-            />
-        </BurizaTabs>
+            <BurizaTabs
+                Class="!w-full !mb-[10px] [&_.mud-tab]:!text-[14px] [&_.mud-tab_.mud-icon-root]:!text-[20px] [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full max-h-[48px]! [&_.mud-tabs-tabbar-inner]:min-h-[44px]! [&_.mud-tabs-scroll-button]:hidden"
+                @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
+            >                        
+                <MudTabPanel 
+                    Text="Token" 
+                    Icon="@BurizaIcons.TokenSymbolIcon"
+                    Class="w-full !min-w-[100px] max-xl:!gap-0"
+                />
+                <MudTabPanel 
+                    Text="NFT" 
+                    Icon="@BurizaIcons.NftSymbolIcon"                            Class="w-full !min-w-[100px] max-xl:!gap-0"
+                />
+            </BurizaTabs>
         <BurizaSearchBar
             Class="!mb-0 !justify-center [&_input]:!p-0 "
         />
