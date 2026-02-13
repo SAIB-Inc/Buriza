@@ -23,7 +23,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
     private DotNetObjectReference<MainLayout>? _dotNetRef;
     protected Anchor FilterDrawerAnchor { get; set; } = Anchor.End;
 
-    protected bool IsHeaderHidden => IsOnRoute(Routes.TransactionSuccess, Routes.Onboard, Routes.Splash);
+    protected bool IsHeaderHidden => IsOnRoute(Routes.TransactionSuccess, Routes.Onboard, Routes.Splash, Routes.Send, Routes.SendAssets);
 
     private static MudTheme BurizaTheme => new()
     {
