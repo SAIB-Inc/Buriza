@@ -5,19 +5,19 @@
 @namespace Buriza.UI.Components.Pages
 
 <section class="max-md:h-screen h-[calc(100vh-24px)]">
-    <div class="max-[376px]:fixed max-[376px]:top-[3px] max-[376px]:right-2">
+    @* <div class="max-[376px]:fixed max-[376px]:top-[3px] max-[376px]:right-2">
         <MudIconButton
             Icon="@BurizaIcons.FullscreenSymbolIcon"
             Class="max-[376px]:!block !hidden !px-2 [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
         >
         </MudIconButton>
-    </div>
+    </div> *@
 
-    <div class="relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 !gap-3 sm:!gap-10 sm:justify-between">
+    <div class="max-[376px]:!py-4 relative container mx-auto h-full w-full flex flex-col items-center justify-center !px-4 !py-8 !gap-3 sm:!gap-10 sm:justify-between">
         @* Mobile App Bar - visible on slides 1-4, hidden on first and last slide *@
         @if (CurrentSlide >= 1 && CurrentSlide <= 4)
         {
-            <div class="md:hidden fixed top-0 left-0 right-0 z-10 flex items-center mt-10! !px-4 !py-3 bg-[var(--mud-palette-background)] !shadow-md">
+            <div class="max-[376px]:hidden sm:hidden fixed top-0 left-0 right-0 z-10 flex items-center mt-10! !px-4 !py-3 bg-[var(--mud-palette-background)] !shadow-md">
                 <BurizaButton
                     Variant="Variant.Filled"
                     Color="Color.Secondary"
@@ -52,7 +52,7 @@
             double stepWidth = 100.0 / totalSteps;
             double leftPercent = (activeStep - 1) * stepWidth + (stepWidth / 2);
         }
-        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-150 {(showProgress ? "max-sm:!mt-[92px] !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
+        <div class="@($"w-full flex flex-col max-w-[420px]! transition-all duration-150 {(showProgress ? "max-[376px]:mt-3! min-[376px]:mt-[92px]! sm:mt-0! !h-[32px] opacity-100" : "opacity-0 h-0! pointer-events-none")}")">
             @* Step Label - pops up from bottom *@
             <div class="w-full relative h-5 mb-1">
                 <div class="absolute" style="left: @(leftPercent)%;">
@@ -93,21 +93,21 @@
                 SelectedIndexChanged="@OnSlideChanged"
             >
             @*1st slide*@
-            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-3! flex flex-col items-center justify-center -mt-4! gap-6! md:!gap-10">
+            <MudCarouselItem Transition="Transition.Fade" Class="max-[376px]:gap-10! flex flex-col items-center justify-center -mt-4! gap-6! md:!gap-10">
                 <div class="md:hidden">
                     <MudImage
                         Alt="onboard buriza"
                         Src="@Misc.OnboardLogo"
-                        Class="max-[376px]:!w-[280px] !w-[340px]"
+                        Class="max-[376px]:!w-[230px] !w-[340px]"
                     />
                 </div>
                 <div class="!text-center !space-y-2 md:hidden">
                     <MudText Class="!text-[32px] !font-semibold">
                         Welcome to Burizas
                     </MudText>
-                    <MudText Class="max-[376px]:!text-sm">
+                    <MudText>
                         <span>To get started, create new wallet or</span><br/>
-                        <span>import an existing seed phrase</span>
+                        <span>import an existing seed phrase.</span>
                     </MudText>
                 </div>
                 <div class="max-md:hidden flex flex-col items-center justify-center">
@@ -201,7 +201,7 @@
                  <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
-                            <MudText Class="!text-2xl !font-medium">
+                            <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium">
                                 Save This Phrase
                             </MudText>
                         </div>
@@ -209,22 +209,22 @@
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-0 -left-2 w-[32px] rotate-3"
+                                Class="max-[376px]:w-[20px] max-[376px]:left-1 max-[376px]:top-2 absolute top-0 -left-2 w-[32px] rotate-3"
                             />
                             <MudImage
                                 Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
-                                Class="absolute -top-3 left-5 rotate-3"
+                                Class="max-[376px]:left-4 max-[376px]:-top-2 absolute -top-3 left-5 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-3 -right-2 rotate-3"
+                                Class="max-[376px]:right-0 max-[376px]:top-2 absolute top-3 -right-2 rotate-3"
                             />
                             <MudImage
                                 Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
-                                Class="absolute -top-5 right-0 w-[40px] rotate-3"
+                                Class="max-[376px]:w-[24px] max-[376px]:right-3 max-[376px]:-top-4 absolute -top-5 right-0 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
@@ -237,7 +237,7 @@
                         </MudText>
                     </div>
                 </div>
-                <div class="max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
+                <div class="max-[376px]:h-[calc(100vh-304px)]! max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
                     <div class="@($"max-[430px]:!gap-x-2 w-full grid grid-cols-3 place-items-center !gap-x-2 !gap-y-2  transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
                         @foreach (var pair in (RecoveryPhrase ?? Enumerable.Empty<string>())
                             .Select((item, index) => new { item, index }))
@@ -253,7 +253,7 @@
                 </div>
                 <div class="w-full flex items-center justify-between max-w-[420px]!">
                     <div>
-                        <MudText Class="max-[376px]:!text-xs !text-sm !font-medium">
+                        <MudText Class="!text-sm !font-medium">
                             Recovery Phrase Length:
                         </MudText>
                     </div>
@@ -270,7 +270,7 @@
                         </MudToggleGroup>
                     </div>
                 </div>
-                <div class="max-md:hidden! w-full flex items-center justify-between max-w-[420px]! ">
+                <div class="max-[376px]:flex! max-[376px]:!mt-auto max-md:hidden w-full flex items-center justify-between max-w-[420px]! ">
                     <div>
                         <BurizaButton
                             Variant="Variant.Filled"
@@ -305,7 +305,7 @@
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
-                            <MudText Class="!text-2xl !font-medium">
+                            <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium">
                                 Recovery Phrase
                             </MudText>
                         </div>
@@ -313,22 +313,22 @@
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-0 -left-2 w-[32px] rotate-3"
+                                Class="max-[376px]:w-[20px] max-[376px]:left-1 max-[376px]:top-2 absolute top-0 -left-2 w-[32px] rotate-3"
                             />
                             <MudImage
                                 Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
-                                Class="absolute -top-3 left-5 rotate-3"
+                                Class="max-[376px]:left-4 max-[376px]:-top-2 absolute -top-3 left-5 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-3 -right-2 rotate-3"
+                                Class="max-[376px]:right-0 max-[376px]:top-2 absolute top-3 -right-2 rotate-3"
                             />
                             <MudImage
                                 Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
-                                Class="absolute -top-5 right-0 w-[40px] rotate-3"
+                                Class="max-[376px]:w-[24px] max-[376px]:right-3 max-[376px]:-top-4 absolute -top-5 right-0 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
@@ -339,7 +339,7 @@
                         </MudText>
                     </div>
                 </div>
-                <div class="max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
+                <div class="max-[376px]:h-[calc(100vh-304px)]! max-sm:max-h-[328px]! max-sm:overflow-y-auto max-sm:p-2! w-full bg-[var(--mud-palette-dark-darken)] rounded-[24px] max-w-[420px]! h-[calc(100vh-482px)]! sm:h-[388px]! p-4! md:p-6!">
                     <div class="@($"max-[430px]:!gap-x-2 w-full grid grid-cols-3 place-items-center !gap-x-2 !gap-y-2 transition-all duration-200 ease-in-out {(IsPhraseTransitioning ? "opacity-0 scale-[0.98]" : "opacity-100 scale-100")}")">
                         @for (int i = 1; i <= DisplayedPhraseLength; i++)
                         {
@@ -375,7 +375,7 @@
                         </MudToggleGroup>
                     </div>
                 </div>
-                <div class="max-md:hidden! w-full flex items-center justify-between max-w-[420px]!">
+                <div class="max-[376px]:flex! max-[376px]:!mt-auto max-md:hidden w-full flex items-center justify-between max-w-[420px]!">
                     <div>
                         <BurizaButton
                             Variant="Variant.Filled"
@@ -410,7 +410,7 @@
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
-                            <MudText Class="!text-2xl !font-medium">
+                            <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium">
                                 Name your wallet
                             </MudText>
                         </div>
@@ -418,27 +418,27 @@
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-0 -left-9 w-[32px] rotate-3"
+                                Class="max-[376px]:w-[20px] max-[376px]:left-1 max-[376px]:top-2 absolute top-0 -left-9 w-[32px] rotate-3"
                             />
                             <MudImage
                                 Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
-                                Class="absolute -top-3 -left-4 rotate-3"
+                                Class="max-[376px]:left-4 max-[376px]:-top-2 absolute -top-3 -left-4 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-3 -right-8 rotate-3"
+                                Class="max-[376px]:right-0 max-[376px]:top-2 absolute top-3 -right-8 rotate-3"
                             />
                             <MudImage
                                 Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
-                                Class="absolute -top-5 -right-8 w-[40px] rotate-3"
+                                Class="max-[376px]:w-[24px] max-[376px]:right-3 max-[376px]:-top-4 absolute -top-5 -right-8 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
                     <div>
-                        <MudText Class="max-[376px]:!text-xs !font-light h-[48px]">
+                        <MudText Class="max-[376px]:h-[20px] max-[376px]:!text-xs !font-light h-[48px]">
                             <span>Almost there!</span>
                         </MudText>
                     </div>
@@ -453,11 +453,11 @@
                         <MudImage
                             Alt="onboard buriza"
                             Src="@Mascots.Mascot2"
-                            Class="!w-[250px] sm:!w-[314px]"
+                            Class="max-[376px]:!w-[235px] !w-[250px] sm:!w-[314px]"
                         />
                     </div>
                 </div>
-                <div class="max-md:hidden! w-full flex items-center justify-between max-w-[420px]!">
+                <div class="max-[376px]:flex! max-[376px]:!mt-auto max-md:hidden w-full flex items-center justify-between max-w-[420px]!">
                     <div>
                         <BurizaButton
                             Variant="Variant.Filled"
@@ -487,7 +487,7 @@
                 <div class="!text-center !space-y-2 max-w-[420px]!">
                     <div class="max-[376px]:!px-[32px] relative">
                         <div>
-                            <MudText Class="!text-2xl !font-medium">
+                            <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium">
                                 Create Password
                             </MudText>
                         </div>
@@ -495,27 +495,27 @@
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-0 left-8 w-[32px] rotate-3"
+                                Class="max-[376px]:w-[20px] max-[376px]:left-1 max-[376px]:top-2 absolute top-0 left-8 w-[32px] rotate-3"
                             />
                             <MudImage
                                 Alt="blue diamond"
                                 Src="@Misc.DiamondBlue"
-                                Class="absolute -top-3 left-14 rotate-3"
+                                Class="max-[376px]:left-4 max-[376px]:-top-2 absolute -top-3 left-14 rotate-3"
                             />
                             <MudImage
                                 Alt="yellow diamond"
                                 Src="@Misc.DiamondYellow"
-                                Class="absolute top-3 right-7 rotate-3"
+                                Class="max-[376px]:right-0 max-[376px]:top-2 absolute top-3 right-7 rotate-3"
                             />
                             <MudImage
                                 Alt="purple diamond"
                                 Src="@Misc.DiamondPurple"
-                                Class="absolute -top-5 right-8 w-[40px] rotate-3"
+                                Class="max-[376px]:w-[24px] max-[376px]:right-3 max-[376px]:-top-4 absolute -top-5 right-8 w-[40px] rotate-3"
                             />
                         </div>
                     </div>
                     <div>
-                        <MudText Class="max-[376px]:!text-xs !font-light h-[48px]">
+                        <MudText Class="max-[376px]:h-[20px] max-[376px]:!text-xs !font-light h-[48px]">
                             <span>Set up your password to unlock your wallet</span>
                         </MudText>
                     </div>
@@ -529,7 +529,7 @@
                             Label="Confirm Password"
                         />
                     </div>
-                    <div class="w-full !mt-[36px]">
+                    <div class="max-[376px]:!mt-[24px] w-full !mt-[36px]">
                         <div>
                             <MudText Class="!text-[var(--mud-palette-text-secondary)] !text-sm !font-normal">
                                 Additional Option
@@ -551,11 +551,11 @@
                         <MudImage
                             Alt="onboard buriza"
                             Src="@Mascots.Mascot8"
-                            Class="!w-[246px]"
+                            Class="max-[376px]:!w-[152px] !w-[246px]"
                         />
                     </div>
                 </div>
-                <div class="max-md:hidden! w-full flex items-center justify-between max-w-[420px]!">
+                <div class="max-[376px]:flex! max-[376px]:!mt-auto max-md:hidden w-full flex items-center justify-between max-w-[420px]!">
                     <div>
                         <BurizaButton
                             Variant="Variant.Filled"
@@ -611,15 +611,15 @@
                         />
                     </div>
                     <div class="!text-center !space-y-2 max-w-[430px]">
-                        <MudText Class="max-[376px]:!text-xl !text-2xl !font-medium max-w-full !text-center !text-[#0271F4] lg:!text-[40px] lg:max-w-[430px]">
+                        <MudText Class="max-[376px]:!text-[28px] !text-2xl !font-medium max-w-full !text-center !text-[#0271F4] lg:!text-[40px] lg:max-w-[430px]">
                             Congratulations!
                         </MudText>
-                        <MudText Class="!text-2xl !font-medium !text-center max-w-[336px]">
+                        <MudText Class="max-[376px]:!text-sm !text-2xl !font-medium !text-center max-w-[336px]">
                             Your new wallet has been created!
                         </MudText>
                     </div>
                 </div>
-                <div class="max-md:hidden! mt-6! w-full flex items-center justify-between max-w-[420px]!">
+                <div class="max-[376px]:flex! max-[376px]:!mt-auto max-md:hidden mt-6! w-full flex items-center justify-between max-w-[420px]!">
                     <BurizaButton
                         Variant="Variant.Filled"
                         Color="Color.Primary"
@@ -631,7 +631,7 @@
                 </div>
             </MudCarouselItem>
         </MudCarousel>
-        <div class="@($"!space-y-3 w-full h-[92px] flex flex-col justify-end max-w-[420px]! md:hidden")">
+        <div class="@($"!space-y-3 w-full h-[92px] flex flex-col justify-end max-w-[420px]! md:hidden {(CurrentSlide > 0 ? "max-[376px]:!hidden" : "")}")">
             @if (ShowSecondaryButton)
             {
                 <BurizaButton
