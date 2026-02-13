@@ -8,27 +8,27 @@
 @namespace Buriza.UI.Components.Pages
 
 <section class="h-screen">
-    <div class="max-[376px]:!pt-5 max-[376px]:!pb-8 h-full container !mx-auto !py-16 !overflow-x-visible">
-
+    <div class="max-[376px]:!p-4 max-[376px]:flex flex-col h-full container !mx-auto !py-16 !overflow-x-visible">
+        <div class="max-[376px]:!mb-0 flex justify-between !mb-[75px] min-[376px]:!px-4">
+            <div class="flex align-center !gap-2">
+                <MudIconButton Icon="@BurizaIcons.ChevronRightIcon"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    OnClick="@(IsAdvancedMode ? OnBackButtonClicked : null)"
+                    Href="@(IsAdvancedMode ? null : "/")" />
+                <MudText Class="!text-[22px] !font-medium">@(IsAdvancedMode ? "Advanced" : "Your Address")</MudText>
+            </div>
+            <div class="flex align-center">
+                <MudIconButton Icon="@(IsAdvancedMode ? BurizaIcons.CloseSymbolIcon : BurizaIcons.AdvancedSettings2Icon)"
+                    Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
+                    OnClick="@(IsAdvancedMode ? OnBackButtonClicked : OnAdvancedModeButtonClicked)" />
+            </div>
+        </div>
         <MudCarousel TData="object" @ref="_carousel" ShowArrows="false" ShowBullets="false" AutoCycle="false"
-            EnableSwipeGesture="false" Class="!h-full">
+            EnableSwipeGesture="false" Class="max-[376px]:!flex-1 !h-full">
 
             @* 1st Slide *@
-            <MudCarouselItem>
-                <div class="max-[376px]:!mb-13 flex justify-between !mb-[75px] !px-4">
-                    <div class="flex align-center !gap-2">
-                        <MudIconButton Icon="@BurizaIcons.ChevronRightIcon"
-                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]" Href="/" />
-                        <MudText Class="!text-[22px] !font-medium">Your Address</MudText>
-                    </div>
-                    <div class="flex align-center">
-                        <MudIconButton Icon="@BurizaIcons.AdvancedSettings2Icon"
-                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                            OnClick="OnAdvancedModeButtonClicked" />
-                    </div>
-                </div>
-
-                <div class="max-[376px]:!mb-14 w-full !px-4">
+            <MudCarouselItem Class="max-[376px]:flex flex-col justify-center">
+                <div class=" w-full min-[376px]:!px-4">
                     <div class="max-[376px]:!mb-8 relative !mb-11">
                         <MudImage 
                             Alt="" 
@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <div class="max-[376px]:w-screen max-[376px]:h-auto max-[376px]:!py-0 h-[calc(100%-510px)] !pb-4 !px-4 flex justify-between items-end gap-x-2 overflow-y-auto">
+                <div class="max-[376px]:w-[calc(100vw-32px)]! max-[376px]:fixed max-[376px]:bottom-4 max-[376px]:h-auto max-[376px]:!py-0 h-[calc(100%-510px)] !pb-4 flex justify-between items-end gap-x-2 overflow-y-auto min-[376px]:!px-4">
                     <BurizaButton Variant="Variant.Filled" Color="Color.Primary">
                         Share QR Code
                     </BurizaButton>
@@ -72,20 +72,6 @@
 
             @* 2nd Slide *@
             <MudCarouselItem>
-                <div class="flex justify-between !mb-[26px] !px-4">
-                    <div class="flex align-center !gap-2">
-                        <MudIconButton Icon="@BurizaIcons.ChevronRightIcon"
-                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                            OnClick="OnBackButtonClicked" />
-                        <MudText Class="!text-[22px] !font-medium">Advanced Mode</MudText>
-                    </div>
-                    <div class="flex align-center">
-                        <MudIconButton Icon="@BurizaIcons.CloseSymbolIcon"
-                            Class="!p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
-                            OnClick="OnBackButtonClicked" />
-                    </div>
-                </div>
-
                 <div class="!px-4">
                     <div
                         class="max-[376px]:!p-[13px] w-full flex items-center justify-between !py-4 !px-4 !mb-6 shadow-[var(--mud-elevation-2)] !rounded-[12px] !bg-[var(--mud-palette-lines-inputs)] md:!bg-[var(--mud-palette-dark-text)]">
