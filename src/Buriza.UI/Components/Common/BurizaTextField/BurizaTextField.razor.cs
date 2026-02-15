@@ -20,6 +20,9 @@ public partial class BurizaTextField
     public string Value { get; set; } = string.Empty;
 
     [Parameter]
+    public InputType InputType { get; set; } = InputType.Text;
+
+    [Parameter]
     public string Label { get; set; } = string.Empty;
 
     [Parameter]

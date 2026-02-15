@@ -2,14 +2,14 @@
 @namespace Buriza.UI.Components.Dialogs
 
 <MudDialog
-    Class="!bg-[var(--mud-palette-background)] !rounded-[16px] !p-0 !shadow-none"
-    TitleClass="!p-4"
-    ContentClass="!p-0 !overflow-y-auto !max-h-[70vh]"
-    ActionsClass="!px-4 !pb-4 !pt-4"
+    Class= "@DialogClass"
+    TitleClass="@DialogTitleClass"
+    ContentClass="@DialogContentClass"
+    ActionsClass="@DialogActionsClass"
 >
     <TitleContent>
         <div class="flex items-center justify-between">
-            <MudText Class="!text-lg !font-semibold !text-[var(--mud-palette-text-primary)]">
+            <MudText Class="!text-xl !font-semibold !text-[var(--mud-palette-text-primary)]">
                 @Title
             </MudText>
             <MudIconButton
