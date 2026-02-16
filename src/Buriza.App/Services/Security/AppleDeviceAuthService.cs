@@ -12,8 +12,8 @@ namespace Buriza.App.Services.Security;
 /// iOS/macOS device-auth service using LocalAuthentication and Keychain.
 ///
 /// Security model:
-/// - Keychain items are protected with SecAccessControl using BiometryCurrentSet flag
-/// - BiometryCurrentSet ties data to current enrolled biometrics (if user adds/removes fingerprint, data becomes inaccessible)
+/// - Keychain items are protected with SecAccessControl using UserPresence flag
+/// - UserPresence requires biometric or device passcode — biometric-only enforcement is at the app layer
 /// - WhenPasscodeSetThisDeviceOnly ensures data is device-specific and requires passcode to be set
 /// - The keychain itself prompts for biometric auth when accessing protected items
 ///
@@ -99,6 +99,9 @@ public class AppleDeviceAuthService : IDeviceAuthService
 
         // Create SecAccessControl with device-auth protection
         // UserPresence: Requires user presence via OS auth (biometric or passcode).
+        // This is intentional — the service handles both biometric and PIN/passcode modes.
+        // Biometric-only gating is enforced at the application layer (BurizaAppStorageService),
+        // not at the Keychain level, because the same IDeviceAuthService serves all auth types.
         SecAccessControl accessControl = new(
             SecAccessible.WhenPasscodeSetThisDeviceOnly,
             SecAccessControlCreateFlags.UserPresence);

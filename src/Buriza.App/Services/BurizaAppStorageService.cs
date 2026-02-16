@@ -366,6 +366,11 @@ public sealed class BurizaAppStorageService(
         }
         await SetSecureJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
         await ResetLockoutStateAsync(walletId, ct);
+
+        // Invalidate biometric/PIN auth — user must re-enable after password change
+        AuthenticationType currentAuth = await GetAuthTypeAsync(walletId, ct);
+        if (currentAuth != AuthenticationType.Password)
+            await DisableDeviceAuthAsync(walletId, ct);
     }
 
     public override async Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default)
