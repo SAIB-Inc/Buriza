@@ -42,12 +42,6 @@ public static class StorageKeys
     /// <summary>Gets the secure storage key for a wallet's seed (direct storage).</summary>
     public static string SecureSeed(Guid walletId) => $"buriza_secure_seed_{walletId:N}";
 
-    /// <summary>Gets the storage key for a wallet's password verifier (direct storage).</summary>
-    public static string PasswordVerifier(Guid walletId) => $"buriza_password_verifier_{walletId:N}";
-
-    /// <summary>Gets the storage key for a wallet's PIN verifier (direct storage).</summary>
-    public static string PinVerifier(Guid walletId) => $"buriza_pin_verifier_{walletId:N}";
-
     /// <summary>Gets the storage key for a chain's encrypted API key vault.</summary>
     public static string ApiKeyVault(int chain, int network) => $"buriza_apikey_{chain}_{network}";
 

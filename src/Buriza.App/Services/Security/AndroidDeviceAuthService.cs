@@ -224,17 +224,16 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             // The keyset is encrypted and stored in SharedPreferences
             // The encryption key for the keyset is stored in Android Keystore
             AndroidKeysetManager keysetManager = new AndroidKeysetManager.Builder()
-                .WithKeyTemplate(KeyTemplates.Get("AES256_GCM"))
-                .WithSharedPref(context, KeysetName, KeysetPrefName)
-                .WithMasterKeyUri(MasterKeyUri)
+                .WithKeyTemplate(KeyTemplates.Get("AES256_GCM"))!
+                .WithSharedPref(context, KeysetName, KeysetPrefName)!
+                .WithMasterKeyUri(MasterKeyUri)!
                 .Build()
                 ?? throw new InvalidOperationException("Failed to create keyset manager");
 
             KeysetHandle keysetHandle = keysetManager.KeysetHandle
                 ?? throw new InvalidOperationException("Failed to get keyset handle");
 
-            // Get AEAD primitive using the recommended API
-            _aead = keysetHandle.GetPrimitive(Java.Lang.Class.FromType(typeof(IAead)))?.JavaCast<IAead>()
+            _aead = keysetHandle.GetPrimitive(RegistryConfiguration.Get(), Java.Lang.Class.FromType(typeof(IAead)))?.JavaCast<IAead>()
                 ?? throw new InvalidOperationException("Failed to create AEAD primitive");
 
             return _aead;
@@ -245,13 +244,14 @@ public class AndroidDeviceAuthService : IDeviceAuthService
     {
         try
         {
-            KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore");
+            KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore")
+                ?? throw new InvalidOperationException("AndroidKeyStore not available");
             keyStore.Load(null);
             if (keyStore.ContainsAlias(MasterKeyAlias))
                 return;
 
-            // Prefer StrongBox when available, then gracefully fallback.
-            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P && TryCreateMasterKey(strongBoxBacked: true))
+            // Prefer StrongBox when available, then gracefully fallback
+            if (TryCreateMasterKey(strongBoxBacked: true))
                 return;
 
             if (TryCreateMasterKey(strongBoxBacked: false))
@@ -271,7 +271,8 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         {
             KeyGenerator keyGenerator = KeyGenerator.GetInstance(
                 KeyProperties.KeyAlgorithmAes,
-                "AndroidKeyStore");
+                "AndroidKeyStore")
+                ?? throw new InvalidOperationException("KeyGenerator not available for AES in AndroidKeyStore");
 
             KeyGenParameterSpec.Builder builder = new(
                 MasterKeyAlias,
@@ -281,15 +282,11 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             builder.SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone);
             builder.SetKeySize(256);
             builder.SetUserAuthenticationRequired(true);
+            builder.SetUserAuthenticationParameters(15,
+                (int)(KeyPropertiesAuthType.BiometricStrong | KeyPropertiesAuthType.DeviceCredential));
+            builder.SetInvalidatedByBiometricEnrollment(true);
 
-            // Required for device-credential (PIN/passcode) flows: allow key use for a short
-            // validity window after strong auth instead of per-operation CryptoObject semantics.
-            builder.SetUserAuthenticationValidityDurationSeconds(15);
-
-            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.N)
-                builder.SetInvalidatedByBiometricEnrollment(true);
-
-            if (strongBoxBacked && Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.P)
+            if (strongBoxBacked)
                 builder.SetIsStrongBoxBacked(true);
 
             keyGenerator.Init(builder.Build());
