@@ -5,36 +5,33 @@ using Buriza.Core.Models.Security;
 namespace Buriza.App.Services.Security;
 
 /// <summary>
-/// Platform-routing biometric service that delegates to the correct platform implementation.
+/// Platform-routing device-auth service that delegates to the correct platform implementation.
 /// This class uses conditional compilation to route to the appropriate implementation.
 /// </summary>
-public class PlatformBiometricService : IBiometricService
+public class PlatformDeviceAuthService : IDeviceAuthService
 {
-    private readonly IBiometricService _platformService;
+    private readonly IDeviceAuthService _platformService;
 
-    public PlatformBiometricService()
+    public PlatformDeviceAuthService()
     {
 #if IOS || MACCATALYST
-        _platformService = new AppleBiometricService();
+        _platformService = new AppleDeviceAuthService();
 #elif ANDROID
-        _platformService = new AndroidBiometricService();
+        _platformService = new AndroidDeviceAuthService();
 #elif WINDOWS
-        _platformService = new WindowsBiometricService();
+        _platformService = new WindowsDeviceAuthService();
 #else
-        _platformService = new NullBiometricService();
+        _platformService = new NullDeviceAuthService();
 #endif
     }
 
     public Task<bool> IsAvailableAsync(CancellationToken ct = default)
         => _platformService.IsAvailableAsync(ct);
 
-    public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
-        => _platformService.GetBiometricTypeAsync(ct);
-
     public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => _platformService.GetCapabilitiesAsync(ct);
 
-    public Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
+    public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
         => _platformService.AuthenticateAsync(reason, ct);
 
     public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
@@ -45,41 +42,32 @@ public class PlatformBiometricService : IBiometricService
 
     public Task RemoveSecureAsync(string key, CancellationToken ct = default)
         => _platformService.RemoveSecureAsync(key, ct);
-
-    public Task<bool> HasSecureDataAsync(string key, CancellationToken ct = default)
-        => _platformService.HasSecureDataAsync(key, ct);
 }
 
 /// <summary>
 /// Null implementation for unsupported platforms.
 /// </summary>
-internal class NullBiometricService : IBiometricService
+internal class NullDeviceAuthService : IDeviceAuthService
 {
     public Task<bool> IsAvailableAsync(CancellationToken ct = default)
         => Task.FromResult(false);
 
-    public Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
-        => Task.FromResult<BiometricType?>(null);
-
     public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => Task.FromResult(new DeviceCapabilities(
-            SupportsBiometric: false,
-            BiometricTypes: Array.Empty<BiometricType>(),
-            SupportsPin: true,
-            SupportsPassword: true));
+            IsSupported: false,
+            SupportsBiometrics: false,
+            SupportsPin: false,
+            AvailableTypes: []));
 
-    public Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
-        => Task.FromResult(BiometricResult.Failed(BiometricError.NotAvailable, "Biometrics not supported on this platform"));
+    public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
+        => Task.FromResult(DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "Device authentication not supported on this platform"));
 
     public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
-        => throw new NotSupportedException("Biometrics not supported on this platform");
+        => throw new NotSupportedException("Device authentication not supported on this platform");
 
     public Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
         => Task.FromResult<byte[]?>(null);
 
     public Task RemoveSecureAsync(string key, CancellationToken ct = default)
         => Task.CompletedTask;
-
-    public Task<bool> HasSecureDataAsync(string key, CancellationToken ct = default)
-        => Task.FromResult(false);
 }

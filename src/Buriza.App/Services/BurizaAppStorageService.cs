@@ -15,15 +15,14 @@ namespace Buriza.App.Services;
 
 /// <summary>
 /// MAUI storage service. Uses SecureStorage for seed + verifiers,
-/// biometric storage for biometric auth, and Preferences for metadata.
+/// OS device authentication for biometric and device-passcode flows, and Preferences for metadata.
 /// </summary>
 public sealed class BurizaAppStorageService(
     IPreferences preferences,
-    IBiometricService biometricService) : BurizaStorageBase, ISecureStorageProvider
+    IDeviceAuthService deviceAuthService) : BurizaStorageBase, ISecureStorageProvider
 {
     private readonly IPreferences _preferences = preferences;
-    private readonly IBiometricService _biometricService = biometricService;
-    private const int MinPinLength = 6;
+    private readonly IDeviceAuthService _deviceAuthService = deviceAuthService;
     private const int MaxFailedAttemptsBeforeLockout = 5;
     private static readonly TimeSpan BaseLockoutDuration = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan MaxLockoutDuration = TimeSpan.FromHours(1);
@@ -65,7 +64,7 @@ public sealed class BurizaAppStorageService(
             await RemoveSecureAsync(StorageKeys.SecureSeed(wallet.Id), ct);
             await RemoveSecureAsync(StorageKeys.PasswordVerifier(wallet.Id), ct);
             await RemoveSecureAsync(StorageKeys.PinVerifier(wallet.Id), ct);
-            await _biometricService.RemoveSecureAsync(StorageKeys.BiometricSeed(wallet.Id), ct);
+            await _deviceAuthService.RemoveSecureAsync(StorageKeys.BiometricSeed(wallet.Id), ct);
         }
 
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
@@ -106,7 +105,7 @@ public sealed class BurizaAppStorageService(
     #region Capabilities
 
     public override Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
-        => _biometricService.GetCapabilitiesAsync(ct);
+        => _deviceAuthService.GetCapabilitiesAsync(ct);
 
     #endregion
 
@@ -223,7 +222,7 @@ public sealed class BurizaAppStorageService(
         return !string.IsNullOrEmpty(seed);
     }
 
-        public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
+    public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
     {
         string seed = Convert.ToBase64String(mnemonic);
         await SetSecureAsync(StorageKeys.SecureSeed(walletId), seed, ct);
@@ -250,6 +249,28 @@ public sealed class BurizaAppStorageService(
         if (!passwordOk)
             throw new CryptographicException("Invalid password");
 
+        return await LoadSecureSeedAsync(walletId, ct);
+    }
+
+    private async Task<byte[]> AuthenticateWithDeviceSecurityAndLoadSeedAsync(Guid walletId, string reason, string? passwordFallback, CancellationToken ct)
+    {
+        if (await _deviceAuthService.IsAvailableAsync(ct))
+        {
+            DeviceAuthResult auth = await _deviceAuthService.AuthenticateAsync(reason, ct);
+            if (!auth.Success)
+                throw new CryptographicException(auth.ErrorMessage ?? "Device authentication failed");
+
+            return await LoadSecureSeedAsync(walletId, ct);
+        }
+
+        if (string.IsNullOrWhiteSpace(passwordFallback))
+            throw new InvalidOperationException("Device authentication unavailable. Password fallback is required.");
+
+        return await UnlockVaultWithPasswordAsync(walletId, passwordFallback, ct);
+    }
+
+    private async Task<byte[]> LoadSecureSeedAsync(Guid walletId, CancellationToken ct)
+    {
         string? seed = await GetSecureAsync(StorageKeys.SecureSeed(walletId), ct);
         if (string.IsNullOrEmpty(seed))
             throw new InvalidOperationException("Secure seed not found");
@@ -269,20 +290,21 @@ public sealed class BurizaAppStorageService(
             {
                 case AuthenticationType.Biometric:
                 {
-                    byte[] biometricSeed = await AuthenticateWithBiometricAsync(walletId, biometricReason ?? "Unlock your wallet", ct);
+                    byte[] mnemonic = await AuthenticateWithDeviceSecurityAndLoadSeedAsync(
+                        walletId,
+                        biometricReason ?? "Unlock your wallet",
+                        passwordOrPin,
+                        ct);
                     await ResetLockoutStateAsync(walletId, ct);
-                    return biometricSeed;
+                    return mnemonic;
                 }
                 case AuthenticationType.Pin:
                 {
-                    string pin = passwordOrPin ?? throw new ArgumentException("PIN required", nameof(passwordOrPin));
-                    if (!IsValidPin(pin, MinPinLength))
-                    {
-                        await RegisterFailedAttemptAsync(walletId, ct);
-                        throw new ArgumentException("PIN must be at least 6 digits.", nameof(passwordOrPin));
-                    }
-
-                    byte[] mnemonic = await AuthenticateWithPinAsync(walletId, pin, ct);
+                    byte[] mnemonic = await AuthenticateWithDeviceSecurityAndLoadSeedAsync(
+                        walletId,
+                        "Authenticate with device security to unlock wallet",
+                        passwordOrPin,
+                        ct);
                     await ResetLockoutStateAsync(walletId, ct);
                     return mnemonic;
                 }
@@ -359,158 +381,36 @@ public sealed class BurizaAppStorageService(
         await RemoveSecureAsync(StorageKeys.PasswordVerifier(walletId), ct);
         await RemoveSecureAsync(StorageKeys.PinVerifier(walletId), ct);
 
-        await _biometricService.RemoveSecureAsync(StorageKeys.BiometricSeed(walletId), ct);
+        await _deviceAuthService.RemoveSecureAsync(StorageKeys.BiometricSeed(walletId), ct);
     }
 
     #endregion
 
-    #region Biometric Auth
+    #region Device Auth
 
-    public override async Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
+    public override async Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
     {
         AuthenticationType authType = await GetAuthTypeAsync(walletId, ct);
         return authType == AuthenticationType.Biometric;
     }
 
-    public override async Task EnableBiometricAsync(Guid walletId, string password, CancellationToken ct = default)
+    public override async Task EnableDeviceAuthAsync(Guid walletId, string password, CancellationToken ct = default)
     {
         if (!await VerifyPasswordAsync(walletId, password, ct))
             throw new CryptographicException("Invalid password");
 
-        string? seed = await GetSecureAsync(StorageKeys.SecureSeed(walletId), ct);
-        if (string.IsNullOrEmpty(seed))
-            throw new InvalidOperationException("Secure seed not found");
-
-        byte[] mnemonicBytes = Convert.FromBase64String(seed);
-        try
-        {
-            await _biometricService.StoreSecureAsync(StorageKeys.BiometricSeed(walletId), mnemonicBytes, ct);
-            await SetAuthTypeAsync(walletId, AuthenticationType.Biometric, ct);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(mnemonicBytes);
-        }
+        // Biometric mode uses OS device authentication at unlock time with secure seed storage.
+        await SetAuthTypeAsync(walletId, AuthenticationType.Biometric, ct);
     }
 
-    public override async Task DisableBiometricAsync(Guid walletId, CancellationToken ct = default)
+    public override async Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
     {
-        await _biometricService.RemoveSecureAsync(StorageKeys.BiometricSeed(walletId), ct);
+        await _deviceAuthService.RemoveSecureAsync(StorageKeys.BiometricSeed(walletId), ct);
         await SetAuthTypeAsync(walletId, AuthenticationType.Password, ct);
     }
 
-    public override async Task<byte[]> AuthenticateWithBiometricAsync(Guid walletId, string reason, CancellationToken ct = default)
-    {
-        byte[]? seed = await _biometricService.RetrieveSecureAsync(StorageKeys.BiometricSeed(walletId), reason, ct);
-        return seed ?? throw new CryptographicException("Biometric authentication failed");
-    }
-
-    #endregion
-
-    #region PIN Auth
-
-    public override async Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
-    {
-        AuthenticationType authType = await GetAuthTypeAsync(walletId, ct);
-        return authType == AuthenticationType.Pin;
-    }
-
-    public override async Task EnablePinAsync(Guid walletId, string pin, string password, CancellationToken ct = default)
-    {
-        if (!IsValidPin(pin, MinPinLength))
-            throw new ArgumentException("PIN must be at least 6 digits.", nameof(pin));
-
-        if (!await VerifyPasswordAsync(walletId, password, ct))
-            throw new CryptographicException("Invalid password");
-
-        byte[] pinBytes = Encoding.UTF8.GetBytes(pin);
-        SecretVerifierPayload verifier;
-        try
-        {
-            verifier = VaultEncryption.CreateSecretVerifier(pinBytes);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(pinBytes);
-        }
-        await SetSecureJsonAsync(StorageKeys.PinVerifier(walletId), verifier, ct);
-        await SetAuthTypeAsync(walletId, AuthenticationType.Pin, ct);
-    }
-
-    public override async Task DisablePinAsync(Guid walletId, CancellationToken ct = default)
-    {
-        await RemoveAsync(StorageKeys.PinVault(walletId), ct);
-        await RemoveSecureAsync(StorageKeys.PinVerifier(walletId), ct);
-        await SetAuthTypeAsync(walletId, AuthenticationType.Password, ct);
-    }
-
-    public override async Task<byte[]> AuthenticateWithPinAsync(Guid walletId, string pin, CancellationToken ct = default)
-    {
-        if (!IsValidPin(pin, MinPinLength))
-            throw new ArgumentException("PIN must be at least 6 digits.", nameof(pin));
-
-        SecretVerifierPayload verifier = await GetSecureJsonAsync<SecretVerifierPayload>(StorageKeys.PinVerifier(walletId), ct)
-            ?? throw new InvalidOperationException("PIN not enabled");
-        byte[] pinBytes = Encoding.UTF8.GetBytes(pin);
-        bool pinOk;
-        try
-        {
-            pinOk = VaultEncryption.VerifySecret(pinBytes, verifier);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(pinBytes);
-        }
-
-        if (!pinOk)
-            throw new CryptographicException("Invalid PIN");
-
-        string? seed = await GetSecureAsync(StorageKeys.SecureSeed(walletId), ct);
-        if (string.IsNullOrEmpty(seed))
-            throw new InvalidOperationException("Secure seed not found");
-
-        return Convert.FromBase64String(seed);
-    }
-
-    public override async Task ChangePinAsync(Guid walletId, string oldPin, string newPin, CancellationToken ct = default)
-    {
-        if (!IsValidPin(newPin, MinPinLength))
-            throw new ArgumentException("PIN must be at least 6 digits.", nameof(newPin));
-
-        await EnsureNotLockedAsync(walletId, ct);
-
-        SecretVerifierPayload verifier = await GetSecureJsonAsync<SecretVerifierPayload>(StorageKeys.PinVerifier(walletId), ct)
-            ?? throw new InvalidOperationException("PIN not enabled");
-        byte[] oldPinBytes = Encoding.UTF8.GetBytes(oldPin);
-        bool oldPinOk;
-        try
-        {
-            oldPinOk = VaultEncryption.VerifySecret(oldPinBytes, verifier);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(oldPinBytes);
-        }
-
-        if (!oldPinOk)
-        {
-            await RegisterFailedAttemptAsync(walletId, ct);
-            throw new CryptographicException("Invalid PIN");
-        }
-
-        byte[] newPinBytes = Encoding.UTF8.GetBytes(newPin);
-        SecretVerifierPayload newVerifier;
-        try
-        {
-            newVerifier = VaultEncryption.CreateSecretVerifier(newPinBytes);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(newPinBytes);
-        }
-        await SetSecureJsonAsync(StorageKeys.PinVerifier(walletId), newVerifier, ct);
-        await ResetLockoutStateAsync(walletId, ct);
-    }
+    public override Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default)
+        => AuthenticateWithDeviceSecurityAndLoadSeedAsync(walletId, reason, null, ct);
 
     #endregion
 

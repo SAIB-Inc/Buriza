@@ -68,25 +68,14 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// <summary>Deletes the vault/seed and associated auth state.</summary>
     public abstract Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default);
 
-    /// <summary>Returns true if biometric auth is enabled for a wallet.</summary>
-    public abstract Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default);
-    /// <summary>Enables biometric auth for a wallet.</summary>
-    public abstract Task EnableBiometricAsync(Guid walletId, string password, CancellationToken ct = default);
-    /// <summary>Disables biometric auth for a wallet.</summary>
-    public abstract Task DisableBiometricAsync(Guid walletId, CancellationToken ct = default);
-    /// <summary>Prompts biometric auth and returns the protected payload.</summary>
-    public abstract Task<byte[]> AuthenticateWithBiometricAsync(Guid walletId, string reason, CancellationToken ct = default);
-
-    /// <summary>Returns true if PIN auth is enabled for a wallet.</summary>
-    public abstract Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default);
-    /// <summary>Enables PIN auth for a wallet.</summary>
-    public abstract Task EnablePinAsync(Guid walletId, string pin, string password, CancellationToken ct = default);
-    /// <summary>Disables PIN auth for a wallet.</summary>
-    public abstract Task DisablePinAsync(Guid walletId, CancellationToken ct = default);
-    /// <summary>Authenticates with PIN and returns the protected payload.</summary>
-    public abstract Task<byte[]> AuthenticateWithPinAsync(Guid walletId, string pin, CancellationToken ct = default);
-    /// <summary>Changes the wallet PIN.</summary>
-    public abstract Task ChangePinAsync(Guid walletId, string oldPin, string newPin, CancellationToken ct = default);
+    /// <summary>Returns true if device auth is enabled for a wallet.</summary>
+    public abstract Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Enables device auth for a wallet.</summary>
+    public abstract Task EnableDeviceAuthAsync(Guid walletId, string password, CancellationToken ct = default);
+    /// <summary>Disables device auth for a wallet.</summary>
+    public abstract Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default);
+    /// <summary>Prompts device auth and returns the protected payload.</summary>
+    public abstract Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default);
 
     /// <summary>Gets custom provider config for a chain.</summary>
     public abstract Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
@@ -127,16 +116,6 @@ public abstract class BurizaStorageBase : IStorageProvider
         byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
         using HMACSHA256 hmac = new(key);
         return Convert.ToBase64String(hmac.ComputeHash(payloadBytes));
-    }
-
-    protected static bool IsValidPin(string pin, int minLength)
-    {
-        if (pin.Length < minLength) return false;
-        foreach (char c in pin)
-        {
-            if (c < '0' || c > '9') return false;
-        }
-        return true;
     }
 
     protected static Guid DeriveApiKeyVaultId(ChainInfo chainInfo)

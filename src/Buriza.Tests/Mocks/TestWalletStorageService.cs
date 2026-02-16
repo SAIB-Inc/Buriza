@@ -14,7 +14,7 @@ namespace Buriza.Tests.Mocks;
 
 /// <summary>
 /// Test storage service using VaultEncryption only.
-/// PIN/biometric are not supported.
+/// PIN/device-auth are not supported.
 /// </summary>
 public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaStorageBase
 {
@@ -52,10 +52,10 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
 
     public override Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => Task.FromResult(new DeviceCapabilities(
-            SupportsBiometric: false,
-            BiometricTypes: [],
+            IsSupported: false,
+            SupportsBiometrics: false,
             SupportsPin: false,
-            SupportsPassword: true));
+            AvailableTypes: []));
 
     public override Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default)
         => Task.FromResult(AuthenticationType.Password);
@@ -197,36 +197,17 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
         await _storage.RemoveAsync(StorageKeys.LockoutState(walletId), ct);
     }
 
-    public override Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
+    public override Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
         => Task.FromResult(false);
 
-    public override Task EnableBiometricAsync(Guid walletId, string password, CancellationToken ct = default)
-        => throw new NotSupportedException("Biometric auth is not supported in tests.");
+    public override Task EnableDeviceAuthAsync(Guid walletId, string password, CancellationToken ct = default)
+        => throw new NotSupportedException("Device auth is not supported in tests.");
 
-    public override Task DisableBiometricAsync(Guid walletId, CancellationToken ct = default)
+    public override Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
         => Task.CompletedTask;
 
-    public override Task<byte[]> AuthenticateWithBiometricAsync(Guid walletId, string reason, CancellationToken ct = default)
-        => throw new NotSupportedException("Biometric auth is not supported in tests.");
-
-    public override Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => Task.FromResult(false);
-
-    public override Task EnablePinAsync(Guid walletId, string pin, string password, CancellationToken ct = default)
-    {
-        if (!IsValidPin(pin, 6))
-            throw new ArgumentException("PIN must be at least 6 digits.", nameof(pin));
-        throw new NotSupportedException("PIN auth is not supported in tests.");
-    }
-
-    public override Task DisablePinAsync(Guid walletId, CancellationToken ct = default)
-        => Task.CompletedTask;
-
-    public override Task<byte[]> AuthenticateWithPinAsync(Guid walletId, string pin, CancellationToken ct = default)
-        => throw new NotSupportedException("PIN auth is not supported in tests.");
-
-    public override Task ChangePinAsync(Guid walletId, string oldPin, string newPin, CancellationToken ct = default)
-        => throw new NotSupportedException("PIN auth is not supported in tests.");
+    public override Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default)
+        => throw new NotSupportedException("Device auth is not supported in tests.");
 
     public override async Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {

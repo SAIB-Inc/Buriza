@@ -30,18 +30,6 @@ public class BurizaStorageServiceTests
     }
 
     [Fact]
-    public async Task EnablePinAsync_TooShort_Throws()
-    {
-        InMemoryStorage platformStorage = new();
-        TestWalletStorageService storage = new(platformStorage);
-
-        Guid walletId = Guid.NewGuid();
-        await storage.CreateVaultAsync(walletId, Encoding.UTF8.GetBytes("word1 word2 word3"), Encoding.UTF8.GetBytes("correct"));
-
-        await Assert.ThrowsAsync<ArgumentException>(() => storage.EnablePinAsync(walletId, "1234", "correct"));
-    }
-
-    [Fact]
     public async Task GetCustomProviderConfigWithApiKeyAsync_InvalidMetadata_Throws()
     {
         InMemoryStorage platformStorage = new();

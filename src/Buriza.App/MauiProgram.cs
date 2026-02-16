@@ -54,8 +54,8 @@ public static class MauiProgram
 		builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
 
 		// Buriza services
-		builder.Services.AddSingleton<PlatformBiometricService>();
-		builder.Services.AddSingleton<IBiometricService>(sp => sp.GetRequiredService<PlatformBiometricService>());
+		builder.Services.AddSingleton<PlatformDeviceAuthService>();
+		builder.Services.AddSingleton<IDeviceAuthService>(sp => sp.GetRequiredService<PlatformDeviceAuthService>());
 		builder.Services.AddSingleton<BurizaAppStorageService>();
 		builder.Services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<BurizaAppStorageService>());
 		builder.Services.AddSingleton<AppStateService>();

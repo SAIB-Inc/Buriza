@@ -13,7 +13,7 @@ namespace Buriza.Cli.Services;
 
 /// <summary>
 /// CLI storage service using in-memory storage and VaultEncryption only.
-/// PIN/biometric are not supported.
+/// PIN/device-auth are not supported.
 /// </summary>
 public sealed class BurizaCliStorageService : BurizaStorageBase
 {
@@ -45,10 +45,10 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
 
     public override Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => Task.FromResult(new DeviceCapabilities(
-            SupportsBiometric: false,
-            BiometricTypes: [],
+            IsSupported: false,
+            SupportsBiometrics: false,
             SupportsPin: false,
-            SupportsPassword: true));
+            AvailableTypes: []));
 
     #endregion
 
@@ -181,32 +181,17 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
 
     #region Unsupported Auth
 
-    public override Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
+    public override Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
         => Task.FromResult(false);
 
-    public override Task EnableBiometricAsync(Guid walletId, string password, CancellationToken ct = default)
-        => throw new NotSupportedException("Biometric auth is not supported in CLI.");
+    public override Task EnableDeviceAuthAsync(Guid walletId, string password, CancellationToken ct = default)
+        => throw new NotSupportedException("Device auth is not supported in CLI.");
 
-    public override Task DisableBiometricAsync(Guid walletId, CancellationToken ct = default)
+    public override Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
         => Task.CompletedTask;
 
-    public override Task<byte[]> AuthenticateWithBiometricAsync(Guid walletId, string reason, CancellationToken ct = default)
-        => throw new NotSupportedException("Biometric auth is not supported in CLI.");
-
-    public override Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => Task.FromResult(false);
-
-    public override Task EnablePinAsync(Guid walletId, string pin, string password, CancellationToken ct = default)
-        => throw new NotSupportedException("PIN auth is not supported in CLI.");
-
-    public override Task DisablePinAsync(Guid walletId, CancellationToken ct = default)
-        => Task.CompletedTask;
-
-    public override Task<byte[]> AuthenticateWithPinAsync(Guid walletId, string pin, CancellationToken ct = default)
-        => throw new NotSupportedException("PIN auth is not supported in CLI.");
-
-    public override Task ChangePinAsync(Guid walletId, string oldPin, string newPin, CancellationToken ct = default)
-        => throw new NotSupportedException("PIN auth is not supported in CLI.");
+    public override Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default)
+        => throw new NotSupportedException("Device auth is not supported in CLI.");
 
     #endregion
 

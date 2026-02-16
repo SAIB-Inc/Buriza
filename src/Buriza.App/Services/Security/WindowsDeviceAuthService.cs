@@ -8,7 +8,7 @@ using Buriza.Core.Models.Security;
 namespace Buriza.App.Services.Security;
 
 /// <summary>
-/// Windows biometric service using Windows Hello and Credential Locker.
+/// Windows device-auth service using Windows Hello and Credential Locker.
 ///
 /// Security model:
 /// - UserConsentVerifier provides Windows Hello authentication (face, fingerprint, PIN)
@@ -19,7 +19,7 @@ namespace Buriza.App.Services.Security;
 /// - https://learn.microsoft.com/en-us/windows/uwp/security/credential-locker
 /// - https://learn.microsoft.com/en-us/uwp/api/windows.security.credentials.ui.userconsentverifier
 /// </summary>
-public class WindowsBiometricService : IBiometricService
+public class WindowsDeviceAuthService : IDeviceAuthService
 {
     private const string ResourceName = "BurizaWallet";
 
@@ -37,33 +37,21 @@ public class WindowsBiometricService : IBiometricService
         }
     }
 
-    public async Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default)
-    {
-        if (!await IsAvailableAsync(ct))
-            return null;
-
-        return BiometricType.WindowsHello;
-    }
-
     public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
     {
-        bool supportsBiometric = await IsAvailableAsync(ct);
-        List<BiometricType> types = [];
-        if (supportsBiometric)
-        {
-            BiometricType biometricType = await GetBiometricTypeAsync(ct) ?? BiometricType.NotAvailable;
-            if (biometricType != BiometricType.NotAvailable)
-                types.Add(biometricType);
-        }
+        bool isSupported = await IsAvailableAsync(ct);
+        List<DeviceAuthType> types = [];
+        if (isSupported)
+            types.Add(DeviceAuthType.PinOrPasscode);
 
         return new DeviceCapabilities(
-            SupportsBiometric: supportsBiometric,
-            BiometricTypes: types,
-            SupportsPin: true,
-            SupportsPassword: true);
+            IsSupported: isSupported,
+            SupportsBiometrics: false,
+            SupportsPin: isSupported,
+            AvailableTypes: types);
     }
 
-    public async Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default)
+    public async Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
     {
         try
         {
@@ -72,26 +60,26 @@ public class WindowsBiometricService : IBiometricService
 
             return result switch
             {
-                UserConsentVerificationResult.Verified => BiometricResult.Succeeded(),
-                UserConsentVerificationResult.Canceled => BiometricResult.Failed(BiometricError.Cancelled, "User cancelled"),
-                UserConsentVerificationResult.DeviceNotPresent => BiometricResult.Failed(BiometricError.NotAvailable, "Device not present"),
-                UserConsentVerificationResult.NotConfiguredForUser => BiometricResult.Failed(BiometricError.NotEnrolled, "Windows Hello not configured"),
-                UserConsentVerificationResult.DisabledByPolicy => BiometricResult.Failed(BiometricError.NotAvailable, "Disabled by policy"),
-                UserConsentVerificationResult.DeviceBusy => BiometricResult.Failed(BiometricError.Unknown, "Device busy"),
-                UserConsentVerificationResult.RetriesExhausted => BiometricResult.Failed(BiometricError.LockedOut, "Too many attempts"),
-                _ => BiometricResult.Failed(BiometricError.Unknown, "Verification failed")
+                UserConsentVerificationResult.Verified => DeviceAuthResult.Succeeded(),
+                UserConsentVerificationResult.Canceled => DeviceAuthResult.Failed(DeviceAuthError.Cancelled, "User cancelled"),
+                UserConsentVerificationResult.DeviceNotPresent => DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "Device not present"),
+                UserConsentVerificationResult.NotConfiguredForUser => DeviceAuthResult.Failed(DeviceAuthError.NotEnrolled, "Windows Hello not configured"),
+                UserConsentVerificationResult.DisabledByPolicy => DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "Disabled by policy"),
+                UserConsentVerificationResult.DeviceBusy => DeviceAuthResult.Failed(DeviceAuthError.Failure, "Device busy"),
+                UserConsentVerificationResult.RetriesExhausted => DeviceAuthResult.Failed(DeviceAuthError.LockedOut, "Too many attempts"),
+                _ => DeviceAuthResult.Failed(DeviceAuthError.Failure, "Verification failed")
             };
         }
         catch (Exception ex)
         {
-            return BiometricResult.Failed(BiometricError.Unknown, ex.Message);
+            return DeviceAuthResult.Failed(DeviceAuthError.Failure, ex.Message);
         }
     }
 
     public async Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
     {
         // First authenticate
-        BiometricResult authResult = await AuthenticateAsync("Authenticate to save credentials", ct);
+        DeviceAuthResult authResult = await AuthenticateAsync("Authenticate to save credentials", ct);
         if (!authResult.Success)
             throw new InvalidOperationException($"Windows Hello authentication required: {authResult.ErrorMessage}");
 
@@ -116,7 +104,7 @@ public class WindowsBiometricService : IBiometricService
     public async Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
     {
         // First authenticate
-        BiometricResult authResult = await AuthenticateAsync(reason, ct);
+        DeviceAuthResult authResult = await AuthenticateAsync(reason, ct);
         if (!authResult.Success)
             return null;
 
@@ -153,18 +141,5 @@ public class WindowsBiometricService : IBiometricService
         return Task.CompletedTask;
     }
 
-    public Task<bool> HasSecureDataAsync(string key, CancellationToken ct = default)
-    {
-        try
-        {
-            PasswordVault vault = new();
-            PasswordCredential credential = vault.Retrieve(ResourceName, key);
-            return Task.FromResult(credential != null);
-        }
-        catch (Exception)
-        {
-            return Task.FromResult(false);
-        }
-    }
 }
 #endif

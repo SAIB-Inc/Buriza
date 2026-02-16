@@ -3,8 +3,8 @@ using Buriza.Core.Models.Enums;
 namespace Buriza.Core.Models.Security;
 
 public record DeviceCapabilities(
-    bool SupportsBiometric,
-    IReadOnlyList<BiometricType> BiometricTypes,
+    bool IsSupported,
+    bool SupportsBiometrics,
     bool SupportsPin,
-    bool SupportsPassword
+    IEnumerable<DeviceAuthType> AvailableTypes
 );
