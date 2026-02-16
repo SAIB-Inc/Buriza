@@ -1,0 +1,45 @@
+@using Buriza.UI.Resources
+@using Buriza.UI.Components.Common
+
+@namespace Buriza.UI.Components.Dialogs
+
+<BurizaBaseDialog 
+    Title="Confirm Data"
+    OnClose="Cancel"
+    Class="w-[379px] h-[304px] !bg-[var(--mud-palette-background)] !rounded-[28px] !p-6" 
+    TitleClass="p-0! mb-4!"
+    ActionsClass="!justify-end px-0! pt-6! pb-0!"
+>
+    <DialogContent>
+        <div class="h-full flex flex-col justify-between">
+            <div>
+                <MudText
+                    Class="text-xs! tracking-[0.1px]">
+                    Once you perform this action, there is no way to reverse it. Please be certain before proceeding.
+                </MudText>
+            </div>
+            <div>
+                <div class="rounded-full">@*Search Icon*@</div>
+                <div>
+                    <MudText>coinecta - Search</MudText>
+                    <MudText>https://www.bing.com</MudText>
+                </div>
+            </div>
+            <div class="relative !mb-6">
+                <MudText>Address</MudText>
+                <div>
+                    <MudIconButton
+                        Icon="@BurizaIcons.QrScannerIcon"
+                    />                    
+                </div>
+                <div>
+                    @*Collapsible Card*@
+                </div>
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <BurizaButton Class="flex-1 bg-[var(--mud-palette-overlay-light)]! text-[var(--mud-palette-text-primary)]!" OnClick="Cancel">Cancel</BurizaButton>
+        <BurizaButton Class="flex-1" Color="Color.Primary" OnClick="Confirm">Confirm</BurizaButton>
+    </DialogActions>
+</BurizaBaseDialog>
