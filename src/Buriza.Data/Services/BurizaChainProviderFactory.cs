@@ -61,7 +61,7 @@ public class BurizaChainProviderFactory(
             using BurizaU5CProvider provider = new(endpoint, apiKey);
             return await provider.ValidateConnectionAsync(ct);
         }
-        catch
+        catch (Exception)
         {
             return false;
         }

@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using Buriza.Core.Interfaces.DataServices;
 using Buriza.Core.Models.DataServices;
 using Buriza.Core.Models.Enums;
@@ -31,15 +32,22 @@ public class TokenMetadataService(
         using HttpRequestMessage request = new(HttpMethod.Get, $"{BaseUrl}/metadata/{subject}");
         AddApiKeyHeader(request);
 
-        HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
-        TokenMetadata? result = await response.Content.ReadFromJsonAsync<TokenMetadata>(ct);
-        if (result is not null)
-            cache.Set(cacheKey, result, _cacheDuration);
+        try
+        {
+            TokenMetadata? result = await response.Content.ReadFromJsonAsync<TokenMetadata>(ct);
+            if (result is not null)
+                cache.Set(cacheKey, result, _cacheDuration);
 
-        return result;
+            return result;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async Task<BatchTokenMetadataResponse?> GetBatchTokenMetadataAsync(
@@ -57,11 +65,18 @@ public class TokenMetadataService(
         };
         AddApiKeyHeader(request);
 
-        HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
-        return await response.Content.ReadFromJsonAsync<BatchTokenMetadataResponse>(ct);
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<BatchTokenMetadataResponse>(ct);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async Task<List<TokenMetadata>> GetWalletTokensAsync(List<string> subjects, CancellationToken ct = default)

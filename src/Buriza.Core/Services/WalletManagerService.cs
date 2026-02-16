@@ -138,8 +138,9 @@ public class WalletManagerService(
         }
         catch
         {
-            // Rollback vault on failure
+            // Rollback vault and wallet metadata on failure
             await _storage.DeleteVaultAsync(wallet.Id, ct);
+            await _storage.DeleteWalletAsync(wallet.Id, ct);
             throw;
         }
 

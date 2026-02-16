@@ -15,22 +15,18 @@ namespace Buriza.Data.Providers;
 /// Buriza-specific U5C provider implementing IBurizaChainProvider and ICardanoDataProvider.
 /// Implements ICardanoDataProvider for Chrysalis.Tx transaction building.
 /// </summary>
-public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
+public class BurizaU5CProvider(
+    string endpoint,
+    string? apiKey = null,
+    BurizaNetworkType networkType = BurizaNetworkType.Mainnet) : IBurizaChainProvider, ICardanoDataProvider
 {
-    private readonly U5CProvider _provider;
+    private readonly U5CProvider _provider = new(endpoint, apiKey, MapNetworkType(networkType));
     private bool _disposed;
 
     /// <summary>Gets the network type for this provider.</summary>
-    public BurizaNetworkType NetworkType { get; }
+    public BurizaNetworkType NetworkType { get; } = networkType;
 
     ChrysalisNetworkType ICardanoDataProvider.NetworkType => MapNetworkType(NetworkType);
-
-
-    public BurizaU5CProvider(string endpoint, string? apiKey = null, BurizaNetworkType networkType = BurizaNetworkType.Mainnet)
-    {
-        NetworkType = networkType;
-        _provider = new U5CProvider(endpoint, apiKey, MapNetworkType(networkType));
-    }
 
     #region IBurizaChainProvider
 

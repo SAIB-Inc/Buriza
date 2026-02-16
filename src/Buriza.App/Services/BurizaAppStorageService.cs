@@ -520,11 +520,14 @@ public sealed class BurizaAppStorageService(
         }
         catch (JsonException)
         {
-            return await BuildTamperedLockoutStateAsync(walletId, ct);
+            // Corruption, not tampering — clear invalid state rather than punishing user
+            await ResetLockoutStateAsync(walletId, ct);
+            return null;
         }
 
         if (state is null || string.IsNullOrEmpty(state.Hmac))
         {
+            // Missing HMAC indicates tampering — enforce max lockout
             return await BuildTamperedLockoutStateAsync(walletId, ct);
         }
 

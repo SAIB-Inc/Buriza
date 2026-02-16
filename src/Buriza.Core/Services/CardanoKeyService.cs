@@ -21,7 +21,7 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
         BurizaNetworkType.Mainnet => NetworkType.Mainnet,
         BurizaNetworkType.Preprod => NetworkType.Preprod,
         BurizaNetworkType.Preview => NetworkType.Testnet,
-        _ => NetworkType.Testnet
+        _ => throw new ArgumentOutOfRangeException(nameof(network), network, "Unsupported network type")
     };
 
     #region Cardano CIP-1852 Derivation

@@ -164,7 +164,7 @@ public class U5CProvider : ICardanoDataProvider, IDisposable
             _ = await _queryClient.ReadParamsAsync(request, headers: _headers, cancellationToken: ct);
             return true;
         }
-        catch
+        catch (Exception)
         {
             return false;
         }
@@ -392,7 +392,10 @@ public class U5CProvider : ICardanoDataProvider, IDisposable
                 CborTransactionOutput output = CborSerializer.Deserialize<CborTransactionOutput>(cborBytes);
                 return new ResolvedInput(input, output);
             }
-            catch { }
+            catch (Exception)
+            {
+                // CBOR deserialization failed — fall through to protobuf mapping
+            }
         }
 
         CardanoSpec.TxOutput txOutput = item.Cardano!;
@@ -413,7 +416,10 @@ public class U5CProvider : ICardanoDataProvider, IDisposable
                 CborTransactionOutput output = CborSerializer.Deserialize<CborTransactionOutput>(cborBytes);
                 return MapTransactionOutputToUtxo(output, txoRef);
             }
-            catch { }
+            catch (Exception)
+            {
+                // CBOR deserialization failed — fall through to protobuf mapping
+            }
         }
 
         CardanoSpec.TxOutput txOutput = item.Cardano!;

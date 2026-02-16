@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using Buriza.Core.Interfaces.DataServices;
 using Buriza.Core.Models.DataServices;
 using Buriza.Core.Models.Enums;
@@ -35,11 +36,18 @@ public class TokenPriceService(
         };
         AddApiKeyHeader(request);
 
-        HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
-        return await response.Content.ReadFromJsonAsync<Dictionary<string, decimal>>(ct);
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<Dictionary<string, decimal>>(ct);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async Task<decimal?> GetTokenPriceAsync(string unit, CancellationToken ct = default)
@@ -74,15 +82,22 @@ public class TokenPriceService(
         using HttpRequestMessage request = new(HttpMethod.Get, url);
         AddApiKeyHeader(request);
 
-        HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
-        TokenPriceChange? result = await response.Content.ReadFromJsonAsync<TokenPriceChange>(ct);
-        if (result is not null)
-            cache.Set(cacheKey, result, _cacheDuration);
+        try
+        {
+            TokenPriceChange? result = await response.Content.ReadFromJsonAsync<TokenPriceChange>(ct);
+            if (result is not null)
+                cache.Set(cacheKey, result, _cacheDuration);
 
-        return result;
+            return result;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     public async Task<decimal?> GetAdaPriceAsync(string quote = "USD", CancellationToken ct = default)
@@ -95,16 +110,23 @@ public class TokenPriceService(
         using HttpRequestMessage request = new(HttpMethod.Get, $"{BaseUrl}/token/quote?quote={quote}");
         AddApiKeyHeader(request);
 
-        HttpResponseMessage response = await httpClient.SendAsync(request, ct);
+        using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
         if (!response.IsSuccessStatusCode)
             return null;
 
-        QuoteResponse? result = await response.Content.ReadFromJsonAsync<QuoteResponse>(ct);
-        if (result is null)
-            return null;
+        try
+        {
+            QuoteResponse? result = await response.Content.ReadFromJsonAsync<QuoteResponse>(ct);
+            if (result is null)
+                return null;
 
-        cache.Set(cacheKey, result.Price, _cacheDuration);
-        return result.Price;
+            cache.Set(cacheKey, result.Price, _cacheDuration);
+            return result.Price;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private void AddApiKeyHeader(HttpRequestMessage request)
