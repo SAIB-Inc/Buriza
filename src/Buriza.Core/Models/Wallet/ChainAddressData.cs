@@ -11,10 +11,13 @@ public class ChainAddressData
     public required ChainType Chain { get; init; }
     public required NetworkType Network { get; init; }
 
-    /// <summary>Primary receive address (index 0, role 0).</summary>
-    public required string ReceiveAddress { get; set; }
+    /// <summary>Native currency symbol (e.g. "ADA", "tADA", "BTC").</summary>
+    public required string Symbol { get; init; }
 
-    /// <summary>Staking/reward address (role 2, index 0). Null if not yet derived.</summary>
+    /// <summary>Primary address (base address for Cardano: payment + staking).</summary>
+    public required string Address { get; set; }
+
+    /// <summary>Staking/reward address (role 2, index 0). Null for chains without staking.</summary>
     public string? StakingAddress { get; set; }
 
     /// <summary>Last time this chain data was synced with the network.</summary>

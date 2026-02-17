@@ -164,7 +164,7 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public void GetAddressInfo_ReturnsReceiveAddress()
+    public void GetAddressInfo_ReturnsAddress()
     {
         // Arrange
         BurizaWallet wallet = CreateWalletWithAddress();
@@ -174,7 +174,7 @@ public class BurizaWalletTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("addr_test1qz...", result.ReceiveAddress);
+        Assert.Equal("addr_test1qz...", result.Address);
     }
 
     [Fact]
@@ -216,7 +216,8 @@ public class BurizaWalletTests
                             {
                                 Chain = ChainType.Cardano,
                                 Network = NetworkType.Mainnet,
-                                ReceiveAddress = "addr_acc0"
+                                Symbol = "ADA",
+                                Address = "addr_acc0"
                             }
                         }
                     }
@@ -233,7 +234,8 @@ public class BurizaWalletTests
                             {
                                 Chain = ChainType.Cardano,
                                 Network = NetworkType.Mainnet,
-                                ReceiveAddress = "addr_acc1"
+                                Symbol = "ADA",
+                                Address = "addr_acc1"
                             }
                         }
                     }
@@ -246,7 +248,7 @@ public class BurizaWalletTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("addr_acc1", result.ReceiveAddress);
+        Assert.Equal("addr_acc1", result.Address);
     }
 
     #endregion
@@ -280,7 +282,7 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public async Task GetBalanceAsync_QueriesReceiveAddress()
+    public async Task GetBalanceAsync_QueriesAddress()
     {
         // Arrange
         BurizaWallet wallet = CreateWalletWithAddress();
@@ -305,7 +307,8 @@ public class BurizaWalletTests
         {
             Chain = ChainType.Cardano,
             Network = NetworkType.Preprod,
-            ReceiveAddress = "addr_test1preprod..."
+            Symbol = "tADA",
+            Address = "addr_test1preprod..."
         };
 
         IBurizaChainProvider mainnetProvider = Substitute.For<IBurizaChainProvider>();
@@ -345,7 +348,7 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public async Task GetUtxosAsync_QueriesReceiveAddress()
+    public async Task GetUtxosAsync_QueriesAddress()
     {
         // Arrange
         BurizaWallet wallet = CreateWalletWithAddress();
@@ -448,7 +451,8 @@ public class BurizaWalletTests
         {
             Chain = ChainType.Cardano,
             Network = NetworkType.Mainnet,
-            ReceiveAddress = "addr_test1..."
+            Symbol = "ADA",
+            Address = "addr_test1..."
         };
 
         BurizaWalletAccount account = new()
@@ -470,7 +474,7 @@ public class BurizaWalletTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(ChainType.Cardano, result.Chain);
-        Assert.Equal("addr_test1...", result.ReceiveAddress);
+        Assert.Equal("addr_test1...", result.Address);
     }
 
     [Fact]
@@ -498,13 +502,14 @@ public class BurizaWalletTests
         {
             Chain = ChainType.Cardano,
             Network = NetworkType.Mainnet,
-            ReceiveAddress = "addr_test1qz..."
+            Symbol = "ADA",
+            Address = "addr_test1qz..."
         };
 
         // Assert
         Assert.Equal(ChainType.Cardano, data.Chain);
         Assert.Equal(NetworkType.Mainnet, data.Network);
-        Assert.Equal("addr_test1qz...", data.ReceiveAddress);
+        Assert.Equal("addr_test1qz...", data.Address);
     }
 
     [Fact]
@@ -515,7 +520,8 @@ public class BurizaWalletTests
         {
             Chain = ChainType.Cardano,
             Network = NetworkType.Mainnet,
-            ReceiveAddress = "addr_test1qz..."
+            Symbol = "ADA",
+            Address = "addr_test1qz..."
         };
 
         // Assert
@@ -549,7 +555,8 @@ public class BurizaWalletTests
                             {
                                 Chain = ChainType.Cardano,
                                 Network = NetworkType.Mainnet,
-                                ReceiveAddress = "addr_test1qz..."
+                                Symbol = "ADA",
+                                Address = "addr_test1qz..."
                             }
                         }
                     }

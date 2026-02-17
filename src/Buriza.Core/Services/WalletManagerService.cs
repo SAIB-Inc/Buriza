@@ -12,6 +12,7 @@ using Buriza.Core.Models.Wallet;
 using Chrysalis.Wallet.Models.Keys;
 using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 
+
 namespace Buriza.Core.Services;
 
 /// <inheritdoc />
@@ -48,22 +49,6 @@ public class WalletManagerService(
     }
 
     /// <inheritdoc/>
-    public async Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default)
-    {
-        byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-        try
-        {
-            return await CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes, chainInfo, ct);
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(mnemonicBytes);
-            CryptographicOperations.ZeroMemory(passwordBytes);
-        }
-    }
-
-    /// <inheritdoc/>
     public async Task<BurizaWallet> CreateFromMnemonicAsync(string name, ReadOnlyMemory<byte> mnemonicBytes, ReadOnlyMemory<byte> passwordBytes, ChainInfo? chainInfo = null, CancellationToken ct = default)
     {
         byte[] mnemonicCopy = mnemonicBytes.ToArray();
@@ -94,14 +79,8 @@ public class WalletManagerService(
         foreach (ChainInfo info in initialChains)
         {
             IKeyService keyService = _providerFactory.CreateKeyService(info);
-            string receiveAddress = await keyService.DeriveAddressAsync(mnemonicBytes, info, 0, 0, false, ct);
-            ChainAddressData chainData = new()
-            {
-                Chain = info.Chain,
-                Network = info.Network,
-                ReceiveAddress = receiveAddress,
-                LastSyncedAt = DateTime.UtcNow
-            };
+            ChainAddressData chainData = await keyService.DeriveChainDataAsync(mnemonicBytes, info, 0, 0, false, ct);
+            chainData.LastSyncedAt = DateTime.UtcNow;
 
             if (!chainDataByChain.TryGetValue(info.Chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
             {
@@ -344,26 +323,19 @@ public class WalletManagerService(
                 }
 
                 // Derive first receive address for this account (passing bytes directly)
-                string address = await keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
+                ChainAddressData chainData = await keyService.DeriveChainDataAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
+                chainData.LastSyncedAt = DateTime.UtcNow;
 
-                // Check if address has any transaction history
-                IReadOnlyList<TransactionHistory> history = await provider.GetTransactionHistoryAsync(address, 1, ct);
+                // Check if address has any UTxOs (indicates usage)
+                bool used = await provider.IsAddressUsedAsync(chainData.Address, ct);
 
-                if (history.Count > 0)
+                if (used)
                 {
                     // Account has been used - create it
                     BurizaWalletAccount account = new()
                     {
                         Index = accountIndex,
                         Name = string.Format(DefaultAccountName, accountIndex + 1)
-                    };
-
-                    ChainAddressData chainData = new()
-                    {
-                        Chain = chainInfo.Chain,
-                        Network = chainInfo.Network,
-                        ReceiveAddress = address,
-                        LastSyncedAt = DateTime.UtcNow
                     };
                     if (!account.ChainData.TryGetValue(chainInfo.Chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
                     {
@@ -393,61 +365,6 @@ public class WalletManagerService(
         }
 
         return discoveredAccounts;
-    }
-
-    #endregion
-
-    #region Address Operations
-
-    /// <inheritdoc/>
-    public async Task<string> GetReceiveAddressAsync(Guid walletId, int accountIndex = 0, CancellationToken ct = default)
-    {
-        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainInfo chainInfo = GetChainInfo(wallet);
-
-        // Get from stored wallet data
-        BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
-        ChainAddressData chainData = account.GetChainData(chainInfo.Chain, chainInfo.Network)
-            ?? throw new InvalidOperationException($"Account {accountIndex} has no data for chain {chainInfo.Chain} {chainInfo.Network}. Call UnlockAccountAsync first.");
-
-        return chainData.ReceiveAddress;
-    }
-
-    /// <inheritdoc/>
-    public async Task<string> GetStakingAddressAsync(Guid walletId, int accountIndex, string? password = null, CancellationToken ct = default)
-    {
-        BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
-        ChainInfo chainInfo = GetChainInfo(wallet);
-        BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
-        ChainAddressData? chainData = account.GetChainData(chainInfo.Chain, chainInfo.Network);
-
-        // Return cached staking address if available
-        if (!string.IsNullOrEmpty(chainData?.StakingAddress))
-            return chainData.StakingAddress;
-
-        // Need password to derive
-        if (string.IsNullOrEmpty(password))
-            throw new ArgumentException("Password required to derive staking address", nameof(password));
-
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
-        try
-        {
-            IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
-            string stakingAddress = await keyService.DeriveStakingAddressAsync(mnemonicBytes, chainInfo, accountIndex, ct);
-
-            // Cache the staking address
-            if (chainData != null)
-            {
-                chainData.StakingAddress = stakingAddress;
-                await _storage.SaveWalletAsync(wallet, ct);
-            }
-
-            return stakingAddress;
-        }
-        finally
-        {
-            CryptographicOperations.ZeroMemory(mnemonicBytes);
-        }
     }
 
     #endregion
@@ -641,14 +558,8 @@ public class WalletManagerService(
     private async Task DeriveAndSaveChainDataAsync(BurizaWallet wallet, int accountIndex, ChainInfo chainInfo, byte[] mnemonicBytes, CancellationToken ct)
     {
         IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
-        string receiveAddress = await keyService.DeriveAddressAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
-        ChainAddressData chainData = new()
-        {
-            Chain = chainInfo.Chain,
-            Network = chainInfo.Network,
-            ReceiveAddress = receiveAddress,
-            LastSyncedAt = DateTime.UtcNow
-        };
+        ChainAddressData chainData = await keyService.DeriveChainDataAsync(mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
+        chainData.LastSyncedAt = DateTime.UtcNow;
 
         BurizaWalletAccount account = wallet.Accounts.FirstOrDefault(a => a.Index == accountIndex)
             ?? throw new InvalidOperationException($"Account {accountIndex} not found in wallet {wallet.Id}");

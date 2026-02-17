@@ -39,14 +39,9 @@ public interface IWalletManager
     /// Creates a wallet from a mnemonic phrase.
     /// Use after GenerateMnemonic for new wallets, or for restoring existing wallets.
     ///
-    /// SECURITY: The mnemonic string parameter is converted to bytes internally and
-    /// the byte array is zeroed after use. However, the input string remains in managed
-    /// memory until garbage collected. For maximum security, ensure the source string
-    /// is not retained longer than necessary.
+    /// SECURITY: Mnemonic and password accepted as bytes to enable proper memory cleanup.
+    /// Callers MUST zero the source arrays after use with CryptographicOperations.ZeroMemory().
     /// </summary>
-    Task<BurizaWallet> CreateFromMnemonicAsync(string name, string mnemonic, string password, ChainInfo? chainInfo = null, CancellationToken ct = default);
-
-    // Byte-first overload that avoids creating a long-lived mnemonic string in callers.
     Task<BurizaWallet> CreateFromMnemonicAsync(string name, ReadOnlyMemory<byte> mnemonicBytes, ReadOnlyMemory<byte> passwordBytes, ChainInfo? chainInfo = null, CancellationToken ct = default);
 
     /// <summary>Gets all wallets.</summary>
@@ -100,19 +95,6 @@ public interface IWalletManager
     /// Returns the list of discovered accounts that were added.
     /// </summary>
     Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, string password, int accountGapLimit = 5, CancellationToken ct = default);
-
-    #endregion
-
-    #region Address Operations
-
-    /// <summary>Gets the current receive address for an account (index 0).</summary>
-    Task<string> GetReceiveAddressAsync(Guid walletId, int accountIndex = 0, CancellationToken ct = default);
-
-    /// <summary>
-    /// Gets the staking/reward address for an account.
-    /// Password only required on first call (to derive and cache).
-    /// </summary>
-    Task<string> GetStakingAddressAsync(Guid walletId, int accountIndex, string? password = null, CancellationToken ct = default);
 
     #endregion
 

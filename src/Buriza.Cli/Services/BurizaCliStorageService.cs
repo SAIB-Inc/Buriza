@@ -128,7 +128,15 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
         string password = passwordOrPin ?? throw new ArgumentException("Password required", nameof(passwordOrPin));
         EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
             ?? throw new InvalidOperationException("Vault not found");
-        return VaultEncryption.Decrypt(vault, password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try
+        {
+            return VaultEncryption.Decrypt(vault, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
     }
 
     public override async Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default)
@@ -136,35 +144,35 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
         EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
         if (vault is null) return false;
 
-        return VaultEncryption.VerifyPassword(vault, password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try
+        {
+            return VaultEncryption.VerifyPassword(vault, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
     }
 
     public override async Task ChangePasswordAsync(Guid walletId, string oldPassword, string newPassword, CancellationToken ct = default)
     {
-        byte[] mnemonicBytes;
+        byte[] oldPasswordBytes = Encoding.UTF8.GetBytes(oldPassword);
+        byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
+        byte[]? mnemonicBytes = null;
         try
         {
             EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
                 ?? throw new InvalidOperationException("Vault not found");
-            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPassword);
-        }
-        catch (CryptographicException) { throw; }
-
-        try
-        {
-            byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
-            try
-            {
-                await CreateVaultAsync(walletId, mnemonicBytes, newPasswordBytes, ct);
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(newPasswordBytes);
-            }
+            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPasswordBytes);
+            await CreateVaultAsync(walletId, mnemonicBytes, newPasswordBytes, ct);
         }
         finally
         {
-            CryptographicOperations.ZeroMemory(mnemonicBytes);
+            CryptographicOperations.ZeroMemory(oldPasswordBytes);
+            CryptographicOperations.ZeroMemory(newPasswordBytes);
+            if (mnemonicBytes is not null)
+                CryptographicOperations.ZeroMemory(mnemonicBytes);
         }
     }
 
@@ -215,17 +223,19 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
         if (!string.IsNullOrEmpty(apiKey))
         {
             byte[] apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
             try
             {
                 ChainInfo info = ChainRegistry.Get(config.Chain, config.Network);
                 Guid vaultId = DeriveApiKeyVaultId(info);
-                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, password, VaultPurpose.ApiKey);
+                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, passwordBytes, VaultPurpose.ApiKey);
                 string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, (int)config.Network);
                 await SetJsonAsync(vaultKey, vault, ct);
             }
             finally
             {
                 CryptographicOperations.ZeroMemory(apiKeyBytes);
+                CryptographicOperations.ZeroMemory(passwordBytes);
             }
         }
         else
@@ -265,7 +275,16 @@ public sealed class BurizaCliStorageService : BurizaStorageBase
         if (vault.Purpose != VaultPurpose.ApiKey || vault.WalletId != expectedId)
             throw new CryptographicException("Invalid API key vault metadata");
 
-        byte[] apiKeyBytes = VaultEncryption.Decrypt(vault, password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        byte[] apiKeyBytes;
+        try
+        {
+            apiKeyBytes = VaultEncryption.Decrypt(vault, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         try
         {
             string apiKey = Encoding.UTF8.GetString(apiKeyBytes);

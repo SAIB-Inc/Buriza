@@ -78,7 +78,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return 0;
 
         return await provider.GetBalanceAsync(address, ct);
@@ -88,7 +88,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
         return await provider.GetAssetsAsync(address, ct);
@@ -98,7 +98,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
         return await provider.GetUtxosAsync(address, ct);
@@ -108,7 +108,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.ReceiveAddress;
+        string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
         return await provider.GetTransactionHistoryAsync(address, limit, ct);
@@ -126,7 +126,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public Task<UnsignedTransaction> BuildTransactionAsync(ulong amount, string toAddress, CancellationToken ct = default)
     {
-        string? fromAddress = GetAddressInfo()?.ReceiveAddress;
+        string? fromAddress = GetAddressInfo()?.Address;
         if (string.IsNullOrEmpty(fromAddress))
             throw new InvalidOperationException("No receive address available for the active account.");
 

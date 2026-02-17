@@ -31,7 +31,7 @@ public record WalletInfo
     public required string WalletName { get; init; }
     public required string AccountName { get; init; }
     public required int AccountIndex { get; init; }
-    public required string ReceiveAddress { get; init; }
+    public required string Address { get; init; }
     public required ChainType Chain { get; init; }
     public required NetworkType Network { get; init; }
 }

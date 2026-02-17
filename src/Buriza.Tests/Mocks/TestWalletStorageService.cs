@@ -122,11 +122,12 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
         await EnsureNotLockedAsync(walletId, ct);
 
         string password = passwordOrPin ?? throw new ArgumentException("Password required", nameof(passwordOrPin));
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
         try
         {
             EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
                 ?? throw new InvalidOperationException("Vault not found");
-            byte[] mnemonic = VaultEncryption.Decrypt(vault, password);
+            byte[] mnemonic = VaultEncryption.Decrypt(vault, passwordBytes);
             await ResetLockoutStateAsync(walletId, ct);
             return mnemonic;
         }
@@ -134,6 +135,10 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
         {
             await RegisterFailedAttemptAsync(walletId, ct);
             throw;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
         }
     }
 
@@ -144,7 +149,16 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
         EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
         if (vault is null) return false;
 
-        bool ok = VaultEncryption.VerifyPassword(vault, password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        bool ok;
+        try
+        {
+            ok = VaultEncryption.VerifyPassword(vault, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         if (ok)
             await ResetLockoutStateAsync(walletId, ct);
         else
@@ -156,35 +170,28 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
     {
         await EnsureNotLockedAsync(walletId, ct);
 
-        byte[] mnemonicBytes;
+        byte[] oldPasswordBytes = Encoding.UTF8.GetBytes(oldPassword);
+        byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
+        byte[]? mnemonicBytes = null;
         try
         {
             EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
                 ?? throw new InvalidOperationException("Vault not found");
-            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPassword);
+            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPasswordBytes);
+            await CreateVaultAsync(walletId, mnemonicBytes, newPasswordBytes, ct);
+            await ResetLockoutStateAsync(walletId, ct);
         }
         catch (CryptographicException)
         {
             await RegisterFailedAttemptAsync(walletId, ct);
             throw;
         }
-
-        try
-        {
-            byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
-            try
-            {
-                await CreateVaultAsync(walletId, mnemonicBytes, newPasswordBytes, ct);
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(newPasswordBytes);
-            }
-            await ResetLockoutStateAsync(walletId, ct);
-        }
         finally
         {
-            CryptographicOperations.ZeroMemory(mnemonicBytes);
+            CryptographicOperations.ZeroMemory(oldPasswordBytes);
+            CryptographicOperations.ZeroMemory(newPasswordBytes);
+            if (mnemonicBytes is not null)
+                CryptographicOperations.ZeroMemory(mnemonicBytes);
         }
     }
 
@@ -227,17 +234,19 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
         if (!string.IsNullOrEmpty(apiKey))
         {
             byte[] apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
             try
             {
                 ChainInfo info = ChainRegistry.Get(config.Chain, config.Network);
                 Guid vaultId = DeriveApiKeyVaultId(info);
-                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, password, VaultPurpose.ApiKey);
+                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, passwordBytes, VaultPurpose.ApiKey);
                 string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, (int)config.Network);
                 await SetJsonAsync(vaultKey, vault, ct);
             }
             finally
             {
                 CryptographicOperations.ZeroMemory(apiKeyBytes);
+                CryptographicOperations.ZeroMemory(passwordBytes);
             }
         }
         else
@@ -277,7 +286,16 @@ public sealed class TestWalletStorageService(IStorageProvider storage) : BurizaS
         if (vault.Purpose != VaultPurpose.ApiKey || vault.WalletId != expectedId)
             throw new CryptographicException("Invalid API key vault metadata");
 
-        byte[] apiKeyBytes = VaultEncryption.Decrypt(vault, password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        byte[] apiKeyBytes;
+        try
+        {
+            apiKeyBytes = VaultEncryption.Decrypt(vault, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         try
         {
             string apiKey = Encoding.UTF8.GetString(apiKeyBytes);

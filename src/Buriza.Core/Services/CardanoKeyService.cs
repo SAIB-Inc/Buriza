@@ -1,6 +1,7 @@
 using System.Text;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Wallet;
 using Chrysalis.Wallet.Models.Addresses;
 using Chrysalis.Wallet.Models.Enums;
 using Chrysalis.Wallet.Models.Keys;
@@ -27,7 +28,7 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
     #region Cardano CIP-1852 Derivation
 
     /// <inheritdoc/>
-    public Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+    public Task<ChainAddressData> DeriveChainDataAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
     {
         Mnemonic restored = RestoreMnemonic(mnemonic);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
@@ -36,24 +37,17 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
         PublicKey paymentKey = DeriveAddressKey(accountKey, role, addressIndex).GetPublicKey();
         PublicKey stakingKey = DeriveAddressKey(accountKey, RoleType.Staking, 0).GetPublicKey();
 
-        return Task.FromResult(Address.FromPublicKeys(_networkType, AddressType.Base, paymentKey, stakingKey).ToBech32());
-    }
+        string address = Address.FromPublicKeys(_networkType, AddressType.Base, paymentKey, stakingKey).ToBech32();
+        string stakingAddress = DeriveStakingAddress(stakingKey.Key, network);
 
-    /// <inheritdoc/>
-    public Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default)
-    {
-        Mnemonic restored = RestoreMnemonic(mnemonic);
-        PublicKey stakingKey = DeriveAddressKey(DeriveAccountKey(restored, accountIndex), RoleType.Staking, 0).GetPublicKey();
-
-        // Workaround: Chrysalis AddressHeader.ToByte() produces wrong header for Delegation (0x80 instead of 0xE0).
-        // Construct reward address bytes manually per CIP-19: header (0xE0/0xE1) + Blake2b-224(stakeVK).
-        byte headerByte = (byte)(0xE0 | (byte)_networkType);
-        byte[] stakeHash = HashUtil.Blake2b224(stakingKey.Key);
-        byte[] addressBytes = new byte[1 + stakeHash.Length];
-        addressBytes[0] = headerByte;
-        stakeHash.CopyTo(addressBytes, 1);
-
-        return Task.FromResult(new Address(addressBytes).ToBech32());
+        return Task.FromResult(new ChainAddressData
+        {
+            Chain = chainInfo.Chain,
+            Network = chainInfo.Network,
+            Symbol = chainInfo.Symbol,
+            Address = address,
+            StakingAddress = stakingAddress
+        });
     }
 
     /// <inheritdoc/>
@@ -77,6 +71,22 @@ public class CardanoKeyService(BurizaNetworkType network) : IKeyService
     #endregion
 
     #region Private Helpers
+
+    /// <summary>
+    /// Derives a CIP-19 reward/staking address (type 14) from a raw staking public key.
+    /// Workaround: Chrysalis AddressHeader.ToByte() produces wrong header for Delegation.
+    /// CIP-19 network nibble: 0 = mainnet, 1 = testnet (preprod/preview are both testnet).
+    /// </summary>
+    public static string DeriveStakingAddress(byte[] stakingPublicKey, BurizaNetworkType network)
+    {
+        byte networkNibble = network == BurizaNetworkType.Mainnet ? (byte)0 : (byte)1;
+        byte headerByte = (byte)(0xE0 | networkNibble);
+        byte[] stakeHash = HashUtil.Blake2b224(stakingPublicKey);
+        byte[] addressBytes = new byte[1 + stakeHash.Length];
+        addressBytes[0] = headerByte;
+        stakeHash.CopyTo(addressBytes, 1);
+        return new Address(addressBytes).ToBech32();
+    }
 
     private static Mnemonic RestoreMnemonic(ReadOnlySpan<byte> mnemonic) =>
         Mnemonic.Restore(Encoding.UTF8.GetString(mnemonic), English.Words);

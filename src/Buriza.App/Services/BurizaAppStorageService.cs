@@ -236,8 +236,16 @@ public sealed class BurizaAppStorageService(
             ?? throw new InvalidOperationException("Vault not found");
 
         // Decrypt to verify password — AES-GCM tag validates correctness
-        byte[] plaintext = VaultEncryption.Decrypt(vault, password);
-        CryptographicOperations.ZeroMemory(plaintext);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try
+        {
+            byte[] plaintext = VaultEncryption.Decrypt(vault, passwordBytes);
+            CryptographicOperations.ZeroMemory(plaintext);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
 
         // Password verified — load seed from SecureStorage
         return await LoadSecureSeedAsync(walletId, ct);
@@ -269,7 +277,7 @@ public sealed class BurizaAppStorageService(
         return Convert.FromBase64String(seed);
     }
 
-    public override async Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default)
+    public override async Task<byte[]> UnlockVaultAsync(Guid walletId, string? password, string? biometricReason = null, CancellationToken ct = default)
     {
         await EnsureNotLockedAsync(walletId, ct);
 
@@ -284,7 +292,7 @@ public sealed class BurizaAppStorageService(
                     byte[] mnemonic = await AuthenticateWithDeviceSecurityAndLoadSeedAsync(
                         walletId,
                         biometricReason ?? "Unlock your wallet",
-                        passwordOrPin,
+                        password,
                         ct);
                     await ResetLockoutStateAsync(walletId, ct);
                     return mnemonic;
@@ -294,14 +302,14 @@ public sealed class BurizaAppStorageService(
                     byte[] mnemonic = await AuthenticateWithDeviceSecurityAndLoadSeedAsync(
                         walletId,
                         "Authenticate with device security to unlock wallet",
-                        passwordOrPin,
+                        password,
                         ct);
                     await ResetLockoutStateAsync(walletId, ct);
                     return mnemonic;
                 }
                 default:
                 {
-                    string password = passwordOrPin ?? throw new ArgumentException("Password required", nameof(passwordOrPin));
+                    ArgumentException.ThrowIfNullOrEmpty(password, nameof(password));
                     byte[] mnemonic = await UnlockVaultWithPasswordAsync(walletId, password, ct);
                     await ResetLockoutStateAsync(walletId, ct);
                     return mnemonic;
@@ -322,7 +330,16 @@ public sealed class BurizaAppStorageService(
         EncryptedVault? vault = await GetSecureJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
         if (vault is null) return false;
 
-        bool ok = VaultEncryption.VerifyPassword(vault, password);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        bool ok;
+        try
+        {
+            ok = VaultEncryption.VerifyPassword(vault, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         if (ok)
             await ResetLockoutStateAsync(walletId, ct);
         else
@@ -338,34 +355,26 @@ public sealed class BurizaAppStorageService(
         EncryptedVault vault = await GetSecureJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
             ?? throw new InvalidOperationException("Vault not found");
 
-        byte[] mnemonicBytes;
+        byte[] oldPasswordBytes = Encoding.UTF8.GetBytes(oldPassword);
+        byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
+        byte[]? mnemonicBytes = null;
         try
         {
-            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPassword);
+            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPasswordBytes);
+            EncryptedVault newVault = VaultEncryption.Encrypt(walletId, mnemonicBytes, newPasswordBytes);
+            await SetSecureJsonAsync(StorageKeys.Vault(walletId), newVault, ct);
         }
         catch (CryptographicException)
         {
             await RegisterFailedAttemptAsync(walletId, ct);
             throw;
         }
-
-        // Re-encrypt with new password
-        try
-        {
-            byte[] newPasswordBytes = Encoding.UTF8.GetBytes(newPassword);
-            try
-            {
-                EncryptedVault newVault = VaultEncryption.Encrypt(walletId, mnemonicBytes, newPasswordBytes);
-                await SetSecureJsonAsync(StorageKeys.Vault(walletId), newVault, ct);
-            }
-            finally
-            {
-                CryptographicOperations.ZeroMemory(newPasswordBytes);
-            }
-        }
         finally
         {
-            CryptographicOperations.ZeroMemory(mnemonicBytes);
+            CryptographicOperations.ZeroMemory(oldPasswordBytes);
+            CryptographicOperations.ZeroMemory(newPasswordBytes);
+            if (mnemonicBytes is not null)
+                CryptographicOperations.ZeroMemory(mnemonicBytes);
         }
 
         await ResetLockoutStateAsync(walletId, ct);

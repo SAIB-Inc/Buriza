@@ -20,7 +20,7 @@ public class EncryptedVaultSerializationTests
     /// </summary>
     private static string DecryptToString(EncryptedVault vault, string password)
     {
-        byte[] bytes = VaultEncryption.Decrypt(vault, password);
+        byte[] bytes = VaultEncryption.Decrypt(vault, ToBytes(password));
         try
         {
             return Encoding.UTF8.GetString(bytes);
@@ -35,7 +35,7 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_SerializeDeserialize_RoundTrip()
     {
         // Arrange
-        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act - Serialize then deserialize (simulates storage)
         string json = JsonSerializer.Serialize(original);
@@ -54,7 +54,7 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_AfterSerialization_CanDecrypt()
     {
         // Arrange
-        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act - Serialize, deserialize, then decrypt
         string json = JsonSerializer.Serialize(original);
@@ -70,7 +70,7 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_SerializesToValidJson()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
         string json = JsonSerializer.Serialize(vault);
@@ -115,7 +115,7 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_MultipleSerializeDeserialize_Stable()
     {
         // Arrange
-        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act - Multiple round-trips
         string json1 = JsonSerializer.Serialize(original);
@@ -134,7 +134,7 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_PreservesCreatedAtTimestamp()
     {
         // Arrange
-        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault original = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         DateTime originalTime = original.CreatedAt;
 
         // Act
@@ -152,8 +152,8 @@ public class EncryptedVaultSerializationTests
         // Arrange
         Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
         Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-0000000003e7");
-        EncryptedVault vault1 = VaultEncryption.Encrypt(walletId1, ToBytes(TestMnemonic), TestPassword);
-        EncryptedVault vault2 = VaultEncryption.Encrypt(walletId2, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault1 = VaultEncryption.Encrypt(walletId1, ToBytes(TestMnemonic), ToBytes(TestPassword));
+        EncryptedVault vault2 = VaultEncryption.Encrypt(walletId2, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
         string json1 = JsonSerializer.Serialize(vault1);
@@ -173,7 +173,7 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_JsonIsCamelCase_ByDefault()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
         JsonSerializerOptions options = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -227,7 +227,7 @@ public class EncryptedVaultSerializationTests
         Guid walletId = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
         // Act - Create vault (what CreateVaultAsync does)
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(mnemonic), password);
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(mnemonic), ToBytes(password));
         string storedJson = JsonSerializer.Serialize(vault);
 
         // Simulate storage retrieval (what UnlockVaultAsync does)
@@ -244,14 +244,14 @@ public class EncryptedVaultSerializationTests
     public void EncryptedVault_VerifyPasswordAfterSerialization_Works()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         string json = JsonSerializer.Serialize(vault);
         EncryptedVault? restored = JsonSerializer.Deserialize<EncryptedVault>(json);
 
         // Act & Assert
         Assert.NotNull(restored);
-        Assert.True(VaultEncryption.VerifyPassword(restored, TestPassword));
-        Assert.False(VaultEncryption.VerifyPassword(restored, "WrongPassword"));
+        Assert.True(VaultEncryption.VerifyPassword(restored, ToBytes(TestPassword)));
+        Assert.False(VaultEncryption.VerifyPassword(restored, ToBytes("WrongPassword")));
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public class EncryptedVaultSerializationTests
         const string oldPassword = "OldPassword123";
         const string newPassword = "NewPassword456";
 
-        EncryptedVault originalVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), oldPassword);
+        EncryptedVault originalVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(oldPassword));
         string storedJson = JsonSerializer.Serialize(originalVault);
 
         // Act - Change password (decrypt with old, encrypt with new)
@@ -271,7 +271,7 @@ public class EncryptedVaultSerializationTests
         Assert.NotNull(retrieved);
 
         string mnemonic = DecryptToString(retrieved, oldPassword);
-        EncryptedVault newVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(mnemonic), newPassword);
+        EncryptedVault newVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(mnemonic), ToBytes(newPassword));
         string newStoredJson = JsonSerializer.Serialize(newVault);
 
         // Assert - Can decrypt with new password
@@ -282,6 +282,6 @@ public class EncryptedVaultSerializationTests
         Assert.Equal(TestMnemonic, decrypted);
 
         // Old password no longer works
-        Assert.False(VaultEncryption.VerifyPassword(finalVault, oldPassword));
+        Assert.False(VaultEncryption.VerifyPassword(finalVault, ToBytes(oldPassword)));
     }
 }

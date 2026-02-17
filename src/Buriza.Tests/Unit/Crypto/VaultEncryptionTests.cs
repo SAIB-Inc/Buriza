@@ -19,7 +19,7 @@ public class VaultEncryptionTests
     /// </summary>
     private static string DecryptToString(EncryptedVault vault, string password)
     {
-        byte[] bytes = VaultEncryption.Decrypt(vault, password);
+        byte[] bytes = VaultEncryption.Decrypt(vault, ToBytes(password));
         try
         {
             return Encoding.UTF8.GetString(bytes);
@@ -34,7 +34,7 @@ public class VaultEncryptionTests
     public void Encrypt_WithValidInputs_ReturnsEncryptedVault()
     {
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert
         Assert.NotNull(vault);
@@ -49,7 +49,7 @@ public class VaultEncryptionTests
     public void Encrypt_ProducesValidBase64Strings()
     {
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert - All fields should be valid base64
         byte[] data = Convert.FromBase64String(vault.Data);
@@ -65,8 +65,8 @@ public class VaultEncryptionTests
     public void Encrypt_SameInputs_ProducesDifferentCiphertext()
     {
         // Act - Encrypt twice with same inputs
-        EncryptedVault vault1 = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
-        EncryptedVault vault2 = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault1 = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
+        EncryptedVault vault2 = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert - Different salt and IV means different ciphertext
         Assert.NotEqual(vault1.Salt, vault2.Salt);
@@ -78,7 +78,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithCorrectPassword_ReturnsMnemonic()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
         string decrypted = DecryptToString(vault, TestPassword);
@@ -91,7 +91,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithWrongPassword_ThrowsAuthenticationException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act & Assert - AuthenticationTagMismatchException is a subclass of CryptographicException
         Assert.ThrowsAny<CryptographicException>(() =>
@@ -102,7 +102,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithTamperedCiphertext_ThrowsAuthenticationException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Tamper with ciphertext
         byte[] data = Convert.FromBase64String(vault.Data);
@@ -119,7 +119,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithTamperedIv_ThrowsAuthenticationException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Tamper with IV
         byte[] iv = Convert.FromBase64String(vault.Iv);
@@ -136,7 +136,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithTamperedSalt_ThrowsAuthenticationException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Tamper with salt (produces different key)
         byte[] salt = Convert.FromBase64String(vault.Salt);
@@ -153,10 +153,10 @@ public class VaultEncryptionTests
     public void VerifyPassword_WithCorrectPassword_ReturnsTrue()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
-        bool result = VaultEncryption.VerifyPassword(vault, TestPassword);
+        bool result = VaultEncryption.VerifyPassword(vault, ToBytes(TestPassword));
 
         // Assert
         Assert.True(result);
@@ -166,10 +166,10 @@ public class VaultEncryptionTests
     public void VerifyPassword_WithWrongPassword_ReturnsFalse()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
-        bool result = VaultEncryption.VerifyPassword(vault, "WrongPassword!");
+        bool result = VaultEncryption.VerifyPassword(vault, ToBytes("WrongPassword!"));
 
         // Assert
         Assert.False(result);
@@ -179,7 +179,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithUnsupportedVersion_ThrowsNotSupportedException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Version = 99 };
 
         // Act & Assert
@@ -195,7 +195,7 @@ public class VaultEncryptionTests
     public void EncryptDecrypt_WithVariousPasswordLengths_Works(string password)
     {
         // Arrange & Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), password);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(password));
         string decrypted = DecryptToString(vault, password);
 
         // Assert
@@ -209,7 +209,7 @@ public class VaultEncryptionTests
     public void EncryptDecrypt_WithVariousMnemonics_Works(string mnemonic)
     {
         // Arrange & Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(mnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(mnemonic), ToBytes(TestPassword));
         string decrypted = DecryptToString(vault, TestPassword);
 
         // Assert
@@ -223,7 +223,7 @@ public class VaultEncryptionTests
         const string mnemonic24 = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art";
 
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(mnemonic24), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(mnemonic24), ToBytes(TestPassword));
         string decrypted = DecryptToString(vault, TestPassword);
 
         // Assert
@@ -237,7 +237,7 @@ public class VaultEncryptionTests
         DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert
         DateTime after = DateTime.UtcNow.AddSeconds(1);
@@ -248,7 +248,7 @@ public class VaultEncryptionTests
     public void Encrypt_DataContainsCiphertextAndTag()
     {
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert - Data should be ciphertext (same length as plaintext) + 16-byte tag
         byte[] data = Convert.FromBase64String(vault.Data);
@@ -263,7 +263,7 @@ public class VaultEncryptionTests
         const string unicodePassword = "密码🔐Пароль";
 
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), unicodePassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(unicodePassword));
         string decrypted = DecryptToString(vault, unicodePassword);
 
         // Assert
@@ -278,7 +278,7 @@ public class VaultEncryptionTests
 
         // Act & Assert
         ArgumentException ex = Assert.Throws<ArgumentException>(
-            () => VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), emptyPassword));
+            () => VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(emptyPassword)));
 
         Assert.Contains("password", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -289,10 +289,10 @@ public class VaultEncryptionTests
     public void Decrypt_WithCorrectPassword_ReturnsMnemonicBytes()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
-        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, TestPassword);
+        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, ToBytes(TestPassword));
 
         // Assert
         string decrypted = Encoding.UTF8.GetString(decryptedBytes);
@@ -306,22 +306,22 @@ public class VaultEncryptionTests
     public void Decrypt_WithWrongPassword_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act & Assert
         Assert.ThrowsAny<CryptographicException>(() =>
-            VaultEncryption.Decrypt(vault, "WrongPassword!"));
+            VaultEncryption.Decrypt(vault, ToBytes("WrongPassword!")));
     }
 
     [Fact]
     public void Decrypt_ReturnsBytesOfCorrectLength()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         int expectedLength = Encoding.UTF8.GetByteCount(TestMnemonic);
 
         // Act
-        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, TestPassword);
+        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, ToBytes(TestPassword));
 
         // Assert
         Assert.Equal(expectedLength, decryptedBytes.Length);
@@ -334,10 +334,10 @@ public class VaultEncryptionTests
     public void Decrypt_BytesCanBeZeroed()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act
-        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, TestPassword);
+        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, ToBytes(TestPassword));
 
         // Verify bytes contain data (at least one non-zero byte)
         Assert.Contains(decryptedBytes, b => b != 0);
@@ -357,7 +357,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithInvalidBase64Data_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Data = "not-valid-base64!!!" };
 
         // Act & Assert - Now wrapped in CryptographicException
@@ -371,7 +371,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithInvalidBase64Salt_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Salt = "invalid!!!" };
 
         // Act & Assert - Now wrapped in CryptographicException
@@ -385,7 +385,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithInvalidBase64Iv_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Iv = "invalid!!!" };
 
         // Act & Assert - Now wrapped in CryptographicException
@@ -399,7 +399,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithNullData_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Data = null! };
 
         // Act & Assert
@@ -412,7 +412,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithNullSalt_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Salt = null! };
 
         // Act & Assert
@@ -425,7 +425,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithNullIv_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Iv = null! };
 
         // Act & Assert
@@ -438,7 +438,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithEmptyStringData_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Data = "" };
 
         // Act & Assert
@@ -451,7 +451,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithEmptyStringSalt_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Salt = "" };
 
         // Act & Assert
@@ -464,7 +464,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithEmptyStringIv_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Iv = "" };
 
         // Act & Assert
@@ -477,7 +477,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithTamperedAuthTag_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Tamper with auth tag (last 16 bytes of data)
         byte[] data = Convert.FromBase64String(vault.Data);
@@ -497,7 +497,7 @@ public class VaultEncryptionTests
         const string emptyMnemonic = "";
 
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(emptyMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(emptyMnemonic), ToBytes(TestPassword));
         string decrypted = DecryptToString(vault, TestPassword);
 
         // Assert
@@ -511,7 +511,7 @@ public class VaultEncryptionTests
         const string specialMnemonic = "test\nmnemonic\twith\rspecial\0chars";
 
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(specialMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(specialMnemonic), ToBytes(TestPassword));
         string decrypted = DecryptToString(vault, TestPassword);
 
         // Assert
@@ -525,7 +525,7 @@ public class VaultEncryptionTests
         Guid walletId = Guid.Parse("00000000-0000-0000-0000-00000000002a");
 
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert
         Assert.Equal(walletId, vault.WalletId);
@@ -535,7 +535,7 @@ public class VaultEncryptionTests
     public void Encrypt_SetsVersionToOne()
     {
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert
         Assert.Equal(1, vault.Version);
@@ -549,7 +549,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithInvalidVersion_ThrowsNotSupportedException(int version)
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Version = version };
 
         // Act & Assert
@@ -561,7 +561,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithCiphertextShorterThanTagSize_ThrowsCryptographicException()
     {
         // Arrange - Create vault with data shorter than tag size (16 bytes)
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Create invalid data that's too short (less than 16 bytes)
         byte[] shortData = [1, 2, 3, 4, 5]; // Only 5 bytes, less than 16-byte tag
@@ -569,7 +569,7 @@ public class VaultEncryptionTests
 
         // Act & Assert
         CryptographicException ex = Assert.Throws<CryptographicException>(() =>
-            VaultEncryption.Decrypt(invalidVault, TestPassword));
+            VaultEncryption.Decrypt(invalidVault, ToBytes(TestPassword)));
         Assert.Contains("ciphertext too short", ex.Message);
     }
 
@@ -577,12 +577,12 @@ public class VaultEncryptionTests
     public void Decrypt_WithEmptyBase64Data_ThrowsCryptographicException()
     {
         // Arrange - Convert.ToBase64String([]) returns "", which triggers "missing required fields"
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault invalidVault = vault with { Data = Convert.ToBase64String([]) };
 
         // Act & Assert - Empty base64 decodes to empty string which is caught by missing fields check
         CryptographicException ex = Assert.Throws<CryptographicException>(() =>
-            VaultEncryption.Decrypt(invalidVault, TestPassword));
+            VaultEncryption.Decrypt(invalidVault, ToBytes(TestPassword)));
         Assert.Contains("missing required fields", ex.Message);
     }
 
@@ -590,13 +590,13 @@ public class VaultEncryptionTests
     public void Decrypt_WithExactlyTagSizeData_ThrowsCryptographicException()
     {
         // Arrange - Data is exactly 16 bytes (tag size), meaning 0 bytes of ciphertext
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         byte[] exactTagSize = new byte[KeyDerivationOptions.Default.TagSize];
         EncryptedVault invalidVault = vault with { Data = Convert.ToBase64String(exactTagSize) };
 
         // Act & Assert - Should fail authentication since tag is invalid
         Assert.ThrowsAny<CryptographicException>(() =>
-            VaultEncryption.Decrypt(invalidVault, TestPassword));
+            VaultEncryption.Decrypt(invalidVault, ToBytes(TestPassword)));
     }
 
     #endregion
@@ -607,7 +607,7 @@ public class VaultEncryptionTests
     public void Encrypt_DefaultsPurposeToMnemonic()
     {
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Assert
         Assert.Equal(VaultPurpose.Mnemonic, vault.Purpose);
@@ -620,7 +620,7 @@ public class VaultEncryptionTests
     public void EncryptDecrypt_WithDifferentPurposes_Works(VaultPurpose purpose)
     {
         // Act
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword, purpose);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword), purpose);
         string decrypted = DecryptToString(vault, TestPassword);
 
         // Assert
@@ -634,7 +634,7 @@ public class VaultEncryptionTests
         // Arrange - Encrypt with wallet ID 1
         Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
         Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId1, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId1, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // Act - Try to decrypt with modified wallet ID (simulating vault swap attack)
         EncryptedVault tamperedVault = vault with { WalletId = walletId2 };
@@ -648,7 +648,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithWrongPurpose_ThrowsCryptographicException()
     {
         // Arrange - Encrypt as mnemonic
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword, VaultPurpose.Mnemonic);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword), VaultPurpose.Mnemonic);
 
         // Act - Try to decrypt with modified purpose (simulating vault type confusion attack)
         EncryptedVault tamperedVault = vault with { Purpose = VaultPurpose.ApiKey };
@@ -662,7 +662,7 @@ public class VaultEncryptionTests
     public void Decrypt_WithWrongVersion_ThrowsCryptographicException_DueToAADMismatch()
     {
         // Arrange - Encrypt with version 1 (default)
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
 
         // This test verifies that changing version fails both due to:
         // 1. NotSupportedException for unsupported versions
@@ -677,8 +677,8 @@ public class VaultEncryptionTests
         // Arrange - Create two vaults for different wallets with same password
         Guid walletId1 = Guid.Parse("00000000-0000-0000-0000-000000000001");
         Guid walletId2 = Guid.Parse("00000000-0000-0000-0000-000000000002");
-        EncryptedVault wallet1Vault = VaultEncryption.Encrypt(walletId1, ToBytes("mnemonic for wallet 1"), TestPassword);
-        EncryptedVault wallet2Vault = VaultEncryption.Encrypt(walletId2, ToBytes("mnemonic for wallet 2"), TestPassword);
+        EncryptedVault wallet1Vault = VaultEncryption.Encrypt(walletId1, ToBytes("mnemonic for wallet 1"), ToBytes(TestPassword));
+        EncryptedVault wallet2Vault = VaultEncryption.Encrypt(walletId2, ToBytes("mnemonic for wallet 2"), ToBytes(TestPassword));
 
         // Act - Try to use wallet 1's encrypted data with wallet 2's metadata
         EncryptedVault swappedVault = wallet1Vault with { WalletId = walletId2 };
@@ -692,7 +692,7 @@ public class VaultEncryptionTests
     public void PurposeConfusionAttack_MnemonicVaultAsApiKey_FailsDecryption()
     {
         // Arrange - Create a mnemonic vault
-        EncryptedVault mnemonicVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword, VaultPurpose.Mnemonic);
+        EncryptedVault mnemonicVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword), VaultPurpose.Mnemonic);
 
         // Act - Try to decrypt it as if it were an API key vault
         EncryptedVault confusedVault = mnemonicVault with { Purpose = VaultPurpose.ApiKey };
@@ -706,23 +706,23 @@ public class VaultEncryptionTests
     public void VerifyPassword_WithAAD_WorksCorrectly()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword, VaultPurpose.ApiKey);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword), VaultPurpose.ApiKey);
 
         // Act & Assert - Correct password with matching AAD
-        Assert.True(VaultEncryption.VerifyPassword(vault, TestPassword));
+        Assert.True(VaultEncryption.VerifyPassword(vault, ToBytes(TestPassword)));
 
         // Wrong password
-        Assert.False(VaultEncryption.VerifyPassword(vault, "WrongPassword!"));
+        Assert.False(VaultEncryption.VerifyPassword(vault, ToBytes("WrongPassword!")));
     }
 
     [Fact]
     public void Decrypt_WithAAD_WorksCorrectly()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword, VaultPurpose.ApiKey);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword), VaultPurpose.ApiKey);
 
         // Act
-        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, TestPassword);
+        byte[] decryptedBytes = VaultEncryption.Decrypt(vault, ToBytes(TestPassword));
 
         // Assert
         string decrypted = Encoding.UTF8.GetString(decryptedBytes);
@@ -736,21 +736,21 @@ public class VaultEncryptionTests
     public void Decrypt_WithTamperedWalletId_ThrowsCryptographicException()
     {
         // Arrange
-        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         EncryptedVault tamperedVault = vault with { WalletId = Guid.Parse("00000000-0000-0000-0000-0000000003e7") };
 
         // Act & Assert
         Assert.ThrowsAny<CryptographicException>(() =>
-            VaultEncryption.Decrypt(tamperedVault, TestPassword));
+            VaultEncryption.Decrypt(tamperedVault, ToBytes(TestPassword)));
     }
 
     [Fact]
     public void Encrypt_PreservesPurpose()
     {
         // Arrange & Act
-        EncryptedVault mnemonicVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), TestPassword, VaultPurpose.Mnemonic);
-        EncryptedVault apiKeyVault = VaultEncryption.Encrypt(TestWalletId, ToBytes("api-key-123"), TestPassword, VaultPurpose.ApiKey);
-        EncryptedVault pinVault = VaultEncryption.Encrypt(TestWalletId, ToBytes("pin-protected-password"), TestPassword, VaultPurpose.PinProtectedPassword);
+        EncryptedVault mnemonicVault = VaultEncryption.Encrypt(TestWalletId, ToBytes(TestMnemonic), ToBytes(TestPassword), VaultPurpose.Mnemonic);
+        EncryptedVault apiKeyVault = VaultEncryption.Encrypt(TestWalletId, ToBytes("api-key-123"), ToBytes(TestPassword), VaultPurpose.ApiKey);
+        EncryptedVault pinVault = VaultEncryption.Encrypt(TestWalletId, ToBytes("pin-protected-password"), ToBytes(TestPassword), VaultPurpose.PinProtectedPassword);
 
         // Assert
         Assert.Equal(VaultPurpose.Mnemonic, mnemonicVault.Purpose);
@@ -766,7 +766,7 @@ public class VaultEncryptionTests
     {
         // Arrange & Act
         Guid walletId = Guid.Parse(walletIdStr);
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(TestMnemonic), TestPassword);
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, ToBytes(TestMnemonic), ToBytes(TestPassword));
         string decrypted = DecryptToString(vault, TestPassword);
 
         // Assert

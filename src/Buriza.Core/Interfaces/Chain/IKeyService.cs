@@ -1,4 +1,5 @@
 using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Wallet;
 using Chrysalis.Wallet.Models.Keys;
 
 namespace Buriza.Core.Interfaces.Chain;
@@ -11,10 +12,8 @@ namespace Buriza.Core.Interfaces.Chain;
 /// </summary>
 public interface IKeyService
 {
-    /// <summary>Derives a receive/change address for an account.</summary>
-    Task<string> DeriveAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
-    /// <summary>Derives a staking/reward address for an account.</summary>
-    Task<string> DeriveStakingAddressAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, CancellationToken ct = default);
+    /// <summary>Derives chain address data (address + chain-specific fields like staking address).</summary>
+    Task<ChainAddressData> DeriveChainDataAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
     /// <summary>Derives a private key for an account/address.</summary>
     Task<PrivateKey> DerivePrivateKeyAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default);
     /// <summary>Derives a public key for an account/address.</summary>

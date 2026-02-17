@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Collections;
 using Buriza.Core.Models.Chain;
@@ -379,7 +380,18 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             .RoundedBorder()
             .Padding(1, 0, 1, 0));
 
-        BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonic, password);
+        byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        BurizaWallet wallet;
+        try
+        {
+            wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(mnemonicBytes);
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         await _walletManager.SetActiveChainAsync(wallet.Id, ChainRegistry.CardanoPreview, null);
         await _walletManager.SetActiveAsync(wallet.Id);
         AnsiConsole.MarkupLine("[bold]Wallet created and set active.[/]");
@@ -400,7 +412,18 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         if (string.IsNullOrEmpty(password))
             return;
 
-        BurizaWallet wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonic, password);
+        byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        BurizaWallet wallet;
+        try
+        {
+            wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(mnemonicBytes);
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         await _walletManager.SetActiveChainAsync(wallet.Id, ChainRegistry.CardanoPreview, null);
         await _walletManager.SetActiveAsync(wallet.Id);
         AnsiConsole.MarkupLine("[bold]Wallet imported and set active.[/]");
@@ -446,8 +469,8 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         }
 
         BurizaWallet active = await ResolveActiveWalletAsync(wallets);
-        string address = await _walletManager.GetReceiveAddressAsync(active.Id);
-        AnsiConsole.MarkupLine($"[bold]Receive address:[/] {address}");
+        string? address = active.GetAddressInfo()?.Address;
+        AnsiConsole.MarkupLine($"[bold]Receive address:[/] {address ?? "[grey]Not derived[/]"}");
         Pause();
     }
 
@@ -664,7 +687,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             ? "[grey]No active wallet[/]"
             : $"[bold]{active.Profile.Name}[/] • {active.ActiveChain} • {active.Network}";
 
-        string? address = active?.GetAddressInfo()?.ReceiveAddress;
+        string? address = active?.GetAddressInfo()?.Address;
         string addressValue = string.IsNullOrEmpty(address)
             ? "[grey]Not derived[/]"
             : address;

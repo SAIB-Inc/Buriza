@@ -39,7 +39,7 @@ public class BurizaStorageServiceTests
         string password = "correct";
         string apiKey = "test-key";
 
-        EncryptedVault vault = VaultEncryption.Encrypt(Guid.Empty, Encoding.UTF8.GetBytes(apiKey), password, VaultPurpose.Mnemonic);
+        EncryptedVault vault = VaultEncryption.Encrypt(Guid.Empty, Encoding.UTF8.GetBytes(apiKey), Encoding.UTF8.GetBytes(password), VaultPurpose.Mnemonic);
         string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
         await platformStorage.SetAsync(key, System.Text.Json.JsonSerializer.Serialize(vault));
 
