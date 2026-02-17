@@ -5,7 +5,7 @@
 @using Buriza.Data.Models.Common
 @using Buriza.Data.Models.Enums
 
-@page "/selectasset"
+@page "/send/assets"
 
 @namespace Buriza.UI.Components.Pages
 
@@ -39,14 +39,15 @@
                 />
                 <MudTabPanel 
                     Text="NFT" 
-                    Icon="@BurizaIcons.NftSymbolIcon"                            Class="w-full !min-w-[100px] max-xl:!gap-0"
+                    Icon="@BurizaIcons.NftSymbolIcon"                            
+                    Class="w-full !min-w-[100px] max-xl:!gap-0"
                 />
             </BurizaTabs>
             <BurizaSearchBar
                 Class="!mb-0 !justify-center [&_input]:!p-0 "
             />
         </div>
-        <div class="relative max-[376px]:min-h-[calc(100%-200px)] !px-4 !space-y-2 h-full max-h-[calc(100%-204px)] !pb-9 w-full overflow-y-auto !rounded-[12px]">
+        <div class="max-[376px]:mt-2! max-[376px]:!pb-0 relative max-[376px]:flex-1 !px-4 !space-y-2 h-full !pb-9 w-full overflow-y-auto !rounded-[12px] min-[376px]:max-h-[calc(100%-204px)]">
             @if (AppStateService.SelectedAssetType == AssetType.Token)
             {
                 @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
