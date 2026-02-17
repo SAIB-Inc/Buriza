@@ -15,7 +15,7 @@
 <PageTitle>Buriza</PageTitle>
 
 <section class="max-md:h-screen min-h-[600px] lg:!ml-4">
-    <div class="max-md:!px-4 max-md:!pb-8 max-md:!mx-auto max-[376px]:!gap-2 max-[376px]:!pb-4 max-[376px]:!pt-4 h-full w-full flex flex-col items-center !pt-16 !gap-3 md:!pt-0">
+    <div class="max-[376px]:!gap-3 max-[376px]:!pb-4 max-[376px]:!pt-4 max-md:!px-4 max-md:!pb-8 max-md:!mx-auto h-full w-full flex flex-col items-center !pt-16 !gap-3 md:!pt-0">
         <div class="w-full flex items-center justify-between lg:hidden">
             <div>
                 <MudImage
@@ -51,17 +51,17 @@
                             Class="max-[376px]:!py-3 !p-0 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)]"
                         />
                     </MudBadge>
-                    <MudIconButton
+                    @* <MudIconButton
                         Icon="@BurizaIcons.FullscreenSymbolIcon"
                         Class="max-[376px]:!block !hidden !px-2 [&_.mud-icon-root]:!text-[var(--mud-palette-primary-lighten)]"
-                    >
-                    </MudIconButton>
+                    /> *@
                 </div>
             </div>
         </div>
         <div class="w-full">
+            @*Desktop and Mobile*@
             <MudCard 
-                Class="@($"!shadow-sm !bg-[url(/_content/Buriza.UI/images/background/wallet_account_background.webp)] bg-cover bg-center bg-no-repeat !transition-all !duration-500 !ease-in-out cursor-pointer !w-full !bg-[var(--mud-palette-primary)] !rounded-[16px] !justify-between overflow-hidden !h-[210px] md:!h-[267px]")"
+                Class="max-[376px]:hidden! !shadow-sm !bg-[url(/_content/Buriza.UI/images/background/wallet_account_background.webp)] bg-cover bg-center bg-no-repeat !transition-all !duration-500 !ease-in-out cursor-pointer !w-full !bg-[var(--mud-palette-primary)] !rounded-[16px] !justify-between overflow-hidden !h-[210px] md:!h-[267px]"
                 @onclick="ToggleCardExpansion"
             >
                 <div class="flex items-center justify-between !p-3 md:!py-4 md:!px-6">
@@ -150,12 +150,45 @@
                     </div>
                 </div>
             </MudCard>
+            
+            @*Extension*@
+            <div class="min-[376px]:hidden w-full flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <div>
+                            <MudText Class="!text-[var(--mud-palette-gray-dark)] !font-medium !text-sm">
+                                Account01
+                            </MudText>
+                        </div>
+                        <div>
+                        </div>
+                    </div>
+                    <div>
+                        <MudText Class="text-[28px]! font-semibold! !text-[var(--mud-palette-success-contrast-text)]">
+                            <span>10,000.00</span>
+                            <span class="!text-[var(--mud-palette-text-secondary)] !text-lg">USD</span>
+                        </MudText>
+                    </div>
+                </div>
+                <div class="flex items-center gap-[6.67px]!">
+                    <MudIconButton
+                        Icon="@BurizaIcons.ReceiveSymbolIcon"
+                        Href="/receive"
+                        Class="md:!hidden !h-10 !w-10 !bg-[var(--mud-palette-primary)] !rounded-full shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-success-contrast-text)]"
+                    />
+                    <MudIconButton
+                        Icon="@BurizaIcons.Send1Icon"
+                        Href="/send"
+                        Class="md:!hidden !h-10 !w-10 !bg-[var(--mud-palette-primary)] !rounded-full shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-success-contrast-text)]"
+                    />
+                </div>
+            </div>
         </div>
         <div class="w-full md:bg-[var(--mud-palette-drawer-background)] md:!shadow-sm md:!pt-4 md:!rounded-[16px] ">
             <div class="flex items-center justify-between !mb-4 md:block md:!mb-5 md:!px-4 xl:!px-6">
                 <div class="w-full flex items-center justify-between md:!mb-3">
                     <div class="@($"transition-opacity duration-300 {(IsSearchExpanded ? "max-md:opacity-0 max-md:pointer-events-none" : "opacity-100")}")">
-                        <MudText Class="!font-semibold !text-[22px]">
+                        <MudText Class="max-[376px]:!text-base !font-semibold !text-[22px]">
                             Portfolio
                         </MudText>
                     </div>
@@ -179,14 +212,14 @@
                 </div>
                 <div class="w-full flex items-center gap-[10px] justify-end md:justify-between relative">
                     @* Mobile: Expandable search with absolute positioning *@
-                    <div class="@($"{(IsSearchExpanded ? "w-[calc(200%-48px)] z-10" : "w-0 z-0")} [&_input]:!px-3 [&_input]:!py-2 [&_input]:!text-sm absolute top-0 right-11 transition-all duration-300 md:relative md:right-0 md:w-full md:z-auto [&_.mud-input-control]:!mb-0") md:hidden">
+                    <div class="@($"{(IsSearchExpanded ? "w-[calc(100vw-76px)] max-[376px]:w-[calc(100vw-64px)] z-10" : "w-0 z-0")} [&_input]:!px-3 [&_input]:!text-sm absolute right-11 max-[376px]:right-8 transition-all duration-300 md:relative md:right-0 md:w-full md:z-auto [&_.mud-input-control]:!mb-0") md:hidden">
                         <BurizaSearchBar
-                            Class="@SearchBarClass"
+                            Class="bg-transparent! !h-9 max-[376px]:[&_input]:pl-2! max-[376px]:!h-6 max-[376px]:!min-h-6 [&_input]:py-4! [&_input]:h-9! max-[376px]:[&_input]:!h-6 max-[376px]:[&_input]:!min-h-6 max-[376px]:[&_input]:py-0! max-[376px]:[&_.mud-input-control-input-container]:!min-h-6 max-[376px]:[&_.mud-input-control-input-container]:!h-6 [&_.mud-icon-root]:!hidden"
                         />
                         <MudIconButton
                             OnClick="ToggleSearch"
                             Icon="@(IsSearchExpanded ? Icons.Material.Filled.Close : Icons.Material.Filled.Search)"
-                            Class="shadow-[var(--mud-elevation-1)]! absolute top-0 right-0 !bg-[var(--mud-palette-overlay-light)] [&_.mud-icon-root]:!text-[18px] !p-0 !h-9 !w-9 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] md:!hidden"
+                            Class="max-[376px]:!h-6 max-[376px]:!w-6 max-[376px]:[&_.mud-icon-root]:!text-xs shadow-[var(--mud-elevation-1)]! absolute top-0 right-0 !bg-[var(--mud-palette-overlay-light)] [&_.mud-icon-root]:!text-[18px] !p-0 !h-9 !w-9 [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] md:!hidden"
                         />
                     </div>
                     <div class="w-full">
@@ -197,30 +230,30 @@
                     <div>
                         <MudIconButton
                             Icon="@BurizaIcons.FilterSymbolIcon"
-                            Class="shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:!text-[18px] md:[&_.mud-icon-root]:!text-[24px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9 md:!w-12 md:!h-12"
+                            Class="max-[376px]:!h-6 max-[376px]:!w-6 max-[376px]:[&_.mud-icon-root]:!text-xs shadow-[var(--mud-elevation-1)]! [&_.mud-icon-root]:!text-[var(--mud-palette-text-primary)] [&_.mud-icon-root]:!text-[18px] md:[&_.mud-icon-root]:!text-[24px] !p-0 !bg-[var(--mud-palette-overlay-light)] !w-9 !h-9 md:!w-12 md:!h-12"
                         />
                     </div>
                 </div>
             </div>
-            <div class="!mb-4 md:hidden">
+            <div class="max-[376px]:!mb-3 !mb-4 md:hidden">
                 <BurizaTabs
-                        Class="!w-full [&_.mud-tab]:!text-[14px] [&_.mud-tab_.mud-icon-root]:!text-[20px] [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full max-h-[48px]! [&_.mud-tabs-tabbar-inner]:min-h-[44px]! [&_.mud-tabs-scroll-button]:hidden"
-                        @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
-                    >
-                        <MudTabPanel 
-                            Text="Token" 
-                            Icon="@BurizaIcons.TokenSymbolIcon"
-                            Class="w-full !min-w-[100px] max-xl:!gap-0"
-                        />
-                        <MudTabPanel 
-                            Text="NFT" 
-                            Icon="@BurizaIcons.NftSymbolIcon"
-                            Class="w-full !min-w-[100px] max-xl:!gap-0"
-                        />
-                    </BurizaTabs>
+                    Class="max-[376px]:p-[2px]! max-[376px]:[&_.mud-tab]:py-[2px]! max-[376px]:[&_.mud-tab]:min-h-6.5! max-[376px]:[&_.mud-tab-slider]:!h-[26px] !w-full [&_.mud-tab]:!text-[14px] [&_.mud-tab_.mud-icon-root]:!text-[20px] [&_.mud-tab-active]:!bg-transparent [&_.mud-tooltip-root]:!w-full [&_.mud-tabs-tabbar-wrapper]:!gap-2 [&_.mud-tabs-tabbar-wrapper]:!max-w-full [&_.mud-tabs-tabbar-wrapper]:!w-full max-h-[48px]! max-[376px]:max-h-[32px]! [&_.mud-tabs-tabbar-inner]:min-h-[44px]! max-[376px]:[&_.mud-tabs-tabbar-inner]:min-h-[32px]! [&_.mud-tabs-scroll-button]:hidden"
+                    @bind-ActivePanelIndex="AppStateService.SelectedAssetTypeIndex"
+                >
+                    <MudTabPanel 
+                        Text="Token" 
+                        Icon="@BurizaIcons.TokenSymbolIcon"
+                        Class="max-w-full !min-w-[100px] max-xl:!gap-0"
+                    />
+                    <MudTabPanel 
+                        Text="NFT" 
+                        Icon="@BurizaIcons.NftSymbolIcon"
+                        Class="w-full !min-w-[100px] max-xl:!gap-0"
+                    />
+                </BurizaTabs>
             </div>
             <div class="relative">
-                <div class="max-[376px]:!max-h-[calc(100vh-390px)] max-[376px]:!pb-12 max-md:!min-h-[calc(100vh-520px)] !pb-11 !space-y-2 overflow-y-auto !max-h-[calc(100vh-552px)] !rounded-[12px] md:!max-h-[calc(100vh-604px)] md:!pb-13 lg:max-h-[calc(100vh-426px)] lg:!pb-4 lg:!max-h-[calc(100vh-548px)] md:!px-4 xl:!px-6">
+                <div class="max-[376px]:!max-h-[calc(100vh-248px)] max-[376px]:!pb-24 max-md:!min-h-[calc(100vh-520px)] !pb-11 !space-y-2 overflow-y-auto !max-h-[calc(100vh-552px)] !rounded-[12px] md:!max-h-[calc(100vh-604px)] md:!pb-13 lg:max-h-[calc(100vh-426px)] lg:!pb-4 lg:!max-h-[calc(100vh-548px)] md:!px-4 xl:!px-6">
                     @if (AppStateService.SelectedAssetType == AssetType.Token)
                     {
                         @foreach(TokenAsset tokenAsset in TokenAssetData.GetDummyTokenAssets())
