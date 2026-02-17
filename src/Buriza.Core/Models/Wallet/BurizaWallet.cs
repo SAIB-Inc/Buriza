@@ -76,7 +76,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public async Task<ulong> GetBalanceAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        IBurizaChainProvider provider = EnsureProvider();
+        using IBurizaChainProvider provider = EnsureProvider();
 
         string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return 0;
@@ -86,7 +86,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        IBurizaChainProvider provider = EnsureProvider();
+        using IBurizaChainProvider provider = EnsureProvider();
 
         string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return [];
@@ -96,7 +96,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public async Task<IReadOnlyList<Utxo>> GetUtxosAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        IBurizaChainProvider provider = EnsureProvider();
+        using IBurizaChainProvider provider = EnsureProvider();
 
         string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return [];
@@ -106,7 +106,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public async Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(int? accountIndex = null, int limit = 50, CancellationToken ct = default)
     {
-        IBurizaChainProvider provider = EnsureProvider();
+        using IBurizaChainProvider provider = EnsureProvider();
 
         string? address = GetAddressInfo(accountIndex)?.Address;
         if (string.IsNullOrEmpty(address)) return [];
@@ -114,10 +114,10 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
         return await provider.GetTransactionHistoryAsync(address, limit, ct);
     }
 
-    public Task<ProtocolParams> GetProtocolParametersAsync(CancellationToken ct = default)
+    public async Task<ProtocolParams> GetProtocolParametersAsync(CancellationToken ct = default)
     {
-        IBurizaChainProvider provider = EnsureProvider();
-        return provider.GetParametersAsync(ct);
+        using IBurizaChainProvider provider = EnsureProvider();
+        return await provider.GetParametersAsync(ct);
     }
 
     #endregion
@@ -141,7 +141,8 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public async Task<UnsignedTransaction> BuildTransactionAsync(TransactionRequest request, CancellationToken ct = default)
     {
-        ICardanoDataProvider provider = GetDataProvider<ICardanoDataProvider>()
+        using IBurizaChainProvider chainProvider = EnsureProvider();
+        ICardanoDataProvider provider = chainProvider as ICardanoDataProvider
             ?? throw new InvalidOperationException("Wallet is not connected to a compatible data provider.");
 
         TransactionTemplateBuilder<TransactionRequest> builder = TransactionTemplateBuilder<TransactionRequest>
@@ -212,7 +213,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
     public async Task<string> SubmitAsync(object signedTx, CancellationToken ct = default)
     {
-        IBurizaChainProvider provider = EnsureProvider();
+        using IBurizaChainProvider provider = EnsureProvider();
 
         // For Cardano, expect Chrysalis Transaction
         if (signedTx is ChrysalisTransaction cardanoTx)
@@ -223,9 +224,6 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
 
         throw new ArgumentException($"Unsupported transaction type: {signedTx.GetType().Name}. For Cardano, use Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction.", nameof(signedTx));
     }
-
-    /// <summary>Gets the data provider cast to the specified type for chain-specific operations.</summary>
-    internal T? GetDataProvider<T>() where T : class => EnsureProvider() as T;
 
     #endregion
 
