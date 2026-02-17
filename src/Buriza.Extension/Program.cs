@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Blazor.BrowserExtension;
 using Buriza.Extension;
 using Buriza.UI.Components;
+using Buriza.UI.Resources;
 using MudBlazor;
 using MudBlazor.Services;
 using Buriza.UI.Services;
+
+BurizaContentPath.Root = "content";
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
