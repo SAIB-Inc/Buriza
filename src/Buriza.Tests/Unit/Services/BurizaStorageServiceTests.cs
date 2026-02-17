@@ -23,10 +23,10 @@ public class BurizaStorageServiceTests
 
         for (int i = 0; i < 5; i++)
         {
-            await Assert.ThrowsAnyAsync<CryptographicException>(() => storage.UnlockVaultAsync(walletId, "wrong"));
+            await Assert.ThrowsAnyAsync<CryptographicException>(() => storage.UnlockVaultAsync(walletId, Encoding.UTF8.GetBytes("wrong")));
         }
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => storage.UnlockVaultAsync(walletId, "wrong"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => storage.UnlockVaultAsync(walletId, Encoding.UTF8.GetBytes("wrong")));
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class BurizaStorageServiceTests
             }));
 
         await Assert.ThrowsAnyAsync<CryptographicException>(() =>
-            storage.GetCustomProviderConfigWithApiKeyAsync(chainInfo, password));
+            storage.GetCustomProviderConfigWithApiKeyAsync(chainInfo, Encoding.UTF8.GetBytes(password)));
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class BurizaStorageServiceTests
             Endpoint = "https://example.com",
             HasCustomApiKey = true
         };
-        await storage.SaveCustomProviderConfigAsync(config, apiKey, password);
+        await storage.SaveCustomProviderConfigAsync(config, apiKey, Encoding.UTF8.GetBytes(password));
 
         string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
         string? json = await platformStorage.GetAsync(key);

@@ -65,7 +65,7 @@ public interface IWalletManager
     /// Password is only required if this is the first time using the chain (to derive addresses).
     /// Throws ArgumentException if password is needed but not provided.
     /// </summary>
-    Task SetActiveChainAsync(Guid walletId, ChainInfo chainInfo, string? password = null, CancellationToken ct = default);
+    Task SetActiveChainAsync(Guid walletId, ChainInfo chainInfo, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default);
 
     /// <summary>Gets all registered chain types from the provider registry.</summary>
     IReadOnlyList<ChainType> GetAvailableChains();
@@ -84,7 +84,7 @@ public interface IWalletManager
     Task SetActiveAccountAsync(Guid walletId, int accountIndex, CancellationToken ct = default);
 
     /// <summary>Unlocks an account by deriving addresses for the active chain. Requires password.</summary>
-    Task UnlockAccountAsync(Guid walletId, int accountIndex, string password, CancellationToken ct = default);
+    Task UnlockAccountAsync(Guid walletId, int accountIndex, ReadOnlyMemory<byte> password, CancellationToken ct = default);
 
     /// <summary>Renames an account.</summary>
     Task RenameAccountAsync(Guid walletId, int accountIndex, string newName, CancellationToken ct = default);
@@ -94,24 +94,24 @@ public interface IWalletManager
     /// Scans account indexes sequentially until finding a gap of unused accounts.
     /// Returns the list of discovered accounts that were added.
     /// </summary>
-    Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, string password, int accountGapLimit = 5, CancellationToken ct = default);
+    Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, ReadOnlyMemory<byte> password, int accountGapLimit = 5, CancellationToken ct = default);
 
     #endregion
 
     #region Password Operations
 
     /// <summary>Verifies if the password is correct for a wallet vault.</summary>
-    Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default);
+    Task<bool> VerifyPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default);
 
     /// <summary>Changes the password for a wallet vault.</summary>
-    Task ChangePasswordAsync(Guid walletId, string currentPassword, string newPassword, CancellationToken ct = default);
+    Task ChangePasswordAsync(Guid walletId, ReadOnlyMemory<byte> currentPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default);
 
     #endregion
 
     #region Sensitive Operations (Requires Password)
 
     /// <summary>Signs a transaction. Requires password to derive private key from vault.</summary>
-    Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default);
+    Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, ReadOnlyMemory<byte> password, CancellationToken ct = default);
 
     /// <summary>
     /// Exports the mnemonic phrase via callback.
@@ -123,7 +123,7 @@ public interface IWalletManager
     /// that cannot be cleared from memory. If you must store temporarily, use char[]
     /// and call Array.Clear() when done.
     /// </summary>
-    Task ExportMnemonicAsync(Guid walletId, string password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default);
+    Task ExportMnemonicAsync(Guid walletId, ReadOnlyMemory<byte> password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default);
 
     #endregion
 
@@ -139,7 +139,7 @@ public interface IWalletManager
     /// - MAUI/native: API key is stored in OS secure storage.
     /// Pass null for apiKey to use default from appsettings.
     /// </summary>
-    Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default);
+    Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, ReadOnlyMemory<byte> password, string? name = null, CancellationToken ct = default);
 
     /// <summary>Removes custom provider config, reverting to appsettings default.</summary>
     Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
@@ -148,7 +148,7 @@ public interface IWalletManager
     /// Loads custom provider config into session (endpoint and decrypted API key).
     /// Call this after wallet unlock to enable custom provider for the session.
     /// </summary>
-    Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, string password, CancellationToken ct = default);
+    Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte> password, CancellationToken ct = default);
 
     #endregion
 }

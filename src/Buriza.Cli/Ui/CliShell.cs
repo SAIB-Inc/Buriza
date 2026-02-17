@@ -1,20 +1,20 @@
+using System.Collections;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Collections;
+using Buriza.Core.Interfaces;
+using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
 using Buriza.Data.Models;
 using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
 using Chrysalis.Network.Cbor.LocalStateQuery;
 using Spectre.Console;
-using Buriza.Core.Interfaces;
 
 namespace Buriza.Cli.Ui;
 
@@ -573,11 +573,19 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         if (string.IsNullOrWhiteSpace(password))
             return;
 
-        UnsignedTransaction unsignedTx = await active.BuildTransactionAsync(amount, toAddress);
-        Transaction signed = await _walletManager.SignTransactionAsync(active.Id, active.ActiveAccountIndex, 0, unsignedTx, password);
-        string txId = await active.SubmitAsync(signed);
-        AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");
-        Pause();
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try
+        {
+            UnsignedTransaction unsignedTx = await active.BuildTransactionAsync(amount, toAddress);
+            Transaction signed = await _walletManager.SignTransactionAsync(active.Id, active.ActiveAccountIndex, 0, unsignedTx, passwordBytes);
+            string txId = await active.SubmitAsync(signed);
+            AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");
+            Pause();
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
     }
 
     private async Task SetActiveWalletAsync()
@@ -615,6 +623,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         };
 
         await _walletManager.SetActiveChainAsync(active.Id, chainInfo, null);
+        _lastBalanceLovelace = null;
         AnsiConsole.MarkupLine("[bold]Network updated.[/]");
         Pause();
     }
@@ -637,8 +646,8 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             _ => ChainRegistry.CardanoMainnet
         };
 
-        await _walletManager.SetCustomProviderConfigAsync(chainInfo, endpoint, string.IsNullOrWhiteSpace(apiKey) ? null : apiKey, password);
-        await _walletManager.LoadCustomProviderConfigAsync(chainInfo, password);
+        await _walletManager.SetCustomProviderConfigAsync(chainInfo, endpoint, string.IsNullOrWhiteSpace(apiKey) ? null : apiKey, Encoding.UTF8.GetBytes(password));
+        await _walletManager.LoadCustomProviderConfigAsync(chainInfo, Encoding.UTF8.GetBytes(password));
         AnsiConsole.MarkupLine("[bold]Custom provider saved and loaded.[/]");
         Pause();
     }
@@ -670,12 +679,12 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         BurizaWallet active = await ResolveActiveWalletAsync(wallets);
 
         string password = AnsiConsole.Prompt(new TextPrompt<string>("Password:").Secret());
-        await _walletManager.ExportMnemonicAsync(active.Id, password, span =>
+        await _walletManager.ExportMnemonicAsync(active.Id, Encoding.UTF8.GetBytes(password), span =>
         {
-        AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
-            .BorderColor(Color.Grey)
-            .RoundedBorder()
-            .Padding(1, 0, 1, 0));
+            AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
+                .BorderColor(Color.Grey)
+                .RoundedBorder()
+                .Padding(1, 0, 1, 0));
         });
         Pause();
     }

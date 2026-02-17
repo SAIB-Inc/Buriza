@@ -60,18 +60,18 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// <summary>Creates the vault/seed for a wallet.</summary>
     public abstract Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default);
     /// <summary>Unlocks the vault/seed using the configured auth type.</summary>
-    public abstract Task<byte[]> UnlockVaultAsync(Guid walletId, string? passwordOrPin, string? biometricReason = null, CancellationToken ct = default);
+    public abstract Task<byte[]> UnlockVaultAsync(Guid walletId, ReadOnlyMemory<byte>? passwordOrPin, string? biometricReason = null, CancellationToken ct = default);
     /// <summary>Verifies a password for the wallet.</summary>
-    public abstract Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default);
+    public abstract Task<bool> VerifyPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default);
     /// <summary>Changes the wallet password.</summary>
-    public abstract Task ChangePasswordAsync(Guid walletId, string oldPassword, string newPassword, CancellationToken ct = default);
+    public abstract Task ChangePasswordAsync(Guid walletId, ReadOnlyMemory<byte> oldPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default);
     /// <summary>Deletes the vault/seed and associated auth state.</summary>
     public abstract Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default);
 
     /// <summary>Returns true if device auth is enabled for a wallet.</summary>
     public abstract Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default);
     /// <summary>Enables device auth for a wallet.</summary>
-    public abstract Task EnableDeviceAuthAsync(Guid walletId, string password, CancellationToken ct = default);
+    public abstract Task EnableDeviceAuthAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default);
     /// <summary>Disables device auth for a wallet.</summary>
     public abstract Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default);
     /// <summary>Prompts device auth and returns the protected payload.</summary>
@@ -84,7 +84,7 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// API key protection is platform-dependent:
     /// password-encrypted vault (web/extension/CLI) or OS secure storage (MAUI/native).
     /// </summary>
-    public abstract Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, string password, CancellationToken ct = default);
+    public abstract Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte> password, CancellationToken ct = default);
     /// <summary>Deletes custom provider config for a chain.</summary>
     public abstract Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
     /// <summary>
@@ -93,7 +93,7 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// </summary>
     public abstract Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
-        string password,
+        ReadOnlyMemory<byte> password,
         CancellationToken ct = default);
 
     protected static string GetCustomConfigKey(ChainInfo chainInfo)

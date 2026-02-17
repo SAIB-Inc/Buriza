@@ -26,6 +26,7 @@ public class WalletManagerServiceTests : IDisposable
     private readonly WalletManagerService _walletManager;
 
     private const string TestPassword = "TestPassword123!";
+    private static readonly byte[] TestPasswordBytes = Encoding.UTF8.GetBytes(TestPassword);
     private const string TestMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
     public WalletManagerServiceTests()
@@ -252,7 +253,7 @@ public class WalletManagerServiceTests : IDisposable
 
         // Act - Export mnemonic
         string? exportedMnemonic = null;
-        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPassword, mnemonic =>
+        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPasswordBytes, mnemonic =>
         {
             exportedMnemonic = mnemonic.ToString();
         });
@@ -479,7 +480,7 @@ public class WalletManagerServiceTests : IDisposable
         string? exportedMnemonic = null;
 
         // Act
-        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPassword, mnemonic =>
+        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPasswordBytes, mnemonic =>
         {
             exportedMnemonic = mnemonic.ToString();
         });
@@ -496,7 +497,7 @@ public class WalletManagerServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(() =>
-            _walletManager.ExportMnemonicAsync(wallet.Id, "WrongPassword", _ => { }));
+            _walletManager.ExportMnemonicAsync(wallet.Id, Encoding.UTF8.GetBytes("WrongPassword"), _ => { }));
     }
 
     #endregion
@@ -514,7 +515,7 @@ public class WalletManagerServiceTests : IDisposable
             ChainRegistryData.CardanoMainnet,
             "https://custom.endpoint.com",
             "custom-api-key",
-            TestPassword,
+            TestPasswordBytes,
             "My Custom Node");
 
         // Assert
@@ -536,7 +537,7 @@ public class WalletManagerServiceTests : IDisposable
                 ChainRegistryData.CardanoMainnet,
                 "not-a-valid-url",
                 "api-key",
-                TestPassword));
+                TestPasswordBytes));
     }
 
     [Fact]
@@ -547,7 +548,7 @@ public class WalletManagerServiceTests : IDisposable
             ChainRegistryData.CardanoMainnet,
             null,
             "custom-api-key",
-            TestPassword);
+            TestPasswordBytes);
 
         // Assert
         CustomProviderConfig? config = await _walletManager.GetCustomProviderConfigAsync(
@@ -566,14 +567,14 @@ public class WalletManagerServiceTests : IDisposable
             ChainRegistryData.CardanoMainnet,
             "https://test.com",
             "initial-key",
-            TestPassword);
+            TestPasswordBytes);
 
         // Act - Update without API key
         await _walletManager.SetCustomProviderConfigAsync(
             ChainRegistryData.CardanoMainnet,
             "https://test.com",
             null,
-            TestPassword);
+            TestPasswordBytes);
 
         // Assert
         CustomProviderConfig? config = await _walletManager.GetCustomProviderConfigAsync(
@@ -583,7 +584,7 @@ public class WalletManagerServiceTests : IDisposable
         Assert.False(config.HasCustomApiKey);
 
         (CustomProviderConfig Config, string? ApiKey)? result =
-            await _storage.GetCustomProviderConfigWithApiKeyAsync(ChainRegistryData.CardanoMainnet, TestPassword);
+            await _storage.GetCustomProviderConfigWithApiKeyAsync(ChainRegistryData.CardanoMainnet, TestPasswordBytes);
         Assert.NotNull(result);
         Assert.Null(result?.ApiKey);
     }
@@ -596,7 +597,7 @@ public class WalletManagerServiceTests : IDisposable
             ChainRegistryData.CardanoMainnet,
             "https://custom.com",
             "custom-key",
-            TestPassword);
+            TestPasswordBytes);
 
         // Act
         await _walletManager.ClearCustomProviderConfigAsync(ChainRegistryData.CardanoMainnet);

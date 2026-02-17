@@ -6,7 +6,7 @@ using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 namespace Buriza.Core.Interfaces.Chain;
 
 /// <summary>
-/// Buriza chain provider interface for UTxO RPC (U5C) operations.
+/// Buriza chain provider interface for query operations.
 /// Pure protocol operations - no chain-specific derivation or signing.
 /// </summary>
 public interface IBurizaChainProvider : IDisposable

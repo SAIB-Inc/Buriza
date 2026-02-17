@@ -34,7 +34,7 @@ public class VaultEncryptionIntegrationTests
 
         // Act
         await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
-        byte[] decrypted = await _walletStorage.UnlockVaultAsync(TestWalletId, TestPassword);
+        byte[] decrypted = await _walletStorage.UnlockVaultAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword));
 
         // Assert
         Assert.Equal(TestMnemonic, Encoding.UTF8.GetString(decrypted));
@@ -53,7 +53,7 @@ public class VaultEncryptionIntegrationTests
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(
-            () => _walletStorage.UnlockVaultAsync(TestWalletId, "WrongPassword!"));
+            () => _walletStorage.UnlockVaultAsync(TestWalletId, Encoding.UTF8.GetBytes("WrongPassword!")));
 
         // Cleanup
         CryptographicOperations.ZeroMemory(mnemonicBytes);
@@ -98,7 +98,7 @@ public class VaultEncryptionIntegrationTests
         await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
-        bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, TestPassword);
+        bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword));
 
         // Assert
         Assert.True(isValid);
@@ -115,7 +115,7 @@ public class VaultEncryptionIntegrationTests
         await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
-        bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, "WrongPassword!");
+        bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, Encoding.UTF8.GetBytes("WrongPassword!"));
 
         // Assert
         Assert.False(isValid);
@@ -128,7 +128,7 @@ public class VaultEncryptionIntegrationTests
     public async Task VerifyPassword_NoVault_ReturnsFalse()
     {
         // Act
-        bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, TestPassword);
+        bool isValid = await _walletStorage.VerifyPasswordAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword));
 
         // Assert
         Assert.False(isValid);
@@ -146,8 +146,8 @@ public class VaultEncryptionIntegrationTests
         await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
-        await _walletStorage.ChangePasswordAsync(TestWalletId, TestPassword, NewPassword);
-        byte[] decrypted = await _walletStorage.UnlockVaultAsync(TestWalletId, NewPassword);
+        await _walletStorage.ChangePasswordAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword), Encoding.UTF8.GetBytes(NewPassword));
+        byte[] decrypted = await _walletStorage.UnlockVaultAsync(TestWalletId, Encoding.UTF8.GetBytes(NewPassword));
 
         // Assert
         Assert.Equal(TestMnemonic, Encoding.UTF8.GetString(decrypted));
@@ -165,11 +165,11 @@ public class VaultEncryptionIntegrationTests
         await _walletStorage.CreateVaultAsync(TestWalletId, mnemonicBytes, Encoding.UTF8.GetBytes(TestPassword));
 
         // Act
-        await _walletStorage.ChangePasswordAsync(TestWalletId, TestPassword, NewPassword);
+        await _walletStorage.ChangePasswordAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword), Encoding.UTF8.GetBytes(NewPassword));
 
         // Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(
-            () => _walletStorage.UnlockVaultAsync(TestWalletId, TestPassword));
+            () => _walletStorage.UnlockVaultAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword)));
 
         // Cleanup
         CryptographicOperations.ZeroMemory(mnemonicBytes);
@@ -184,7 +184,7 @@ public class VaultEncryptionIntegrationTests
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(
-            () => _walletStorage.ChangePasswordAsync(TestWalletId, "WrongPassword!", NewPassword));
+            () => _walletStorage.ChangePasswordAsync(TestWalletId, Encoding.UTF8.GetBytes("WrongPassword!"), Encoding.UTF8.GetBytes(NewPassword)));
 
         // Cleanup
         CryptographicOperations.ZeroMemory(mnemonicBytes);
@@ -222,7 +222,7 @@ public class VaultEncryptionIntegrationTests
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _walletStorage.UnlockVaultAsync(TestWalletId, TestPassword));
+            () => _walletStorage.UnlockVaultAsync(TestWalletId, Encoding.UTF8.GetBytes(TestPassword)));
 
         // Cleanup
         CryptographicOperations.ZeroMemory(mnemonicBytes);
@@ -247,8 +247,8 @@ public class VaultEncryptionIntegrationTests
         await _walletStorage.CreateVaultAsync(walletId1, mnemonicBytes1, Encoding.UTF8.GetBytes("password1"));
         await _walletStorage.CreateVaultAsync(walletId2, mnemonicBytes2, Encoding.UTF8.GetBytes("password2"));
 
-        byte[] decrypted1 = await _walletStorage.UnlockVaultAsync(walletId1, "password1");
-        byte[] decrypted2 = await _walletStorage.UnlockVaultAsync(walletId2, "password2");
+        byte[] decrypted1 = await _walletStorage.UnlockVaultAsync(walletId1, Encoding.UTF8.GetBytes("password1"));
+        byte[] decrypted2 = await _walletStorage.UnlockVaultAsync(walletId2, Encoding.UTF8.GetBytes("password2"));
 
         // Assert
         Assert.Equal(mnemonic1, Encoding.UTF8.GetString(decrypted1));
@@ -275,7 +275,7 @@ public class VaultEncryptionIntegrationTests
 
         // Act & Assert - password1 shouldn't work for wallet 2
         await Assert.ThrowsAnyAsync<CryptographicException>(
-            () => _walletStorage.UnlockVaultAsync(walletId2, "password1"));
+            () => _walletStorage.UnlockVaultAsync(walletId2, Encoding.UTF8.GetBytes("password1")));
 
         // Cleanup
         CryptographicOperations.ZeroMemory(mnemonicBytes1);

@@ -178,7 +178,7 @@ public class WalletManagerService(
     #region Chain Management
 
     /// <inheritdoc/>
-    public async Task SetActiveChainAsync(Guid walletId, ChainInfo chainInfo, string? password = null, CancellationToken ct = default)
+    public async Task SetActiveChainAsync(Guid walletId, ChainInfo chainInfo, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         // Validate chain is supported
         if (!GetAvailableChains().Contains(chainInfo.Chain))
@@ -192,10 +192,10 @@ public class WalletManagerService(
         // Derive addresses for this chain if needed
         if (account.GetChainData(chainInfo.Chain, chainInfo.Network) == null)
         {
-            if (string.IsNullOrEmpty(password))
+            if (!password.HasValue || password.Value.IsEmpty)
                 throw new ArgumentException("Password is required to derive addresses for a new chain", nameof(password));
 
-            byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
+            byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password.Value, null, ct);
             try
             {
                 await DeriveAndSaveChainDataAsync(wallet, account.Index, chainInfo, mnemonicBytes, ct);
@@ -262,7 +262,7 @@ public class WalletManagerService(
     }
 
     /// <inheritdoc/>
-    public async Task UnlockAccountAsync(Guid walletId, int accountIndex, string password, CancellationToken ct = default)
+    public async Task UnlockAccountAsync(Guid walletId, int accountIndex, ReadOnlyMemory<byte> password, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
@@ -298,7 +298,7 @@ public class WalletManagerService(
     private const string DefaultAccountName = "Account {0}";
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, string password, int accountGapLimit = 5, CancellationToken ct = default)
+    public async Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, ReadOnlyMemory<byte> password, int accountGapLimit = 5, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         ChainInfo chainInfo = GetChainInfo(wallet);
@@ -372,11 +372,11 @@ public class WalletManagerService(
     #region Password Operations
 
     /// <inheritdoc/>
-    public Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default)
+    public Task<bool> VerifyPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default)
         => _storage.VerifyPasswordAsync(walletId, password, ct);
 
     /// <inheritdoc/>
-    public Task ChangePasswordAsync(Guid walletId, string currentPassword, string newPassword, CancellationToken ct = default)
+    public Task ChangePasswordAsync(Guid walletId, ReadOnlyMemory<byte> currentPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default)
         => _storage.ChangePasswordAsync(walletId, currentPassword, newPassword, ct);
 
     #endregion
@@ -384,7 +384,7 @@ public class WalletManagerService(
     #region Sensitive Operations (Requires Password)
 
     /// <inheritdoc/>
-    public async Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default)
+    public async Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, ReadOnlyMemory<byte> password, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         ChainInfo chainInfo = GetChainInfo(wallet);
@@ -406,7 +406,7 @@ public class WalletManagerService(
     }
 
     /// <inheritdoc/>
-    public async Task ExportMnemonicAsync(Guid walletId, string password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default)
+    public async Task ExportMnemonicAsync(Guid walletId, ReadOnlyMemory<byte> password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default)
     {
         await GetWalletOrThrowAsync(walletId, ct);
         byte[] mnemonicBytes = await _storage.UnlockVaultAsync(walletId, password, null, ct);
@@ -437,7 +437,7 @@ public class WalletManagerService(
         => _storage.GetCustomProviderConfigAsync(chainInfo, ct);
 
     /// <inheritdoc/>
-    public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default)
+    public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, ReadOnlyMemory<byte> password, string? name = null, CancellationToken ct = default)
     {
         string? normalizedEndpoint = ValidateAndNormalizeEndpoint(endpoint, nameof(endpoint));
         string? normalizedApiKey = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey;
@@ -465,7 +465,7 @@ public class WalletManagerService(
     }
 
     /// <inheritdoc/>
-    public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, string password, CancellationToken ct = default)
+    public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte> password, CancellationToken ct = default)
     {
         (CustomProviderConfig Config, string? ApiKey)? result =
             await _storage.GetCustomProviderConfigWithApiKeyAsync(chainInfo, password, ct);

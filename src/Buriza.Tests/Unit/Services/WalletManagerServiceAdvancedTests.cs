@@ -28,6 +28,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     private readonly WalletManagerService _walletManager;
 
     private const string TestPassword = "TestPassword123!";
+    private static readonly byte[] TestPasswordBytes = Encoding.UTF8.GetBytes(TestPassword);
     private const string TestMnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
 
     public WalletManagerServiceAdvancedTests()
@@ -73,7 +74,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         Assert.False(string.IsNullOrEmpty(originalAddress));
 
         // Act - Unlock the account (should no-op because chain data exists)
-        await _walletManager.UnlockAccountAsync(wallet.Id, 0, TestPassword);
+        await _walletManager.UnlockAccountAsync(wallet.Id, 0, TestPasswordBytes);
 
         // Assert - Address remains the same
         BurizaWallet? reloaded = await _storage.LoadWalletAsync(wallet.Id);
@@ -87,7 +88,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _walletManager.UnlockAccountAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), 0, TestPassword));
+            _walletManager.UnlockAccountAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), 0, TestPasswordBytes));
     }
 
     [Fact]
@@ -98,7 +99,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _walletManager.UnlockAccountAsync(wallet.Id, 99, TestPassword));
+            _walletManager.UnlockAccountAsync(wallet.Id, 99, TestPasswordBytes));
     }
 
     [Fact]
@@ -114,7 +115,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         Assert.Null(beforeAccount.GetChainData(ChainType.Cardano, NetworkType.Mainnet));
 
         // Act - Unlock the new account (should derive addresses since no chain data exists)
-        await _walletManager.UnlockAccountAsync(wallet.Id, newAccount.Index, TestPassword);
+        await _walletManager.UnlockAccountAsync(wallet.Id, newAccount.Index, TestPasswordBytes);
 
         // Assert - Chain data should now exist
         BurizaWallet? afterUnlock = await _storage.LoadWalletAsync(wallet.Id);
@@ -192,7 +193,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
 
         // Act
-        bool result = await _storage.VerifyPasswordAsync(wallet.Id, TestPassword);
+        bool result = await _storage.VerifyPasswordAsync(wallet.Id, TestPasswordBytes);
 
         // Assert
         Assert.True(result);
@@ -205,7 +206,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
 
         // Act
-        bool result = await _storage.VerifyPasswordAsync(wallet.Id, "WrongPassword!");
+        bool result = await _storage.VerifyPasswordAsync(wallet.Id, Encoding.UTF8.GetBytes("WrongPassword!"));
 
         // Assert
         Assert.False(result);
@@ -215,7 +216,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     public async Task VerifyPassword_WithNonExistentWallet_ReturnsFalse()
     {
         // Act
-        bool result = await _storage.VerifyPasswordAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), TestPassword);
+        bool result = await _storage.VerifyPasswordAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), TestPasswordBytes);
 
         // Assert
         Assert.False(result);
@@ -233,11 +234,11 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         const string newPassword = "NewPassword456!";
 
         // Act
-        await _storage.ChangePasswordAsync(wallet.Id, TestPassword, newPassword);
+        await _storage.ChangePasswordAsync(wallet.Id, TestPasswordBytes, Encoding.UTF8.GetBytes(newPassword));
 
         // Assert - Old password should no longer work
-        Assert.False(await _storage.VerifyPasswordAsync(wallet.Id, TestPassword));
-        Assert.True(await _storage.VerifyPasswordAsync(wallet.Id, newPassword));
+        Assert.False(await _storage.VerifyPasswordAsync(wallet.Id, TestPasswordBytes));
+        Assert.True(await _storage.VerifyPasswordAsync(wallet.Id, Encoding.UTF8.GetBytes(newPassword)));
     }
 
     [Fact]
@@ -248,10 +249,10 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         const string newPassword = "NewPassword456!";
 
         // Act
-        await _storage.ChangePasswordAsync(wallet.Id, TestPassword, newPassword);
+        await _storage.ChangePasswordAsync(wallet.Id, TestPasswordBytes, Encoding.UTF8.GetBytes(newPassword));
 
         // Assert - Should be able to decrypt and get same mnemonic
-        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(wallet.Id, newPassword);
+        byte[] mnemonicBytes = await _storage.UnlockVaultAsync(wallet.Id, Encoding.UTF8.GetBytes(newPassword));
         string decryptedMnemonic = Encoding.UTF8.GetString(mnemonicBytes);
         Assert.Equal(TestMnemonic, decryptedMnemonic);
 
@@ -267,7 +268,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<CryptographicException>(() =>
-            _storage.ChangePasswordAsync(wallet.Id, "WrongPassword!", "NewPassword456!"));
+            _storage.ChangePasswordAsync(wallet.Id, Encoding.UTF8.GetBytes("WrongPassword!"), Encoding.UTF8.GetBytes("NewPassword456!")));
     }
 
     #endregion
@@ -282,7 +283,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         int? exportedLength = null;
 
         // Act
-        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPassword, mnemonic =>
+        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPasswordBytes, mnemonic =>
         {
             exportedLength = mnemonic.Length;
         });
@@ -296,7 +297,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _walletManager.ExportMnemonicAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), TestPassword, _ => { }));
+            _walletManager.ExportMnemonicAsync(Guid.Parse("00000000-0000-0000-0000-0000000003e7"), TestPasswordBytes, _ => { }));
     }
 
     [Fact]
@@ -307,7 +308,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         string? exportedMnemonic = null;
 
         // Act
-        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPassword, mnemonic =>
+        await _walletManager.ExportMnemonicAsync(wallet.Id, TestPasswordBytes, mnemonic =>
         {
             exportedMnemonic = mnemonic.ToString();
         });
@@ -331,7 +332,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
 
         // Act - Create second account and unlock it
         BurizaWalletAccount account1 = await _walletManager.CreateAccountAsync(wallet.Id, "Account 2");
-        await _walletManager.UnlockAccountAsync(wallet.Id, account1.Index, TestPassword);
+        await _walletManager.UnlockAccountAsync(wallet.Id, account1.Index, TestPasswordBytes);
 
         // Assert - Addresses should be different
         BurizaWallet? reloaded = await _storage.LoadWalletAsync(wallet.Id);
