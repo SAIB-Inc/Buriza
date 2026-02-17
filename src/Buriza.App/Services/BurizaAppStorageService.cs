@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Buriza.Core.Crypto;
 using Buriza.Core.Interfaces.Security;
@@ -10,11 +9,12 @@ using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Security;
 using Buriza.Core.Models.Wallet;
 using Buriza.Core.Storage;
+using Konscious.Security.Cryptography;
 
 namespace Buriza.App.Services;
 
 /// <summary>
-/// MAUI storage service. Uses SecureStorage for seed + encrypted vault,
+/// MAUI storage service. Uses SecureStorage for seed, Argon2id password verifier for authentication,
 /// OS device authentication for biometric and device-passcode flows, and Preferences for metadata.
 /// </summary>
 public sealed class BurizaAppStorageService(
@@ -62,7 +62,6 @@ public sealed class BurizaAppStorageService(
         foreach (BurizaWallet wallet in wallets)
         {
             await RemoveSecureAsync(StorageKeys.SecureSeed(wallet.Id), ct);
-            await RemoveSecureAsync(StorageKeys.Vault(wallet.Id), ct);
             await _deviceAuthService.RemoveSecureAsync(StorageKeys.BiometricSeed(wallet.Id), ct);
         }
 
@@ -225,21 +224,21 @@ public sealed class BurizaAppStorageService(
     {
         string seed = Convert.ToBase64String(mnemonic);
         await SetSecureAsync(StorageKeys.SecureSeed(walletId), seed, ct);
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic, passwordBytes.Span);
-        await SetSecureJsonAsync(StorageKeys.Vault(walletId), vault, ct);
+
+        PasswordVerifier verifier = VaultEncryption.CreateVerifier(passwordBytes.Span);
+        await SetJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
+
         await SetAuthTypeAsync(walletId, AuthenticationType.Password, ct);
     }
 
     private async Task<byte[]> UnlockVaultWithPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default)
     {
-        EncryptedVault vault = await GetSecureJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
-            ?? throw new InvalidOperationException("Vault not found");
+        PasswordVerifier? verifier = await GetJsonAsync<PasswordVerifier>(StorageKeys.PasswordVerifier(walletId), ct)
+            ?? throw new InvalidOperationException("Password verifier not found");
 
-        // Decrypt to verify password — AES-GCM tag validates correctness
-        byte[] plaintext = VaultEncryption.Decrypt(vault, password.Span);
-        CryptographicOperations.ZeroMemory(plaintext);
+        if (!VaultEncryption.VerifyPasswordHash(verifier, password.Span))
+            throw new CryptographicException("Invalid password");
 
-        // Password verified — load seed from SecureStorage
         return await LoadSecureSeedAsync(walletId, ct);
     }
 
@@ -248,11 +247,8 @@ public sealed class BurizaAppStorageService(
         if (!await _deviceAuthService.IsAvailableAsync(ct))
             throw new InvalidOperationException("Device authentication is unavailable. Please re-enable it or use password authentication.");
 
-        DeviceAuthResult auth = await _deviceAuthService.AuthenticateAsync(reason, ct);
-        if (!auth.Success)
-            throw new CryptographicException(auth.ErrorMessage ?? "Device authentication failed");
-
-        return await LoadSecureSeedAsync(walletId, ct);
+        byte[]? seed = await _deviceAuthService.RetrieveSecureAsync(StorageKeys.BiometricSeed(walletId), reason, ct);
+        return seed ?? throw new InvalidOperationException("Biometric seed not found. Please re-enable biometric authentication.");
     }
 
     private async Task<byte[]> LoadSecureSeedAsync(Guid walletId, CancellationToken ct)
@@ -313,10 +309,10 @@ public sealed class BurizaAppStorageService(
     {
         await EnsureNotLockedAsync(walletId, ct);
 
-        EncryptedVault? vault = await GetSecureJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
-        if (vault is null) return false;
+        PasswordVerifier? verifier = await GetJsonAsync<PasswordVerifier>(StorageKeys.PasswordVerifier(walletId), ct);
+        if (verifier is null) return false;
 
-        bool ok = VaultEncryption.VerifyPassword(vault, password.Span);
+        bool ok = VaultEncryption.VerifyPasswordHash(verifier, password.Span);
         if (ok)
             await ResetLockoutStateAsync(walletId, ct);
         else
@@ -328,28 +324,11 @@ public sealed class BurizaAppStorageService(
     {
         await EnsureNotLockedAsync(walletId, ct);
 
-        // Decrypt vault to verify old password and get seed
-        EncryptedVault vault = await GetSecureJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
-            ?? throw new InvalidOperationException("Vault not found");
+        if (!await VerifyPasswordAsync(walletId, oldPassword, ct))
+            throw new CryptographicException("Invalid password");
 
-        byte[]? mnemonicBytes = null;
-        try
-        {
-            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPassword.Span);
-            EncryptedVault newVault = VaultEncryption.Encrypt(walletId, mnemonicBytes, newPassword.Span);
-            await SetSecureJsonAsync(StorageKeys.Vault(walletId), newVault, ct);
-        }
-        catch (CryptographicException)
-        {
-            await RegisterFailedAttemptAsync(walletId, ct);
-            throw;
-        }
-        finally
-        {
-            if (mnemonicBytes is not null)
-                CryptographicOperations.ZeroMemory(mnemonicBytes);
-        }
-
+        PasswordVerifier verifier = VaultEncryption.CreateVerifier(newPassword.Span);
+        await SetJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
         await ResetLockoutStateAsync(walletId, ct);
 
         // Invalidate biometric/PIN auth — user must re-enable after password change
@@ -360,14 +339,14 @@ public sealed class BurizaAppStorageService(
 
     public override async Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default)
     {
-        await RemoveAsync(StorageKeys.Vault(walletId), ct);
+        await RemoveAsync(StorageKeys.PasswordVerifier(walletId), ct);
         await RemoveAsync(StorageKeys.PinVault(walletId), ct);
         await RemoveAsync(StorageKeys.AuthType(walletId), ct);
         await RemoveAsync(StorageKeys.AuthTypeHmac(walletId), ct);
         await RemoveAsync(StorageKeys.LockoutState(walletId), ct);
 
         await RemoveSecureAsync(StorageKeys.SecureSeed(walletId), ct);
-        await RemoveSecureAsync(StorageKeys.Vault(walletId), ct);
+        await RemoveSecureAsync(StorageKeys.LockoutActive(walletId), ct);
 
         await _deviceAuthService.RemoveSecureAsync(StorageKeys.BiometricSeed(walletId), ct);
     }
@@ -387,7 +366,16 @@ public sealed class BurizaAppStorageService(
         if (!await VerifyPasswordAsync(walletId, password, ct))
             throw new CryptographicException("Invalid password");
 
-        // Biometric mode uses OS device authentication at unlock time with secure seed storage.
+        byte[] seed = await LoadSecureSeedAsync(walletId, ct);
+        try
+        {
+            await _deviceAuthService.StoreSecureAsync(StorageKeys.BiometricSeed(walletId), seed, ct);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(seed);
+        }
+
         await SetAuthTypeAsync(walletId, AuthenticationType.Biometric, ct);
     }
 
@@ -486,15 +474,27 @@ public sealed class BurizaAppStorageService(
         }
 
         await SaveLockoutStateAsync(walletId, failedAttempts, lockoutEndUtc, ct);
+        await SetSecureAsync(StorageKeys.LockoutActive(walletId), "true", ct);
     }
 
-    private Task ResetLockoutStateAsync(Guid walletId, CancellationToken ct)
-        => RemoveAsync(StorageKeys.LockoutState(walletId), ct);
+    private async Task ResetLockoutStateAsync(Guid walletId, CancellationToken ct)
+    {
+        await RemoveAsync(StorageKeys.LockoutState(walletId), ct);
+        await RemoveSecureAsync(StorageKeys.LockoutActive(walletId), ct);
+    }
 
     private async Task<LockoutState?> TryGetLockoutStateAsync(Guid walletId, CancellationToken ct)
     {
         string? json = await GetAsync(StorageKeys.LockoutState(walletId), ct);
-        if (string.IsNullOrEmpty(json)) return null;
+        if (string.IsNullOrEmpty(json))
+        {
+            // If SecureStorage flag exists but Preferences state was deleted — tampering
+            string? activeFlag = await GetSecureAsync(StorageKeys.LockoutActive(walletId), ct);
+            if (!string.IsNullOrEmpty(activeFlag))
+                return await BuildTamperedLockoutStateAsync(walletId, ct);
+
+            return null;
+        }
 
         LockoutState? state;
         try
@@ -694,32 +694,6 @@ public sealed class BurizaAppStorageService(
         }
     }
 
-    
-    #region Secure JSON Helpers
-
-    private async Task<T?> GetSecureJsonAsync<T>(string key, CancellationToken ct = default)
-    {
-        string? json = await GetSecureAsync(key, ct);
-        if (string.IsNullOrEmpty(json))
-            return default;
-
-        try
-        {
-            return JsonSerializer.Deserialize<T>(json);
-        }
-        catch (JsonException ex)
-        {
-            throw new InvalidOperationException($"Failed to deserialize secure storage key '{key}'.", ex);
-        }
-    }
-
-    private async Task SetSecureJsonAsync<T>(string key, T value, CancellationToken ct = default)
-    {
-        string json = JsonSerializer.Serialize(value);
-        await SetSecureAsync(key, json, ct);
-    }
-
-    #endregion
 
 #endregion
 }

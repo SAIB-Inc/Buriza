@@ -64,6 +64,7 @@ public static class VaultEncryption
             CryptographicOperations.ZeroMemory(combined);
             CryptographicOperations.ZeroMemory(ciphertext);
             CryptographicOperations.ZeroMemory(tag);
+            CryptographicOperations.ZeroMemory(aad);
         }
     }
 
@@ -115,6 +116,7 @@ public static class VaultEncryption
             CryptographicOperations.ZeroMemory(ciphertext);
             CryptographicOperations.ZeroMemory(tag);
             CryptographicOperations.ZeroMemory(combined);
+            CryptographicOperations.ZeroMemory(aad);
         }
     }
 
@@ -132,6 +134,65 @@ public static class VaultEncryption
         catch (CryptographicException)
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Creates an Argon2id password verifier (salt + hash) without encrypting any data.
+    /// Used by MAUI where the seed is stored directly in OS secure storage.
+    /// </summary>
+    public static PasswordVerifier CreateVerifier(ReadOnlySpan<byte> passwordBytes, KeyDerivationOptions? options = null)
+    {
+        options ??= KeyDerivationOptions.Default;
+        byte[] salt = RandomNumberGenerator.GetBytes(options.SaltSize);
+        byte[] hash = DeriveKey(passwordBytes, salt, options);
+
+        try
+        {
+            return new PasswordVerifier
+            {
+                Salt = Convert.ToBase64String(salt),
+                Hash = Convert.ToBase64String(hash)
+            };
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(salt);
+            CryptographicOperations.ZeroMemory(hash);
+        }
+    }
+
+    /// <summary>
+    /// Verifies a password against an Argon2id verifier using constant-time comparison.
+    /// </summary>
+    public static bool VerifyPasswordHash(PasswordVerifier verifier, ReadOnlySpan<byte> passwordBytes)
+    {
+        if (string.IsNullOrEmpty(verifier.Salt) || string.IsNullOrEmpty(verifier.Hash))
+            return false;
+
+        byte[] salt, storedHash;
+        try
+        {
+            salt = Convert.FromBase64String(verifier.Salt);
+            storedHash = Convert.FromBase64String(verifier.Hash);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+
+        KeyDerivationOptions options = KeyDerivationOptions.Default;
+        byte[] computed = DeriveKey(passwordBytes, salt, options);
+
+        try
+        {
+            return CryptographicOperations.FixedTimeEquals(storedHash, computed);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(salt);
+            CryptographicOperations.ZeroMemory(storedHash);
+            CryptographicOperations.ZeroMemory(computed);
         }
     }
 

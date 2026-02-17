@@ -42,6 +42,9 @@ public static class StorageKeys
     /// <summary>Gets the secure storage key for a wallet's seed (direct storage).</summary>
     public static string SecureSeed(Guid walletId) => $"buriza_secure_seed_{walletId:N}";
 
+    /// <summary>Gets the storage key for a wallet's Argon2id password verifier (MAUI only).</summary>
+    public static string PasswordVerifier(Guid walletId) => $"buriza_pw_verifier_{walletId:N}";
+
     /// <summary>Gets the storage key for a chain's encrypted API key vault.</summary>
     public static string ApiKeyVault(int chain, int network) => $"buriza_apikey_{chain}_{network}";
 
@@ -58,8 +61,11 @@ public static class StorageKeys
     /// <summary>Gets the storage key for a wallet's authentication type HMAC.</summary>
     public static string AuthTypeHmac(Guid walletId) => $"buriza_auth_type_hmac_{walletId:N}";
 
-    /// <summary>Gets the secure storage key for HMAC-protected lockout state.</summary>
+    /// <summary>Gets the storage key for HMAC-protected lockout state (Preferences).</summary>
     public static string LockoutState(Guid walletId) => $"buriza_lockout_state_{walletId:N}";
+
+    /// <summary>Gets the secure storage key for lockout-active flag (SecureStorage). Detects Preferences deletion.</summary>
+    public static string LockoutActive(Guid walletId) => $"buriza_lockout_active_{walletId:N}";
 
     /// <summary>Key for storing the lockout HMAC key (installation scoped).</summary>
     public const string LockoutKey = "buriza_lockout_hmac_key";
