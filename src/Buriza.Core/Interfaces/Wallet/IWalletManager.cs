@@ -84,8 +84,8 @@ public interface IWalletManager
     /// <summary>Unlocks an account by deriving addresses for the active chain. Requires password.</summary>
     Task UnlockAccountAsync(Guid walletId, int accountIndex, ReadOnlyMemory<byte> password, CancellationToken ct = default);
 
-    /// <summary>Renames an account.</summary>
-    Task RenameAccountAsync(Guid walletId, int accountIndex, string newName, CancellationToken ct = default);
+    /// <summary>Updates account profile (name, avatar). Only non-null fields are applied.</summary>
+    Task UpdateAccountAsync(Guid walletId, int accountIndex, string? name = null, string? avatar = null, CancellationToken ct = default);
 
     /// <summary>
     /// Discovers accounts by scanning for transaction history.

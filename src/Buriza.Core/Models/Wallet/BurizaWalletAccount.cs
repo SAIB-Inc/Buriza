@@ -14,6 +14,9 @@ public class BurizaWalletAccount
     /// <summary>Account name (e.g., "Savings", "Trading").</summary>
     public required string Name { get; set; }
 
+    /// <summary>Optional avatar/image for visual distinction between accounts.</summary>
+    public string? Avatar { get; set; }
+
     /// <summary>Chain-specific address data, keyed by ChainType and Network.</summary>
     public Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>> ChainData { get; set; } = [];
 

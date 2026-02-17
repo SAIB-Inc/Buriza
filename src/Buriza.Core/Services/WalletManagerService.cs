@@ -283,11 +283,14 @@ public class WalletManagerService(
     }
 
     /// <inheritdoc/>
-    public async Task RenameAccountAsync(Guid walletId, int accountIndex, string newName, CancellationToken ct = default)
+    public async Task UpdateAccountAsync(Guid walletId, int accountIndex, string? name = null, string? avatar = null, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         BurizaWalletAccount account = GetAccountOrThrow(wallet, accountIndex);
-        account.Name = newName;
+
+        if (name is not null) account.Name = name;
+        if (avatar is not null) account.Avatar = avatar;
+
         await _storage.SaveWalletAsync(wallet, ct);
     }
 
@@ -299,7 +302,7 @@ public class WalletManagerService(
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         ChainInfo chainInfo = GetChainInfo(wallet);
-        IBurizaChainProvider provider = GetProviderForWallet(wallet);
+        using IBurizaChainProvider provider = GetProviderForWallet(wallet);
         IKeyService keyService = _providerFactory.CreateKeyService(chainInfo);
 
         List<BurizaWalletAccount> discoveredAccounts = [];

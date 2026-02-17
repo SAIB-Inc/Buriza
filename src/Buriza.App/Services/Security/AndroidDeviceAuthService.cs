@@ -331,6 +331,9 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result)
             => tcs.TrySetResult(DeviceAuthResult.Succeeded());
 
+        // Intentionally empty: OnAuthenticationFailed fires per-attempt (e.g., fingerprint mismatch).
+        // The user can retry. Android guarantees OnAuthenticationError is called on terminal failure
+        // (lockout, cancel, timeout), which resolves the tcs.
         public override void OnAuthenticationFailed() { }
 
         public override void OnAuthenticationError(int errorCode, Java.Lang.ICharSequence? errString)
@@ -379,6 +382,8 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             }
         }
 
+        // Intentionally empty: per-attempt notification, user can retry.
+        // Terminal failures go through OnAuthenticationError.
         public override void OnAuthenticationFailed() { }
 
         public override void OnAuthenticationError(int errorCode, Java.Lang.ICharSequence? errString)
@@ -415,6 +420,8 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             }
         }
 
+        // Intentionally empty: per-attempt notification, user can retry.
+        // Terminal failures go through OnAuthenticationError.
         public override void OnAuthenticationFailed() { }
 
         public override void OnAuthenticationError(int errorCode, Java.Lang.ICharSequence? errString)
