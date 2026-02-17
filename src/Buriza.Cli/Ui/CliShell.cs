@@ -12,7 +12,6 @@ using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
 using Buriza.Core.Services;
 using Buriza.Data.Models;
-using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
 using Chrysalis.Network.Cbor.LocalStateQuery;
 using Spectre.Console;
 
@@ -217,7 +216,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
     private async Task ShowProtocolParametersAsync()
     {
         BurizaWallet active = await RequireActiveWalletAsync();
-        ProtocolParams parameters = await active.GetProtocolParametersAsync();
+        ProtocolParams parameters = (ProtocolParams)await active.GetProtocolParametersAsync();
 
         Table table = new();
         table.AddColumn("Field");
@@ -577,7 +576,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         try
         {
             UnsignedTransaction unsignedTx = await active.BuildTransactionAsync(amount, toAddress);
-            Transaction signed = await _walletManager.SignTransactionAsync(active.Id, active.ActiveAccountIndex, 0, unsignedTx, passwordBytes);
+            object signed = await _walletManager.SignTransactionAsync(active.Id, active.ActiveAccountIndex, 0, unsignedTx, passwordBytes);
             string txId = await active.SubmitAsync(signed);
             AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");
             Pause();

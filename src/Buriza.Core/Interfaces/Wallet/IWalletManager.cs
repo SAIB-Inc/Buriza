@@ -3,8 +3,6 @@ using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
-using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
-
 namespace Buriza.Core.Interfaces.Wallet;
 
 /// <summary>
@@ -111,7 +109,7 @@ public interface IWalletManager
     #region Sensitive Operations (Requires Password)
 
     /// <summary>Signs a transaction. Requires password to derive private key from vault.</summary>
-    Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, ReadOnlyMemory<byte> password, CancellationToken ct = default);
+    Task<object> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, ReadOnlyMemory<byte> password, CancellationToken ct = default);
 
     /// <summary>
     /// Exports the mnemonic phrase via callback.

@@ -10,9 +10,6 @@ using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
 using Chrysalis.Wallet.Models.Keys;
-using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
-
-
 namespace Buriza.Core.Services;
 
 /// <inheritdoc />
@@ -384,7 +381,7 @@ public class WalletManagerService(
     #region Sensitive Operations (Requires Password)
 
     /// <inheritdoc/>
-    public async Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    public async Task<object> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, ReadOnlyMemory<byte> password, CancellationToken ct = default)
     {
         BurizaWallet wallet = await GetWalletOrThrowAsync(walletId, ct);
         ChainInfo chainInfo = GetChainInfo(wallet);
@@ -394,8 +391,7 @@ public class WalletManagerService(
         try
         {
             privateKey = await keyService.DerivePrivateKeyAsync(mnemonicBytes, chainInfo, accountIndex, addressIndex, ct: ct);
-            object signedTx = wallet.Sign(unsignedTx, privateKey);
-            return signedTx as Transaction ?? throw new InvalidOperationException("Failed to sign transaction");
+            return wallet.Sign(unsignedTx, privateKey);
         }
         finally
         {

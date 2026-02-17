@@ -15,8 +15,6 @@ using Chrysalis.Tx.Models;
 using Chrysalis.Wallet.Models.Keys;
 using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
 using ChrysalisTransaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
-using Chrysalis.Network.Cbor.LocalStateQuery;
-
 namespace Buriza.Core.Models.Wallet;
 
 /// <summary>
@@ -114,7 +112,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
         return await provider.GetTransactionHistoryAsync(address, limit, ct);
     }
 
-    public async Task<ProtocolParams> GetProtocolParametersAsync(CancellationToken ct = default)
+    public async Task<object> GetProtocolParametersAsync(CancellationToken ct = default)
     {
         using IBurizaChainProvider provider = EnsureProvider();
         return await provider.GetParametersAsync(ct);

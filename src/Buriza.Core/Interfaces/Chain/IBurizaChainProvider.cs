@@ -1,7 +1,5 @@
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Transaction;
-using Chrysalis.Network.Cbor.LocalStateQuery;
-using Transaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
 
 namespace Buriza.Core.Interfaces.Chain;
 
@@ -29,11 +27,11 @@ public interface IBurizaChainProvider : IDisposable
     /// <summary>Gets transaction history for the given address.</summary>
     Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(string address, int limit = 50, CancellationToken ct = default);
 
-    /// <summary>Gets protocol parameters.</summary>
-    Task<ProtocolParams> GetParametersAsync(CancellationToken ct = default);
+    /// <summary>Gets protocol parameters. Returns chain-specific parameter object.</summary>
+    Task<object> GetParametersAsync(CancellationToken ct = default);
 
-    /// <summary>Reads a transaction by hash and returns the deserialized CBOR Transaction.</summary>
-    Task<Transaction?> ReadTxAsync(string txHash, CancellationToken ct = default);
+    /// <summary>Reads a transaction by hash. Returns chain-specific transaction object.</summary>
+    Task<object?> ReadTxAsync(string txHash, CancellationToken ct = default);
 
     /// <summary>Submits a raw transaction (CBOR bytes).</summary>
     Task<string> SubmitAsync(byte[] txBytes, CancellationToken ct = default);

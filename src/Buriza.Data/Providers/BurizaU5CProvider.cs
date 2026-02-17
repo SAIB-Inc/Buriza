@@ -120,6 +120,9 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
         return GetTransactionMetadataCoreAsync(request);
     }
 
+    async Task<object?> IBurizaChainProvider.ReadTxAsync(string txHash, CancellationToken ct)
+        => await ReadTxAsync(txHash, ct);
+
     public async Task<Transaction?> ReadTxAsync(string txHash, CancellationToken ct = default)
     {
         UtxorpcQuery.ReadTxRequest request = new()
@@ -155,6 +158,9 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
             return false;
         }
     }
+
+    async Task<object> IBurizaChainProvider.GetParametersAsync(CancellationToken ct)
+        => await GetParametersAsync(ct);
 
     public async Task<ProtocolParams> GetParametersAsync(CancellationToken ct = default)
     {
