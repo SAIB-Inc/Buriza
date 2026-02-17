@@ -64,31 +64,31 @@ Buriza.Core/
 ├── Interfaces/
 │   ├── Chain/
 │   │   ├── IBurizaChainProvider.cs # Chain provider abstraction
-│   │   └── IKeyService.cs          # Chain-agnostic key operations
+│   │   └── IKeyService.cs          # Chain-specific key derivation
 │   ├── IBurizaChainProviderFactory.cs # Provider + key service factory
 │   ├── Storage/
 │   │   ├── IStorageProvider.cs     # Low-level key-value storage
-│   │   └── BurizaStorageBase.cs # Wallet persistence + vault
+│   │   └── BurizaStorageBase.cs    # Wallet persistence + vault
 │   ├── Wallet/
 │   │   ├── IWallet.cs              # Wallet query/transaction interface
 │   │   └── IWalletManager.cs       # Main wallet management facade
 ├── Extensions/
 │   └── StorageProviderExtensions.cs # JSON helpers for storage providers
 ├── Services/
-│   ├── CardanoKeyService.cs        # Cardano key derivation
+│   ├── CardanoKeyService.cs        # Cardano CIP-1852 key derivation
 │   ├── MnemonicService.cs          # BIP-39 mnemonic operations
-│   ├── NullBiometricService.cs     # No-op biometric implementation
+│   ├── HeartbeatService.cs         # Chain tip monitoring
 │   └── WalletManagerService.cs     # IWalletManager implementation
 ├── Crypto/
 │   ├── VaultEncryption.cs          # Argon2id + AES-256-GCM encryption
 │   └── KeyDerivationOptions.cs     # Argon2id parameters
 ├── Models/
-│   ├── Chain/                      # Chain metadata + registry
+│   ├── Chain/                      # ChainInfo, ChainRegistry, ChainTip
 │   ├── Config/                     # Provider/data service configs
 │   ├── Enums/                      # Chain/network/auth enums
 │   ├── Security/                   # EncryptedVault, LockoutState
 │   ├── Transaction/                # Requests + unsigned tx
-│   └── Wallet/                     # Wallet + account + address data
+│   └── Wallet/                     # BurizaWallet, ChainAddressData, WalletProfile
 └── Usage.md                        # Detailed usage examples
 ```
 
@@ -163,7 +163,7 @@ AppState override (endpoint/apiKey) → appsettings defaults → error if missin
 Chain operations for querying and submitting transactions.
 
 ### IKeyService
-Chain-specific key derivation (e.g., Cardano CIP-1852).
+Chain-specific key derivation. Returns `ChainAddressData` directly (address, staking address, symbol). Cardano implementation uses CIP-1852 derivation paths.
 
 ### IBurizaChainProviderFactory
 Creates providers and key services, and validates endpoints.
@@ -191,7 +191,7 @@ Uses `ChainProviderSettings` + session overrides to create `IBurizaChainProvider
 ## Models
 
 ### BurizaWallet / BurizaWalletAccount / ChainAddressData
-Wallet profile, accounts, and per-chain address data.
+Wallet profile, accounts, and per-chain address data. `ChainAddressData` stores address, staking address, symbol (e.g., "ADA", "tADA"), chain/network type, and sync timestamp.
 
 ### EncryptedVault
 Encrypted mnemonic format (wallet-bound via AAD). `WalletId` is a `Guid`.
@@ -223,9 +223,10 @@ See [Architecture/Security.md](../Buriza.Docs/Architecture/Security.md) for full
 
 ### Memory Safety
 
-Sensitive data is zeroed after use:
+All sensitive APIs use byte arrays with explicit zeroing. `VaultEncryption.Encrypt`, `Decrypt`, and `VerifyPassword` accept `ReadOnlySpan<byte>` — callers handle string-to-byte conversion and zeroing.
 
 ```csharp
+// Internal: vault unlock returns bytes
 byte[] mnemonicBytes = await storage.UnlockVaultAsync(walletId, password, null, ct);
 try
 {
@@ -235,19 +236,33 @@ finally
 {
     CryptographicOperations.ZeroMemory(mnemonicBytes);
 }
+
+// External: callers convert and zero
+byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
+byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+try
+{
+    await walletManager.CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes);
+}
+finally
+{
+    CryptographicOperations.ZeroMemory(mnemonicBytes);
+    CryptographicOperations.ZeroMemory(passwordBytes);
+}
 ```
 
 ### Password Requirements
 
 | Operation | Password Required | Why |
 |-----------|-------------------|-----|
-| Create/Import wallet | Yes | Encrypt mnemonic |
-| Get balance/assets | No | Uses cached addresses |
+| Create/Import wallet | Yes (as bytes) | Encrypt mnemonic |
+| Get address/balance/assets | No | Uses persisted `ChainAddressData` |
 | Build transaction | No | Only needs addresses |
 | Sign transaction | Yes | Derives private key |
 | Export mnemonic | Yes | Decrypt vault |
-| Set active chain | Yes | Derive new addresses |
+| Set active chain | Conditional | Only if chain data not yet derived |
 | Unlock account | Yes | Derive new addresses |
+| Discover accounts | Yes | Derive addresses for each index |
 
 ### What's Never Stored
 
@@ -331,8 +346,23 @@ See [Usage.md](./Usage.md) for detailed examples including:
 using var factory = new BurizaChainProviderFactory(appState, settings);
 var walletManager = new WalletManagerService(storage, factory);
 
-// Create wallet from existing mnemonic (uses default provider config)
-var wallet = await walletManager.CreateFromMnemonicAsync("My Wallet", "mnemonic words...", "password123");
+// Create wallet (byte-based API — callers must zero after use)
+byte[] mnemonicBytes = Encoding.UTF8.GetBytes("mnemonic words...");
+byte[] passwordBytes = Encoding.UTF8.GetBytes("password123");
+BurizaWallet wallet;
+try
+{
+    wallet = await walletManager.CreateFromMnemonicAsync("My Wallet", mnemonicBytes, passwordBytes);
+}
+finally
+{
+    CryptographicOperations.ZeroMemory(mnemonicBytes);
+    CryptographicOperations.ZeroMemory(passwordBytes);
+}
+
+// Access address (no password needed — stored in wallet metadata)
+string? address = wallet.GetAddressInfo()?.Address;
+string? stakingAddress = wallet.GetAddressInfo()?.StakingAddress;
 
 // Query balance (no password needed)
 ulong balance = await wallet.GetBalanceAsync();

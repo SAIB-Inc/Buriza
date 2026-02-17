@@ -50,12 +50,12 @@ Buriza supports biometric authentication on MAUI platforms (iOS, Android, macOS,
 
 ## Interfaces
 
-### IBiometricService
+### IDeviceAuthService
 
 Platform-specific biometric abstraction. Implemented per-platform in MAUI.
 
 ```csharp
-public interface IBiometricService
+public interface IDeviceAuthService
 {
     Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
     Task<bool> IsAvailableAsync(CancellationToken ct = default);
@@ -81,15 +81,20 @@ Uses `LocalAuthentication` framework with `LAContext`:
 - Keychain for secure password storage with biometric access control
 
 **Key Security Features:**
-- `SecAccessControlCreateFlags.BiometryCurrentSet` - Ties data to currently enrolled biometrics. If user adds/removes a fingerprint or Face ID, the data becomes inaccessible (more secure than `BiometryAny`)
+- `SecAccessControlCreateFlags.UserPresence` - Requires user presence via biometric or device passcode. This is intentional: `IDeviceAuthService` serves both biometric and PIN/passcode auth modes, so `BiometryCurrentSet` would break non-biometric users
 - `SecAccessible.WhenPasscodeSetThisDeviceOnly` - Data only accessible when device has passcode, not synced to other devices
-- Keychain automatically prompts for biometric auth when accessing protected items
+- Biometric-only enforcement is at the application layer (`BurizaAppStorageService`), not at the Keychain level
+
+**Why not `BiometryCurrentSet`?**
+- `BiometryCurrentSet` ties Keychain items exclusively to biometric enrollment — passcode cannot satisfy the access control
+- Since `IDeviceAuthService.StoreSecureAsync/RetrieveSecureAsync` is a shared API for all auth types, `BiometryCurrentSet` would make items inaccessible for users without biometric enrollment
+- The seed itself is stored in MAUI `SecureStorage` (not in the biometric-gated Keychain), so biometric gating is a proof-of-presence check, not a storage-level binding
 
 ```csharp
 // Create SecAccessControl - AccessControl and Accessible are mutually exclusive
 SecAccessControl accessControl = new(
     SecAccessible.WhenPasscodeSetThisDeviceOnly,
-    SecAccessControlCreateFlags.BiometryCurrentSet);
+    SecAccessControlCreateFlags.UserPresence);
 
 SecRecord record = new(SecKind.GenericPassword)
 {
@@ -161,9 +166,9 @@ var result = await UserConsentVerifier.RequestVerificationAsync(reason);
 Platform selector that routes to the correct implementation based on runtime platform:
 
 ```csharp
-public class PlatformBiometricService : IBiometricService
+public class PlatformBiometricService : IDeviceAuthService
 {
-    private readonly IBiometricService _platformService;
+    private readonly IDeviceAuthService _platformService;
 
     public PlatformBiometricService()
     {
@@ -182,17 +187,21 @@ public class PlatformBiometricService : IBiometricService
 
 ## Security Model
 
-### Password Never Stored in Plaintext
+### DirectSecure Mode (MAUI)
 
-The password is encrypted before storage:
-1. **Biometric**: Password stored in platform secure storage (Keychain/Keystore/CredentialLocker), protected by biometric access control
-2. **PIN**: Password encrypted with PIN-derived key using Argon2id + AES-256-GCM
+In DirectSecure mode, the seed is stored in MAUI `SecureStorage` (Keychain on iOS/macOS, Keystore-backed EncryptedSharedPreferences on Android, DPAPI on Windows). It is **not** additionally encrypted by the application — OS-level protection is the primary defense.
+
+Important: MAUI `SecureStorage` does not expose biometric access control flags. The biometric check is an **application-layer gate** (proof of presence), not a storage-level binding. After biometric authentication succeeds, the seed is read from `SecureStorage` without further biometric challenge at the OS level.
+
+1. **Biometric unlock**: `IDeviceAuthService.AuthenticateAsync()` prompts biometric → on success, seed loaded from `SecureStorage`
+2. **Password unlock**: Password verified against `SecretVerifierPayload` (Argon2id hash) → on success, seed loaded from `SecureStorage`
 
 ### Biometric is a Convenience Layer
 
-- The underlying vault encryption (Argon2id + AES-256-GCM) remains the security foundation
-- Biometric only provides quick access to the password
+- Biometric provides quick proof-of-presence, gated at the application layer
+- The seed in `SecureStorage` is protected by OS security (Keychain/Keystore/DPAPI), not by biometric access control
 - User can always fall back to manual password entry
+- On password change, biometric auth is automatically disabled (user must re-enable)
 
 ### Lockout Protection
 
@@ -206,7 +215,7 @@ The password is encrypted before storage:
 src/
 ├── Buriza.Core/
 │   ├── Interfaces/Security/
-│   │   └── IBiometricService.cs      # Platform biometric abstraction
+│   │   └── IDeviceAuthService.cs      # Platform biometric abstraction
 │   └── Services/
 │       └── NullBiometricService.cs   # Null pattern for non-MAUI platforms
 │
