@@ -1,4 +1,5 @@
 #if WINDOWS
+using System.Security.Cryptography;
 using Windows.Security.Credentials;
 using Windows.Security.Credentials.UI;
 using Buriza.Core.Interfaces.Security;
@@ -13,6 +14,7 @@ namespace Buriza.App.Services.Security;
 /// Security model:
 /// - UserConsentVerifier provides Windows Hello authentication (face, fingerprint, PIN)
 /// - PasswordVault (Credential Locker) stores credentials encrypted by the OS
+/// - Data is additionally encrypted with DPAPI (CurrentUser scope) before storage
 /// - Credentials are tied to the user account and protected by Windows security
 ///
 /// References:
@@ -78,14 +80,15 @@ public class WindowsDeviceAuthService : IDeviceAuthService
 
     public async Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
     {
-        // First authenticate
         DeviceAuthResult authResult = await AuthenticateAsync("Authenticate to save credentials", ct);
         if (!authResult.Success)
             throw new InvalidOperationException($"Windows Hello authentication required: {authResult.ErrorMessage}");
 
+        byte[] entropy = System.Text.Encoding.UTF8.GetBytes(key);
+        byte[] encrypted = ProtectedData.Protect(data, entropy, DataProtectionScope.CurrentUser);
+
         PasswordVault vault = new();
 
-        // Remove existing if present
         try
         {
             PasswordCredential existing = vault.Retrieve(ResourceName, key);
@@ -93,17 +96,15 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         }
         catch (Exception)
         {
-            // Credential doesn't exist, that's fine
+            // Credential doesn't exist
         }
 
-        // Store new credential
-        PasswordCredential credential = new(ResourceName, key, Convert.ToBase64String(data));
+        PasswordCredential credential = new(ResourceName, key, Convert.ToBase64String(encrypted));
         vault.Add(credential);
     }
 
     public async Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
     {
-        // First authenticate
         DeviceAuthResult authResult = await AuthenticateAsync(reason, ct);
         if (!authResult.Success)
             return null;
@@ -117,7 +118,9 @@ public class WindowsDeviceAuthService : IDeviceAuthService
             if (string.IsNullOrEmpty(credential.Password))
                 return null;
 
-            return Convert.FromBase64String(credential.Password);
+            byte[] encrypted = Convert.FromBase64String(credential.Password);
+            byte[] entropy = System.Text.Encoding.UTF8.GetBytes(key);
+            return ProtectedData.Unprotect(encrypted, entropy, DataProtectionScope.CurrentUser);
         }
         catch (Exception)
         {
