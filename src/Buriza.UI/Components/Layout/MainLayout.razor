@@ -14,7 +14,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<main class="@($"{(IsOnRoute(Routes.Onboard, Routes.Splash) ? "" : "md:!pt-4 md:!px-4")} {(AppStateService.IsDarkMode ? "bg-[url(/_content/Buriza.UI/images/background/background_dark_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_dark.webp)]" : "bg-[url(/_content/Buriza.UI/images/background/background_light_mobile.webp)] sm:bg-[url(/_content/Buriza.UI/images/background/background_light.webp)]")} bg-auto bg-center bg-no-repeat")">
+<main class="@($"{(IsOnRoute(Routes.Onboard, Routes.Splash) ? "" : "md:!pt-4 md:!px-4")} {(AppStateService.IsDarkMode ? $"bg-[url({Background.BackgroundDarkMobile})] sm:bg-[url({Background.BackgroundDark})]" : $"bg-[url({Background.BackgroundLightMobile})] sm:bg-[url({Background.BackgroundLight})]")} bg-auto bg-center bg-no-repeat")">
     @if (!IsHeaderHidden)
     {
         <BurizaHeader />
