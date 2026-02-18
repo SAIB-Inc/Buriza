@@ -6,7 +6,7 @@
 <BurizaBaseDialog 
     Title="Transaction Confirmation"
     OnClose="Cancel" 
-    Class="w-[379px] h-[271px] !bg-[var(--mud-palette-background)] !rounded-[28px] !p-6" 
+    Class="w-[379px] h-[271px] !rounded-[28px] !p-6" 
     TitleClass="p-0! mb-3!"
     ActionsClass="!justify-end px-0! pt-0! pb-0!"
 >
@@ -22,7 +22,7 @@
                 <BurizaTextField 
                     @bind-Value="_password"
                     Label="Password" 
-                    InputType="_passwordInputType"
+                    InputType="@_passwordInputType"
                 />
                 <div>
                     <MudIconButton
