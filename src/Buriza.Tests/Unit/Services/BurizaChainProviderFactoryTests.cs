@@ -1,7 +1,6 @@
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
-using Buriza.Core.Models.Enums;
 using Buriza.Data.Models;
 using Buriza.Data.Providers;
 using Buriza.Data.Services;
@@ -28,8 +27,8 @@ public class BurizaChainProviderFactoryTests
 
         using IBurizaChainProvider provider = factory.CreateProvider(ChainRegistry.CardanoPreprod);
 
-        BurizaU5CProvider concrete = Assert.IsType<BurizaU5CProvider>(provider);
-        Assert.Equal(NetworkType.Preprod, concrete.NetworkType);
+        BurizaUtxoRpcProvider concrete = Assert.IsType<BurizaUtxoRpcProvider>(provider);
+        Assert.Equal("preprod", concrete.NetworkType);
     }
 
     [Fact]

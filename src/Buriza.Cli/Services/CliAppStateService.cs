@@ -50,7 +50,7 @@ public sealed class CliAppStateService : IBurizaAppStateService
     }
 
     private static string GetChainKey(ChainInfo chainInfo)
-        => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
+        => $"{(int)chainInfo.Chain}:{chainInfo.Network}";
 
     private static string GetAddressPrefix(Guid walletId, ChainInfo chainInfo, int accountIndex)
         => $"address:{walletId:N}:{GetChainKey(chainInfo)}:{accountIndex}:";

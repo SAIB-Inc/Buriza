@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Buriza.Core.Interfaces;
+using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
@@ -216,7 +217,9 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
     private async Task ShowProtocolParametersAsync()
     {
         BurizaWallet active = await RequireActiveWalletAsync();
-        ProtocolParams parameters = (ProtocolParams)await active.GetProtocolParametersAsync();
+        ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
+        using IBurizaChainProvider provider = _providerFactory.CreateProvider(chainInfo);
+        ProtocolParams parameters = (ProtocolParams)await provider.GetParametersAsync();
 
         Table table = new();
         table.AddColumn("Field");
@@ -384,14 +387,14 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         BurizaWallet wallet;
         try
         {
-            wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes);
+            wallet = await _walletManager.CreateAsync(name, mnemonicBytes, passwordBytes);
         }
         finally
         {
             CryptographicOperations.ZeroMemory(mnemonicBytes);
             CryptographicOperations.ZeroMemory(passwordBytes);
         }
-        await _walletManager.SetActiveChainAsync(wallet.Id, ChainRegistry.CardanoPreview, null);
+        await wallet.SetActiveChainAsync(ChainRegistry.CardanoPreview);
         await _walletManager.SetActiveAsync(wallet.Id);
         AnsiConsole.MarkupLine("[bold]Wallet created and set active.[/]");
         Pause();
@@ -416,14 +419,14 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         BurizaWallet wallet;
         try
         {
-            wallet = await _walletManager.CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes);
+            wallet = await _walletManager.CreateAsync(name, mnemonicBytes, passwordBytes);
         }
         finally
         {
             CryptographicOperations.ZeroMemory(mnemonicBytes);
             CryptographicOperations.ZeroMemory(passwordBytes);
         }
-        await _walletManager.SetActiveChainAsync(wallet.Id, ChainRegistry.CardanoPreview, null);
+        await wallet.SetActiveChainAsync(ChainRegistry.CardanoPreview);
         await _walletManager.SetActiveAsync(wallet.Id);
         AnsiConsole.MarkupLine("[bold]Wallet imported and set active.[/]");
         Pause();
@@ -450,7 +453,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             table.AddRow(
                 wallet.Id.ToString("N"),
                 wallet.Profile.Name,
-                wallet.Network.ToString(),
+                wallet.Network,
                 active?.Id == wallet.Id ? "Yes" : "No");
         }
 
@@ -468,7 +471,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         }
 
         BurizaWallet active = await ResolveActiveWalletAsync(wallets);
-        string? address = active.GetAddressInfo()?.Address;
+        string? address = (await active.GetAddressInfoAsync())?.Address;
         AnsiConsole.MarkupLine($"[bold]Receive address:[/] {address ?? "[grey]Not derived[/]"}");
         Pause();
     }
@@ -526,7 +529,16 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
     private async Task ShowTransactionHistoryAsync()
     {
         BurizaWallet active = await RequireActiveWalletAsync();
-        IReadOnlyList<TransactionHistory> history = await active.GetTransactionHistoryAsync();
+        string? address = (await active.GetAddressInfoAsync())?.Address;
+        if (string.IsNullOrEmpty(address))
+        {
+            AnsiConsole.MarkupLine("[grey]No address available.[/]");
+            Pause();
+            return;
+        }
+        ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
+        using IBurizaChainProvider provider = _providerFactory.CreateProvider(chainInfo);
+        IReadOnlyList<TransactionHistory> history = await provider.GetTransactionHistoryAsync(address);
         if (history.Count == 0)
         {
             AnsiConsole.MarkupLine("[grey]No transactions found.[/]");
@@ -575,14 +587,20 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
         try
         {
-            UnsignedTransaction unsignedTx = await active.BuildTransactionAsync(amount, toAddress);
-            object signed = await _walletManager.SignTransactionAsync(active.Id, active.ActiveAccountIndex, 0, unsignedTx, passwordBytes);
-            string txId = await active.SubmitAsync(signed);
+            await active.UnlockAsync(passwordBytes);
+
+            TransactionRequest request = new()
+            {
+                Recipients = [new TransactionRecipient { Address = toAddress, Amount = amount }]
+            };
+
+            string txId = await active.SendAsync(request);
             AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");
             Pause();
         }
         finally
         {
+            active.Lock();
             CryptographicOperations.ZeroMemory(passwordBytes);
         }
     }
@@ -621,7 +639,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             _ => ChainRegistry.CardanoMainnet
         };
 
-        await _walletManager.SetActiveChainAsync(active.Id, chainInfo, null);
+        await active.SetActiveChainAsync(chainInfo);
         _lastBalanceLovelace = null;
         AnsiConsole.MarkupLine("[bold]Network updated.[/]");
         Pause();
@@ -638,15 +656,10 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         if (string.IsNullOrWhiteSpace(password))
             return;
 
-        ChainInfo chainInfo = active.Network switch
-        {
-            NetworkType.Preprod => ChainRegistry.CardanoPreprod,
-            NetworkType.Preview => ChainRegistry.CardanoPreview,
-            _ => ChainRegistry.CardanoMainnet
-        };
+        ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
 
-        await _walletManager.SetCustomProviderConfigAsync(chainInfo, endpoint, string.IsNullOrWhiteSpace(apiKey) ? null : apiKey, Encoding.UTF8.GetBytes(password));
-        await _walletManager.LoadCustomProviderConfigAsync(chainInfo, Encoding.UTF8.GetBytes(password));
+        await active.SetCustomProviderConfigAsync(chainInfo, endpoint, string.IsNullOrWhiteSpace(apiKey) ? null : apiKey, Encoding.UTF8.GetBytes(password));
+        await active.LoadCustomProviderConfigAsync(chainInfo, Encoding.UTF8.GetBytes(password));
         AnsiConsole.MarkupLine("[bold]Custom provider saved and loaded.[/]");
         Pause();
     }
@@ -654,14 +667,9 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
     private async Task ClearCustomProviderAsync()
     {
         BurizaWallet active = await RequireActiveWalletAsync();
-        ChainInfo chainInfo = active.Network switch
-        {
-            NetworkType.Preprod => ChainRegistry.CardanoPreprod,
-            NetworkType.Preview => ChainRegistry.CardanoPreview,
-            _ => ChainRegistry.CardanoMainnet
-        };
+        ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
 
-        await _walletManager.ClearCustomProviderConfigAsync(chainInfo);
+        await active.ClearCustomProviderConfigAsync(chainInfo);
         AnsiConsole.MarkupLine("[bold]Custom provider cleared.[/]");
         Pause();
     }
@@ -678,14 +686,24 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         BurizaWallet active = await ResolveActiveWalletAsync(wallets);
 
         string password = AnsiConsole.Prompt(new TextPrompt<string>("Password:").Secret());
-        await _walletManager.ExportMnemonicAsync(active.Id, Encoding.UTF8.GetBytes(password), span =>
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try
         {
-            AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
-                .BorderColor(Color.Grey)
-                .RoundedBorder()
-                .Padding(1, 0, 1, 0));
-        });
-        Pause();
+            await active.UnlockAsync(passwordBytes);
+            active.ExportMnemonic(span =>
+            {
+                AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
+                    .BorderColor(Color.Grey)
+                    .RoundedBorder()
+                    .Padding(1, 0, 1, 0));
+            });
+            Pause();
+        }
+        finally
+        {
+            active.Lock();
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
     }
 
     private async Task RenderHeaderAsync()
@@ -695,7 +713,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
             ? "[grey]No active wallet[/]"
             : $"[bold]{active.Profile.Name}[/] • {active.ActiveChain} • {active.Network}";
 
-        string? address = active?.GetAddressInfo()?.Address;
+        string? address = active is not null ? (await active.GetAddressInfoAsync())?.Address : null;
         string addressValue = string.IsNullOrEmpty(address)
             ? "[grey]Not derived[/]"
             : address;
@@ -905,7 +923,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
     {
         ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
 
-        CustomProviderConfig? custom = await _walletManager.GetCustomProviderConfigAsync(chainInfo);
+        CustomProviderConfig? custom = await active.GetCustomProviderConfigAsync(chainInfo);
         if (!string.IsNullOrWhiteSpace(custom?.Endpoint))
             return custom.Endpoint;
 
@@ -917,8 +935,8 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
 
         return chainInfo.Network switch
         {
-            NetworkType.Preprod => cardano.PreprodEndpoint,
-            NetworkType.Preview => cardano.PreviewEndpoint,
+            "preprod" => cardano.PreprodEndpoint,
+            "preview" => cardano.PreviewEndpoint,
             _ => cardano.MainnetEndpoint
         };
     }

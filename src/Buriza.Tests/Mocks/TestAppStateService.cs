@@ -25,5 +25,5 @@ public sealed class TestAppStateService : IBurizaAppStateService
     public void ClearCache() => _chainConfigs.Clear();
 
     private static string GetChainKey(ChainInfo chainInfo)
-        => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
+        => $"{(int)chainInfo.Chain}:{chainInfo.Network}";
 }

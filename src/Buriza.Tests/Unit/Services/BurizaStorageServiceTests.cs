@@ -40,7 +40,7 @@ public class BurizaStorageServiceTests
         string apiKey = "test-key";
 
         EncryptedVault vault = VaultEncryption.Encrypt(Guid.Empty, Encoding.UTF8.GetBytes(apiKey), Encoding.UTF8.GetBytes(password), VaultPurpose.Mnemonic);
-        string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
+        string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network);
         await platformStorage.SetAsync(key, System.Text.Json.JsonSerializer.Serialize(vault));
 
         CustomProviderConfig config = new()
@@ -53,7 +53,7 @@ public class BurizaStorageServiceTests
         await platformStorage.SetAsync(StorageKeys.CustomConfigs, System.Text.Json.JsonSerializer.Serialize(
             new Dictionary<string, CustomProviderConfig>
             {
-                [$"{(int)chainInfo.Chain}:{(int)chainInfo.Network}"] = config
+                [$"{(int)chainInfo.Chain}:{chainInfo.Network}"] = config
             }));
 
         await Assert.ThrowsAnyAsync<CryptographicException>(() =>
@@ -79,7 +79,7 @@ public class BurizaStorageServiceTests
         };
         await storage.SaveCustomProviderConfigAsync(config, apiKey, Encoding.UTF8.GetBytes(password));
 
-        string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
+        string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network);
         string? json = await platformStorage.GetAsync(key);
         Assert.NotNull(json);
 
@@ -95,7 +95,8 @@ public class BurizaStorageServiceTests
     public async Task LoadAllWalletsAsync_InvalidJson_Throws()
     {
         InMemoryStorage platformStorage = new();
-        await platformStorage.SetAsync(StorageKeys.Wallets, "{not json");
+        Guid walletId = Guid.NewGuid();
+        await platformStorage.SetAsync(StorageKeys.Wallet(walletId), "{not json");
 
         TestWalletStorageService storage = new(platformStorage);
 
@@ -104,7 +105,7 @@ public class BurizaStorageServiceTests
 
     private static Guid DeriveApiKeyVaultId(ChainInfo chainInfo)
     {
-        string input = $"apikey|{(int)chainInfo.Chain}|{(int)chainInfo.Network}";
+        string input = $"apikey|{(int)chainInfo.Chain}|{chainInfo.Network}";
         byte[] bytes = Encoding.UTF8.GetBytes(input);
         byte[] hash = SHA256.HashData(bytes);
         Span<byte> guidBytes = stackalloc byte[16];

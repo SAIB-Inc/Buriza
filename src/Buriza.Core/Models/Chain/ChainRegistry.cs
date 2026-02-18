@@ -7,7 +7,7 @@ public static class ChainRegistry
     public static readonly ChainInfo CardanoMainnet = new()
     {
         Chain = ChainType.Cardano,
-        Network = NetworkType.Mainnet,
+        Network = "mainnet",
         Symbol = "ADA",
         Name = "Cardano",
         Decimals = 6
@@ -16,7 +16,7 @@ public static class ChainRegistry
     public static readonly ChainInfo CardanoPreview = new()
     {
         Chain = ChainType.Cardano,
-        Network = NetworkType.Preview,
+        Network = "preview",
         Symbol = "tADA",
         Name = "Cardano",
         Decimals = 6
@@ -25,18 +25,18 @@ public static class ChainRegistry
     public static readonly ChainInfo CardanoPreprod = new()
     {
         Chain = ChainType.Cardano,
-        Network = NetworkType.Preprod,
+        Network = "preprod",
         Symbol = "tADA",
         Name = "Cardano",
         Decimals = 6
     };
 
-    public static ChainInfo Get(ChainType chain, NetworkType network) =>
+    public static ChainInfo Get(ChainType chain, string network) =>
         (chain, network) switch
         {
-            (ChainType.Cardano, NetworkType.Mainnet) => CardanoMainnet,
-            (ChainType.Cardano, NetworkType.Preview) => CardanoPreview,
-            (ChainType.Cardano, NetworkType.Preprod) => CardanoPreprod,
+            (ChainType.Cardano, "mainnet") => CardanoMainnet,
+            (ChainType.Cardano, "preview") => CardanoPreview,
+            (ChainType.Cardano, "preprod") => CardanoPreprod,
             _ => throw new NotSupportedException($"Chain {chain} {network} not supported")
         };
 }

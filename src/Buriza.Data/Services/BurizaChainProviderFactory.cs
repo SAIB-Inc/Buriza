@@ -3,14 +3,14 @@ using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
-using Buriza.Core.Services;
+using Buriza.Core.Chain.Cardano;
 using Buriza.Data.Models;
 using Buriza.Data.Providers;
 
 namespace Buriza.Data.Services;
 
 /// <summary>
-/// Factory for creating chain providers and key services.
+/// Factory for creating chain providers and chain wallets.
 /// Uses session-scoped overrides, falls back to ChainProviderSettings.
 /// </summary>
 public class BurizaChainProviderFactory(
@@ -31,7 +31,7 @@ public class BurizaChainProviderFactory(
             throw new InvalidOperationException($"No endpoint configured for {chainInfo.Chain} {chainInfo.Network}");
 
         ValidateEndpointSecurity(endpoint);
-        return new BurizaU5CProvider(endpoint, apiKey, chainInfo.Network);
+        return new BurizaUtxoRpcProvider(endpoint, apiKey, chainInfo.Network);
     }
 
     public IBurizaChainProvider CreateProvider(string endpoint, string? apiKey = null)
@@ -40,14 +40,14 @@ public class BurizaChainProviderFactory(
             throw new ArgumentException("Endpoint is required", nameof(endpoint));
 
         ValidateEndpointSecurity(endpoint);
-        return new BurizaU5CProvider(endpoint, apiKey);
+        return new BurizaUtxoRpcProvider(endpoint, apiKey);
     }
 
-    public IKeyService CreateKeyService(ChainInfo chainInfo)
+    public IChainWallet CreateChainWallet(ChainInfo chainInfo)
     {
         return chainInfo.Chain switch
         {
-            ChainType.Cardano => new CardanoKeyService(chainInfo.Network),
+            ChainType.Cardano => new BurizaCardanoWallet(),
             _ => throw new NotSupportedException($"Chain type {chainInfo.Chain} is not supported")
         };
     }
@@ -58,7 +58,7 @@ public class BurizaChainProviderFactory(
     {
         try
         {
-            using BurizaU5CProvider provider = new(endpoint, apiKey);
+            using BurizaUtxoRpcProvider provider = new(endpoint, apiKey);
             return await provider.ValidateConnectionAsync(ct);
         }
         catch (Exception)
@@ -73,9 +73,9 @@ public class BurizaChainProviderFactory(
         {
             ChainType.Cardano => chainInfo.Network switch
             {
-                NetworkType.Mainnet => _settings.Cardano?.MainnetEndpoint,
-                NetworkType.Preprod => _settings.Cardano?.PreprodEndpoint,
-                NetworkType.Preview => _settings.Cardano?.PreviewEndpoint,
+                "mainnet" => _settings.Cardano?.MainnetEndpoint,
+                "preprod" => _settings.Cardano?.PreprodEndpoint,
+                "preview" => _settings.Cardano?.PreviewEndpoint,
                 _ => _settings.Cardano?.MainnetEndpoint
             },
             _ => null
@@ -88,9 +88,9 @@ public class BurizaChainProviderFactory(
         {
             ChainType.Cardano => chainInfo.Network switch
             {
-                NetworkType.Mainnet => _settings.Cardano?.MainnetApiKey,
-                NetworkType.Preprod => _settings.Cardano?.PreprodApiKey,
-                NetworkType.Preview => _settings.Cardano?.PreviewApiKey,
+                "mainnet" => _settings.Cardano?.MainnetApiKey,
+                "preprod" => _settings.Cardano?.PreprodApiKey,
+                "preview" => _settings.Cardano?.PreviewApiKey,
                 _ => _settings.Cardano?.MainnetApiKey
             },
             _ => null

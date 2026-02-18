@@ -1,43 +1,42 @@
+using System.Security.Cryptography;
+using System.Text;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
+using Buriza.Core.Storage;
 using System.Text.Json.Serialization;
-using Chrysalis.Cbor.Extensions.Cardano.Core.Transaction;
-using Chrysalis.Cbor.Serialization;
-using Chrysalis.Cbor.Types.Cardano.Core.Common;
-using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
-using Chrysalis.Tx.Builders;
-using Chrysalis.Tx.Extensions;
-using Chrysalis.Tx.Models;
-using Chrysalis.Wallet.Models.Keys;
-using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
-using ChrysalisTransaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
+
 namespace Buriza.Core.Models.Wallet;
 
 /// <summary>
 /// HD Wallet following BIP-39/BIP-44 standards.
 /// One wallet = one mnemonic seed that can derive keys for multiple chains.
+/// Chain-agnostic — all chain-specific logic lives in IChainWallet implementations.
 /// </summary>
-public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = null) : IWallet
+public class BurizaWallet(
+    IBurizaChainProviderFactory? chainProviderFactory = null,
+    BurizaStorageBase? storage = null) : IWallet
 {
     private IBurizaChainProviderFactory? _chainProviderFactory = chainProviderFactory;
+    private BurizaStorageBase? _storage = storage;
 
-    // JSON storage rehydrates wallet metadata without runtime services.
-    // We still use the primary constructor for runtime factory injection,
-    // but deserialization must use a parameterless constructor.
+    [JsonIgnore]
+    private byte[]? _mnemonicBytes;
+
     [JsonConstructor]
-    public BurizaWallet() : this(null) { }
+    public BurizaWallet() : this(null, null) { }
 
     public required Guid Id { get; init; }
 
     /// <summary>Wallet profile (name, label, avatar).</summary>
     public required WalletProfile Profile { get; set; }
 
-    /// <summary>Network this wallet operates on (Mainnet, Preprod, Preview).</summary>
-    public NetworkType Network { get; set; } = NetworkType.Mainnet;
+    /// <summary>Network this wallet operates on (e.g. "mainnet", "preprod", "preview").</summary>
+    public string Network { get; set; } = "mainnet";
 
     /// <summary>Current active chain for this wallet.</summary>
     public ChainType ActiveChain { get; set; } = ChainType.Cardano;
@@ -51,21 +50,65 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? LastAccessedAt { get; set; }
 
-    internal void BindChainProviderFactory(IBurizaChainProviderFactory chainProviderFactory)
-        => _chainProviderFactory = chainProviderFactory ?? throw new ArgumentNullException(nameof(chainProviderFactory));
+    internal void BindRuntimeServices(IBurizaChainProviderFactory chainProviderFactory, BurizaStorageBase storage)
+    {
+        _chainProviderFactory = chainProviderFactory ?? throw new ArgumentNullException(nameof(chainProviderFactory));
+        _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+    }
+
+    #region Lock / Unlock
+
+    [JsonIgnore]
+    public bool IsUnlocked => _mnemonicBytes is not null;
+
+    public async Task UnlockAsync(ReadOnlyMemory<byte>? passwordOrPin = null, string? biometricReason = null, CancellationToken ct = default)
+    {
+        if (IsUnlocked) return;
+        _mnemonicBytes = await EnsureStorage().UnlockVaultAsync(Id, passwordOrPin, biometricReason, ct);
+    }
+
+    public void Lock()
+    {
+        if (IsUnlocked)
+        {
+            CryptographicOperations.ZeroMemory(_mnemonicBytes);
+            _mnemonicBytes = null;
+        }
+    }
+
+    #endregion
 
     #region Account & Address Helpers
 
     public BurizaWalletAccount? GetActiveAccount() =>
         Accounts.FirstOrDefault(a => a.Index == ActiveAccountIndex);
 
-    public ChainAddressData? GetAddressInfo(int? accountIndex = null)
+    public async Task<ChainAddressData?> GetAddressInfoAsync(int? accountIndex = null, CancellationToken ct = default)
     {
+        if (!IsUnlocked)
+            return null;
+
         BurizaWalletAccount? account = accountIndex.HasValue
             ? Accounts.FirstOrDefault(a => a.Index == accountIndex.Value)
             : GetActiveAccount();
 
-        return account?.GetChainData(ActiveChain, Network);
+        if (account is null)
+            return null;
+
+        ChainInfo chainInfo = ChainRegistry.Get(ActiveChain, Network);
+        IChainWallet chainWallet = EnsureFactory().CreateChainWallet(chainInfo);
+        return await chainWallet.DeriveChainDataAsync(_mnemonicBytes, chainInfo, account.Index, 0, false, ct);
+    }
+
+    /// <summary>Gets the chain wallet for the active chain.</summary>
+    [JsonIgnore]
+    public IChainWallet ChainWallet
+    {
+        get
+        {
+            ChainInfo chainInfo = ChainRegistry.Get(ActiveChain, Network);
+            return EnsureFactory().CreateChainWallet(chainInfo);
+        }
     }
 
     #endregion
@@ -76,7 +119,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         using IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.Address;
+        string? address = (await GetAddressInfoAsync(accountIndex, ct))?.Address;
         if (string.IsNullOrEmpty(address)) return 0;
 
         return await provider.GetBalanceAsync(address, ct);
@@ -86,7 +129,7 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         using IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.Address;
+        string? address = (await GetAddressInfoAsync(accountIndex, ct))?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
         return await provider.GetAssetsAsync(address, ct);
@@ -96,190 +139,265 @@ public class BurizaWallet(IBurizaChainProviderFactory? chainProviderFactory = nu
     {
         using IBurizaChainProvider provider = EnsureProvider();
 
-        string? address = GetAddressInfo(accountIndex)?.Address;
+        string? address = (await GetAddressInfoAsync(accountIndex, ct))?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
         return await provider.GetUtxosAsync(address, ct);
     }
 
-    public async Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(int? accountIndex = null, int limit = 50, CancellationToken ct = default)
-    {
-        using IBurizaChainProvider provider = EnsureProvider();
-
-        string? address = GetAddressInfo(accountIndex)?.Address;
-        if (string.IsNullOrEmpty(address)) return [];
-
-        return await provider.GetTransactionHistoryAsync(address, limit, ct);
-    }
-
-    public async Task<object> GetProtocolParametersAsync(CancellationToken ct = default)
-    {
-        using IBurizaChainProvider provider = EnsureProvider();
-        return await provider.GetParametersAsync(ct);
-    }
-
     #endregion
 
-    #region IWallet - Transaction Operations
+    #region Account Management
 
-    public Task<UnsignedTransaction> BuildTransactionAsync(ulong amount, string toAddress, CancellationToken ct = default)
+    private const int MaxAccountDiscoveryLimit = 100;
+    private const string DefaultAccountName = "Account {0}";
+
+    public async Task<BurizaWalletAccount> CreateAccountAsync(string name, int? accountIndex = null, CancellationToken ct = default)
     {
-        string? fromAddress = GetAddressInfo()?.Address;
-        if (string.IsNullOrEmpty(fromAddress))
-            throw new InvalidOperationException("No receive address available for the active account.");
+        int index = accountIndex ?? (Accounts.Count > 0 ? Accounts.Max(a => a.Index) + 1 : 0);
 
-        TransactionRequest request = new()
+        if (Accounts.Any(a => a.Index == index))
+            throw new InvalidOperationException($"Account with index {index} already exists");
+
+        BurizaWalletAccount account = new()
         {
-            FromAddress = fromAddress,
-            Recipients = [new TransactionRecipient { Address = toAddress, Amount = amount }]
+            Index = index,
+            Name = name
         };
 
-        return BuildTransactionAsync(request, ct);
+        Accounts.Add(account);
+        await SaveAsync(ct);
+
+        return account;
     }
 
-    public async Task<UnsignedTransaction> BuildTransactionAsync(TransactionRequest request, CancellationToken ct = default)
+    public async Task SetActiveAccountAsync(int accountIndex, CancellationToken ct = default)
     {
-        using IBurizaChainProvider chainProvider = EnsureProvider();
-        ICardanoDataProvider provider = chainProvider as ICardanoDataProvider
-            ?? throw new InvalidOperationException("Wallet is not connected to a compatible data provider.");
+        _ = Accounts.FirstOrDefault(a => a.Index == accountIndex)
+            ?? throw new ArgumentException($"Account {accountIndex} not found", nameof(accountIndex));
 
-        TransactionTemplateBuilder<TransactionRequest> builder = TransactionTemplateBuilder<TransactionRequest>
-            .Create(provider)
-            .AddInput((options, req) => options.From = "sender");
+        ActiveAccountIndex = accountIndex;
+        LastAccessedAt = DateTime.UtcNow;
+        await SaveAsync(ct);
+    }
 
-        builder = request.Recipients
-            .Select((_, i) => i)
-            .Aggregate(builder, (b, i) => b.AddOutput((options, req, fee) =>
+    public async Task UpdateAccountAsync(int accountIndex, string? name = null, string? avatar = null, CancellationToken ct = default)
+    {
+        BurizaWalletAccount account = Accounts.FirstOrDefault(a => a.Index == accountIndex)
+            ?? throw new ArgumentException($"Account {accountIndex} not found", nameof(accountIndex));
+
+        if (name is not null) account.Name = name;
+        if (avatar is not null) account.Avatar = avatar;
+
+        await SaveAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(int accountGapLimit = 5, CancellationToken ct = default)
+    {
+        if (!IsUnlocked)
+            throw new InvalidOperationException("Wallet must be unlocked to discover accounts.");
+
+        ChainInfo chainInfo = ChainRegistry.Get(ActiveChain, Network);
+        using IBurizaChainProvider provider = EnsureProvider();
+        IChainWallet chainWallet = ChainWallet;
+
+        List<BurizaWalletAccount> discoveredAccounts = [];
+        int consecutiveEmpty = 0;
+        int accountIndex = 0;
+
+        while (consecutiveEmpty < accountGapLimit && accountIndex < MaxAccountDiscoveryLimit)
+        {
+            if (Accounts.Any(a => a.Index == accountIndex))
             {
-                options.To = $"recipient_{i}";
-                options.Amount = BuildOutputValue(req.Recipients[i]);
-            }));
-
-        if (request.Metadata is { Count: > 0 })
-        {
-            builder = builder.AddMetadata(req => BuildMetadata(req.Metadata!));
-        }
-
-        TransactionTemplate<TransactionRequest> template = builder.Build();
-        ChrysalisTransaction tx = await template(request);
-
-        ulong fee = tx switch
-        {
-            PostMaryTransaction pmt => pmt.TransactionBody.Fee(),
-            _ => 0
-        };
-
-        return new UnsignedTransaction
-        {
-            ChainType = ActiveChain,
-            Transaction = tx,
-            Fee = fee,
-            Summary = new TransactionSummary
-            {
-                Type = TransactionActionType.Send,
-                Outputs = [.. request.Recipients.Select(r =>
-                new Transaction.TransactionOutput
-                    {
-                        Address = r.Address,
-                        Amount = r.Amount,
-                        Assets = r.Assets
-                    })],
-                TotalAmount = (ulong)request.Recipients.Sum(r => (long)r.Amount)
+                consecutiveEmpty = 0;
+                accountIndex++;
+                continue;
             }
-        };
-    }
 
-    public object Sign(UnsignedTransaction unsignedTx, PrivateKey privateKey)
-    {
-        if (unsignedTx.Transaction is not ChrysalisTransaction cardanoTx)
-            throw new ArgumentException("UnsignedTransaction does not contain a valid Cardano transaction.", nameof(unsignedTx));
+            ChainAddressData chainData = await chainWallet.DeriveChainDataAsync(_mnemonicBytes, chainInfo, accountIndex, 0, false, ct);
+            bool used = await provider.IsAddressUsedAsync(chainData.Address, ct);
 
-        // Use Chrysalis.Tx to sign the transaction
-        ChrysalisTransaction signedTx = cardanoTx.Sign(privateKey) with { Raw = null };
-
-        if (signedTx is PostMaryTransaction pmt)
-        {
-            signedTx = pmt with
+            if (used)
             {
-                Raw = null,
-                TransactionWitnessSet = pmt.TransactionWitnessSet with { Raw = null }
-            };
+                BurizaWalletAccount account = new()
+                {
+                    Index = accountIndex,
+                    Name = string.Format(DefaultAccountName, accountIndex + 1)
+                };
+
+                Accounts.Add(account);
+                discoveredAccounts.Add(account);
+                consecutiveEmpty = 0;
+            }
+            else
+            {
+                consecutiveEmpty++;
+            }
+
+            accountIndex++;
         }
 
-        return signedTx;
-    }
+        if (discoveredAccounts.Count > 0)
+            await SaveAsync(ct);
 
-    public async Task<string> SubmitAsync(object signedTx, CancellationToken ct = default)
-    {
-        using IBurizaChainProvider provider = EnsureProvider();
-
-        // For Cardano, expect Chrysalis Transaction
-        if (signedTx is ChrysalisTransaction cardanoTx)
-        {
-            byte[] txBytes = CborSerializer.Serialize(cardanoTx);
-            return await provider.SubmitAsync(txBytes, ct);
-        }
-
-        throw new ArgumentException($"Unsupported transaction type: {signedTx.GetType().Name}. For Cardano, use Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction.", nameof(signedTx));
+        return discoveredAccounts;
     }
 
     #endregion
 
-    #region Transaction Helpers
+    #region Chain Management
 
-    private static Value BuildOutputValue(TransactionRecipient recipient)
+    public async Task SetActiveChainAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
-        Lovelace lovelace = new(recipient.Amount);
+        if (!EnsureFactory().GetSupportedChains().Contains(chainInfo.Chain))
+            throw new NotSupportedException($"Chain {chainInfo.Chain} is not supported");
 
-        if (recipient.Assets is null || recipient.Assets.Count == 0)
-            return lovelace;
-
-        Dictionary<byte[], TokenBundleOutput> multiAssets = recipient.Assets
-            .Select(a => (PolicyId: a.Unit[..56], HexName: a.Unit[56..], a.Quantity))
-            .GroupBy(a => a.PolicyId)
-            .ToDictionary(
-                g => Convert.FromHexString(g.Key),
-                g => new TokenBundleOutput(
-                    g.ToDictionary(
-                        a => Convert.FromHexString(a.HexName),
-                        a => a.Quantity)));
-
-        return new LovelaceWithMultiAsset(lovelace, new MultiAssetOutput(multiAssets));
+        ActiveChain = chainInfo.Chain;
+        Network = chainInfo.Network;
+        LastAccessedAt = DateTime.UtcNow;
+        await SaveAsync(ct);
     }
 
-    private static TxMetadata BuildMetadata(Dictionary<ulong, object> metadata)
-    {
-        Dictionary<ulong, TransactionMetadatum> metadatum = metadata
-            .ToDictionary(kv => kv.Key, kv => ConvertToMetadatumValue(kv.Value));
+    #endregion
 
-        return new TxMetadata(metadatum);
-    }
+    #region Password Operations
 
-    private static TransactionMetadatum ConvertToMetadatumValue(object value)
+    public Task<bool> VerifyPasswordAsync(ReadOnlyMemory<byte> password, CancellationToken ct = default)
+        => EnsureStorage().VerifyPasswordAsync(Id, password, ct);
+
+    public Task ChangePasswordAsync(ReadOnlyMemory<byte> currentPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default)
+        => EnsureStorage().ChangePasswordAsync(Id, currentPassword, newPassword, ct);
+
+    #endregion
+
+    #region Sensitive Operations
+
+    public void ExportMnemonic(Action<ReadOnlySpan<char>> onMnemonic)
     {
-        return value switch
+        if (!IsUnlocked)
+            throw new InvalidOperationException("Wallet must be unlocked to export mnemonic.");
+
+        char[] mnemonicChars = Encoding.UTF8.GetChars(_mnemonicBytes!);
+        try
         {
-            string s => new MetadataText(s),
-            long l => new MetadatumIntLong(l),
-            int i => new MetadatumIntLong(i),
-            ulong u => new MetadatumIntUlong(u),
-            byte[] b => new MetadatumBytes(b),
-            Dictionary<object, object> dict => new MetadatumMap(
-                dict.ToDictionary(
-                    kv => ConvertToMetadatumValue(kv.Key),
-                    kv => ConvertToMetadatumValue(kv.Value))),
-            IEnumerable<object> list => new MetadatumList(
-                [.. list.Select(ConvertToMetadatumValue)]),
-            _ => new MetadataText(value.ToString() ?? string.Empty)
+            onMnemonic(mnemonicChars);
+        }
+        finally
+        {
+            Array.Clear(mnemonicChars);
+        }
+    }
+
+    #endregion
+
+    #region Custom Provider Config
+
+    public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
+        => EnsureStorage().GetCustomProviderConfigAsync(chainInfo, ct);
+
+    public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, ReadOnlyMemory<byte> password, string? name = null, CancellationToken ct = default)
+    {
+        string? normalizedEndpoint = ValidateAndNormalizeEndpoint(endpoint);
+        string? normalizedApiKey = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey;
+
+        CustomProviderConfig config = new()
+        {
+            Chain = chainInfo.Chain,
+            Network = chainInfo.Network,
+            Endpoint = normalizedEndpoint,
+            HasCustomApiKey = !string.IsNullOrEmpty(normalizedApiKey),
+            Name = name
         };
+        await EnsureStorage().SaveCustomProviderConfigAsync(config, normalizedApiKey, password, ct);
+
+        EnsureFactory().SetChainConfig(chainInfo, new ServiceConfig(normalizedEndpoint, normalizedApiKey));
+    }
+
+    public async Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
+    {
+        await EnsureStorage().DeleteCustomProviderConfigAsync(chainInfo, ct);
+        EnsureFactory().ClearChainConfig(chainInfo);
+    }
+
+    public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    {
+        (CustomProviderConfig Config, string? ApiKey)? result =
+            await EnsureStorage().GetCustomProviderConfigWithApiKeyAsync(chainInfo, password, ct);
+        if (result is null) return;
+
+        CustomProviderConfig config = result.Value.Config;
+        string? endpoint;
+        try
+        {
+            endpoint = ValidateAndNormalizeEndpoint(config.Endpoint);
+        }
+        catch (ArgumentException ex)
+        {
+            await EnsureStorage().DeleteCustomProviderConfigAsync(chainInfo, ct);
+            EnsureFactory().ClearChainConfig(chainInfo);
+            throw new InvalidOperationException("Stored custom provider configuration is invalid and has been cleared.", ex);
+        }
+
+        EnsureFactory().SetChainConfig(chainInfo, new ServiceConfig(endpoint, result.Value.ApiKey));
+    }
+
+    private static string? ValidateAndNormalizeEndpoint(string? endpoint)
+    {
+        if (string.IsNullOrWhiteSpace(endpoint))
+            return null;
+
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri? uri))
+            throw new ArgumentException("Invalid endpoint URL", nameof(endpoint));
+
+        if (uri.Scheme != "http" && uri.Scheme != "https")
+            throw new ArgumentException("Endpoint must use HTTP or HTTPS", nameof(endpoint));
+
+        if (uri.Scheme == "http" && !uri.IsLoopback)
+            throw new ArgumentException("HTTP endpoints are allowed only for localhost/loopback. Use HTTPS for remote providers.", nameof(endpoint));
+
+        return endpoint;
     }
 
     #endregion
+
+    #region Persistence
+
+    public Task SaveAsync(CancellationToken ct = default)
+        => EnsureStorage().SaveWalletAsync(this, ct);
+
+    #endregion
+
+    #region Transaction Operations
+
+    /// <summary>Builds, signs, and submits a transaction. Wallet must be unlocked.</summary>
+    public async Task<string> SendAsync(TransactionRequest request, CancellationToken ct = default)
+    {
+        if (!IsUnlocked)
+            throw new InvalidOperationException("Wallet must be unlocked to send transactions.");
+
+        string fromAddress = (await GetAddressInfoAsync(ct: ct))?.Address
+            ?? throw new InvalidOperationException("No receive address available for the active account.");
+
+        using IBurizaChainProvider provider = EnsureProvider();
+        ChainInfo chainInfo = ChainRegistry.Get(ActiveChain, Network);
+        IChainWallet chainWallet = ChainWallet;
+
+        UnsignedTransaction unsignedTx = await chainWallet.BuildTransactionAsync(fromAddress, request, provider, ct);
+        byte[] signedTxBytes = chainWallet.Sign(unsignedTx, _mnemonicBytes!, chainInfo, ActiveAccountIndex, 0);
+        return await provider.SubmitAsync(signedTxBytes, ct);
+    }
+
+    #endregion
+
+    private BurizaStorageBase EnsureStorage()
+        => _storage ?? throw new InvalidOperationException("Wallet storage is not bound. Use WalletManager to load the wallet.");
+
+    private IBurizaChainProviderFactory EnsureFactory()
+        => _chainProviderFactory ?? throw new InvalidOperationException("Wallet is not connected to a chain provider factory. Use WalletManager to load the wallet.");
 
     private IBurizaChainProvider EnsureProvider()
     {
-        IBurizaChainProviderFactory? factory = _chainProviderFactory ?? throw new InvalidOperationException("Wallet is not connected to a chain provider factory. Use WalletManager to load the wallet.");
         ChainInfo chainInfo = ChainRegistry.Get(ActiveChain, Network);
-        return factory.CreateProvider(chainInfo);
+        return EnsureFactory().CreateProvider(chainInfo);
     }
 }

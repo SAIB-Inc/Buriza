@@ -364,7 +364,7 @@ public class AppStateService : IBurizaAppStateService, IDataServiceSessionProvid
 
     #region Cache Helpers
 
-    private static string GetChainKey(ChainInfo chainInfo) => $"{(int)chainInfo.Chain}:{(int)chainInfo.Network}";
+    private static string GetChainKey(ChainInfo chainInfo) => $"{(int)chainInfo.Chain}:{chainInfo.Network}";
 
     private string? CacheGet(string key)
         => _cache.TryGetValue(key, out string? value) ? value : null;

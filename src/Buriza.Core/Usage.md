@@ -140,8 +140,8 @@ IReadOnlyList<Asset> assets = await wallet.GetAssetsAsync();
 // Get UTxOs
 IReadOnlyList<Utxo> utxos = await wallet.GetUtxosAsync();
 
-// Get transaction history
-IReadOnlyList<TransactionHistory> history = await wallet.GetTransactionHistoryAsync(limit: 50);
+using Chrysalis.Wallet.Models.Keys;// Get transaction history (via provider)
+IReadOnlyList<TransactionHistory> history = await provider.GetTransactionHistoryAsync(address, limit: 50);
 ```
 
 ### 5. Send Transaction

@@ -1,4 +1,4 @@
-using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Chain;
 
 namespace Buriza.Core.Models.Wallet;
 
@@ -8,11 +8,7 @@ namespace Buriza.Core.Models.Wallet;
 /// </summary>
 public class ChainAddressData
 {
-    public required ChainType Chain { get; init; }
-    public required NetworkType Network { get; init; }
-
-    /// <summary>Native currency symbol (e.g. "ADA", "tADA", "BTC").</summary>
-    public required string Symbol { get; init; }
+    public required ChainInfo ChainInfo { get; init; }
 
     /// <summary>Primary address (base address for Cardano: payment + staking).</summary>
     public required string Address { get; set; }

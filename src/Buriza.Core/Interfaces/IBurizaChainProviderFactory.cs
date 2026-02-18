@@ -6,7 +6,7 @@ using Buriza.Core.Models.Enums;
 namespace Buriza.Core.Interfaces;
 
 /// <summary>
-/// Factory for creating chain providers and key services.
+/// Factory for creating chain providers and chain wallets.
 /// Provides unified access to chain configuration.
 /// </summary>
 public interface IBurizaChainProviderFactory : IDisposable
@@ -17,8 +17,8 @@ public interface IBurizaChainProviderFactory : IDisposable
     /// <summary>Creates a provider with explicit endpoint/apiKey (for validation).</summary>
     IBurizaChainProvider CreateProvider(string endpoint, string? apiKey = null);
 
-    /// <summary>Creates a key service for the specified chain (for key derivation).</summary>
-    IKeyService CreateKeyService(ChainInfo chainInfo);
+    /// <summary>Creates a chain wallet for the specified chain (key derivation, tx building, signing).</summary>
+    IChainWallet CreateChainWallet(ChainInfo chainInfo);
 
     /// <summary>Gets the list of supported chain types.</summary>
     IReadOnlyList<ChainType> GetSupportedChains();

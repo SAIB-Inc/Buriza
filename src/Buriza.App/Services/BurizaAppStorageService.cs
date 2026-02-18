@@ -68,7 +68,7 @@ public sealed class BurizaAppStorageService(
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         foreach (CustomProviderConfig config in configs.Values)
         {
-            string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, (int)config.Network);
+            string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, config.Network);
             await RemoveSecureAsync(vaultKey, ct);
         }
 
@@ -165,53 +165,6 @@ public sealed class BurizaAppStorageService(
 
     #endregion
 
-    #region Wallet Metadata
-
-    public override async Task SaveWalletAsync(BurizaWallet wallet, CancellationToken ct = default)
-    {
-        List<BurizaWallet> wallets = [.. await LoadAllWalletsAsync(ct)];
-        int existingIndex = wallets.FindIndex(w => w.Id == wallet.Id);
-
-        if (existingIndex >= 0)
-            wallets[existingIndex] = wallet;
-        else
-            wallets.Add(wallet);
-
-        await SetJsonAsync(StorageKeys.Wallets, wallets, ct);
-    }
-
-    public override async Task<BurizaWallet?> LoadWalletAsync(Guid walletId, CancellationToken ct = default)
-    {
-        IReadOnlyList<BurizaWallet> wallets = await LoadAllWalletsAsync(ct);
-        return wallets.FirstOrDefault(w => w.Id == walletId);
-    }
-
-    public override async Task<IReadOnlyList<BurizaWallet>> LoadAllWalletsAsync(CancellationToken ct = default)
-        => await GetJsonAsync<List<BurizaWallet>>(StorageKeys.Wallets, ct) ?? [];
-
-    public override async Task DeleteWalletAsync(Guid walletId, CancellationToken ct = default)
-    {
-        List<BurizaWallet> wallets = [.. await LoadAllWalletsAsync(ct)];
-        wallets.RemoveAll(w => w.Id == walletId);
-        await SetJsonAsync(StorageKeys.Wallets, wallets, ct);
-
-        await DeleteVaultAsync(walletId, ct);
-    }
-
-    public override async Task<Guid?> GetActiveWalletIdAsync(CancellationToken ct = default)
-    {
-        string? value = await GetAsync(StorageKeys.ActiveWallet, ct);
-        return string.IsNullOrEmpty(value) ? null : Guid.TryParse(value, out Guid id) ? id : null;
-    }
-
-    public override Task SetActiveWalletIdAsync(Guid walletId, CancellationToken ct = default)
-        => SetAsync(StorageKeys.ActiveWallet, walletId.ToString("N"), ct);
-
-    public override Task ClearActiveWalletIdAsync(CancellationToken ct = default)
-        => RemoveAsync(StorageKeys.ActiveWallet, ct);
-
-    #endregion
-
     #region Vault Operations
 
     public override async Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default)
@@ -220,9 +173,9 @@ public sealed class BurizaAppStorageService(
         return !string.IsNullOrEmpty(seed);
     }
 
-    public override async Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
+    public override async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
     {
-        string seed = Convert.ToBase64String(mnemonic);
+        string seed = Convert.ToBase64String(mnemonic.Span);
         await SetSecureAsync(StorageKeys.SecureSeed(walletId), seed, ct);
 
         PasswordVerifier verifier = VaultEncryption.CreateVerifier(passwordBytes.Span);
@@ -263,7 +216,6 @@ public sealed class BurizaAppStorageService(
     public override async Task<byte[]> UnlockVaultAsync(Guid walletId, ReadOnlyMemory<byte>? password, string? biometricReason = null, CancellationToken ct = default)
     {
         await EnsureNotLockedAsync(walletId, ct);
-
         AuthenticationType authType = await GetAuthTypeAsync(walletId, ct);
 
         try
@@ -407,7 +359,7 @@ public sealed class BurizaAppStorageService(
         configs[key] = updated;
         await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
 
-        string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, (int)config.Network);
+        string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, config.Network);
         if (!string.IsNullOrEmpty(apiKey))
             await SetSecureAsync(vaultKey, apiKey, ct);
         else
@@ -421,7 +373,7 @@ public sealed class BurizaAppStorageService(
         if (configs.Remove(key))
             await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
 
-        await RemoveSecureAsync(StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network), ct);
+        await RemoveSecureAsync(StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network), ct);
     }
 
     public override async Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
@@ -436,7 +388,7 @@ public sealed class BurizaAppStorageService(
         if (!config.HasCustomApiKey)
             return (config, null);
 
-        string vaultKey = StorageKeys.ApiKeyVault((int)chainInfo.Chain, (int)chainInfo.Network);
+        string vaultKey = StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network);
         string? apiKey = await GetSecureAsync(vaultKey, ct);
         return (config, apiKey);
     }

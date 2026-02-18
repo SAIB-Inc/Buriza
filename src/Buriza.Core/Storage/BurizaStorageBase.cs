@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Buriza.Core.Crypto;
 using Buriza.Core.Interfaces.Storage;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
@@ -12,11 +13,13 @@ namespace Buriza.Core.Storage;
 
 /// <summary>
 /// Unified storage contract for wallet data, vaults, and auth operations.
-/// Platform implementations provide the storage mechanisms.
+/// Platform implementations provide the storage mechanisms via IStorageProvider.
+/// Default implementations use VaultEncryption for vault/password/config operations.
+/// MAUI overrides these for OS secure storage, biometric auth, and Argon2id verifier.
 /// </summary>
 public abstract class BurizaStorageBase : IStorageProvider
 {
-    // IStorageProvider surface
+    // IStorageProvider surface — subclasses provide platform-specific key-value storage.
     /// <inheritdoc/>
     public abstract Task<string?> GetAsync(string key, CancellationToken ct = default);
     /// <inheritdoc/>
@@ -30,77 +33,245 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// <inheritdoc/>
     public abstract Task ClearAsync(CancellationToken ct = default);
 
-    // Wallet storage surface
-    /// <summary>Returns device security capabilities (biometric/pin/password).</summary>
-    public abstract Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
+    #region Wallet Metadata
 
-    /// <summary>Gets the configured auth type for a wallet.</summary>
-    public abstract Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default);
-    /// <summary>Sets the configured auth type for a wallet.</summary>
-    public abstract Task SetAuthTypeAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default);
+    /// <summary>Persists wallet metadata under its own key.</summary>
+    public virtual Task SaveWalletAsync(BurizaWallet wallet, CancellationToken ct = default)
+        => SetJsonAsync(StorageKeys.Wallet(wallet.Id), wallet, ct);
 
-    /// <summary>Persists wallet metadata.</summary>
-    public abstract Task SaveWalletAsync(BurizaWallet wallet, CancellationToken ct = default);
     /// <summary>Loads a wallet by id, or null if not found.</summary>
-    public abstract Task<BurizaWallet?> LoadWalletAsync(Guid walletId, CancellationToken ct = default);
-    /// <summary>Loads all wallets.</summary>
-    public abstract Task<IReadOnlyList<BurizaWallet>> LoadAllWalletsAsync(CancellationToken ct = default);
-    /// <summary>Deletes a wallet and associated storage.</summary>
-    public abstract Task DeleteWalletAsync(Guid walletId, CancellationToken ct = default);
+    public virtual Task<BurizaWallet?> LoadWalletAsync(Guid walletId, CancellationToken ct = default)
+        => GetJsonAsync<BurizaWallet>(StorageKeys.Wallet(walletId), ct);
+
+    /// <summary>Loads all wallets by scanning per-wallet keys.</summary>
+    public virtual async Task<IReadOnlyList<BurizaWallet>> LoadAllWalletsAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<string> keys = await GetKeysAsync(StorageKeys.WalletPrefix, ct);
+        List<BurizaWallet> wallets = new(keys.Count);
+        foreach (string key in keys)
+        {
+            BurizaWallet? wallet = await GetJsonAsync<BurizaWallet>(key, ct);
+            if (wallet is not null)
+                wallets.Add(wallet);
+        }
+        return wallets;
+    }
+
+    /// <summary>Deletes wallet metadata.</summary>
+    public virtual Task DeleteWalletAsync(Guid walletId, CancellationToken ct = default)
+        => RemoveAsync(StorageKeys.Wallet(walletId), ct);
 
     /// <summary>Gets the active wallet id, or null if none.</summary>
-    public abstract Task<Guid?> GetActiveWalletIdAsync(CancellationToken ct = default);
+    public virtual async Task<Guid?> GetActiveWalletIdAsync(CancellationToken ct = default)
+    {
+        string? value = await GetAsync(StorageKeys.ActiveWallet, ct);
+        return string.IsNullOrEmpty(value) ? null : Guid.TryParse(value, out Guid id) ? id : null;
+    }
+
     /// <summary>Sets the active wallet id.</summary>
-    public abstract Task SetActiveWalletIdAsync(Guid walletId, CancellationToken ct = default);
+    public virtual Task SetActiveWalletIdAsync(Guid walletId, CancellationToken ct = default)
+        => SetAsync(StorageKeys.ActiveWallet, walletId.ToString("N"), ct);
+
     /// <summary>Clears the active wallet id.</summary>
-    public abstract Task ClearActiveWalletIdAsync(CancellationToken ct = default);
+    public virtual Task ClearActiveWalletIdAsync(CancellationToken ct = default)
+        => RemoveAsync(StorageKeys.ActiveWallet, ct);
+
+    #endregion
+
+    #region Vault Operations
 
     /// <summary>Returns true if the wallet has a stored vault/seed.</summary>
-    public abstract Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default);
+    public virtual async Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default)
+    {
+        string? json = await GetAsync(StorageKeys.Vault(walletId), ct);
+        return !string.IsNullOrEmpty(json);
+    }
+
     /// <summary>Creates the vault/seed for a wallet.</summary>
-    public abstract Task CreateVaultAsync(Guid walletId, byte[] mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default);
+    public virtual async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
+    {
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic.Span, passwordBytes.Span);
+        await SetJsonAsync(StorageKeys.Vault(walletId), vault, ct);
+    }
+
     /// <summary>Unlocks the vault/seed using the configured auth type.</summary>
-    public abstract Task<byte[]> UnlockVaultAsync(Guid walletId, ReadOnlyMemory<byte>? passwordOrPin, string? biometricReason = null, CancellationToken ct = default);
+    public virtual async Task<byte[]> UnlockVaultAsync(Guid walletId, ReadOnlyMemory<byte>? passwordOrPin, string? biometricReason = null, CancellationToken ct = default)
+    {
+        ReadOnlyMemory<byte> password = passwordOrPin ?? throw new ArgumentException("Password required", nameof(passwordOrPin));
+        EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
+            ?? throw new InvalidOperationException("Vault not found");
+        return VaultEncryption.Decrypt(vault, password.Span);
+    }
+
     /// <summary>Verifies a password for the wallet.</summary>
-    public abstract Task<bool> VerifyPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default);
+    public virtual async Task<bool> VerifyPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    {
+        EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct);
+        if (vault is null) return false;
+        return VaultEncryption.VerifyPassword(vault, password.Span);
+    }
+
     /// <summary>Changes the wallet password.</summary>
-    public abstract Task ChangePasswordAsync(Guid walletId, ReadOnlyMemory<byte> oldPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default);
+    public virtual async Task ChangePasswordAsync(Guid walletId, ReadOnlyMemory<byte> oldPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default)
+    {
+        byte[]? mnemonicBytes = null;
+        try
+        {
+            EncryptedVault vault = await GetJsonAsync<EncryptedVault>(StorageKeys.Vault(walletId), ct)
+                ?? throw new InvalidOperationException("Vault not found");
+            mnemonicBytes = VaultEncryption.Decrypt(vault, oldPassword.Span);
+            await CreateVaultAsync(walletId, mnemonicBytes, newPassword, ct);
+        }
+        finally
+        {
+            if (mnemonicBytes is not null)
+                CryptographicOperations.ZeroMemory(mnemonicBytes);
+        }
+    }
+
     /// <summary>Deletes the vault/seed and associated auth state.</summary>
-    public abstract Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default);
+    public virtual async Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default)
+    {
+        await RemoveAsync(StorageKeys.Vault(walletId), ct);
+        await RemoveAsync(StorageKeys.PinVault(walletId), ct);
+        await RemoveAsync(StorageKeys.AuthType(walletId), ct);
+        await RemoveAsync(StorageKeys.AuthTypeHmac(walletId), ct);
+        await RemoveAsync(StorageKeys.LockoutState(walletId), ct);
+    }
+
+    #endregion
+
+    #region Device Auth
+
+    /// <summary>Returns device security capabilities (biometric/pin/password).</summary>
+    public virtual Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
+        => Task.FromResult(new DeviceCapabilities(
+            IsSupported: false,
+            SupportsBiometrics: false,
+            SupportsPin: false,
+            AvailableTypes: []));
+
+    /// <summary>Gets the configured auth type for a wallet.</summary>
+    public virtual Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default)
+        => Task.FromResult(AuthenticationType.Password);
+
+    /// <summary>Sets the configured auth type for a wallet.</summary>
+    public virtual Task SetAuthTypeAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default)
+        => Task.CompletedTask;
 
     /// <summary>Returns true if device auth is enabled for a wallet.</summary>
-    public abstract Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default);
+    public virtual Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
+        => Task.FromResult(false);
+
     /// <summary>Enables device auth for a wallet.</summary>
-    public abstract Task EnableDeviceAuthAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default);
+    public virtual Task EnableDeviceAuthAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+        => throw new NotSupportedException("Device auth is not supported on this platform.");
+
     /// <summary>Disables device auth for a wallet.</summary>
-    public abstract Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default);
+    public virtual Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
+        => Task.CompletedTask;
+
     /// <summary>Prompts device auth and returns the protected payload.</summary>
-    public abstract Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default);
+    public virtual Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default)
+        => throw new NotSupportedException("Device auth is not supported on this platform.");
+
+    #endregion
+
+    #region Custom Provider Config
 
     /// <summary>Gets custom provider config for a chain.</summary>
-    public abstract Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
-    /// <summary>
-    /// Saves custom provider config and optional API key.
-    /// API key protection is platform-dependent:
-    /// password-encrypted vault (web/extension/CLI) or OS secure storage (MAUI/native).
-    /// </summary>
-    public abstract Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte> password, CancellationToken ct = default);
+    public virtual async Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
+    {
+        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
+        string key = GetCustomConfigKey(chainInfo);
+        return configs.TryGetValue(key, out CustomProviderConfig? config) ? config : null;
+    }
+
+    /// <summary>Saves custom provider config and optional API key (encrypted with password).</summary>
+    public virtual async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    {
+        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
+        string key = GetCustomConfigKey(config.Chain, config.Network);
+        CustomProviderConfig updated = config with { HasCustomApiKey = !string.IsNullOrEmpty(apiKey) };
+        configs[key] = updated;
+        await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
+
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            byte[] apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
+            try
+            {
+                ChainInfo info = ChainRegistry.Get(config.Chain, config.Network);
+                Guid vaultId = DeriveApiKeyVaultId(info);
+                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, password.Span, VaultPurpose.ApiKey);
+                string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, config.Network);
+                await SetJsonAsync(vaultKey, vault, ct);
+            }
+            finally
+            {
+                CryptographicOperations.ZeroMemory(apiKeyBytes);
+            }
+        }
+        else
+        {
+            await RemoveAsync(StorageKeys.ApiKeyVault((int)config.Chain, config.Network), ct);
+        }
+    }
+
     /// <summary>Deletes custom provider config for a chain.</summary>
-    public abstract Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
-    /// <summary>
-    /// Gets custom provider config along with plaintext API key if available.
-    /// Implementations decrypt or unwrap from secure storage as needed.
-    /// </summary>
-    public abstract Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
+    public virtual async Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
+    {
+        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
+        string key = GetCustomConfigKey(chainInfo);
+        if (configs.Remove(key))
+            await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
+
+        await RemoveAsync(StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network), ct);
+    }
+
+    /// <summary>Gets custom provider config along with plaintext API key (decrypted with password).</summary>
+    public virtual async Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
         ReadOnlyMemory<byte> password,
-        CancellationToken ct = default);
+        CancellationToken ct = default)
+    {
+        CustomProviderConfig? config = await GetCustomProviderConfigAsync(chainInfo, ct);
+        if (config is null)
+            return null;
+
+        if (!config.HasCustomApiKey)
+            return (config, null);
+
+        string key = StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network);
+        EncryptedVault? vault = await GetJsonAsync<EncryptedVault>(key, ct);
+        if (vault is null)
+            return (config, null);
+
+        Guid expectedId = DeriveApiKeyVaultId(chainInfo);
+        if (vault.Purpose != VaultPurpose.ApiKey || vault.WalletId != expectedId)
+            throw new CryptographicException("Invalid API key vault metadata");
+
+        byte[] apiKeyBytes = VaultEncryption.Decrypt(vault, password.Span);
+        try
+        {
+            string apiKey = Encoding.UTF8.GetString(apiKeyBytes);
+            return (config, apiKey);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(apiKeyBytes);
+        }
+    }
+
+    #endregion
+
+    #region Protected Helpers
 
     protected static string GetCustomConfigKey(ChainInfo chainInfo)
         => GetCustomConfigKey(chainInfo.Chain, chainInfo.Network);
 
-    protected static string GetCustomConfigKey(ChainType chain, NetworkType network)
-        => $"{(int)chain}:{(int)network}";
+    protected static string GetCustomConfigKey(ChainType chain, string network)
+        => $"{(int)chain}:{network}";
 
     protected static string ComputeAuthTypeHmac(byte[] key, Guid walletId, string typeStr)
     {
@@ -120,7 +291,7 @@ public abstract class BurizaStorageBase : IStorageProvider
 
     protected static Guid DeriveApiKeyVaultId(ChainInfo chainInfo)
     {
-        string input = $"apikey|{(int)chainInfo.Chain}|{(int)chainInfo.Network}";
+        string input = $"apikey|{(int)chainInfo.Chain}|{chainInfo.Network}";
         byte[] bytes = Encoding.UTF8.GetBytes(input);
         byte[] hash = SHA256.HashData(bytes);
         Span<byte> guidBytes = stackalloc byte[16];
@@ -128,7 +299,6 @@ public abstract class BurizaStorageBase : IStorageProvider
         return new Guid(guidBytes);
     }
 
-    // JSON helpers
     protected async Task<T?> GetJsonAsync<T>(string key, CancellationToken ct = default)
     {
         string? json = await GetAsync(key, ct);
@@ -151,4 +321,5 @@ public abstract class BurizaStorageBase : IStorageProvider
         await SetAsync(key, json, ct);
     }
 
+    #endregion
 }

@@ -9,7 +9,7 @@ namespace Buriza.Core.Models.Config;
 public record CustomProviderConfig
 {
     public required ChainType Chain { get; init; }
-    public required NetworkType Network { get; init; }
+    public required string Network { get; init; }
 
     /// <summary>Custom endpoint URL (not sensitive, stored plain).</summary>
     public string? Endpoint { get; init; }

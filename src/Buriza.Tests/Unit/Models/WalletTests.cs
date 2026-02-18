@@ -4,13 +4,17 @@ using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Enums;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
+using Buriza.Core.Storage;
 using NSubstitute;
 using System.Reflection;
+using System.Text;
 
 namespace Buriza.Tests.Unit.Models;
 
 public class BurizaWalletTests
 {
+    private static readonly byte[] FakeMnemonic = Encoding.UTF8.GetBytes("fake mnemonic");
+
     #region BurizaWallet Properties Tests
 
     [Fact]
@@ -43,6 +47,7 @@ public class BurizaWalletTests
         Assert.Equal(0, wallet.ActiveAccountIndex);
         Assert.Empty(wallet.Accounts);
         Assert.Null(wallet.LastAccessedAt);
+        Assert.False(wallet.IsUnlocked);
     }
 
     [Fact]
@@ -129,48 +134,42 @@ public class BurizaWalletTests
 
     #endregion
 
-    #region GetAddressInfo Tests
+    #region GetAddressInfoAsync Tests
 
     [Fact]
-    public void GetAddressInfo_WhenNoAccount_ReturnsNull()
+    public async Task GetAddressInfoAsync_WhenLocked_ReturnsNull()
     {
         // Arrange
         BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
 
         // Act
-        ChainAddressData? result = wallet.GetAddressInfo();
+        ChainAddressData? result = await wallet.GetAddressInfoAsync();
 
         // Assert
         Assert.Null(result);
     }
 
     [Fact]
-    public void GetAddressInfo_WhenNoChainData_ReturnsNull()
+    public async Task GetAddressInfoAsync_WhenNoAccount_ReturnsNull()
     {
         // Arrange
-        BurizaWallet wallet = new()
-        {
-            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
-            Profile = new WalletProfile { Name = "Test" },
-            ActiveChain = ChainType.Cardano,
-            Accounts = [new BurizaWalletAccount { Index = 0, Name = "Account 0" }]
-        };
+        BurizaWallet wallet = CreateUnlockedWallet();
 
         // Act
-        ChainAddressData? result = wallet.GetAddressInfo();
+        ChainAddressData? result = await wallet.GetAddressInfoAsync();
 
-        // Assert
+        // Assert - no accounts exist
         Assert.Null(result);
     }
 
     [Fact]
-    public void GetAddressInfo_ReturnsAddress()
+    public async Task GetAddressInfoAsync_WhenUnlocked_ReturnsAddress()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
+        (BurizaWallet wallet, _) = CreateUnlockedWalletWithMockChainWallet("addr_test1qz...");
 
         // Act
-        ChainAddressData? result = wallet.GetAddressInfo();
+        ChainAddressData? result = await wallet.GetAddressInfoAsync();
 
         // Assert
         Assert.NotNull(result);
@@ -178,73 +177,33 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public void GetAddressInfo_WithNetworkWithoutData_ReturnsNull()
+    public async Task GetAddressInfoAsync_WithSpecificAccountIndex_ReturnsCorrectData()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
-        wallet.Network = NetworkType.Preview;
+        FakeChainWallet fakeKeyService = new(accountIndex => new ChainAddressData
+        {
+            ChainInfo = ChainRegistry.CardanoMainnet,
+            Address = $"addr_acc{accountIndex}"
+        });
 
-        // Act
-        ChainAddressData? result = wallet.GetAddressInfo();
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public void GetAddressInfo_WithSpecificAccountIndex_ReturnsCorrectData()
-    {
-        // Arrange
         BurizaWallet wallet = new()
         {
             Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test" },
             ActiveChain = ChainType.Cardano,
-            Network = NetworkType.Mainnet,
+            Network = "mainnet",
             ActiveAccountIndex = 0,
             Accounts =
             [
-                new BurizaWalletAccount
-                {
-                    Index = 0,
-                    Name = "Account 0",
-                    ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
-                    {
-                        [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
-                        {
-                            [NetworkType.Mainnet] = new ChainAddressData
-                            {
-                                Chain = ChainType.Cardano,
-                                Network = NetworkType.Mainnet,
-                                Symbol = "ADA",
-                                Address = "addr_acc0"
-                            }
-                        }
-                    }
-                },
-                new BurizaWalletAccount
-                {
-                    Index = 1,
-                    Name = "Account 1",
-                    ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
-                    {
-                        [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
-                        {
-                            [NetworkType.Mainnet] = new ChainAddressData
-                            {
-                                Chain = ChainType.Cardano,
-                                Network = NetworkType.Mainnet,
-                                Symbol = "ADA",
-                                Address = "addr_acc1"
-                            }
-                        }
-                    }
-                }
+                new BurizaWalletAccount { Index = 0, Name = "Account 0" },
+                new BurizaWalletAccount { Index = 1, Name = "Account 1" }
             ]
         };
+        AttachChainWallet(wallet, fakeKeyService);
+        SetMnemonicBytes(wallet, FakeMnemonic);
 
         // Act
-        ChainAddressData? result = wallet.GetAddressInfo(accountIndex: 1);
+        ChainAddressData? result = await wallet.GetAddressInfoAsync(accountIndex: 1);
 
         // Assert
         Assert.NotNull(result);
@@ -253,25 +212,47 @@ public class BurizaWalletTests
 
     #endregion
 
-    #region IWallet Query Operations Tests
+    #region Lock / Unlock Tests
 
     [Fact]
-    public async Task GetBalanceAsync_WhenNoProvider_ThrowsInvalidOperationException()
+    public void Lock_WhenUnlocked_ClearsMnemonic()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
+        BurizaWallet wallet = CreateUnlockedWallet();
+        Assert.True(wallet.IsUnlocked);
 
-        // Act & Assert
-        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => wallet.GetBalanceAsync());
-        Assert.Contains("provider", ex.Message.ToLower());
+        // Act
+        wallet.Lock();
+
+        // Assert
+        Assert.False(wallet.IsUnlocked);
     }
 
     [Fact]
-    public async Task GetBalanceAsync_WhenNoAddress_ReturnsZero()
+    public void Lock_WhenAlreadyLocked_IsNoOp()
     {
         // Arrange
         BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
+
+        // Act & Assert - should not throw
+        wallet.Lock();
+        Assert.False(wallet.IsUnlocked);
+    }
+
+    #endregion
+
+    #region IWallet Query Operations Tests
+
+    [Fact]
+    public async Task GetBalanceAsync_WhenLocked_ReturnsZero()
+    {
+        // Arrange
+        BurizaWallet wallet = new()
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Profile = new WalletProfile { Name = "Test" },
+            Accounts = [new BurizaWalletAccount { Index = 0, Name = "Account 0" }]
+        };
         AttachMockProvider(wallet);
 
         // Act
@@ -282,11 +263,10 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public async Task GetBalanceAsync_QueriesAddress()
+    public async Task GetBalanceAsync_WhenUnlocked_QueriesAddress()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
-        IBurizaChainProvider mockProvider = AttachMockProvider(wallet);
+        (BurizaWallet wallet, IBurizaChainProvider mockProvider) = CreateUnlockedWalletWithMockChainWallet("addr_test1qz...");
         mockProvider.GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>())
             .Returns(5_000_000UL);
 
@@ -299,60 +279,26 @@ public class BurizaWalletTests
     }
 
     [Fact]
-    public async Task GetBalanceAsync_ResolvesProviderFromFactoryUsingCurrentNetwork()
-    {
-        // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
-        wallet.Accounts[0].ChainData[ChainType.Cardano][NetworkType.Preprod] = new ChainAddressData
-        {
-            Chain = ChainType.Cardano,
-            Network = NetworkType.Preprod,
-            Symbol = "tADA",
-            Address = "addr_test1preprod..."
-        };
-
-        IBurizaChainProvider mainnetProvider = Substitute.For<IBurizaChainProvider>();
-        IBurizaChainProvider preprodProvider = Substitute.For<IBurizaChainProvider>();
-        mainnetProvider.GetBalanceAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(1_000_000UL);
-        preprodProvider.GetBalanceAsync("addr_test1preprod...", Arg.Any<CancellationToken>()).Returns(2_000_000UL);
-
-        IBurizaChainProviderFactory factory = Substitute.For<IBurizaChainProviderFactory>();
-        factory.CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Mainnet))
-            .Returns(mainnetProvider);
-        factory.CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Preprod))
-            .Returns(preprodProvider);
-        AttachMockProviderFactory(wallet, factory);
-
-        // Act
-        wallet.Network = NetworkType.Mainnet;
-        ulong mainnetBalance = await wallet.GetBalanceAsync();
-
-        wallet.Network = NetworkType.Preprod;
-        ulong preprodBalance = await wallet.GetBalanceAsync();
-
-        // Assert
-        Assert.Equal(1_000_000UL, mainnetBalance);
-        Assert.Equal(2_000_000UL, preprodBalance);
-        factory.Received(1).CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Mainnet));
-        factory.Received(1).CreateProvider(Arg.Is<ChainInfo>(c => c.Chain == ChainType.Cardano && c.Network == NetworkType.Preprod));
-    }
-
-    [Fact]
     public async Task GetUtxosAsync_WhenNoProvider_ThrowsInvalidOperationException()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
+        BurizaWallet wallet = new()
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Profile = new WalletProfile { Name = "Test" },
+            Accounts = [new BurizaWalletAccount { Index = 0, Name = "Account 0" }]
+        };
+        SetMnemonicBytes(wallet, FakeMnemonic);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetUtxosAsync());
     }
 
     [Fact]
-    public async Task GetUtxosAsync_QueriesAddress()
+    public async Task GetUtxosAsync_WhenUnlocked_QueriesAddress()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
-        IBurizaChainProvider mockProvider = AttachMockProvider(wallet);
+        (BurizaWallet wallet, IBurizaChainProvider mockProvider) = CreateUnlockedWalletWithMockChainWallet("addr_test1qz...");
 
         List<Utxo> utxos = [new Utxo { TxHash = "tx1", OutputIndex = 0, Address = "addr_test1qz...", Value = 1_000_000 }];
         mockProvider.GetUtxosAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(utxos);
@@ -369,59 +315,43 @@ public class BurizaWalletTests
     public async Task GetAssetsAsync_WhenNoProvider_ThrowsInvalidOperationException()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
+        BurizaWallet wallet = new()
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Profile = new WalletProfile { Name = "Test" },
+            Accounts = [new BurizaWalletAccount { Index = 0, Name = "Account 0" }]
+        };
+        SetMnemonicBytes(wallet, FakeMnemonic);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetAssetsAsync());
     }
 
-    [Fact]
-    public async Task GetTransactionHistoryAsync_WhenNoProvider_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetTransactionHistoryAsync());
-    }
 
     #endregion
 
     #region IWallet Transaction Operations Tests
 
     [Fact]
-    public async Task BuildTransactionAsync_WhenNoProvider_ThrowsInvalidOperationException()
+    public async Task SendAsync_WhenNoProvider_ThrowsInvalidOperationException()
     {
         // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
+        BurizaWallet wallet = new()
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Profile = new WalletProfile { Name = "Test" },
+            Accounts = [new BurizaWalletAccount { Index = 0, Name = "Account 0" }]
+        };
+        SetMnemonicBytes(wallet, FakeMnemonic);
+
+        TransactionRequest request = new()
+        {
+            Recipients = [new TransactionRecipient { Address = "addr_recipient", Amount = 1_000_000 }]
+        };
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => wallet.BuildTransactionAsync(1_000_000, "addr_recipient"));
-    }
-
-    [Fact]
-    public async Task BuildTransactionAsync_WhenNoAddress_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
-        AttachMockProvider(wallet);
-
-        // Act & Assert
-        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => wallet.BuildTransactionAsync(1_000_000, "addr_recipient"));
-        Assert.Contains("address", ex.Message.ToLower());
-    }
-
-    [Fact]
-    public async Task SubmitAsync_WhenNoProvider_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        BurizaWallet wallet = CreateWalletWithAddress();
-
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => wallet.SubmitAsync(null!));
+            () => wallet.SendAsync(request));
     }
 
     #endregion
@@ -443,53 +373,6 @@ public class BurizaWalletTests
         Assert.Equal("Main Account", account.Name);
     }
 
-    [Fact]
-    public void BurizaWalletAccount_GetChainData_WhenExists_ReturnsData()
-    {
-        // Arrange
-        ChainAddressData cardanoData = new()
-        {
-            Chain = ChainType.Cardano,
-            Network = NetworkType.Mainnet,
-            Symbol = "ADA",
-            Address = "addr_test1..."
-        };
-
-        BurizaWalletAccount account = new()
-        {
-            Index = 0,
-            Name = "Test",
-            ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
-            {
-                [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
-                {
-                    [NetworkType.Mainnet] = cardanoData
-                }
-            }
-        };
-
-        // Act
-        ChainAddressData? result = account.GetChainData(ChainType.Cardano, NetworkType.Mainnet);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(ChainType.Cardano, result.Chain);
-        Assert.Equal("addr_test1...", result.Address);
-    }
-
-    [Fact]
-    public void BurizaWalletAccount_GetChainData_WhenNotExists_ReturnsNull()
-    {
-        // Arrange
-        BurizaWalletAccount account = new() { Index = 0, Name = "Test" };
-
-        // Act
-        ChainAddressData? result = account.GetChainData(ChainType.Cardano, NetworkType.Mainnet);
-
-        // Assert
-        Assert.Null(result);
-    }
-
     #endregion
 
     #region ChainAddressData Tests
@@ -500,15 +383,13 @@ public class BurizaWalletTests
         // Arrange & Act
         ChainAddressData data = new()
         {
-            Chain = ChainType.Cardano,
-            Network = NetworkType.Mainnet,
-            Symbol = "ADA",
+            ChainInfo = ChainRegistry.CardanoMainnet,
             Address = "addr_test1qz..."
         };
 
         // Assert
-        Assert.Equal(ChainType.Cardano, data.Chain);
-        Assert.Equal(NetworkType.Mainnet, data.Network);
+        Assert.Equal(ChainType.Cardano, data.ChainInfo.Chain);
+        Assert.Equal("mainnet", data.ChainInfo.Network);
         Assert.Equal("addr_test1qz...", data.Address);
     }
 
@@ -518,9 +399,7 @@ public class BurizaWalletTests
         // Arrange & Act
         ChainAddressData data = new()
         {
-            Chain = ChainType.Cardano,
-            Network = NetworkType.Mainnet,
-            Symbol = "ADA",
+            ChainInfo = ChainRegistry.CardanoMainnet,
             Address = "addr_test1qz..."
         };
 
@@ -532,37 +411,51 @@ public class BurizaWalletTests
 
     #region Helper Methods
 
-    private static BurizaWallet CreateWalletWithAddress()
+    private static BurizaWallet CreateUnlockedWallet()
     {
-        return new BurizaWallet
+        BurizaWallet wallet = new()
+        {
+            Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
+            Profile = new WalletProfile { Name = "Test Wallet" },
+            ActiveChain = ChainType.Cardano,
+            Network = "mainnet",
+            ActiveAccountIndex = 0
+        };
+        SetMnemonicBytes(wallet, FakeMnemonic);
+        return wallet;
+    }
+
+    private static (BurizaWallet Wallet, IBurizaChainProvider Provider) CreateUnlockedWalletWithMockChainWallet(string address)
+    {
+        FakeChainWallet fakeKeyService = new(_ => new ChainAddressData
+        {
+            ChainInfo = ChainRegistry.CardanoMainnet,
+            Address = address
+        });
+
+        BurizaWallet wallet = new()
         {
             Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Profile = new WalletProfile { Name = "Test Wallet", Avatar = "test.png" },
             ActiveChain = ChainType.Cardano,
-            Network = NetworkType.Mainnet,
+            Network = "mainnet",
             ActiveAccountIndex = 0,
             Accounts =
             [
-                new BurizaWalletAccount
-                {
-                    Index = 0,
-                    Name = "Account 0",
-                    ChainData = new Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>>
-                    {
-                        [ChainType.Cardano] = new Dictionary<NetworkType, ChainAddressData>
-                        {
-                            [NetworkType.Mainnet] = new ChainAddressData
-                            {
-                                Chain = ChainType.Cardano,
-                                Network = NetworkType.Mainnet,
-                                Symbol = "ADA",
-                                Address = "addr_test1qz..."
-                            }
-                        }
-                    }
-                }
+                new BurizaWalletAccount { Index = 0, Name = "Account 0" }
             ]
         };
+
+        IBurizaChainProvider provider = AttachChainWallet(wallet, fakeKeyService);
+        SetMnemonicBytes(wallet, FakeMnemonic);
+        return (wallet, provider);
+    }
+
+    private static void SetMnemonicBytes(BurizaWallet wallet, byte[] mnemonic)
+    {
+        FieldInfo? field = typeof(BurizaWallet).GetField("_mnemonicBytes",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        field!.SetValue(wallet, (byte[])mnemonic.Clone());
     }
 
     private static IBurizaChainProvider AttachMockProvider(BurizaWallet wallet)
@@ -570,17 +463,42 @@ public class BurizaWalletTests
         IBurizaChainProvider provider = Substitute.For<IBurizaChainProvider>();
         IBurizaChainProviderFactory factory = Substitute.For<IBurizaChainProviderFactory>();
         factory.CreateProvider(Arg.Any<ChainInfo>()).Returns(provider);
-        AttachMockProviderFactory(wallet, factory);
+        SetField(wallet, "_chainProviderFactory", factory);
         return provider;
     }
 
-    private static void AttachMockProviderFactory(BurizaWallet wallet, IBurizaChainProviderFactory factory)
+    private static IBurizaChainProvider AttachChainWallet(BurizaWallet wallet, IChainWallet chainWallet)
     {
-        // Internal runtime dependency; tests inject it via reflection.
-        FieldInfo? field = typeof(BurizaWallet).GetField("_chainProviderFactory",
+        IBurizaChainProvider provider = Substitute.For<IBurizaChainProvider>();
+        IBurizaChainProviderFactory factory = Substitute.For<IBurizaChainProviderFactory>();
+        factory.CreateProvider(Arg.Any<ChainInfo>()).Returns(provider);
+        factory.CreateChainWallet(Arg.Any<ChainInfo>()).Returns(chainWallet);
+        SetField(wallet, "_chainProviderFactory", factory);
+        return provider;
+    }
+
+    private static void SetField(BurizaWallet wallet, string fieldName, object value)
+    {
+        FieldInfo? field = typeof(BurizaWallet).GetField(fieldName,
             BindingFlags.Instance | BindingFlags.NonPublic);
-        field!.SetValue(wallet, factory);
+        field!.SetValue(wallet, value);
     }
 
     #endregion
+
+    /// <summary>
+    /// Concrete IChainWallet implementation for tests.
+    /// NSubstitute cannot proxy IChainWallet because DeriveChainDataAsync uses ReadOnlySpan&lt;byte&gt;.
+    /// </summary>
+    private sealed class FakeChainWallet(Func<int, ChainAddressData> addressFactory) : IChainWallet
+    {
+        public Task<ChainAddressData> DeriveChainDataAsync(ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange = false, CancellationToken ct = default)
+            => Task.FromResult(addressFactory(accountIndex));
+
+        public Task<UnsignedTransaction> BuildTransactionAsync(string fromAddress, TransactionRequest request, IBurizaChainProvider provider, CancellationToken ct = default)
+            => throw new NotImplementedException();
+
+        public byte[] Sign(UnsignedTransaction unsignedTx, ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo, int accountIndex, int addressIndex)
+            => throw new NotImplementedException();
+    }
 }

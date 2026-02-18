@@ -26,15 +26,13 @@ using Chrysalis.Network.Cbor.LocalStateQuery;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Chain;
-using BurizaNetworkType = Buriza.Core.Models.Enums.NetworkType;
-
 namespace Buriza.Data.Providers;
 
 /// <summary>
-/// UTxO RPC (U5C) provider implementing IBurizaChainProvider and ICardanoDataProvider.
+/// UTxO RPC provider implementing IBurizaChainProvider and ICardanoDataProvider.
 /// Handles all chain queries, transaction submission, and Chrysalis transaction building.
 /// </summary>
-public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
+public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
 {
     private readonly GrpcChannel _channel;
     private readonly UtxorpcQuery.QueryService.QueryServiceClient _queryClient;
@@ -45,15 +43,15 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
 
     private const int MaxParallelQueries = 5;
 
-    /// <summary>Gets the Buriza network type for this provider.</summary>
-    public BurizaNetworkType NetworkType { get; }
+    /// <summary>Gets the network identifier for this provider.</summary>
+    public string NetworkType { get; }
 
     /// <summary>Gets the Chrysalis network type (for ICardanoDataProvider).</summary>
     ChrysalisNetworkType ICardanoDataProvider.NetworkType => MapNetworkType(NetworkType);
 
-    public BurizaU5CProvider(string endpoint, string? apiKey = null, BurizaNetworkType networkType = BurizaNetworkType.Mainnet)
+    public BurizaUtxoRpcProvider(string endpoint, string? apiKey = null, string network = "mainnet")
     {
-        NetworkType = networkType;
+        NetworkType = network;
         _channel = GrpcChannel.ForAddress(endpoint);
         _queryClient = new UtxorpcQuery.QueryService.QueryServiceClient(_channel);
         _syncClient = new SyncService.SyncServiceClient(_channel);
@@ -61,11 +59,11 @@ public class BurizaU5CProvider : IBurizaChainProvider, ICardanoDataProvider
         _headers = BuildHeaders(apiKey);
     }
 
-    private static ChrysalisNetworkType MapNetworkType(BurizaNetworkType networkType)
-        => networkType switch
+    private static ChrysalisNetworkType MapNetworkType(string network)
+        => network switch
         {
-            BurizaNetworkType.Mainnet => ChrysalisNetworkType.Mainnet,
-            BurizaNetworkType.Preprod => ChrysalisNetworkType.Preprod,
+            "mainnet" => ChrysalisNetworkType.Mainnet,
+            "preprod" => ChrysalisNetworkType.Preprod,
             _ => ChrysalisNetworkType.Testnet
         };
 

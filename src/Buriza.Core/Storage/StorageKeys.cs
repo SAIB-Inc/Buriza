@@ -8,8 +8,11 @@ public static class StorageKeys
 {
     #region Wallet Metadata
 
-    /// <summary>Key for storing all wallet metadata as JSON array.</summary>
-    public const string Wallets = "buriza_wallets";
+    /// <summary>Prefix for per-wallet storage keys.</summary>
+    public const string WalletPrefix = "buriza_wallet_";
+
+    /// <summary>Gets the storage key for a single wallet's metadata.</summary>
+    public static string Wallet(Guid walletId) => $"buriza_wallet_{walletId:N}";
 
     /// <summary>Key for storing the active wallet ID.</summary>
     public const string ActiveWallet = "buriza_active_wallet";
@@ -46,7 +49,7 @@ public static class StorageKeys
     public static string PasswordVerifier(Guid walletId) => $"buriza_pw_verifier_{walletId:N}";
 
     /// <summary>Gets the storage key for a chain's encrypted API key vault.</summary>
-    public static string ApiKeyVault(int chain, int network) => $"buriza_apikey_{chain}_{network}";
+    public static string ApiKeyVault(int chain, string network) => $"buriza_apikey_{chain}_{network}";
 
     /// <summary>Gets the storage key for a data service's encrypted API key vault.</summary>
     public static string DataServiceApiKeyVault(int serviceType) => $"buriza_data_apikey_{serviceType}";

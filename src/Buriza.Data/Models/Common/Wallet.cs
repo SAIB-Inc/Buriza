@@ -33,5 +33,5 @@ public record WalletInfo
     public required int AccountIndex { get; init; }
     public required string Address { get; init; }
     public required ChainType Chain { get; init; }
-    public required NetworkType Network { get; init; }
+    public required string Network { get; init; }
 }

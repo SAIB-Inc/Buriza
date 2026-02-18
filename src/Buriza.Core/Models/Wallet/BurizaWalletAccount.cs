@@ -1,5 +1,3 @@
-using Buriza.Core.Models.Enums;
-
 namespace Buriza.Core.Models.Wallet;
 
 /// <summary>
@@ -17,15 +15,5 @@ public class BurizaWalletAccount
     /// <summary>Optional avatar/image for visual distinction between accounts.</summary>
     public string? Avatar { get; set; }
 
-    /// <summary>Chain-specific address data, keyed by ChainType and Network.</summary>
-    public Dictionary<ChainType, Dictionary<NetworkType, ChainAddressData>> ChainData { get; set; } = [];
-
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-
-    public ChainAddressData? GetChainData(ChainType chain, NetworkType network)
-    {
-        if (!ChainData.TryGetValue(chain, out Dictionary<NetworkType, ChainAddressData>? perNetwork))
-            return null;
-        return perNetwork.TryGetValue(network, out ChainAddressData? data) ? data : null;
-    }
 }
