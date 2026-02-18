@@ -10,12 +10,12 @@
     @if(!IsAdvancedMode)
     {
         <div />
-            <div class="w-full !px-4">
-                <div class="relative !mb-11">
+            <div class="w-full !px-6">
+                <div class="relative !mb-13">
                     <MudImage   
                         Alt="glimmer" 
                         Src="@Misc.DiamondClusterOrange"
-                        Class="!absolute bottom-[-45px] left-3" 
+                        Class="!absolute bottom-[-45px] -left-3" 
                     />
                     <MudImage 
                         Alt="QR Code" 
@@ -25,11 +25,11 @@
                     <MudImage 
                         Alt="glimmer" 
                         Src="@Misc.DiamondClusterPurple" 
-                        Class="!absolute top-[-67px] right-[-14px]" 
+                        Class="!absolute top-[-67px] -right-[42px]" 
                     />
 
                 </div>
-                <div class="!px-4">
+                <div>
                     <MudText 
                         Class="!text-[22px] !font-semibold !text-[var(--mud-palette-text-primary)]" 
                         Align="Align.Center"
@@ -37,19 +37,10 @@
                         @SelectedAccount.Name
                     </MudText>
                     <MudText 
-                        Class="break-words !text-[var(--mud-palette-text-primary)] !mt-2" 
+                        Class="break-words !p-3 rounded-xl bg-[var(--mud-palette-drawer-background)] !text-[var(--mud-palette-text-primary)] !mt-3" 
                         Align="Align.Center"
                     >
-                        <span class="font-bold"
-                            Align="Align.Center"
-                        >
-                            @SelectedAccount.Start
-                        </span>@SelectedAccount.Middle
-                        <span
-                            class="font-bold"
-                        >
-                            @SelectedAccount.End
-                        </span>
+                        <span class="font-semibold">@SelectedAccount.Start</span>@SelectedAccount.Middle<span class="font-semibold">@SelectedAccount.End</span>
                     </MudText>
                 </div>
             </div>
