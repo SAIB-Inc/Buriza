@@ -6,30 +6,51 @@
 <BurizaBaseDialog 
     Title="Confirm Data"
     OnClose="Cancel"
-    Class="w-[379px] h-[304px] !bg-[var(--mud-palette-background)] !rounded-[28px] !p-6" 
-    TitleClass="p-0! mb-4!"
-    ActionsClass="!justify-end px-0! pt-6! pb-0!"
 >
     <DialogContent>
-        <div class="h-full flex flex-col justify-between">
+        <div class="h-full flex flex-col gap-y-6">
             <div>
                 <MudText
                     Class="text-xs! tracking-[0.1px]">
                     Once you perform this action, there is no way to reverse it. Please be certain before proceeding.
                 </MudText>
             </div>
-            <div>
-                <div class="rounded-full">@*Search Icon*@</div>
-                <div>
-                    <MudText>coinecta - Search</MudText>
-                    <MudText>https://www.bing.com</MudText>
+            <div class="flex w-full gap-x-[9px] bg-[var(--mud-palette-dark-darken)] !p-3 rounded-xl">
+                <div class="w-10 h-10 rounded-full bg-[var(--buriza-chip-bg)] [&_.mud-icon-root]:text-[var(--search-icon)]! [&_.mud-button-root]:w-10! [&_.mud-button-root]:h-10!">
+                    <MudIconButton 
+                        Icon="@BurizaIcons.SearchSymbolIcon"
+                    />
+                </div>
+                <div>   
+                    <MudText
+                        class="!tracking-[0.1px]"
+                    >
+                        coinecta - Search
+                    </MudText>
+                    <MudText
+                        class="!text-xs text-[var(--mud-palette-text-secondary)]! !tracking-[0.1px]"
+                    >
+                        https://www.bing.com
+                    </MudText>
                 </div>
             </div>
             <div class="relative !mb-6">
-                <MudText>Address</MudText>
                 <div>
+                    <MudText
+                        class="!text-xs text-[var(--mud-palette-text-secondary)]"
+                    >
+                        Address
+                    </MudText>
+                </div>
+                <div class="flex justify-between bg-[var(--mud-palette-dark-darken)] !py-2 !px-2 rounded-lg">
+                    <MudText
+                        class="!text-sm self-center"
+                    >
+                        addr1q9qvcgu...82ameqf3wyew
+                    </MudText>
                     <MudIconButton
-                        Icon="@BurizaIcons.QrScannerIcon"
+                        class="p-1! [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-white"
+                        Icon="@BurizaIcons.CopySymbolIcon"
                     />                    
                 </div>
                 <div>

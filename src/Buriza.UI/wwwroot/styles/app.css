@@ -7,9 +7,6 @@
     --card-wallet-chip: #002116;
     --card-wallet-subtext: #00173D;
     --card-wallet-overlay: #B5E6FF4D;
-    --buriza-chip-bg: #32353D;
-    --send-token-card-border: #1D212B;
-    --light-border: #3A4663;
     --dapp-type-defi: #AEC6FF;
     --dapp-type-nft: #D7494B;
     --dapp-type-gaming: #C671FE;
@@ -18,6 +15,10 @@
     --dapp-type-bridge: #FF4D9A;
     --dapp-type-infrastructure: #FFEF72;
     --dapp-type-realfi: #6D8AFF;
+    --buriza-chip-bg: #32353D;
+    --send-token-card-border: #1D212B;
+    --light-border: #3A4663;
+    --search-icon: #A6C1FE;
 }
 
 * {

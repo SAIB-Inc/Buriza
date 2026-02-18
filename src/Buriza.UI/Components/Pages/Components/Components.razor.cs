@@ -32,4 +32,16 @@ public partial class Components
 
         await DialogService.ShowAsync<TransactionSummaryDialog>(null, options);
     }
+
+    private async Task OpenConfirmDataDialog()
+    {
+        DialogOptions options = new()
+        {
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        await DialogService.ShowAsync<ConfirmDataDialog>(null, options);
+    }
 }
