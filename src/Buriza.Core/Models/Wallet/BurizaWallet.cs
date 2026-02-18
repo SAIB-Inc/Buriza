@@ -27,6 +27,7 @@ public class BurizaWallet(
     [JsonIgnore]
     private byte[]? _mnemonicBytes;
 
+
     [JsonConstructor]
     public BurizaWallet() : this(null, null) { }
 
@@ -49,7 +50,7 @@ public class BurizaWallet(
 
     public DateTime? LastAccessedAt { get; set; }
 
-    internal void BindRuntimeServices(IBurizaChainProviderFactory chainProviderFactory, BurizaStorageBase storage)
+    internal void Attach(IBurizaChainProviderFactory chainProviderFactory, BurizaStorageBase storage)
     {
         _chainProviderFactory = chainProviderFactory ?? throw new ArgumentNullException(nameof(chainProviderFactory));
         _storage = storage ?? throw new ArgumentNullException(nameof(storage));

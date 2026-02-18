@@ -6,12 +6,7 @@ namespace Buriza.Core.Models.Enums;
 public enum TransactionActionType
 {
     Send,
-    Delegate,
-    Withdraw,
-    RegisterStake,
-    DeregisterStake,
-    Mint,
-    Burn,
-    Vote,
+    Receive,
+    Mixed,
     Other
 }

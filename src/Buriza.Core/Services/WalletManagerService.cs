@@ -87,7 +87,7 @@ public class WalletManagerService(
     public async Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default)
     {
         IReadOnlyList<BurizaWallet> wallets = await _storage.LoadAllWalletsAsync(ct);
-        return BindRuntimeDependencies(wallets);
+        return AttachRuntime(wallets);
     }
 
     /// <inheritdoc/>
@@ -97,7 +97,7 @@ public class WalletManagerService(
         if (!activeId.HasValue) return null;
 
         BurizaWallet? wallet = await _storage.LoadWalletAsync(activeId.Value, ct);
-        return wallet is null ? null : BindRuntimeDependencies(wallet);
+        return wallet is null ? null : AttachRuntime(wallet);
     }
 
     /// <inheritdoc/>
@@ -136,21 +136,19 @@ public class WalletManagerService(
     {
         BurizaWallet wallet = await _storage.LoadWalletAsync(walletId, ct)
             ?? throw new ArgumentException("Wallet not found", nameof(walletId));
-        return BindRuntimeDependencies(wallet);
+        return AttachRuntime(wallet);
     }
 
-    // Wallet metadata is persisted as JSON, but runtime services (like provider factory)
-    // are not serializable. Rebind those dependencies after load before returning wallets.
-    private BurizaWallet BindRuntimeDependencies(BurizaWallet wallet)
+    private BurizaWallet AttachRuntime(BurizaWallet wallet)
     {
-        wallet.BindRuntimeServices(_providerFactory, _storage);
+        wallet.Attach(_providerFactory, _storage);
         return wallet;
     }
 
-    private IReadOnlyList<BurizaWallet> BindRuntimeDependencies(IReadOnlyList<BurizaWallet> wallets)
+    private IReadOnlyList<BurizaWallet> AttachRuntime(IReadOnlyList<BurizaWallet> wallets)
     {
         foreach (BurizaWallet wallet in wallets)
-            wallet.BindRuntimeServices(_providerFactory, _storage);
+            wallet.Attach(_providerFactory, _storage);
         return wallets;
     }
 

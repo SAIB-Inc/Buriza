@@ -249,12 +249,6 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         return utxos.Count > 0;
     }
 
-    public Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(string address, int limit = 50, CancellationToken ct = default)
-    {
-        // TODO: Implement transaction history retrieval
-        return Task.FromResult<IReadOnlyList<TransactionHistory>>([]);
-    }
-
     public async Task<string> SubmitAsync(byte[] txBytes, CancellationToken ct = default)
     {
         SubmitTxRequest request = new()

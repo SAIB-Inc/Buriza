@@ -126,7 +126,7 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         {
             string choice = await RunMenuLoopAsync(
                 "Account",
-                ["Show receive address", "Show balance", "Show assets", "Show UTXOs", "Show transaction history", "Back"]);
+                ["Show receive address", "Show balance", "Show assets", "Show UTXOs", "Back"]);
 
             switch (choice)
             {
@@ -141,9 +141,6 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
                     break;
                 case "Show UTXOs":
                     await ExecuteWithHandlingAsync(() => ShowUtxosAsync());
-                    break;
-                case "Show transaction history":
-                    await ExecuteWithHandlingAsync(() => ShowTransactionHistoryAsync());
                     break;
                 case "Back":
                     return;
@@ -522,38 +519,6 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         table.AddColumn("Value");
         foreach (Utxo utxo in utxos)
             table.AddRow(utxo.TxHash, utxo.OutputIndex.ToString(), utxo.Value.ToString());
-        AnsiConsole.Write(table);
-        Pause();
-    }
-
-    private async Task ShowTransactionHistoryAsync()
-    {
-        BurizaWallet active = await RequireActiveWalletAsync();
-        string? address = (await active.GetAddressInfoAsync())?.Address;
-        if (string.IsNullOrEmpty(address))
-        {
-            AnsiConsole.MarkupLine("[grey]No address available.[/]");
-            Pause();
-            return;
-        }
-        ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
-        using IBurizaChainProvider provider = _providerFactory.CreateProvider(chainInfo);
-        IReadOnlyList<TransactionHistory> history = await provider.GetTransactionHistoryAsync(address);
-        if (history.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[grey]No transactions found.[/]");
-            Pause();
-            return;
-        }
-
-        Table table = new();
-        table.AddColumn("TxId");
-        table.AddColumn("Type");
-        table.AddColumn("From");
-        table.AddColumn("To");
-        table.AddColumn("Timestamp");
-        foreach (TransactionHistory tx in history)
-            table.AddRow(tx.TransactionId, tx.Type.ToString(), tx.FromAddress, tx.ToAddress, tx.Timestamp.ToString("u"));
         AnsiConsole.Write(table);
         Pause();
     }

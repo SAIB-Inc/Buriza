@@ -24,9 +24,6 @@ public interface IBurizaChainProvider : IDisposable
     /// <summary>Checks if an address has been used (has UTxOs).</summary>
     Task<bool> IsAddressUsedAsync(string address, CancellationToken ct = default);
 
-    /// <summary>Gets transaction history for the given address.</summary>
-    Task<IReadOnlyList<TransactionHistory>> GetTransactionHistoryAsync(string address, int limit = 50, CancellationToken ct = default);
-
     /// <summary>Gets protocol parameters. Returns chain-specific parameter object.</summary>
     Task<object> GetParametersAsync(CancellationToken ct = default);
 
