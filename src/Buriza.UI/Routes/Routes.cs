@@ -16,4 +16,5 @@ public static class Routes
     public const string Send = "/send";
     public const string Settings = "/settings";
     public const string Manage = "/manage";
+    public const string SendAssets = "/send/assets";
 }
