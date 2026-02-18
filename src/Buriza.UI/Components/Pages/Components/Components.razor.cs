@@ -32,4 +32,11 @@ public partial class Components
 
         await DialogService.ShowAsync<TransactionSummaryDialog>(null, options);
     }
+
+    private async Task OpenTransactionConfirmationDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        await DialogService.ShowAsync<TransactionConfirmationDialog>(null, options);
+    }
 }
