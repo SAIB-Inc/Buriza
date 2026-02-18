@@ -19,6 +19,10 @@ public class WalletManagerService(
     #region Wallet Lifecycle
 
     /// <inheritdoc/>
+    /// <remarks>
+    /// Chrysalis allocates mnemonic words as managed strings internally.
+    /// We zero the char[] copy but cannot zero the library's immutable strings.
+    /// </remarks>
     public void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic)
     {
         Mnemonic mnemonic = Mnemonic.Generate(English.Words, wordCount);
@@ -63,16 +67,16 @@ public class WalletManagerService(
             ]
         };
 
-        await _storage.CreateVaultAsync(wallet.Id, mnemonicBytes, passwordBytes, ct);
+        await _storage.SaveWalletAsync(wallet, ct);
+        await _storage.SetActiveWalletIdAsync(wallet.Id, ct);
         try
         {
-            await _storage.SaveWalletAsync(wallet, ct);
-            await _storage.SetActiveWalletIdAsync(wallet.Id, ct);
+            await _storage.CreateVaultAsync(wallet.Id, mnemonicBytes, passwordBytes, ct);
         }
         catch
         {
-            await _storage.DeleteVaultAsync(wallet.Id, ct);
             await _storage.DeleteWalletAsync(wallet.Id, ct);
+            await _storage.ClearActiveWalletIdAsync(ct);
             throw;
         }
 
@@ -150,6 +154,7 @@ public class WalletManagerService(
         return wallets;
     }
 
+    // Chrysalis limitation: Mnemonic.Restore() requires string — immutable string cannot be zeroed.
     private static bool ValidateMnemonic(ReadOnlySpan<byte> mnemonic)
     {
         try

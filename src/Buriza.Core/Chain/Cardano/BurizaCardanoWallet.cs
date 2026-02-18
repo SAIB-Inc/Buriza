@@ -9,18 +9,18 @@ using Chrysalis.Cbor.Extensions.Cardano.Core.Transaction;
 using Chrysalis.Cbor.Serialization;
 using Chrysalis.Cbor.Types.Cardano.Core.Common;
 using Chrysalis.Cbor.Types.Cardano.Core.Transaction;
-using WalletAddress = Chrysalis.Wallet.Models.Addresses.Address;
-using BurizaTransactionOutput = Buriza.Core.Models.Transaction.TransactionOutput;
 using Chrysalis.Tx.Builders;
 using Chrysalis.Tx.Extensions;
+using Chrysalis.Tx.Models;
 using Chrysalis.Wallet.Models.Addresses;
 using Chrysalis.Wallet.Models.Enums;
 using Chrysalis.Wallet.Models.Keys;
 using Chrysalis.Wallet.Utils;
 using Chrysalis.Wallet.Words;
-using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
+using BurizaTransactionOutput = Buriza.Core.Models.Transaction.TransactionOutput;
 using ChrysalisTransaction = Chrysalis.Cbor.Types.Cardano.Core.Transaction.Transaction;
-using Chrysalis.Tx.Models;
+using TxMetadata = Chrysalis.Cbor.Types.Cardano.Core.Metadata;
+using WalletAddress = Chrysalis.Wallet.Models.Addresses.Address;
 
 namespace Buriza.Core.Chain.Cardano;
 
@@ -40,24 +40,37 @@ public class BurizaCardanoWallet : IChainWallet
         NetworkType networkType = MapNetworkType(chainInfo.Network);
         Mnemonic restored = RestoreMnemonic(mnemonic);
         RoleType role = isChange ? RoleType.InternalChain : RoleType.ExternalChain;
+
         PrivateKey accountKey = DeriveAccountKey(restored, accountIndex);
-
-        PublicKey paymentKey = DeriveAddressKey(accountKey, role, addressIndex).GetPublicKey();
-        PublicKey stakingKey = DeriveAddressKey(accountKey, RoleType.Staking, 0).GetPublicKey();
-
-        string address = WalletAddress.FromPublicKeys(networkType, AddressType.Base, paymentKey, stakingKey).ToBech32();
-        string stakingAddress = DeriveStakingAddress(stakingKey.Key, chainInfo.Network);
-
-        return Task.FromResult(new ChainAddressData
+        PrivateKey paymentAddrKey = DeriveAddressKey(accountKey, role, addressIndex);
+        PrivateKey stakingAddrKey = DeriveAddressKey(accountKey, RoleType.Staking, 0);
+        try
         {
-            ChainInfo = chainInfo,
-            Address = address,
-            StakingAddress = stakingAddress
-        });
+            PublicKey paymentKey = paymentAddrKey.GetPublicKey();
+            PublicKey stakingKey = stakingAddrKey.GetPublicKey();
+
+            string address = WalletAddress.FromPublicKeys(networkType, AddressType.Base, paymentKey, stakingKey).ToBech32();
+            string stakingAddress = DeriveStakingAddress(stakingKey.Key, chainInfo.Network);
+
+            return Task.FromResult(new ChainAddressData
+            {
+                ChainInfo = chainInfo,
+                Address = address,
+                StakingAddress = stakingAddress
+            });
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(accountKey.Key);
+            CryptographicOperations.ZeroMemory(paymentAddrKey.Key);
+            CryptographicOperations.ZeroMemory(stakingAddrKey.Key);
+        }
     }
 
     public async Task<UnsignedTransaction> BuildTransactionAsync(
-        string fromAddress, TransactionRequest request, IBurizaChainProvider provider,
+        string fromAddress,
+        TransactionRequest request,
+        IBurizaChainProvider provider,
         CancellationToken ct = default)
     {
         ICardanoDataProvider cardanoProvider = provider as ICardanoDataProvider
@@ -93,23 +106,19 @@ public class BurizaCardanoWallet : IChainWallet
 
         byte[] txRaw = CborSerializer.Serialize(tx);
 
-        return new UnsignedTransaction
-        {
-            TxRaw = txRaw,
-            Fee = fee,
-            Summary = new TransactionSummary
-            {
-                Type = TransactionActionType.Send,
-                Outputs = [.. request.Recipients.Select(r =>
-                    new BurizaTransactionOutput
-                    {
-                        Address = r.Address,
-                        Amount = r.Amount,
-                        Assets = r.Assets
-                    })],
-                TotalAmount = (ulong)request.Recipients.Sum(r => (long)r.Amount)
-            }
-        };
+        return new UnsignedTransaction(
+            TxRaw: txRaw,
+            Fee: fee,
+            Summary: new TransactionSummary(
+                Type: TransactionActionType.Send,
+                Outputs: [.. request.Recipients.Select(r =>
+                    new BurizaTransactionOutput(
+                        Address: r.Address,
+                        Amount: r.Amount,
+                        Assets: r.Assets))],
+                TotalAmount: (ulong)request.Recipients.Sum(r => (long)r.Amount)
+            )
+        );
     }
 
     public byte[] Sign(
@@ -120,8 +129,8 @@ public class BurizaCardanoWallet : IChainWallet
         ChrysalisTransaction cardanoTx = CborSerializer.Deserialize<ChrysalisTransaction>(unsignedTx.TxRaw);
 
         Mnemonic restored = RestoreMnemonic(mnemonic);
-        RoleType role = RoleType.ExternalChain;
-        PrivateKey privateKey = DeriveAddressKey(DeriveAccountKey(restored, accountIndex), role, addressIndex);
+        PrivateKey accountKey = DeriveAccountKey(restored, accountIndex);
+        PrivateKey privateKey = DeriveAddressKey(accountKey, RoleType.ExternalChain, addressIndex);
 
         try
         {
@@ -140,6 +149,7 @@ public class BurizaCardanoWallet : IChainWallet
         }
         finally
         {
+            CryptographicOperations.ZeroMemory(accountKey.Key);
             CryptographicOperations.ZeroMemory(privateKey.Key);
         }
     }
@@ -150,7 +160,7 @@ public class BurizaCardanoWallet : IChainWallet
 
     public static string DeriveStakingAddress(byte[] stakingPublicKey, string network)
     {
-        byte networkNibble = network == "mainnet" ? (byte)0 : (byte)1;
+        byte networkNibble = network == "mainnet" ? (byte)1 : (byte)0;
         byte headerByte = (byte)(0xE0 | networkNibble);
         byte[] stakeHash = HashUtil.Blake2b224(stakingPublicKey);
         byte[] addressBytes = new byte[1 + stakeHash.Length];
@@ -159,17 +169,34 @@ public class BurizaCardanoWallet : IChainWallet
         return new WalletAddress(addressBytes).ToBech32();
     }
 
+    // Chrysalis limitation: Mnemonic.Restore() requires string — cannot avoid immutable string creation.
     private static Mnemonic RestoreMnemonic(ReadOnlySpan<byte> mnemonic) =>
         Mnemonic.Restore(Encoding.UTF8.GetString(mnemonic), English.Words);
 
-    private static PrivateKey DeriveAccountKey(Mnemonic mnemonic, int accountIndex) =>
-        mnemonic.GetRootKey()
-            .Derive(PurposeType.Shelley, DerivationType.HARD)
-            .Derive(CoinType.Ada, DerivationType.HARD)
-            .Derive(accountIndex, DerivationType.HARD);
+    /// <summary>Derives the account-level key, zeroing all intermediate keys (root, purpose, coin).</summary>
+    private static PrivateKey DeriveAccountKey(Mnemonic mnemonic, int accountIndex)
+    {
+        PrivateKey rootKey = mnemonic.GetRootKey();
+        PrivateKey purposeKey = rootKey.Derive(PurposeType.Shelley, DerivationType.HARD);
+        CryptographicOperations.ZeroMemory(rootKey.Key);
 
-    private static PrivateKey DeriveAddressKey(PrivateKey accountKey, RoleType role, int addressIndex) =>
-        accountKey.Derive(role).Derive(addressIndex);
+        PrivateKey coinKey = purposeKey.Derive(CoinType.Ada, DerivationType.HARD);
+        CryptographicOperations.ZeroMemory(purposeKey.Key);
+
+        PrivateKey accountKey = coinKey.Derive(accountIndex, DerivationType.HARD);
+        CryptographicOperations.ZeroMemory(coinKey.Key);
+
+        return accountKey;
+    }
+
+    /// <summary>Derives the address-level key, zeroing the intermediate role key.</summary>
+    private static PrivateKey DeriveAddressKey(PrivateKey accountKey, RoleType role, int addressIndex)
+    {
+        PrivateKey roleKey = accountKey.Derive(role);
+        PrivateKey addressKey = roleKey.Derive(addressIndex);
+        CryptographicOperations.ZeroMemory(roleKey.Key);
+        return addressKey;
+    }
 
     private static NetworkType MapNetworkType(string network) => network switch
     {

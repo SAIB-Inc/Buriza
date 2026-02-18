@@ -344,10 +344,9 @@ public class BurizaWalletTests
         };
         SetMnemonicBytes(wallet, FakeMnemonic);
 
-        TransactionRequest request = new()
-        {
-            Recipients = [new TransactionRecipient { Address = "addr_recipient", Amount = 1_000_000 }]
-        };
+        TransactionRequest request = new(
+            Recipients: [new TransactionRecipient("addr_recipient", 1_000_000)]
+        );
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(

@@ -589,10 +589,9 @@ public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings
         {
             await active.UnlockAsync(passwordBytes);
 
-            TransactionRequest request = new()
-            {
-                Recipients = [new TransactionRecipient { Address = toAddress, Amount = amount }]
-            };
+            TransactionRequest request = new(
+                Recipients: [new TransactionRecipient(toAddress, amount)]
+            );
 
             string txId = await active.SendAsync(request);
             AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");

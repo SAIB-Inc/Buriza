@@ -19,7 +19,7 @@ namespace Buriza.Core.Models.Wallet;
 /// </summary>
 public class BurizaWallet(
     IBurizaChainProviderFactory? chainProviderFactory = null,
-    BurizaStorageBase? storage = null) : IWallet
+    BurizaStorageBase? storage = null) : IWallet, IDisposable
 {
     private IBurizaChainProviderFactory? _chainProviderFactory = chainProviderFactory;
     private BurizaStorageBase? _storage = storage;
@@ -47,7 +47,6 @@ public class BurizaWallet(
     /// <summary>All accounts in this wallet.</summary>
     public List<BurizaWalletAccount> Accounts { get; set; } = [];
 
-    public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? LastAccessedAt { get; set; }
 
     internal void BindRuntimeServices(IBurizaChainProviderFactory chainProviderFactory, BurizaStorageBase storage)
@@ -388,6 +387,12 @@ public class BurizaWallet(
     }
 
     #endregion
+
+    public void Dispose()
+    {
+        Lock();
+        GC.SuppressFinalize(this);
+    }
 
     private BurizaStorageBase EnsureStorage()
         => _storage ?? throw new InvalidOperationException("Wallet storage is not bound. Use WalletManager to load the wallet.");

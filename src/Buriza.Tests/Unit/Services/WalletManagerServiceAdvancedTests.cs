@@ -156,7 +156,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
 
         // Act & Assert - Using an unsupported chain type (cast to simulate future chain)
-        ChainInfo unsupportedChain = new() { Chain = (ChainType)999, Network = "mainnet", Symbol = "UNKNOWN", Name = "Unknown", Decimals = 0 };
+        ChainInfo unsupportedChain = new((ChainType)999, "mainnet", "UNKNOWN", "Unknown", 0);
         await Assert.ThrowsAsync<NotSupportedException>(() =>
             wallet.SetActiveChainAsync(unsupportedChain));
     }

@@ -24,8 +24,8 @@ public class BurizaChainProviderFactory(
     public IBurizaChainProvider CreateProvider(ChainInfo chainInfo)
     {
         ServiceConfig? customConfig = _appState.GetChainConfig(chainInfo);
-        string? endpoint = Normalize(customConfig?.Endpoint) ?? GetDefaultEndpoint(chainInfo);
-        string? apiKey = Normalize(customConfig?.ApiKey) ?? GetDefaultApiKey(chainInfo);
+        string? endpoint = Normalize(customConfig?.Endpoint) ?? GetDefaultConfigEndpoint(chainInfo);
+        string? apiKey = Normalize(customConfig?.ApiKey) ?? GetDefaultConfigApiKey(chainInfo);
 
         if (string.IsNullOrEmpty(endpoint))
             throw new InvalidOperationException($"No endpoint configured for {chainInfo.Chain} {chainInfo.Network}");
@@ -67,7 +67,7 @@ public class BurizaChainProviderFactory(
         }
     }
 
-    private string? GetDefaultEndpoint(ChainInfo chainInfo)
+    private string? GetDefaultConfigEndpoint(ChainInfo chainInfo)
     {
         return chainInfo.Chain switch
         {
@@ -82,7 +82,7 @@ public class BurizaChainProviderFactory(
         };
     }
 
-    private string? GetDefaultApiKey(ChainInfo chainInfo)
+    private string? GetDefaultConfigApiKey(ChainInfo chainInfo)
     {
         return chainInfo.Chain switch
         {

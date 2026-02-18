@@ -1,4 +1,4 @@
-namespace Buriza.Core.Models.Chain;
+namespace Buriza.Core.Models.Enums;
 
 public enum TipAction
 {

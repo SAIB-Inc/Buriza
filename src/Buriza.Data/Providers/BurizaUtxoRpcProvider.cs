@@ -26,6 +26,7 @@ using Chrysalis.Network.Cbor.LocalStateQuery;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Enums;
 namespace Buriza.Data.Providers;
 
 /// <summary>
