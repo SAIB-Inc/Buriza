@@ -12,7 +12,10 @@ public partial class ConfirmDataDialog
     [CascadingParameter]
     private IMudDialogInstance DialogInstance { get; set; } = null!;
 
-    private readonly string address = "test";
+    // TODO: Replace with actual data to confirm
+    private readonly string _address = "test";
+
+    private bool _expanded = false;
 
     private void Confirm()
     {
@@ -24,8 +27,13 @@ public partial class ConfirmDataDialog
         DialogInstance.Cancel();
     }
 
-        private async Task CopyAddressToClipboard()
+    private async Task CopyAddressToClipboard()
     {
-        await JavaScriptBridgeService.CopyToClipboardAsync(address);
+        await JavaScriptBridgeService.CopyToClipboardAsync(_address);
+    }
+
+    private void ExpandCard()
+    {
+        _expanded = !_expanded;
     }
 }
