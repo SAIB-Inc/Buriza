@@ -81,7 +81,6 @@ public class WalletManagerService(
         }
 
         wallet.UnlockWith(mnemonicBytes);
-
         return wallet;
     }
 

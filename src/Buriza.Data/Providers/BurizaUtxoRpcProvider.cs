@@ -65,7 +65,8 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         {
             "mainnet" => ChrysalisNetworkType.Mainnet,
             "preprod" => ChrysalisNetworkType.Preprod,
-            _ => ChrysalisNetworkType.Testnet
+            "preview" => ChrysalisNetworkType.Testnet,
+            _ => throw new ArgumentException($"Unknown network: {network}. Expected mainnet, preprod, or preview.", nameof(network))
         };
 
     private static GrpcMetadata BuildHeaders(string? apiKey)
@@ -101,7 +102,7 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
     }
 
     public Task<ProtocolParams> GetParametersAsync()
-        => GetParametersAsync(CancellationToken.None);
+        => GetParametersAsync(default);
 
     public async Task<string> SubmitTransactionAsync(Transaction tx)
     {
@@ -266,7 +267,10 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
 
     public IAsyncEnumerable<TipEvent> FollowTipAsync(CancellationToken ct = default)
     {
-        Channel<TipEvent> channel = Channel.CreateUnbounded<TipEvent>();
+        Channel<TipEvent> channel = Channel.CreateBounded<TipEvent>(new BoundedChannelOptions(20)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest
+        });
 
         _ = Task.Run(async () =>
         {
