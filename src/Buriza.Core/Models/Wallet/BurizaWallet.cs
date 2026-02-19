@@ -149,7 +149,7 @@ public class BurizaWallet(
 
     #region Account Management
 
-    private const int MaxAccountDiscoveryLimit = 100;
+    private const int MaxAccountDiscoveryLimit = 50;
     private const string DefaultAccountName = "Account {0}";
 
     public async Task<BurizaWalletAccount> CreateAccountAsync(string name, int? accountIndex = null, CancellationToken ct = default)

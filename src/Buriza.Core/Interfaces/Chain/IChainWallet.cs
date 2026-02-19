@@ -12,13 +12,18 @@ public interface IChainWallet
 {
     /// <summary>Derives chain address data (address + chain-specific fields like staking address).</summary>
     Task<ChainAddressData> DeriveChainDataAsync(
-        ReadOnlySpan<byte> mnemonic, ChainInfo chainInfo,
-        int accountIndex, int addressIndex,
-        bool isChange = false, CancellationToken ct = default);
+        ReadOnlySpan<byte> mnemonic,
+        ChainInfo chainInfo,
+        int accountIndex,
+        int addressIndex,
+        bool isChange = false,
+        CancellationToken ct = default);
 
     /// <summary>Builds an unsigned transaction from a request.</summary>
     Task<UnsignedTransaction> BuildTransactionAsync(
-        string fromAddress, TransactionRequest request, IBurizaChainProvider provider,
+        string fromAddress,
+        TransactionRequest request,
+        IBurizaChainProvider provider,
         CancellationToken ct = default);
 
     /// <summary>
