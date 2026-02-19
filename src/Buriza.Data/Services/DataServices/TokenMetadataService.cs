@@ -3,14 +3,12 @@ using System.Text.Json;
 using Buriza.Core.Interfaces.DataServices;
 using Buriza.Core.Models.DataServices;
 using Buriza.Core.Models.Enums;
+using Buriza.Data.Models.DataServices;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace Buriza.Data.Services.DataServices;
 
-/// <summary>
-/// Service for fetching token metadata from COMP or custom endpoint.
-/// </summary>
 public class TokenMetadataService(
     HttpClient httpClient,
     IMemoryCache cache,
@@ -22,14 +20,14 @@ public class TokenMetadataService(
     private string BaseUrl => sessionProvider?.GetDataServiceEndpoint(DataServiceType.TokenMetadata)
         ?? options.Value.BaseUrl;
 
-    public async Task<TokenMetadata?> GetTokenMetadataAsync(string subject, CancellationToken ct = default)
+    public async Task<TokenMetadata?> GetTokenMetadataAsync(string assetId, CancellationToken ct = default)
     {
-        string cacheKey = $"token:{subject}";
+        string cacheKey = $"token:{assetId}";
 
         if (cache.TryGetValue(cacheKey, out TokenMetadata? cached))
             return cached;
 
-        using HttpRequestMessage request = new(HttpMethod.Get, $"{BaseUrl}/metadata/{subject}");
+        using HttpRequestMessage request = new(HttpMethod.Get, $"{BaseUrl}/metadata/{assetId}");
         AddApiKeyHeader(request);
 
         using HttpResponseMessage response = await httpClient.SendAsync(request, ct);
@@ -38,10 +36,12 @@ public class TokenMetadataService(
 
         try
         {
-            TokenMetadata? result = await response.Content.ReadFromJsonAsync<TokenMetadata>(ct);
-            if (result is not null)
-                cache.Set(cacheKey, result, _cacheDuration);
+            TokenMetadataDto? dto = await response.Content.ReadFromJsonAsync<TokenMetadataDto>(ct);
+            if (dto is null)
+                return null;
 
+            TokenMetadata result = MapToTokenMetadata(dto);
+            cache.Set(cacheKey, result, _cacheDuration);
             return result;
         }
         catch (JsonException)
@@ -50,14 +50,40 @@ public class TokenMetadataService(
         }
     }
 
-    public async Task<BatchTokenMetadataResponse?> GetBatchTokenMetadataAsync(
-        List<string> subjects,
-        int? limit = null,
-        string? searchText = null,
-        string? policyId = null,
-        CancellationToken ct = default)
+    public async Task<List<TokenMetadata>> GetTokenMetadataAsync(List<string> assetIds, CancellationToken ct = default)
     {
-        var payload = new { subjects, limit, searchText, policyId };
+        List<TokenMetadata> results = [];
+        List<string> uncached = [];
+
+        foreach (string assetId in assetIds)
+        {
+            string cacheKey = $"token:{assetId}";
+            if (cache.TryGetValue(cacheKey, out TokenMetadata? cached) && cached is not null)
+                results.Add(cached);
+            else
+                uncached.Add(assetId);
+        }
+
+        if (uncached.Count > 0)
+        {
+            BatchTokenMetadataResponse? batch = await FetchBatchAsync(uncached, ct);
+            if (batch?.Data is not null)
+            {
+                foreach (TokenMetadataDto dto in batch.Data)
+                {
+                    TokenMetadata token = MapToTokenMetadata(dto);
+                    cache.Set($"token:{token.AssetId}", token, _cacheDuration);
+                    results.Add(token);
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private async Task<BatchTokenMetadataResponse?> FetchBatchAsync(List<string> subjects, CancellationToken ct)
+    {
+        var payload = new { subjects };
 
         using HttpRequestMessage request = new(HttpMethod.Post, $"{BaseUrl}/metadata")
         {
@@ -79,35 +105,15 @@ public class TokenMetadataService(
         }
     }
 
-    public async Task<List<TokenMetadata>> GetWalletTokensAsync(List<string> subjects, CancellationToken ct = default)
+    private static TokenMetadata MapToTokenMetadata(TokenMetadataDto dto) => new()
     {
-        List<TokenMetadata> results = [];
-        List<string> uncached = [];
-
-        foreach (string subject in subjects)
-        {
-            string cacheKey = $"token:{subject}";
-            if (cache.TryGetValue(cacheKey, out TokenMetadata? cached) && cached is not null)
-                results.Add(cached);
-            else
-                uncached.Add(subject);
-        }
-
-        if (uncached.Count > 0)
-        {
-            BatchTokenMetadataResponse? batch = await GetBatchTokenMetadataAsync(uncached, ct: ct);
-            if (batch?.Data is not null)
-            {
-                foreach (TokenMetadata token in batch.Data)
-                {
-                    cache.Set($"token:{token.Subject}", token, _cacheDuration);
-                    results.Add(token);
-                }
-            }
-        }
-
-        return results;
-    }
+        AssetId = dto.Subject,
+        Name = dto.Name,
+        Ticker = dto.Ticker,
+        Logo = dto.Logo,
+        Description = dto.Description,
+        Decimals = dto.Decimals
+    };
 
     private void AddApiKeyHeader(HttpRequestMessage request)
     {

@@ -146,11 +146,7 @@ public class WalletManagerService(
     }
 
     private IReadOnlyList<BurizaWallet> AttachRuntime(IReadOnlyList<BurizaWallet> wallets)
-    {
-        foreach (BurizaWallet wallet in wallets)
-            wallet.Attach(_providerFactory, _storage);
-        return wallets;
-    }
+        => [.. wallets.Select(AttachRuntime)];
 
     // Chrysalis limitation: Mnemonic.Restore() requires string — immutable string cannot be zeroed.
     private static bool ValidateMnemonic(ReadOnlySpan<byte> mnemonic)

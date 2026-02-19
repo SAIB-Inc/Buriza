@@ -119,10 +119,10 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         return GetTransactionMetadataCoreAsync(request);
     }
 
-    async Task<object?> IBurizaChainProvider.ReadTxAsync(string txHash, CancellationToken ct)
+    async Task<byte[]?> IBurizaChainProvider.ReadTxAsync(string txHash, CancellationToken ct)
         => await ReadTxAsync(txHash, ct);
 
-    public async Task<Transaction?> ReadTxAsync(string txHash, CancellationToken ct = default)
+    public async Task<byte[]?> ReadTxAsync(string txHash, CancellationToken ct = default)
     {
         UtxorpcQuery.ReadTxRequest request = new()
         {
@@ -137,7 +137,7 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         if (response.Tx == null || response.Tx.NativeBytes.IsEmpty)
             return null;
 
-        return CborSerializer.Deserialize<Transaction>(response.Tx.NativeBytes.ToByteArray());
+        return response.Tx.NativeBytes.ToByteArray();
     }
 
     #endregion
@@ -433,15 +433,14 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         }
 
         CardanoSpec.TxOutput txOutput = item.Cardano!;
-        return new Utxo
-        {
-            TxHash = txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
-            OutputIndex = (int)(txoRef?.Index ?? 0),
-            Value = ToUlong(txOutput.Coin),
-            Address = txOutput.Address != null ? Address.FromBytes(txOutput.Address.ToByteArray()).ToBech32() : null,
-            Assets = [.. txOutput.Assets.SelectMany(ma =>
+        return new Utxo(
+            TxHash: txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
+            OutputIndex: (int)(txoRef?.Index ?? 0),
+            Value: ToUlong(txOutput.Coin),
+            Address: txOutput.Address != null ? Address.FromBytes(txOutput.Address.ToByteArray()).ToBech32() : null,
+            Assets: [.. txOutput.Assets.SelectMany(ma =>
                 ma.Assets.Select(a => CreateAsset(ma.PolicyId.ToByteArray(), a.Name.ToByteArray(), ToUlong(a.OutputCoin))))]
-        };
+        );
     }
 
     private static Utxo MapTransactionOutputToUtxo(CborTransactionOutput output, UtxorpcQuery.TxoRef? txoRef)
@@ -477,14 +476,13 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
             .SelectMany(kv => kv.Value.Value.Select(t => CreateAsset(kv.Key, t.Key, t.Value)))
             .ToList() ?? [];
 
-        return new Utxo
-        {
-            TxHash = txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
-            OutputIndex = (int)(txoRef?.Index ?? 0),
-            Value = lovelace,
-            Address = address,
-            Assets = assets
-        };
+        return new Utxo(
+            TxHash: txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
+            OutputIndex: (int)(txoRef?.Index ?? 0),
+            Value: lovelace,
+            Address: address,
+            Assets: assets
+        );
     }
 
     private static Value BuildValue(CardanoSpec.TxOutput txOutput)

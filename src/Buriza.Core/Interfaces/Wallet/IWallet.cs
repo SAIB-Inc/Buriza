@@ -7,7 +7,7 @@ namespace Buriza.Core.Interfaces.Wallet;
 /// </summary>
 public interface IWallet
 {
-    /// <summary>Gets the total balance (in lovelace) for the active account.</summary>
+    /// <summary>Gets the total balance (in base units) for the active account.</summary>
     Task<ulong> GetBalanceAsync(int? accountIndex = null, CancellationToken ct = default);
 
     /// <summary>Gets UTxOs for the active account.</summary>

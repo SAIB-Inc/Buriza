@@ -300,7 +300,7 @@ public class BurizaWalletTests
         // Arrange
         (BurizaWallet wallet, IBurizaChainProvider mockProvider) = CreateUnlockedWalletWithMockChainWallet("addr_test1qz...");
 
-        List<Utxo> utxos = [new Utxo { TxHash = "tx1", OutputIndex = 0, Address = "addr_test1qz...", Value = 1_000_000 }];
+        List<Utxo> utxos = [new Utxo(TxHash: "tx1", OutputIndex: 0, Value: 1_000_000, Address: "addr_test1qz...")];
         mockProvider.GetUtxosAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(utxos);
 
         // Act

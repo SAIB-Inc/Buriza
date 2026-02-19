@@ -15,7 +15,7 @@ public interface IBurizaChainProvider : IDisposable
     /// <summary>Gets UTxOs for the given address.</summary>
     Task<IReadOnlyList<Utxo>> GetUtxosAsync(string address, CancellationToken ct = default);
 
-    /// <summary>Gets the total balance (in lovelace) for the given address.</summary>
+    /// <summary>Gets the total balance (in base units) for the given address.</summary>
     Task<ulong> GetBalanceAsync(string address, CancellationToken ct = default);
 
     /// <summary>Gets native assets for the given address.</summary>
@@ -28,7 +28,7 @@ public interface IBurizaChainProvider : IDisposable
     Task<object> GetParametersAsync(CancellationToken ct = default);
 
     /// <summary>Reads a transaction by hash. Returns chain-specific transaction object.</summary>
-    Task<object?> ReadTxAsync(string txHash, CancellationToken ct = default);
+    Task<byte[]?> ReadTxAsync(string txHash, CancellationToken ct = default);
 
     /// <summary>Submits a raw transaction (CBOR bytes).</summary>
     Task<string> SubmitAsync(byte[] txBytes, CancellationToken ct = default);

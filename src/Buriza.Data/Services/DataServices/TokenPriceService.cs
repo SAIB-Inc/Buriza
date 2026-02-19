@@ -3,6 +3,7 @@ using System.Text.Json;
 using Buriza.Core.Interfaces.DataServices;
 using Buriza.Core.Models.DataServices;
 using Buriza.Core.Models.Enums;
+using Buriza.Data.Models.DataServices;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -100,9 +101,9 @@ public class TokenPriceService(
         }
     }
 
-    public async Task<decimal?> GetAdaPriceAsync(string quote = "USD", CancellationToken ct = default)
+    public async Task<decimal?> GetNativeCoinPriceAsync(string quote = "USD", CancellationToken ct = default)
     {
-        string cacheKey = $"adaprice:{quote}";
+        string cacheKey = $"nativeprice:{quote}";
 
         if (cache.TryGetValue(cacheKey, out decimal cachedPrice))
             return cachedPrice;

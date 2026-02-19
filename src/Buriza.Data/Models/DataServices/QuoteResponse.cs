@@ -1,4 +1,4 @@
-namespace Buriza.Core.Models.DataServices;
+namespace Buriza.Data.Models.DataServices;
 
 public class QuoteResponse
 {
