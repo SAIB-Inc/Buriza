@@ -57,7 +57,12 @@
                             Class="!p-3 rounded-xl bg-[var(--mud-palette-drawer-background)] break-words font-light !mt-4" 
                             Align="Align.Center"
                         >
-                            <span class="font-semibold"Align="Align.Center">@SelectedAccount?.Start</span>@SelectedAccount?.Middle<span class="font-semibold">@SelectedAccount?.End</span>
+                            <span class="!text-[var(--mud-palette-tertiary-text)] font-semibold" Align="Align.Center">@SelectedAccount?.Start</span><span class="!text-[var(--mud-palette-tertiary-text)]">@SelectedAccount?.Middle</span><span class="!text-[var(--mud-palette-tertiary-text)] !font-semibold">@SelectedAccount?.End</span>
+                        </MudText>
+                        <MudText
+                            Class="w-max !mx-auto !text-xs !text-[var(--mud-palette-tertiary-text)] !font-semibold bg-[var(--mud-palette-drawer-background)] !py-1 !px-4 !mt-[10px] rounded-[99px]"
+                        >
+                            @SelectedAccount?.DerivationPath
                         </MudText>
                     </div>
                 </div>
