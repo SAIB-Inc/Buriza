@@ -1,0 +1,206 @@
+@using Buriza.UI.Resources
+@using Buriza.UI.Components.Common
+
+@namespace Buriza.UI.Components.Dialogs
+
+<BurizaBaseDialog 
+    Title="Sign Data"
+    OnClose="Cancel"    
+>
+    <DialogContent>
+        <div class="h-full flex flex-col gap-y-6">
+            <div>
+                <MudText
+                    Class="text-xs! tracking-[0.1px]">
+                    Once you perform this action, there is no way to reverse it. Please be certain before proceeding.
+                </MudText>
+            </div>
+            <div class="flex w-full gap-x-[9px] bg-[var(--mud-palette-dark-darken)] !p-3 rounded-xl">
+                <div class="w-10 h-10 !p-2 rounded-full bg-[var(--buriza-chip-bg)] [&_.mud-icon-root]:text-[var(--search-icon)]!">
+                    @* TODO: Change Icon to JPG Store Logo Icon *@
+                    <MudIcon 
+                        Icon="@BurizaIcons.SearchSymbolIcon"
+                    />
+                </div>
+                <div>   
+                    <MudText
+                        Class="!tracking-[0.1px]"
+                    >
+                        JPG Store
+                    </MudText>
+                    <MudText
+                        Class="!text-xs text-[var(--mud-palette-text-secondary)]! !tracking-[0.1px]"
+                    >
+                        https://www.jpg.store
+                    </MudText>
+                </div>
+            </div>
+
+            @*Non-ParsableWarning*@
+            @if(!_IsParsable)
+            {
+            <div class="!rounded-[12px] !p-3 !bg-[var(--mud-palette-warning-darken)] w-full mx-auto flex items-center !gap-[14px]">
+                <div class="w-6 h-6 min-w-6 rounded-full bg-[var(--warning-text)] flex items-center justify-center">
+                    <MudIcon Icon="@Icons.Material.Rounded.PriorityHigh" Class="!text-sm !text-[var(--mud-palette-warning-darken)]"/>
+                </div>
+                <MudText Class="!text-xs !font-medium !text-[var(--mud-palette-warning-lighten)]">
+                    <span Class="!font-bold !text-[var(--warning-text)]">Non-readable payload.</span>
+                    <span class="!text-[var(--warning-text)]">This message contains raw data that cannot be displayed as text. Only sign if you trust this application.</span>
+                </MudText>
+            </div>
+            }
+
+            <div class="relative !mb-6">
+                <div>
+                    <div class="w-full flex justify-between items-center mb-3">
+                        <MudText
+                            Class="!text-sm text-white"
+                        >
+                            Signing Address
+                        </MudText>
+                        <MudIconButton
+                            Ripple="false"
+                            Icon="@(_IsSigningAddressExpanded ? @BurizaIcons.ArrowUp2Icon : @BurizaIcons.ArrowDown2Icon)"
+                            OnClick="ExpandSigningAddress"
+                            Class="!bg-transparent !p-0 [&_.mud-icon-root]:text-white!"
+                        />
+                    </div>
+                    <div>
+                        <MudCollapse Expanded="@(!_IsSigningAddressExpanded)">
+                            <div class="flex justify-between bg-[var(--mud-palette-dark-darken)] !py-3 !px-3 mb-4 rounded-lg">
+                                <MudText
+                                    Class="!text-sm self-center"
+                                >
+                                    @(_address[..13] + "..." + _address[^12..])
+                                </MudText>
+                                <MudIconButton
+                                    Class="p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
+                                    Icon="@BurizaIcons.CopySymbolIcon"
+                                    OnClick="CopyAddressToClipboard"
+                                />     
+                            </div>
+                        </MudCollapse>  
+                        <MudCollapse Expanded="_IsSigningAddressExpanded">
+                            <div class="relative !p-3 bg-[var(--mud-palette-dark-darken)] rounded-lg mb-4">
+                                <MudText
+                                    Class="!text-sm break-all">
+                                    <span class="!font-semibold">@_address[..5]</span><span>@_address[5..^6]</span><span class="!font-semibold">@_address[^6..]</span>
+                                </MudText>
+                                <MudIconButton
+                                    Class="absolute bottom-3 right-3 p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
+                                    Icon="@BurizaIcons.CopySymbolIcon"
+                                    OnClick="CopyAddressToClipboard"
+                                />  
+                            </div>
+                        </MudCollapse>
+                    </div>                                     
+                </div>
+
+                @if(!_IsParsable)
+                {   
+                    <div>
+                        <div class="w-full flex justify-between items-center mb-2">
+                            <MudText
+                                Class="!text-sm text-white"
+                            >
+                                Payload (HEX)
+                            </MudText>
+                            <MudIconButton
+                                Ripple="false"
+                                Icon="@(_IsPayloadExpanded ? @BurizaIcons.ArrowUp2Icon : @BurizaIcons.ArrowDown2Icon)"
+                                OnClick="ExpandPayload"
+                                Class="!bg-transparent !p-0 [&_.mud-icon-root]:text-white!" 
+                            />
+                        </div>
+                        <div class="bg-[var(--mud-palette-dark-darken)] rounded-lg">
+                            <MudCollapse Expanded="@(!_IsPayloadExpanded)">
+                                <div class="flex justify-between items-center px-4 !py-[13px]">
+                                    <MudText
+                                        Class="!text-sm tracking-[0.014px]"
+                                    >
+                                        @(_hexPayload[..26] + "...")
+                                    </MudText>
+                                    <MudIconButton
+                                        Class="p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
+                                        Icon="@BurizaIcons.CopySymbolIcon"
+                                        OnClick="CopyPayloadToClipboard"
+                                    />   
+                                </div>
+                            </MudCollapse>
+                            <MudCollapse Expanded="_IsPayloadExpanded">
+                                <div class="relative max-h-[124px] !p-3 bg-[var(--mud-palette-dark-darken)] rounded-lg">
+                                    <MudText
+                                        Class="!text-sm break-all">
+                                        @(_hexPayload.Length > 200 ? _hexPayload[..200] + "..." : _hexPayload)
+                                    </MudText>
+                                    <MudIconButton
+                                        Class="absolute bottom-3 right-3 p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
+                                        Icon="@BurizaIcons.CopySymbolIcon"
+                                        OnClick="CopyPayloadToClipboard"
+                                    />  
+                                </div>
+                            </MudCollapse>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div>
+                        <MudText
+                            Class="!text-sm text-white mb-2"
+                        >
+                            Message
+                        </MudText>
+                        <div class="p-3 bg-[var(--mud-palette-dark-darken)] rounded-lg flex flex-col px-4 !py-[13px]">
+                            <MudText
+                                Class="!text-sm tracking-[0.014px]"
+                            >
+                                Sign In to JPG Store
+                            </MudText>
+                            <div class="flex">
+                                <MudText
+                                    Class="!text-sm tracking-[0.014px]"
+                                >
+                                    Nonce:&nbsp;
+                                </MudText>
+                                <MudText
+                                    Class="!text-sm tracking-[0.014px]"
+                                >
+                                    a8f3e9b2c1d4
+                                </MudText>
+                            </div>
+                            <div class="flex">
+                                <MudText
+                                    Class="!text-sm tracking-[0.014px]"
+                                >
+                                    Timestamp:&nbsp;
+                                </MudText>
+                                <MudText
+                                    Class="!text-sm tracking-[0.014px]"
+                                >
+                                    2026-02-19T14:32:00Z
+                                </MudText>
+                            </div>
+                            <div class="flex">
+                                <MudText
+                                    Class="!text-sm tracking-[0.014px]"
+                                >
+                                    Domain:&nbsp;  
+                                </MudText>
+                                <MudText
+                                    Class="!text-sm tracking-[0.014px]"
+                                >
+                                    jpg store
+                                </MudText>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <BurizaButton Class="flex-1 bg-[var(--mud-palette-overlay-light)]! text-[var(--mud-palette-text-primary)]!" OnClick="Cancel">Cancel</BurizaButton>
+        <BurizaButton Class="flex-1" Color="Color.Primary" OnClick="Confirm">Sign</BurizaButton>
+    </DialogActions>
+</BurizaBaseDialog>

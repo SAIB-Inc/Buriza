@@ -33,7 +33,7 @@ public partial class Components
         await DialogService.ShowAsync<TransactionSummaryDialog>(null, options);
     }
 
-    private async Task OpenConfirmDataDialog()
+    private async Task OpenSignDataDialog()
     {
         DialogOptions options = new()
         {
@@ -42,6 +42,6 @@ public partial class Components
             BackdropClick = true
         };
 
-        await DialogService.ShowAsync<ConfirmDataDialog>(null, options);
+        await DialogService.ShowAsync<SignDataDialog>(null, options);
     }
 }
