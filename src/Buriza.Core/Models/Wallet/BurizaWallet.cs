@@ -60,10 +60,16 @@ public class BurizaWallet(
     [JsonIgnore]
     public bool IsUnlocked => _mnemonicBytes is not null;
 
-    public async Task UnlockAsync(ReadOnlyMemory<byte>? passwordOrPin = null, string? biometricReason = null, CancellationToken ct = default)
+    public async Task UnlockAsync(ReadOnlyMemory<byte>? password = null, string? biometricReason = null, CancellationToken ct = default)
     {
         if (IsUnlocked) return;
-        _mnemonicBytes = await EnsureStorage().UnlockVaultAsync(Id, passwordOrPin, biometricReason, ct);
+        _mnemonicBytes = await EnsureStorage().UnlockVaultAsync(Id, password, biometricReason, ct);
+    }
+
+    internal void UnlockWith(ReadOnlyMemory<byte> mnemonicBytes)
+    {
+        if (IsUnlocked) return;
+        _mnemonicBytes = mnemonicBytes.ToArray();
     }
 
     public void Lock()

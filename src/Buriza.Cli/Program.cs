@@ -34,6 +34,7 @@ ServiceProvider serviceProvider = services.BuildServiceProvider();
 CliShell shell = new(
     serviceProvider.GetRequiredService<WalletManagerService>(),
     serviceProvider.GetRequiredService<ChainProviderSettings>(),
-    serviceProvider.GetRequiredService<IBurizaChainProviderFactory>());
+    serviceProvider.GetRequiredService<IBurizaChainProviderFactory>(),
+    serviceProvider.GetRequiredService<CliAppStateService>());
 
 await shell.RunAsync();

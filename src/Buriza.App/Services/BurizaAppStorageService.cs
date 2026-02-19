@@ -143,7 +143,8 @@ public sealed class BurizaAppStorageService(
             byte[] mnemonic = method switch
             {
                 AuthenticationType.Password => await UnlockVaultWithPasswordAsync(walletId, password!.Value, ct),
-                _ => await AuthenticateWithDeviceSecurityAndLoadSeedAsync(walletId, method, biometricReason!, ct)
+                AuthenticationType.Pin or AuthenticationType.Biometric => await AuthenticateWithDeviceAuthAsync(walletId, method, biometricReason!, ct),
+                _ => throw new InvalidOperationException("Unsupported authentication method")
             };
             await ResetLockoutStateAsync(walletId, ct);
             return mnemonic;
@@ -208,7 +209,7 @@ public sealed class BurizaAppStorageService(
         return await LoadSecureSeedAsync(walletId, ct);
     }
 
-    private async Task<byte[]> AuthenticateWithDeviceSecurityAndLoadSeedAsync(Guid walletId, AuthenticationType method, string reason, CancellationToken ct)
+    public override async Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, AuthenticationType method, string reason, CancellationToken ct = default)
     {
         if (!await _deviceAuthService.IsAvailableAsync(ct))
             throw new InvalidOperationException("Device authentication is unavailable. Please re-enable it or use password authentication.");
@@ -302,9 +303,6 @@ public sealed class BurizaAppStorageService(
         await _deviceAuthService.RemoveSecureAsync(StorageKeys.PinVault(walletId), AuthenticationType.Pin, ct);
         await SetEnabledAuthMethodsAsync(walletId, [], ct);
     }
-
-    public override Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, AuthenticationType method, string reason, CancellationToken ct = default)
-        => AuthenticateWithDeviceSecurityAndLoadSeedAsync(walletId, method, reason, ct);
 
     private async Task SetEnabledAuthMethodsAsync(Guid walletId, HashSet<AuthenticationType> methods, CancellationToken ct)
     {

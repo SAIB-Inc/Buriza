@@ -63,10 +63,11 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     #region Wallet Lock/Unlock Tests
 
     [Fact]
-    public async Task UnlockAsync_DerivesAddressOnDemand()
+    public async Task UnlockAsync_DerivesAddressAfterLockUnlockCycle()
     {
         // Arrange
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
+        wallet.Lock();
         Assert.False(wallet.IsUnlocked);
 
         // Act

@@ -82,22 +82,25 @@ public class WalletManagerServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateAsync_DoesNotDeriveAddresses()
+    public async Task CreateAsync_ReturnsUnlockedWallet()
     {
         // Act
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
 
-        // Assert - no addresses derived until wallet is unlocked
-        Assert.False(wallet.IsUnlocked);
+        // Assert - wallet is unlocked after creation
+        Assert.True(wallet.IsUnlocked);
         ChainAddressData? data = await wallet.GetAddressInfoAsync();
-        Assert.Null(data);
+        Assert.NotNull(data);
+        Assert.False(string.IsNullOrEmpty(data.Address));
     }
 
     [Fact]
-    public async Task UnlockAsync_DerivesAddressOnDemand()
+    public async Task UnlockAsync_DerivesAddressAfterLockUnlockCycle()
     {
         // Arrange
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
+        wallet.Lock();
+        Assert.False(wallet.IsUnlocked);
 
         // Act
         await wallet.UnlockAsync(TestPasswordBytes);
@@ -166,7 +169,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Act
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(24, mnemonic =>
+        WalletManagerService.GenerateMnemonic(24, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });
@@ -182,7 +185,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Act
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(12, mnemonic =>
+        WalletManagerService.GenerateMnemonic(12, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });
@@ -198,7 +201,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Act
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(24, mnemonic =>
+        WalletManagerService.GenerateMnemonic(24, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });
@@ -215,8 +218,8 @@ public class WalletManagerServiceTests : IDisposable
         // Act
         string? mnemonic1 = null;
         string? mnemonic2 = null;
-        _walletManager.GenerateMnemonic(24, m => mnemonic1 = m.ToString());
-        _walletManager.GenerateMnemonic(24, m => mnemonic2 = m.ToString());
+        WalletManagerService.GenerateMnemonic(24, m => mnemonic1 = m.ToString());
+        WalletManagerService.GenerateMnemonic(24, m => mnemonic2 = m.ToString());
 
         // Assert - Two generations should produce different mnemonics
         Assert.NotNull(mnemonic1);
@@ -229,7 +232,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Arrange
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(24, mnemonic =>
+        WalletManagerService.GenerateMnemonic(24, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });
@@ -247,7 +250,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Arrange - Generate and create wallet
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(24, mnemonic =>
+        WalletManagerService.GenerateMnemonic(24, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });
@@ -271,7 +274,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Arrange
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(12, mnemonic =>
+        WalletManagerService.GenerateMnemonic(12, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });
@@ -289,7 +292,7 @@ public class WalletManagerServiceTests : IDisposable
     {
         // Arrange
         string? generatedMnemonic = null;
-        _walletManager.GenerateMnemonic(24, mnemonic =>
+        WalletManagerService.GenerateMnemonic(24, mnemonic =>
         {
             generatedMnemonic = mnemonic.ToString();
         });

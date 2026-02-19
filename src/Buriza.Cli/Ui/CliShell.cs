@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Buriza.Cli.Services;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Chain;
@@ -17,11 +18,13 @@ using Spectre.Console;
 
 namespace Buriza.Cli.Ui;
 
-public sealed class CliShell(WalletManagerService walletManager, ChainProviderSettings settings, IBurizaChainProviderFactory providerFactory)
+public sealed class CliShell(WalletManagerService walletManager, ChainProviderSettings settings, IBurizaChainProviderFactory providerFactory, CliAppStateService appState)
 {
     private readonly WalletManagerService _walletManager = walletManager;
     private readonly ChainProviderSettings _settings = settings;
     private readonly IBurizaChainProviderFactory _providerFactory = providerFactory;
+    private readonly CliAppStateService _appState = appState;
+    private BurizaWallet? _activeWallet;
     private HeartbeatService? _heartbeat;
     private string? _heartbeatKey;
     private ulong _lastTipSlot;
@@ -35,12 +38,9 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     {
         while (true)
         {
-            IReadOnlyList<BurizaWallet> wallets = await _walletManager.GetAllAsync();
-            bool hasWallets = wallets.Count > 0;
-            BurizaWallet? active = await _walletManager.GetActiveAsync();
-            bool hasActive = active is not null;
+            _activeWallet ??= await _walletManager.GetActiveAsync();
 
-            if (!hasWallets || !hasActive)
+            if (_activeWallet is null)
             {
                 string startChoice = await RunMenuLoopAsync(
                     "Get started",
@@ -92,12 +92,21 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     {
         while (true)
         {
+            bool isUnlocked = _activeWallet?.IsUnlocked == true;
+            string lockAction = isUnlocked ? "Lock wallet" : "Unlock wallet";
+
             string choice = await RunMenuLoopAsync(
                 "Wallets",
-                ["List wallets", "Set active wallet", "Export mnemonic", "Create wallet", "Import wallet", "Back"]);
+                [lockAction, "List wallets", "Set active wallet", "Export mnemonic", "Create wallet", "Import wallet", "Back"]);
 
             switch (choice)
             {
+                case "Unlock wallet":
+                    await ExecuteWithHandlingAsync(() => UnlockWalletAsync());
+                    break;
+                case "Lock wallet":
+                    LockWallet();
+                    break;
                 case "List wallets":
                     await ExecuteWithHandlingAsync(() => ListWalletsAsync());
                     break;
@@ -368,7 +377,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             return;
 
         string mnemonic = "";
-        _walletManager.GenerateMnemonic(24, span =>
+        WalletManagerService.GenerateMnemonic(24, span =>
         {
             mnemonic = span.ToString();
         });
@@ -392,6 +401,8 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         }
         await wallet.SetActiveChainAsync(ChainRegistry.CardanoPreview);
         await _walletManager.SetActiveAsync(wallet.Id);
+        _activeWallet = wallet;
+        await CacheActiveAddressAsync(wallet);
         AnsiConsole.MarkupLine("[bold]Wallet created and set active.[/]");
         Pause();
     }
@@ -424,7 +435,41 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         }
         await wallet.SetActiveChainAsync(ChainRegistry.CardanoPreview);
         await _walletManager.SetActiveAsync(wallet.Id);
+        _activeWallet = wallet;
+        await CacheActiveAddressAsync(wallet);
         AnsiConsole.MarkupLine("[bold]Wallet imported and set active.[/]");
+        Pause();
+    }
+
+    private async Task UnlockWalletAsync()
+    {
+        BurizaWallet active = await RequireActiveWalletAsync();
+        if (active.IsUnlocked)
+        {
+            AnsiConsole.MarkupLine("[grey]Wallet is already unlocked.[/]");
+            Pause();
+            return;
+        }
+
+        string? password = PromptOptional("Password", secret: true);
+        if (string.IsNullOrWhiteSpace(password))
+            return;
+
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try { await active.UnlockAsync(passwordBytes); }
+        finally { CryptographicOperations.ZeroMemory(passwordBytes); }
+
+        await CacheActiveAddressAsync(active);
+        AnsiConsole.MarkupLine("[bold]Wallet unlocked.[/]");
+        Pause();
+    }
+
+    private void LockWallet()
+    {
+        if (_activeWallet is not null)
+            _appState.ClearWalletCache(_activeWallet.Id);
+        _activeWallet?.Lock();
+        AnsiConsole.MarkupLine("[bold]Wallet locked.[/]");
         Pause();
     }
 
@@ -443,14 +488,13 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         table.AddColumn("Network");
         table.AddColumn("Active");
 
-        BurizaWallet? active = await _walletManager.GetActiveAsync();
         foreach (BurizaWallet wallet in wallets)
         {
             table.AddRow(
                 wallet.Id.ToString("N"),
                 wallet.Profile.Name,
                 wallet.Network,
-                active?.Id == wallet.Id ? "Yes" : "No");
+                _activeWallet?.Id == wallet.Id ? "Yes" : "No");
         }
 
         AnsiConsole.Write(table);
@@ -459,16 +503,15 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
     private async Task ShowReceiveAddressAsync()
     {
-        IReadOnlyList<BurizaWallet> wallets = await _walletManager.GetAllAsync();
-        if (wallets.Count == 0)
+        BurizaWallet active = await RequireActiveWalletAsync();
+        string? address = (await active.GetAddressInfoAsync())?.Address;
+        if (string.IsNullOrEmpty(address))
         {
-            AnsiConsole.MarkupLine("[grey]No wallets found.[/]");
+            AnsiConsole.MarkupLine("[yellow]Wallet is locked.[/] Unlock it first to derive the address.");
+            Pause();
             return;
         }
-
-        BurizaWallet active = await ResolveActiveWalletAsync(wallets);
-        string? address = (await active.GetAddressInfoAsync())?.Address;
-        AnsiConsole.MarkupLine($"[bold]Receive address:[/] {address ?? "[grey]Not derived[/]"}");
+        AnsiConsole.MarkupLine($"[bold]Receive address:[/] {address}");
         Pause();
     }
 
@@ -525,6 +568,18 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     private async Task SendTransactionAsync()
     {
         BurizaWallet active = await RequireActiveWalletAsync();
+
+        if (!active.IsUnlocked)
+        {
+            string? password = PromptOptional("Password", secret: true);
+            if (string.IsNullOrWhiteSpace(password))
+                return;
+
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            try { await active.UnlockAsync(passwordBytes); }
+            finally { CryptographicOperations.ZeroMemory(passwordBytes); }
+        }
+
         string? toAddress = PromptOptional("Recipient address");
         if (string.IsNullOrWhiteSpace(toAddress))
             return;
@@ -544,28 +599,13 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         }
         ulong amount = (ulong)decimal.Round(ada * 1_000_000m, 0, MidpointRounding.AwayFromZero);
 
-        string? password = PromptOptional("Password", secret: true);
-        if (string.IsNullOrWhiteSpace(password))
-            return;
+        TransactionRequest request = new(
+            Recipients: [new TransactionRecipient(toAddress, amount)]
+        );
 
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-        try
-        {
-            await active.UnlockAsync(passwordBytes);
-
-            TransactionRequest request = new(
-                Recipients: [new TransactionRecipient(toAddress, amount)]
-            );
-
-            string txId = await active.SendAsync(request);
-            AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");
-            Pause();
-        }
-        finally
-        {
-            active.Lock();
-            CryptographicOperations.ZeroMemory(passwordBytes);
-        }
+        string txId = await active.SendAsync(request);
+        AnsiConsole.MarkupLine($"[bold]Submitted:[/] {txId}");
+        Pause();
     }
 
     private async Task SetActiveWalletAsync()
@@ -584,6 +624,11 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         string id = selected.Split('(').Last().TrimEnd(')');
         BurizaWallet wallet = wallets.First(w => w.Id.ToString("N") == id);
         await _walletManager.SetActiveAsync(wallet.Id);
+        if (_activeWallet is not null)
+            _appState.ClearWalletCache(_activeWallet.Id);
+        _activeWallet?.Lock();
+        _activeWallet = wallet;
+        _lastBalanceLovelace = null;
         AnsiConsole.MarkupLine("[bold]Active wallet set.[/]");
         Pause();
     }
@@ -602,8 +647,10 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             _ => ChainRegistry.CardanoMainnet
         };
 
+        _appState.ClearWalletCache(active.Id);
         await active.SetActiveChainAsync(chainInfo);
         _lastBalanceLovelace = null;
+        await CacheActiveAddressAsync(active);
         AnsiConsole.MarkupLine("[bold]Network updated.[/]");
         Pause();
     }
@@ -639,44 +686,45 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
     private async Task ExportMnemonicAsync()
     {
-        IReadOnlyList<BurizaWallet> wallets = await _walletManager.GetAllAsync();
-        if (wallets.Count == 0)
+        BurizaWallet active = await RequireActiveWalletAsync();
+
+        if (!active.IsUnlocked)
         {
-            AnsiConsole.MarkupLine("[grey]No wallets found.[/]");
-            return;
+            string? password = PromptOptional("Password", secret: true);
+            if (string.IsNullOrWhiteSpace(password))
+                return;
+
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            try { await active.UnlockAsync(passwordBytes); }
+            finally { CryptographicOperations.ZeroMemory(passwordBytes); }
         }
 
-        BurizaWallet active = await ResolveActiveWalletAsync(wallets);
-
-        string password = AnsiConsole.Prompt(new TextPrompt<string>("Password:").Secret());
-        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
-        try
+        active.ExportMnemonic(span =>
         {
-            await active.UnlockAsync(passwordBytes);
-            active.ExportMnemonic(span =>
-            {
-                AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
-                    .BorderColor(Color.Grey)
-                    .RoundedBorder()
-                    .Padding(1, 0, 1, 0));
-            });
-            Pause();
-        }
-        finally
-        {
-            active.Lock();
-            CryptographicOperations.ZeroMemory(passwordBytes);
-        }
+            AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
+                .BorderColor(Color.Grey)
+                .RoundedBorder()
+                .Padding(1, 0, 1, 0));
+        });
+        Pause();
     }
 
     private async Task RenderHeaderAsync()
     {
-        BurizaWallet? active = await _walletManager.GetActiveAsync();
+        BurizaWallet? active = _activeWallet;
         string walletValue = active is null
             ? "[grey]No active wallet[/]"
             : $"[bold]{active.Profile.Name}[/] • {active.ActiveChain} • {active.Network}";
 
-        string? address = active is not null ? (await active.GetAddressInfoAsync())?.Address : null;
+        
+        string lockStatus = active switch
+        {
+            null => string.Empty,
+            { IsUnlocked: true } => " [green](unlocked)[/]",
+            _ => " [yellow](locked)[/]"
+        };
+
+        string? address = active is not null ? GetCachedAddress(active) : null;
         string addressValue = string.IsNullOrEmpty(address)
             ? "[grey]Not derived[/]"
             : address;
@@ -722,7 +770,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         grid.AddColumn(new GridColumn().NoWrap());
         grid.AddColumn(new GridColumn());
 
-        grid.AddRow(new Markup("[grey]Wallet[/]"), new Markup(walletValue));
+        grid.AddRow(new Markup("[grey]Wallet[/]"), new Markup($"{walletValue}{lockStatus}"));
         grid.AddRow(new Markup("[grey]Balance[/]"), new Markup(balanceValue));
         grid.AddRow(new Markup("[grey]Address[/]"), new Markup(addressValue));
         grid.AddRow(new Markup("[grey]Provider[/]"), new Markup(providerValue));
@@ -740,16 +788,30 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     private async Task<string> RunMenuLoopAsync(string title, IReadOnlyList<string> items)
     {
         int selected = 0;
-        _needsRender = true;
+        bool firstRender = true;
         DateTime lastRenderAt = DateTime.MinValue;
 
         while (true)
         {
             if (_needsRender || DateTime.UtcNow - lastRenderAt > TimeSpan.FromSeconds(1))
             {
-                AnsiConsole.Clear();
+                if (firstRender)
+                {
+                    AnsiConsole.Clear();
+                    firstRender = false;
+                }
+                else
+                {
+                    // Move cursor to top-left without clearing — overwrites in place, no flicker
+                    Console.Write("\x1b[H");
+                }
+
                 await RenderHeaderAsync();
                 RenderMenu(title, items, selected);
+
+                // Clear any leftover lines below the current content
+                Console.Write("\x1b[J");
+
                 _needsRender = false;
                 lastRenderAt = DateTime.UtcNow;
             }
@@ -924,9 +986,8 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             _lastTipSlot = _heartbeat.Slot;
             _lastTipHash = _heartbeat.Hash;
             _lastTipAtUtc = DateTime.UtcNow;
-            BurizaWallet? current = _walletManager.GetActiveAsync().GetAwaiter().GetResult();
-            if (current != null)
-                _ = RefreshBalanceAsync(current);
+            if (_activeWallet != null)
+                _ = RefreshBalanceAsync(_activeWallet);
             _needsRender = true;
         };
     }
@@ -965,38 +1026,35 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
     private async Task<string> BuildProviderHintAsync()
     {
-        BurizaWallet? active = await _walletManager.GetActiveAsync();
-        if (active is null) return string.Empty;
+        if (_activeWallet is null) return string.Empty;
 
-        string? endpoint = await ResolveProviderEndpointAsync(active);
+        string? endpoint = await ResolveProviderEndpointAsync(_activeWallet);
         if (string.IsNullOrWhiteSpace(endpoint))
             return "[grey]Active provider: not configured[/]";
 
         return $"[grey]Active provider:[/] {endpoint}";
     }
 
-    private async Task<BurizaWallet> RequireActiveWalletAsync()
+    private Task<BurizaWallet> RequireActiveWalletAsync()
     {
-        IReadOnlyList<BurizaWallet> wallets = await _walletManager.GetAllAsync();
-        if (wallets.Count == 0)
-            throw new InvalidOperationException("No wallets found.");
+        if (_activeWallet is not null)
+            return Task.FromResult(_activeWallet);
 
-        return await ResolveActiveWalletAsync(wallets);
+        throw new InvalidOperationException("No active wallet. Create or import a wallet first.");
     }
 
-    private async Task<BurizaWallet> ResolveActiveWalletAsync(IReadOnlyList<BurizaWallet> wallets)
+    private string? GetCachedAddress(BurizaWallet wallet)
     {
-        BurizaWallet? active = await _walletManager.GetActiveAsync();
-        if (active is not null)
-            return active;
+        ChainInfo chainInfo = ChainRegistry.Get(wallet.ActiveChain, wallet.Network);
+        return _appState.GetCachedAddress(wallet.Id, chainInfo, wallet.ActiveAccountIndex, 0, false);
+    }
 
-        string selected = AnsiConsole.Prompt(new SelectionPrompt<string>()
-            .Title("Select wallet:")
-            .AddChoices(wallets.Select(w => $"{w.Profile.Name} ({w.Id:N})")));
+    private async Task CacheActiveAddressAsync(BurizaWallet wallet)
+    {
+        ChainAddressData? data = await wallet.GetAddressInfoAsync();
+        if (data is null) return;
 
-        string id = selected.Split('(').Last().TrimEnd(')');
-        BurizaWallet wallet = wallets.First(w => w.Id.ToString("N") == id);
-        await _walletManager.SetActiveAsync(wallet.Id);
-        return wallet;
+        ChainInfo chainInfo = ChainRegistry.Get(wallet.ActiveChain, wallet.Network);
+        _appState.CacheAddress(wallet.Id, chainInfo, wallet.ActiveAccountIndex, 0, false, data.Address);
     }
 }
