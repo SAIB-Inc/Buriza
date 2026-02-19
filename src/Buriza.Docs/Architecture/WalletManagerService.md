@@ -13,21 +13,27 @@ Buriza uses interface-based abstraction for multi-chain support. Current impleme
 - **Chrysalis.Wallet** for key/address derivation
 - **Chrysalis.Tx** for transaction building/signing
 
-Wallet lifecycle and sensitive operations are centralized in `IWalletManager` (implemented by `WalletManagerService`).
+Wallet lifecycle is managed by `WalletManagerService` (concrete class — no interface).
+`BurizaWallet` owns account management, chain switching, signing, and export operations directly.
 Storage, authentication, and PIN/biometric flows live behind `BurizaStorageBase` (platform implementations in App/Web/CLI).
 
 ### Primary Responsibilities
 
-**IWalletManager / WalletManagerService**
+**WalletManagerService**
 - Wallet lifecycle (create/import/delete, set active)
+- Mnemonic generation
+- Auth management (delegates to storage)
+
+**BurizaWallet**
 - Account lifecycle (create, discover, set active)
 - Chain lifecycle (set active chain / network)
 - Sensitive operations (sign, export mnemonic)
+- Query operations (balance, UTxOs, assets)
+- Address derivation (via IChainWallet)
 
 **BurizaStorageBase**
 - Seed vault encryption / decryption
-- Auth type (password / PIN / biometric)
-- PIN + biometric enable/disable
+- Multi-method auth (password always implicit; biometric/PIN additive convenience methods)
 - Lockout policy
 - Provider config persistence
 
@@ -35,62 +41,82 @@ Storage, authentication, and PIN/biometric flows live behind `BurizaStorageBase`
 - Resolves chain provider per chain/network
 - Exposes supported chains and key services
 
-## Core Interfaces (current)
+## Core API (current)
 
-### IWalletManager
+### WalletManagerService (concrete class)
 
 ```csharp
-public interface IWalletManager
+public class WalletManagerService(BurizaStorageBase storage, IBurizaChainProviderFactory providerFactory)
 {
     // Wallet Lifecycle
-    void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic);
-    Task<BurizaWallet> CreateFromMnemonicAsync(string name, ReadOnlyMemory<byte> mnemonicBytes, ReadOnlyMemory<byte> passwordBytes, ChainInfo? chainInfo = null, CancellationToken ct = default);
+    static void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic);
+    Task<BurizaWallet> CreateAsync(string name, ReadOnlyMemory<byte> mnemonicBytes, ReadOnlyMemory<byte> passwordBytes, ChainInfo? chainInfo = null, CancellationToken ct = default);
     Task<IReadOnlyList<BurizaWallet>> GetAllAsync(CancellationToken ct = default);
     Task<BurizaWallet?> GetActiveAsync(CancellationToken ct = default);
     Task SetActiveAsync(Guid walletId, CancellationToken ct = default);
     Task DeleteAsync(Guid walletId, CancellationToken ct = default);
 
-    // Chain Management
-    Task SetActiveChainAsync(Guid walletId, ChainInfo chainInfo, string? password = null, CancellationToken ct = default);
-    IReadOnlyList<ChainType> GetAvailableChains();
-
-    // Account Management
-    Task<BurizaWalletAccount> CreateAccountAsync(Guid walletId, string name, int? accountIndex = null, CancellationToken ct = default);
-    Task<BurizaWalletAccount?> GetActiveAccountAsync(CancellationToken ct = default);
-    Task SetActiveAccountAsync(Guid walletId, int accountIndex, CancellationToken ct = default);
-    Task UnlockAccountAsync(Guid walletId, int accountIndex, string password, CancellationToken ct = default);
-    Task RenameAccountAsync(Guid walletId, int accountIndex, string newName, CancellationToken ct = default);
-    Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(Guid walletId, string password, int accountGapLimit = 5, CancellationToken ct = default);
-
-    // Password Operations
-    Task<bool> VerifyPasswordAsync(Guid walletId, string password, CancellationToken ct = default);
-    Task ChangePasswordAsync(Guid walletId, string currentPassword, string newPassword, CancellationToken ct = default);
-
-    // Sensitive Operations (Requires Password)
-    Task<Transaction> SignTransactionAsync(Guid walletId, int accountIndex, int addressIndex, UnsignedTransaction unsignedTx, string password, CancellationToken ct = default);
-    Task ExportMnemonicAsync(Guid walletId, string password, Action<ReadOnlySpan<char>> onMnemonic, CancellationToken ct = default);
-
-    // Custom Provider Config
-    Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
-    Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, string password, string? name = null, CancellationToken ct = default);
-    Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default);
-    Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, string password, CancellationToken ct = default);
+    // Auth Management (delegates to storage)
+    Task<DeviceCapabilities> GetDeviceCapabilitiesAsync(CancellationToken ct = default);
+    Task<HashSet<AuthenticationType>> GetEnabledAuthMethodsAsync(Guid walletId, CancellationToken ct = default);
+    Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default);
+    Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default);
+    Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default);
+    Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default);
+    Task DisableAuthMethodAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default);
+    Task DisableAllDeviceAuthAsync(Guid walletId, CancellationToken ct = default);
 }
 ```
 
+### BurizaWallet (operations moved here)
+
+```csharp
+// Account Management
+Task<BurizaWalletAccount> CreateAccountAsync(string name, int? accountIndex = null);
+BurizaWalletAccount? GetActiveAccount();
+Task SetActiveAccountAsync(int accountIndex);
+
+// Chain Management
+Task SetActiveChainAsync(ChainInfo chainInfo);
+
+// Address & Query
+Task<ChainAddressData?> GetAddressInfoAsync(int? accountIndex = null);
+Task<ulong> GetBalanceAsync();
+Task<IReadOnlyList<Utxo>> GetUtxosAsync();
+Task<IReadOnlyList<Asset>> GetAssetsAsync();
+
+// Sensitive Operations (wallet must be unlocked)
+Task UnlockAsync(ReadOnlyMemory<byte> passwordOrPin, string? biometricReason = null);
+void Lock();
+Task SendAsync(TransactionRequest request);
+void ExportMnemonic(Action<ReadOnlySpan<char>> onMnemonic);
+Task ChangePasswordAsync(ReadOnlyMemory<byte> oldPassword, ReadOnlyMemory<byte> newPassword);
+
+// Custom Provider Config
+Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string endpoint, string? apiKey, ReadOnlyMemory<byte> password, string? name = null);
+Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo);
+Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte> password);
+Task ClearCustomProviderConfigAsync(ChainInfo chainInfo);
+```
+
 **Key changes from earlier versions:**
-- `CreateFromMnemonicAsync` accepts `ReadOnlyMemory<byte>` for both mnemonic and password (callers must zero after use)
-- `GetReceiveAddressAsync` / `GetStakingAddressAsync` removed — use `wallet.GetAddressInfo()?.Address` and `wallet.GetAddressInfo()?.StakingAddress` directly
-- `DiscoverAccountsAsync` checks UTxOs (`IsAddressUsedAsync`) instead of transaction history
+- `IWalletManager` interface removed — `WalletManagerService` is a concrete class
+- `CreateFromMnemonicAsync` renamed to `CreateAsync`
+- Account management, chain switching, signing, export moved to `BurizaWallet`
+- `SignTransactionAsync` removed — use `wallet.SendAsync(request)` (build + sign + submit)
+- `IKeyService`/`CardanoKeyService` deleted — replaced by `IChainWallet`/`BurizaCardanoWallet`
+- `NetworkType` enum deleted — `Network` is now a `string`, `ChainRegistry` is source of truth
+- Auth model: single `AuthenticationType` → multi-method `HashSet<AuthenticationType>` (password always implicit, biometric/PIN additive)
 
 ### BurizaStorageBase (auth + storage)
 
 `BurizaStorageBase` owns:
 - Vault encryption (Argon2id + AES-256-GCM)
-- PIN / biometric enablement
+- Multi-method auth management (`GetEnabledAuthMethodsAsync` → `HashSet<AuthenticationType>`)
+- PIN / biometric enable/disable (additive — both can be on simultaneously)
 - Lockout policy
-- Auth type management
 - Wallet metadata persistence
+- Custom provider config persistence
 
 Platform behavior:
 - **MAUI**: seed stored in SecureStorage; PIN/biometric supported.
@@ -105,20 +131,17 @@ src/Buriza.Core/
 │   ├── IBurizaChainProviderFactory.cs
 │   ├── Chain/
 │   │   ├── IBurizaChainProvider.cs
-│   │   └── IKeyService.cs
+│   │   └── IChainWallet.cs
 │   ├── Security/
-│   │   └── IBiometricService.cs
-│   ├── Storage/
-│   │   ├── IStorageProvider.cs
-│   │   └── BurizaStorageBase.cs
-│   └── Wallet/
-│       ├── IWallet.cs
-│       └── IWalletManager.cs
+│   │   └── IDeviceAuthService.cs
+│   └── Storage/
+│       └── IStorageProvider.cs
 ├── Services/
 │   ├── WalletManagerService.cs
-│   ├── CardanoKeyService.cs
-│   ├── MnemonicService.cs
 │   └── HeartbeatService.cs
+├── Chain/
+│   └── Cardano/
+│       └── BurizaCardanoWallet.cs
 ├── Crypto/
 │   ├── VaultEncryption.cs
 │   └── KeyDerivationOptions.cs
@@ -127,96 +150,98 @@ src/Buriza.Core/
 │   │   ├── BurizaWallet.cs
 │   │   ├── BurizaWalletAccount.cs
 │   │   ├── ChainAddressData.cs
-│   │   ├── WalletProfile.cs
-│   │   └── DerivedAddress.cs
+│   │   └── WalletProfile.cs
 │   ├── Security/
 │   │   ├── EncryptedVault.cs
 │   │   ├── SecretVerifierPayload.cs
+│   │   ├── DeviceCapabilities.cs
 │   │   └── LockoutState.cs
 │   ├── Chain/
 │   │   ├── ChainInfo.cs
 │   │   ├── ChainRegistry.cs
-│   │   └── ChainTip.cs
+│   │   └── TipEvent.cs
+│   ├── Enums/
+│   │   ├── AuthenticationType.cs
+│   │   ├── ChainType.cs
+│   │   └── TipAction.cs
 │   └── Transaction/
 │       ├── UnsignedTransaction.cs
 │       ├── TransactionRequest.cs
-│       ├── TransactionHistory.cs
 │       └── Utxo.cs
 └── Storage/
-    └── StorageKeys.cs
+    ├── BurizaStorageBase.cs
+    ├── StorageKeys.cs
+    └── InMemoryStorage.cs
 ```
 
 ## Data Flow Summary
 
 **Create/Import**
-1. `IWalletManager.CreateFromMnemonicAsync` validates mnemonic (byte-based API)
-2. Derives chain data (address, staking address, symbol) for all Cardano networks via `IKeyService.DeriveChainDataAsync`
-3. Stores wallet metadata
-4. Creates encrypted vault via `BurizaStorageBase`
+1. `WalletManagerService.CreateAsync` validates mnemonic (byte-based API)
+2. Saves wallet metadata first, then creates encrypted vault (with rollback on failure)
+3. Unlocks wallet in-memory with mnemonic bytes
+4. Addresses derived on demand via `IChainWallet.DeriveChainDataAsync`
 
 **Unlock**
-1. `BurizaStorageBase.UnlockVaultAsync` uses auth type
+1. `BurizaWallet.UnlockAsync` calls `BurizaStorageBase.UnlockVaultAsync`
 2. Password / PIN / biometric returns mnemonic bytes
-3. Callers must zero the bytes after use
+3. Mnemonic cached in-memory on `BurizaWallet` until `Lock()` is called
 
 ### Detailed Flows
 
 #### Create Wallet (Password)
 1. UI calls `GenerateMnemonic`
 2. User confirms they saved the mnemonic
-3. UI calls `CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes)` — byte-based API
-4. `WalletManagerService` derives chain data for all Cardano networks (Mainnet/Preprod/Preview) via `IKeyService.DeriveChainDataAsync`
-5. `BurizaStorageBase.CreateVaultAsync` persists vault
-6. Wallet metadata is saved and set active
+3. UI calls `CreateAsync(name, mnemonicBytes, passwordBytes)` — byte-based API
+4. `WalletManagerService` saves wallet metadata and sets active
+5. `BurizaStorageBase.CreateVaultAsync` persists vault (rollback on failure: delete wallet + clear active)
+6. Wallet unlocked in-memory with mnemonic bytes
 7. Caller zeros mnemonic and password bytes
 
 #### Import Wallet (Password)
 Same as create, except mnemonic is user-supplied.
 
-#### Enable PIN
-1. User supplies password + PIN
-2. `BurizaStorageBase.EnablePinAsync` verifies password
-3. Stores PIN verifier in secure storage
-4. Stores encrypted password (VaultEncryption mode) or updates auth type (DirectSecure)
-5. Auth type set to PIN
-
-#### Enable Biometric
+#### Enable Biometric / PIN (additive)
 1. User supplies password
-2. `BurizaStorageBase.EnableBiometricAsync` verifies password
-3. DirectSecure: stores mnemonic in biometric secure storage
-4. VaultEncryption: stores biometric key in secure storage and biometric seed vault in normal storage
-5. Auth type set to Biometric
+2. `BurizaStorageBase.EnableAuthAsync(walletId, type, password)` — additive
+3. Verifies password, stores seed in device auth
+4. Reads current enabled methods, **adds** the new type, writes back
+5. Both biometric and PIN can be enabled simultaneously
+
+#### Disable Biometric / PIN
+- `DisableAuthMethodAsync(walletId, type)` — removes one method
+- `DisableAllDeviceAuthAsync(walletId)` — removes all convenience methods
+- Password cannot be disabled (always implicit)
 
 #### Unlock with PIN / Biometric
-- PIN: unlocks password or seed depending on storage mode
-- Biometric: unlocks biometric seed or decrypts biometric seed vault
+- `BurizaWallet.UnlockAsync(passwordOrPin, biometricReason)`
+- Storage routes to appropriate device auth based on enabled methods
 
 #### Change Password
 1. Unlock vault with old password
 2. Re-encrypt vault with new password
-3. Reset PIN/biometric vaults in VaultEncryption mode
+3. Biometric/PIN are independent — not invalidated on password change
 
 #### Discover Accounts
-1. Unlock vault with password
-2. For each account index, derive chain data via `IKeyService.DeriveChainDataAsync`
+1. Wallet must be unlocked (mnemonic in memory)
+2. For each account index, derive chain data via `IChainWallet.DeriveChainDataAsync`
 3. Check if address has UTxOs via `provider.IsAddressUsedAsync`
 4. Stop after `accountGapLimit` consecutive unused accounts
 
 #### Set Active Chain / Network
-1. If chain data is missing, password required to derive addresses
-2. Chain data saved under `(ChainType, NetworkType)`
-3. Provider attached for the active chain
+1. `wallet.SetActiveChainAsync(chainInfo)` — updates wallet metadata
+2. Network stored as string, persisted via storage
 
-#### Sign Transaction
-1. Unlock vault with password
-2. Derive private key via key service
-3. Build/sign transaction
-4. Submit via provider
+#### Send Transaction
+1. Wallet must be unlocked
+2. `wallet.SendAsync(request)` — resolves from address, builds, signs, submits
+3. `IChainWallet.Sign` derives private key internally and zeros after use
 
 ## Notes
 
 - Authentication and secure storage are centralized in `BurizaStorageBase`.
 - Web/Extension run in VaultEncryption mode; MAUI uses DirectSecure.
+- Password is always the baseline auth method. Biometric/PIN are additive convenience layers.
 
 ## Error Semantics
 
@@ -232,13 +257,14 @@ Callers should treat these as **user‑actionable** errors and avoid surfacing i
 - Vaults use Argon2id + AES‑256‑GCM with AAD binding (`walletId`, `purpose`, `version`)
 - Lockout uses HMAC to prevent tampering; in web/extension HMAC keys are stored in normal storage
 - In DirectSecure mode, security relies on platform secure storage (Keychain/Keystore/PasswordVault)
+- Password change does **not** invalidate biometric/PIN — they store the seed independently
 
 ## Examples
 
 ### Create Wallet
 
 ```csharp
-walletManager.GenerateMnemonic(24, span =>
+WalletManagerService.GenerateMnemonic(24, span =>
 {
     // Show to user; do not persist as string
 });
@@ -247,7 +273,7 @@ byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
 byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
 try
 {
-    var wallet = await walletManager.CreateFromMnemonicAsync(
+    var wallet = await walletManager.CreateAsync(
         "Main Wallet", mnemonicBytes, passwordBytes);
 }
 finally
@@ -260,23 +286,22 @@ finally
 ### Access Addresses
 
 ```csharp
-// Receive address (no password needed — stored in wallet metadata)
-string? address = wallet.GetAddressInfo()?.Address;
-
-// Staking address
-string? stakingAddress = wallet.GetAddressInfo()?.StakingAddress;
+// Receive address (wallet must be unlocked for first derivation)
+ChainAddressData? addressData = await wallet.GetAddressInfoAsync();
+string? address = addressData?.Address;
+string? stakingAddress = addressData?.StakingAddress;
 ```
 
-### Sign and Submit Transaction
+### Send Transaction
 
 ```csharp
+// Wallet must be unlocked
 var wallet = await walletManager.GetActiveAsync();
-var unsignedTx = await wallet!.BuildTransactionAsync(amount, toAddress);
-var signed = await walletManager.SignTransactionAsync(
-    wallet.Id,
-    wallet.ActiveAccountIndex,
-    0,
-    unsignedTx,
-    password);
-var txId = await wallet.SubmitAsync(signed);
+await wallet!.UnlockAsync(passwordBytes);
+
+// SendAsync builds, signs, and submits in one call
+await wallet.SendAsync(new TransactionRequest
+{
+    Recipients = [new Recipient { Address = "addr_test1...", Amount = 5_000_000 }]
+});
 ```

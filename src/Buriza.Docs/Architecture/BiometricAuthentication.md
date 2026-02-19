@@ -201,7 +201,8 @@ Important: MAUI `SecureStorage` does not expose biometric access control flags. 
 - Biometric provides quick proof-of-presence, gated at the application layer
 - The seed in `SecureStorage` is protected by OS security (Keychain/Keystore/DPAPI), not by biometric access control
 - User can always fall back to manual password entry
-- On password change, biometric auth is automatically disabled (user must re-enable)
+- Both biometric and PIN can be enabled simultaneously (additive model)
+- Password change does **not** invalidate biometric/PIN — they store the seed independently
 
 ### Lockout Protection
 
@@ -241,7 +242,7 @@ builder.Services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<Bur
 builder.Services.AddSingleton<AppStateService>();
 builder.Services.AddSingleton<ChainProviderSettings>();
 builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
+builder.Services.AddSingleton<WalletManagerService>();
 ```
 
 ### Web/Extension Program.cs (Password Only)
@@ -253,7 +254,7 @@ builder.Services.AddScoped<BurizaStorageBase>(sp => sp.GetRequiredService<Buriza
 builder.Services.AddSingleton<AppStateService>();
 builder.Services.AddSingleton<ChainProviderSettings>();
 builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-builder.Services.AddScoped<IWalletManager, WalletManagerService>();
+builder.Services.AddScoped<WalletManagerService>();
 ```
 
 ## Blazor Component Integration

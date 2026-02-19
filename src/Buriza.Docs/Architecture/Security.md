@@ -100,14 +100,15 @@ Binary format (24 bytes):
 
 ## Authentication Model
 
-### Authentication Types
+### Authentication Model
+
+Password is always the baseline — it cannot be disabled. Biometric and PIN are **additive** convenience layers that can be independently enabled or disabled. Both can be active simultaneously.
 
 - **Password**: primary secret. Required for vault decryption or verifier validation.
 - **PIN**: convenience factor. Encrypts/stores the password or unlocks it (depending on mode).
 - **Biometric**: convenience factor. Uses platform biometric APIs to unlock the password.
 
-`AuthenticationType` is stored with an HMAC (tamper detection) in platform storage.
-If the HMAC is missing or invalid, auth type resets to **Password**.
+Enabled convenience methods are stored as a `HashSet<AuthenticationType>` with HMAC (tamper detection) in platform storage. If the HMAC is missing or invalid, enabled methods reset to empty (password only).
 
 ### PIN Policy
 

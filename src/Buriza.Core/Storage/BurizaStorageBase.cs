@@ -204,8 +204,8 @@ public abstract class BurizaStorageBase : IStorageProvider
         return configs.TryGetValue(key, out CustomProviderConfig? config) ? config : null;
     }
 
-    /// <summary>Saves custom provider config and optional API key (encrypted with password).</summary>
-    public virtual async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    /// <summary>Saves custom provider config and optional API key. Password required for Web/Extension/CLI (VaultEncryption); MAUI uses SecureStorage directly.</summary>
+    public virtual async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         string key = GetCustomConfigKey(config.Chain, config.Network);
@@ -215,12 +215,15 @@ public abstract class BurizaStorageBase : IStorageProvider
 
         if (!string.IsNullOrEmpty(apiKey))
         {
+            if (!password.HasValue || password.Value.IsEmpty)
+                throw new ArgumentException("Password is required to encrypt API key in this storage mode.", nameof(password));
+
             byte[] apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
             try
             {
                 ChainInfo info = ChainRegistry.Get(config.Chain, config.Network);
                 Guid vaultId = DeriveApiKeyVaultId(info);
-                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, password.Span, VaultPurpose.ApiKey);
+                EncryptedVault vault = VaultEncryption.Encrypt(vaultId, apiKeyBytes, password.Value.Span, VaultPurpose.ApiKey);
                 string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, config.Network);
                 await SetJsonAsync(vaultKey, vault, ct);
             }
@@ -246,10 +249,10 @@ public abstract class BurizaStorageBase : IStorageProvider
         await RemoveAsync(StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network), ct);
     }
 
-    /// <summary>Gets custom provider config along with plaintext API key (decrypted with password).</summary>
+    /// <summary>Gets custom provider config along with plaintext API key. Password required for Web/Extension/CLI (VaultEncryption); MAUI uses SecureStorage directly.</summary>
     public virtual async Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
-        ReadOnlyMemory<byte> password,
+        ReadOnlyMemory<byte>? password = null,
         CancellationToken ct = default)
     {
         CustomProviderConfig? config = await GetCustomProviderConfigAsync(chainInfo, ct);
@@ -268,7 +271,10 @@ public abstract class BurizaStorageBase : IStorageProvider
         if (vault.Purpose != VaultPurpose.ApiKey || vault.WalletId != expectedId)
             throw new CryptographicException("Invalid API key vault metadata");
 
-        byte[] apiKeyBytes = VaultEncryption.Decrypt(vault, password.Span);
+        if (!password.HasValue || password.Value.IsEmpty)
+            throw new ArgumentException("Password is required to decrypt API key in this storage mode.", nameof(password));
+
+        byte[] apiKeyBytes = VaultEncryption.Decrypt(vault, password.Value.Span);
         try
         {
             string apiKey = Encoding.UTF8.GetString(apiKeyBytes);

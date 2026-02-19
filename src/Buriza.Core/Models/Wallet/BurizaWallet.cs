@@ -299,7 +299,7 @@ public class BurizaWallet(
     public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
         => EnsureStorage().GetCustomProviderConfigAsync(chainInfo, ct);
 
-    public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, ReadOnlyMemory<byte> password, string? name = null, CancellationToken ct = default)
+    public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, ReadOnlyMemory<byte>? password = null, string? name = null, CancellationToken ct = default)
     {
         string? normalizedEndpoint = ValidateAndNormalizeEndpoint(endpoint);
         string? normalizedApiKey = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey;
@@ -323,7 +323,7 @@ public class BurizaWallet(
         EnsureFactory().ClearChainConfig(chainInfo);
     }
 
-    public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         (CustomProviderConfig Config, string? ApiKey)? result =
             await EnsureStorage().GetCustomProviderConfigWithApiKeyAsync(chainInfo, password, ct);
@@ -387,7 +387,7 @@ public class BurizaWallet(
         IChainWallet chainWallet = ChainWallet;
 
         UnsignedTransaction unsignedTx = await chainWallet.BuildTransactionAsync(fromAddress, request, provider, ct);
-        byte[] signedTxBytes = chainWallet.Sign(unsignedTx, _mnemonicBytes!, chainInfo, ActiveAccountIndex, 0);
+        byte[] signedTxBytes = chainWallet.Sign(unsignedTx, _mnemonicBytes, chainInfo, ActiveAccountIndex, 0);
         return await provider.SubmitAsync(signedTxBytes, ct);
     }
 

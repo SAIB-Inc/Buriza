@@ -26,14 +26,14 @@ Business logic layer for the Buriza wallet suite. Provides multi-chain HD wallet
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌─────────────────────────┐       ┌────────────────────────────┐  │
-│  │     IWalletManager      │       │       BurizaWallet         │  │
-│  │  (WalletManagerService) │       │     (implements IWallet)   │  │
+│  │   WalletManagerService   │       │       BurizaWallet         │  │
+│  │     (concrete class)    │       │     (chain-agnostic)       │  │
 │  ├─────────────────────────┤       ├────────────────────────────┤  │
 │  │ • Create/Import wallet  │       │ • GetBalanceAsync()        │  │
 │  │ • GetAllAsync()         │──────►│ • GetUtxosAsync()          │  │
 │  │ • SetActiveChainAsync() │returns│ • GetAssetsAsync()         │  │
 │  │ • CreateAccountAsync()  │       │ • BuildTransactionAsync()  │  │
-│  │ • SignTransactionAsync()│       │ • SubmitAsync()            │  │
+│  │ • DeleteAsync()         │       │ • SubmitAsync()            │  │
 │  └───────────┬─────────────┘       └─────────────┬──────────────┘  │
 │              │                                   │                  │
 │   password   │                      no password  │                  │
@@ -53,7 +53,7 @@ Business logic layer for the Buriza wallet suite. Provides multi-chain HD wallet
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-**Key insight**: `IWalletManager` handles lifecycle and sensitive operations (requires password), while `BurizaWallet` handles queries and transaction building (no password needed after wallet is loaded).
+**Key insight**: `WalletManagerService` handles wallet lifecycle (create/delete/set active) and auth management, while `BurizaWallet` handles queries, transactions, accounts, and chain operations directly (wallet must be unlocked for sensitive operations).
 
 ---
 
@@ -64,21 +64,18 @@ Buriza.Core/
 ├── Interfaces/
 │   ├── Chain/
 │   │   ├── IBurizaChainProvider.cs # Chain provider abstraction
-│   │   └── IKeyService.cs          # Chain-specific key derivation
-│   ├── IBurizaChainProviderFactory.cs # Provider + key service factory
-│   ├── Storage/
-│   │   ├── IStorageProvider.cs     # Low-level key-value storage
-│   │   └── BurizaStorageBase.cs    # Wallet persistence + vault
-│   ├── Wallet/
-│   │   ├── IWallet.cs              # Wallet query/transaction interface
-│   │   └── IWalletManager.cs       # Main wallet management facade
-├── Extensions/
-│   └── StorageProviderExtensions.cs # JSON helpers for storage providers
+│   │   └── IChainWallet.cs         # Chain-specific key derivation + tx building + signing
+│   ├── IBurizaChainProviderFactory.cs # Provider + chain wallet factory
+│   ├── Security/
+│   │   └── IDeviceAuthService.cs   # Platform device auth abstraction
+│   └── Storage/
+│       └── IStorageProvider.cs     # Low-level key-value storage
+├── Chain/
+│   └── Cardano/
+│       └── BurizaCardanoWallet.cs  # Cardano CIP-1852 derivation + tx building + signing
 ├── Services/
-│   ├── CardanoKeyService.cs        # Cardano CIP-1852 key derivation
-│   ├── MnemonicService.cs          # BIP-39 mnemonic operations
 │   ├── HeartbeatService.cs         # Chain tip monitoring
-│   └── WalletManagerService.cs     # IWalletManager implementation
+│   └── WalletManagerService.cs     # Wallet lifecycle + auth management
 ├── Crypto/
 │   ├── VaultEncryption.cs          # Argon2id + AES-256-GCM encryption
 │   └── KeyDerivationOptions.cs     # Argon2id parameters
@@ -89,6 +86,10 @@ Buriza.Core/
 │   ├── Security/                   # EncryptedVault, LockoutState
 │   ├── Transaction/                # Requests + unsigned tx
 │   └── Wallet/                     # BurizaWallet, ChainAddressData, WalletProfile
+├── Storage/
+│   ├── BurizaStorageBase.cs        # Wallet + vault + auth abstraction
+│   ├── StorageKeys.cs              # Centralized storage key definitions
+│   └── InMemoryStorage.cs          # In-memory storage (CLI/tests)
 └── Usage.md                        # Detailed usage examples
 ```
 
@@ -103,12 +104,12 @@ Buriza.Core/
 3. **Platform abstraction** - Web/Extension use JS storage, MAUI uses SecureStorage + Preferences
 4. **Dependency injection** - Loose coupling between components
 
-### Why Separate IWalletManager and BurizaWallet?
+### Why Separate WalletManagerService and BurizaWallet?
 
 | Component | Responsibility | Password Required |
 |-----------|----------------|-------------------|
-| `IWalletManager` | Wallet lifecycle, accounts, signing | Yes (for sensitive ops) |
-| `BurizaWallet` | Queries, transaction building | No |
+| `WalletManagerService` | Wallet lifecycle, auth management | Yes (for create/delete) |
+| `BurizaWallet` | Queries, accounts, chain, sign, export | Wallet must be unlocked |
 
 This separation ensures:
 - UI can freely query balances/assets without prompting for password
@@ -162,14 +163,11 @@ AppState override (endpoint/apiKey) → appsettings defaults → error if missin
 ### IBurizaChainProvider
 Chain operations for querying and submitting transactions.
 
-### IKeyService
-Chain-specific key derivation. Returns `ChainAddressData` directly (address, staking address, symbol). Cardano implementation uses CIP-1852 derivation paths.
+### IChainWallet
+Chain-specific key derivation, transaction building, and signing. Returns `ChainAddressData` directly. Cardano implementation (`BurizaCardanoWallet`) uses CIP-1852 derivation paths.
 
 ### IBurizaChainProviderFactory
-Creates providers and key services, and validates endpoints.
-
-### IWalletManager
-Wallet lifecycle, account management, signing, and custom provider config.
+Creates providers and chain wallets, and validates endpoints.
 
 ## Implementations
 
@@ -182,8 +180,8 @@ Storage and vault operations implemented per platform:
 - `BurizaWebStorageService` (Web/Extension)
 - `BurizaCliStorageService` (CLI)
 
-### CardanoKeyService
-Cardano CIP-1852 derivation.
+### BurizaCardanoWallet
+Cardano CIP-1852 derivation, transaction building with Chrysalis `TransactionTemplateBuilder`, and signing. Implements `IChainWallet`.
 
 ### BurizaChainProviderFactory (Buriza.Data)
 Uses `ChainProviderSettings` + session overrides to create `IBurizaChainProvider`.
@@ -191,7 +189,7 @@ Uses `ChainProviderSettings` + session overrides to create `IBurizaChainProvider
 ## Models
 
 ### BurizaWallet / BurizaWalletAccount / ChainAddressData
-Wallet profile, accounts, and per-chain address data. `ChainAddressData` stores address, staking address, symbol (e.g., "ADA", "tADA"), chain/network type, and sync timestamp.
+Wallet profile, accounts, and address data. `ChainAddressData` references `ChainInfo` and stores address and staking address. Addresses derived on demand via `IChainWallet.DeriveChainDataAsync`. `Network` is a `string` (not enum).
 
 ### EncryptedVault
 Encrypted mnemonic format (wallet-bound via AAD). `WalletId` is a `Guid`.
@@ -242,7 +240,7 @@ byte[] mnemonicBytes = Encoding.UTF8.GetBytes(mnemonic);
 byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
 try
 {
-    await walletManager.CreateFromMnemonicAsync(name, mnemonicBytes, passwordBytes);
+    await walletManager.CreateAsync(name, mnemonicBytes, passwordBytes);
 }
 finally
 {
@@ -253,16 +251,15 @@ finally
 
 ### Password Requirements
 
-| Operation | Password Required | Why |
-|-----------|-------------------|-----|
-| Create/Import wallet | Yes (as bytes) | Encrypt mnemonic |
-| Get address/balance/assets | No | Uses persisted `ChainAddressData` |
-| Build transaction | No | Only needs addresses |
-| Sign transaction | Yes | Derives private key |
-| Export mnemonic | Yes | Decrypt vault |
-| Set active chain | Conditional | Only if chain data not yet derived |
-| Unlock account | Yes | Derive new addresses |
-| Discover accounts | Yes | Derive addresses for each index |
+| Operation | Requirement | Why |
+|-----------|-------------|-----|
+| Create/Import wallet | Password (as bytes) | Encrypt mnemonic |
+| Get address | Wallet unlocked | Derives on demand |
+| Get balance/UTxOs/assets | Wallet unlocked or provider only | Provider query |
+| Send transaction | Wallet unlocked | Derives key, signs, submits |
+| Export mnemonic | Wallet unlocked | Mnemonic in memory |
+| Set active chain | Wallet unlocked | Updates metadata |
+| Create account | Wallet unlocked | Derives addresses |
 
 ### What's Never Stored
 
@@ -298,8 +295,8 @@ Custom endpoints and API keys are stored via `BurizaStorageBase` (API keys encry
 ### Adding a New Chain (e.g., Bitcoin)
 
 1. Implement a new `IBurizaChainProvider` for the chain.
-2. Add a chain-specific `IKeyService` implementation if derivation differs.
-3. Extend `IBurizaChainProviderFactory` implementation to create the new provider and advertise supported chains.
+2. Add a chain-specific `IChainWallet` implementation for key derivation, tx building, and signing.
+3. Extend `IBurizaChainProviderFactory` implementation to create the new provider and chain wallet.
 
 ---
 
@@ -352,7 +349,7 @@ byte[] passwordBytes = Encoding.UTF8.GetBytes("password123");
 BurizaWallet wallet;
 try
 {
-    wallet = await walletManager.CreateFromMnemonicAsync("My Wallet", mnemonicBytes, passwordBytes);
+    wallet = await walletManager.CreateAsync("My Wallet", mnemonicBytes, passwordBytes);
 }
 finally
 {
@@ -360,33 +357,30 @@ finally
     CryptographicOperations.ZeroMemory(passwordBytes);
 }
 
-// Access address (no password needed — stored in wallet metadata)
-string? address = wallet.GetAddressInfo()?.Address;
-string? stakingAddress = wallet.GetAddressInfo()?.StakingAddress;
+// Access address (wallet is already unlocked after create)
+ChainAddressData? addressData = await wallet.GetAddressInfoAsync();
+string? address = addressData?.Address;
+string? stakingAddress = addressData?.StakingAddress;
 
-// Query balance (no password needed)
+// Query balance
 ulong balance = await wallet.GetBalanceAsync();
 
-// Build transaction (no password needed)
-var unsignedTx = await wallet.BuildTransactionAsync(5_000_000, "addr_test1...");
-
-// Sign transaction (password required)
-var signedTx = await walletManager.SignTransactionAsync(
-    wallet.Id, accountIndex: 0, addressIndex: 0, unsignedTx, "password123");
-
-// Submit transaction (no password needed)
-string txHash = await wallet.SubmitAsync(signedTx);
+// Send transaction (wallet must be unlocked — build + sign + submit in one call)
+await wallet.SendAsync(new TransactionRequest
+{
+    Recipients = [new Recipient { Address = "addr_test1...", Amount = 5_000_000 }]
+});
 
 // Configure custom provider endpoint (encrypted API key, validated URL)
-await walletManager.SetCustomProviderConfigAsync(
+await wallet.SetCustomProviderConfigAsync(
     ChainRegistry.CardanoMainnet,
     endpoint: "https://my-node.com",
     apiKey: "my-api-key",
-    password: "password123");
+    password: passwordBytes);
 
 // Load custom config into session after app restart
-await walletManager.LoadCustomProviderConfigAsync(
-    ChainRegistry.CardanoMainnet, "password123");
+await wallet.LoadCustomProviderConfigAsync(
+    ChainRegistry.CardanoMainnet, passwordBytes);
 ```
 
 ---
@@ -447,7 +441,7 @@ builder.Services.AddScoped<BurizaStorageBase>(sp => sp.GetRequiredService<Buriza
 builder.Services.AddSingleton<AppStateService>();
 builder.Services.AddSingleton<ChainProviderSettings>();
 builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-builder.Services.AddScoped<IWalletManager, WalletManagerService>();
+builder.Services.AddScoped<WalletManagerService>();
 
 // Buriza.App/MauiProgram.cs
 builder.Services.AddSingleton(Preferences.Default);
@@ -457,7 +451,7 @@ builder.Services.AddSingleton<BurizaStorageBase>(sp => sp.GetRequiredService<Bur
 builder.Services.AddSingleton<AppStateService>();
 builder.Services.AddSingleton<ChainProviderSettings>();
 builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
+builder.Services.AddSingleton<WalletManagerService>();
 ```
 
 ### Why This Architecture?

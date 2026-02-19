@@ -351,7 +351,7 @@ public sealed class BurizaAppStorageService(
         return configs.TryGetValue(key, out CustomProviderConfig? config) ? config : null;
     }
 
-    public override async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    public override async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
         string key = GetCustomConfigKey(config.Chain, config.Network);
@@ -378,7 +378,7 @@ public sealed class BurizaAppStorageService(
 
     public override async Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
-        ReadOnlyMemory<byte> password,
+        ReadOnlyMemory<byte>? password = null,
         CancellationToken ct = default)
     {
         CustomProviderConfig? config = await GetCustomProviderConfigAsync(chainInfo, ct);
