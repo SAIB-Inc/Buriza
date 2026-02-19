@@ -92,15 +92,17 @@ public class BurizaStorageAuthMethodsTests : IDisposable
     }
 
     [Fact]
-    public async Task DisableAuthMethodAsync_Default_CompletesWithoutError()
+    public async Task DisableAuthMethodAsync_Default_ThrowsNotSupported()
     {
-        await _storage.DisableAuthMethodAsync(_walletId, AuthenticationType.Biometric);
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _storage.DisableAuthMethodAsync(_walletId, AuthenticationType.Biometric));
     }
 
     [Fact]
-    public async Task DisableAllDeviceAuthAsync_Default_CompletesWithoutError()
+    public async Task DisableAllDeviceAuthAsync_Default_ThrowsNotSupported()
     {
-        await _storage.DisableAllDeviceAuthAsync(_walletId);
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _storage.DisableAllDeviceAuthAsync(_walletId));
     }
 
     [Fact]
@@ -167,13 +169,15 @@ public class BurizaStorageAuthMethodsTests : IDisposable
     [Fact]
     public async Task WalletManagerService_DisableAuthMethodAsync_DelegatesToStorage()
     {
-        await _walletManager.DisableAuthMethodAsync(_walletId, AuthenticationType.Biometric);
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _walletManager.DisableAuthMethodAsync(_walletId, AuthenticationType.Biometric));
     }
 
     [Fact]
     public async Task WalletManagerService_DisableAllDeviceAuthAsync_DelegatesToStorage()
     {
-        await _walletManager.DisableAllDeviceAuthAsync(_walletId);
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            _walletManager.DisableAllDeviceAuthAsync(_walletId));
     }
 
     #endregion

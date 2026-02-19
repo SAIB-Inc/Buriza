@@ -13,6 +13,7 @@ using Buriza.Core.Models.Transaction;
 using Buriza.Core.Models.Wallet;
 using Buriza.Core.Services;
 using Buriza.Data.Models;
+using Buriza.Data.Providers;
 using Chrysalis.Network.Cbor.LocalStateQuery;
 using Spectre.Console;
 
@@ -225,7 +226,9 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         BurizaWallet active = await RequireActiveWalletAsync();
         ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
         using IBurizaChainProvider provider = _providerFactory.CreateProvider(chainInfo);
-        ProtocolParams parameters = (ProtocolParams)await provider.GetParametersAsync();
+        BurizaUtxoRpcProvider cardanoProvider = provider as BurizaUtxoRpcProvider
+            ?? throw new InvalidOperationException("Protocol parameters are only available for Cardano providers.");
+        ProtocolParams parameters = await cardanoProvider.GetParametersAsync();
 
         Table table = new();
         table.AddColumn("Field");

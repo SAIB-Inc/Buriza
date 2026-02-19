@@ -158,9 +158,6 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         }
     }
 
-    async Task<object> IBurizaChainProvider.GetParametersAsync(CancellationToken ct)
-        => await GetParametersAsync(ct);
-
     public async Task<ProtocolParams> GetParametersAsync(CancellationToken ct = default)
     {
         UtxorpcQuery.ReadParamsRequest request = new();

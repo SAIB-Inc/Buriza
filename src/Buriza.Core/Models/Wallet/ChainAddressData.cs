@@ -13,9 +13,6 @@ public class ChainAddressData
     /// <summary>Primary address (base address for Cardano: payment + staking).</summary>
     public required string Address { get; set; }
 
-    /// <summary>Staking/reward address (role 2, index 0). Null for chains without staking.</summary>
-    public string? StakingAddress { get; set; }
-
     /// <summary>Last time this chain data was synced with the network.</summary>
     public DateTime? LastSyncedAt { get; set; }
 }

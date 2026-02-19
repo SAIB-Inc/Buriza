@@ -54,8 +54,7 @@ public class BurizaCardanoWallet : IChainWallet
             return Task.FromResult(new ChainAddressData
             {
                 ChainInfo = chainInfo,
-                Address = address,
-                StakingAddress = stakingAddress
+                Address = address
             });
         }
         finally
