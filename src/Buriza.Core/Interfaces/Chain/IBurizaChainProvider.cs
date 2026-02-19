@@ -28,9 +28,9 @@ public interface IBurizaChainProvider : IDisposable
     Task<object> GetParametersAsync(CancellationToken ct = default);
 
     /// <summary>Reads a transaction by hash. Returns chain-specific transaction object.</summary>
-    Task<byte[]?> ReadTxAsync(string txHash, CancellationToken ct = default);
+    Task<byte[]?> ReadTxAsync(string hash, CancellationToken ct = default);
 
-    /// <summary>Submits a raw transaction (CBOR bytes).</summary>
+    /// <summary>Submits a raw transaction.</summary>
     Task<string> SubmitAsync(byte[] txBytes, CancellationToken ct = default);
 
     /// <summary>Follows the chain tip for real-time updates.</summary>

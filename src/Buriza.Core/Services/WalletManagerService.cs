@@ -17,7 +17,7 @@ public class WalletManagerService(
     private readonly BurizaStorageBase _storage = storage ?? throw new ArgumentNullException(nameof(storage));
     private readonly IBurizaChainProviderFactory _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
 
-    #region Wallet Lifecycle
+    #region Wallet Lifecycle — Create → Get → SetActive → Delete
 
     /// <inheritdoc/>
     /// <remarks>
@@ -113,7 +113,6 @@ public class WalletManagerService(
     {
         _ = await GetWalletOrThrowAsync(walletId, ct);
 
-        // Update active wallet if deleting the active one
         Guid? activeId = await _storage.GetActiveWalletIdAsync(ct);
         if (activeId == walletId)
         {
@@ -129,28 +128,52 @@ public class WalletManagerService(
         await _storage.DeleteWalletAsync(walletId, ct);
     }
 
+    // Chrysalis limitation: Mnemonic.Restore() requires string — immutable string cannot be zeroed.
+    private static bool ValidateMnemonic(ReadOnlySpan<byte> mnemonic)
+    {
+        try
+        {
+            string mnemonicStr = Encoding.UTF8.GetString(mnemonic);
+            Mnemonic.Restore(mnemonicStr, English.Words);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     #endregion
 
-    #region Auth Management
-
-    public Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
-        => _storage.EnableAuthAsync(walletId, type, password, ct);
-
-    public Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
-        => _storage.DisableDeviceAuthAsync(walletId, ct);
-
-    public Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => _storage.IsDeviceAuthEnabledAsync(walletId, ct);
-
-    public Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default)
-        => _storage.GetAuthTypeAsync(walletId, ct);
+    #region Auth Management — Capabilities → Query → Enable → Disable
 
     public Task<DeviceCapabilities> GetDeviceCapabilitiesAsync(CancellationToken ct = default)
         => _storage.GetCapabilitiesAsync(ct);
 
+    public Task<HashSet<AuthenticationType>> GetEnabledAuthMethodsAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.GetEnabledAuthMethodsAsync(walletId, ct);
+
+    public Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.IsDeviceAuthEnabledAsync(walletId, ct);
+
+    public Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.IsBiometricEnabledAsync(walletId, ct);
+
+    public Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.IsPinEnabledAsync(walletId, ct);
+
+    public Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+        => _storage.EnableAuthAsync(walletId, type, password, ct);
+
+    public Task DisableAuthMethodAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default)
+        => _storage.DisableAuthMethodAsync(walletId, type, ct);
+
+    public Task DisableAllDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.DisableAllDeviceAuthAsync(walletId, ct);
+
     #endregion
 
-    #region Private Helpers
+    #region Runtime Binding
 
     private async Task<BurizaWallet> GetWalletOrThrowAsync(Guid walletId, CancellationToken ct)
     {
@@ -167,21 +190,6 @@ public class WalletManagerService(
 
     private IReadOnlyList<BurizaWallet> AttachRuntime(IReadOnlyList<BurizaWallet> wallets)
         => [.. wallets.Select(AttachRuntime)];
-
-    // Chrysalis limitation: Mnemonic.Restore() requires string — immutable string cannot be zeroed.
-    private static bool ValidateMnemonic(ReadOnlySpan<byte> mnemonic)
-    {
-        try
-        {
-            string mnemonicStr = Encoding.UTF8.GetString(mnemonic);
-            Mnemonic.Restore(mnemonicStr, English.Words);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     #endregion
 }

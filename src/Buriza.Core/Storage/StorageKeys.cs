@@ -58,11 +58,11 @@ public static class StorageKeys
 
     #region Authentication State
 
-    /// <summary>Gets the storage key for a wallet's authentication type (password/pin/biometric).</summary>
-    public static string AuthType(Guid walletId) => $"buriza_auth_type_{walletId:N}";
+    /// <summary>Gets the storage key for a wallet's enabled convenience auth methods (biometric, pin).</summary>
+    public static string EnabledAuthMethods(Guid walletId) => $"buriza_auth_methods_{walletId:N}";
 
-    /// <summary>Gets the storage key for a wallet's authentication type HMAC.</summary>
-    public static string AuthTypeHmac(Guid walletId) => $"buriza_auth_type_hmac_{walletId:N}";
+    /// <summary>Gets the storage key for a wallet's enabled auth methods HMAC.</summary>
+    public static string EnabledAuthMethodsHmac(Guid walletId) => $"buriza_auth_methods_hmac_{walletId:N}";
 
     /// <summary>Gets the storage key for HMAC-protected lockout state (Preferences).</summary>
     public static string LockoutState(Guid walletId) => $"buriza_lockout_state_{walletId:N}";
@@ -73,8 +73,8 @@ public static class StorageKeys
     /// <summary>Key for storing the lockout HMAC key (installation scoped).</summary>
     public const string LockoutKey = "buriza_lockout_hmac_key";
 
-    /// <summary>Key for storing the auth-type HMAC key (installation scoped).</summary>
-    public const string AuthTypeKey = "buriza_auth_type_hmac_key";
+    /// <summary>Key for storing the auth-methods HMAC key (installation scoped).</summary>
+    public const string AuthMethodsKey = "buriza_auth_methods_hmac_key";
 
     #endregion
 

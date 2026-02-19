@@ -119,14 +119,14 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
         return GetTransactionMetadataCoreAsync(request);
     }
 
-    async Task<byte[]?> IBurizaChainProvider.ReadTxAsync(string txHash, CancellationToken ct)
-        => await ReadTxAsync(txHash, ct);
+    async Task<byte[]?> IBurizaChainProvider.ReadTxAsync(string hash, CancellationToken ct)
+        => await ReadTxAsync(hash, ct);
 
-    public async Task<byte[]?> ReadTxAsync(string txHash, CancellationToken ct = default)
+    public async Task<byte[]?> ReadTxAsync(string hash, CancellationToken ct = default)
     {
         UtxorpcQuery.ReadTxRequest request = new()
         {
-            Hash = ByteString.CopyFrom(Convert.FromHexString(txHash))
+            Hash = ByteString.CopyFrom(Convert.FromHexString(hash))
         };
 
         UtxorpcQuery.ReadTxResponse response = await _queryClient.ReadTxAsync(

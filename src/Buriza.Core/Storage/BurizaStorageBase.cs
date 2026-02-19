@@ -33,7 +33,7 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// <inheritdoc/>
     public abstract Task ClearAsync(CancellationToken ct = default);
 
-    #region Wallet Metadata
+    #region Wallet Metadata — Save → Load → Delete → ActiveWallet
 
     /// <summary>Persists wallet metadata under its own key.</summary>
     public virtual Task SaveWalletAsync(BurizaWallet wallet, CancellationToken ct = default)
@@ -78,7 +78,7 @@ public abstract class BurizaStorageBase : IStorageProvider
 
     #endregion
 
-    #region Vault Operations
+    #region Vault Lifecycle — HasVault → Create → Unlock → VerifyPassword → ChangePassword → Delete
 
     /// <summary>Returns true if the wallet has a stored vault/seed.</summary>
     public virtual async Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default)
@@ -134,14 +134,14 @@ public abstract class BurizaStorageBase : IStorageProvider
     {
         await RemoveAsync(StorageKeys.Vault(walletId), ct);
         await RemoveAsync(StorageKeys.PinVault(walletId), ct);
-        await RemoveAsync(StorageKeys.AuthType(walletId), ct);
-        await RemoveAsync(StorageKeys.AuthTypeHmac(walletId), ct);
+        await RemoveAsync(StorageKeys.EnabledAuthMethods(walletId), ct);
+        await RemoveAsync(StorageKeys.EnabledAuthMethodsHmac(walletId), ct);
         await RemoveAsync(StorageKeys.LockoutState(walletId), ct);
     }
 
     #endregion
 
-    #region Device Auth
+    #region Device Auth — Capabilities → Query → Enable → Disable → Authenticate
 
     /// <summary>Returns device security capabilities (biometric/pin/password).</summary>
     public virtual Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
@@ -151,28 +151,45 @@ public abstract class BurizaStorageBase : IStorageProvider
             SupportsPin: false,
             AvailableTypes: []));
 
-    /// <summary>Gets the configured auth type for a wallet.</summary>
-    public virtual Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default)
-        => Task.FromResult(AuthenticationType.Password);
+    /// <summary>Gets the set of enabled convenience auth methods (biometric, pin) for a wallet. Password is always implicit.</summary>
+    public virtual Task<HashSet<AuthenticationType>> GetEnabledAuthMethodsAsync(Guid walletId, CancellationToken ct = default)
+        => Task.FromResult(new HashSet<AuthenticationType>());
 
-    /// <summary>Sets the configured auth type for a wallet.</summary>
-    public virtual Task SetAuthTypeAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default)
-        => Task.CompletedTask;
+    /// <summary>Returns true if any device auth method (biometric or pin) is enabled for a wallet.</summary>
+    public virtual async Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
+    {
+        HashSet<AuthenticationType> methods = await GetEnabledAuthMethodsAsync(walletId, ct);
+        return methods.Count > 0;
+    }
 
-    /// <summary>Returns true if device auth is enabled for a wallet.</summary>
-    public virtual Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => Task.FromResult(false);
+    /// <summary>Returns true if biometric auth is enabled for a wallet.</summary>
+    public virtual async Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
+    {
+        HashSet<AuthenticationType> methods = await GetEnabledAuthMethodsAsync(walletId, ct);
+        return methods.Contains(AuthenticationType.Biometric);
+    }
 
-    /// <summary>Enables the specified auth type for a wallet (biometric, pin, or password).</summary>
+    /// <summary>Returns true if PIN auth is enabled for a wallet.</summary>
+    public virtual async Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
+    {
+        HashSet<AuthenticationType> methods = await GetEnabledAuthMethodsAsync(walletId, ct);
+        return methods.Contains(AuthenticationType.Pin);
+    }
+
+    /// <summary>Enables the specified auth type for a wallet. Additive — does not remove existing methods.</summary>
     public virtual Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
         => throw new NotSupportedException("Device auth is not supported on this platform.");
 
-    /// <summary>Disables device auth for a wallet.</summary>
-    public virtual Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
+    /// <summary>Disables a specific device auth method for a wallet.</summary>
+    public virtual Task DisableAuthMethodAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default)
         => Task.CompletedTask;
 
-    /// <summary>Prompts device auth and returns the protected payload.</summary>
-    public virtual Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, string reason, CancellationToken ct = default)
+    /// <summary>Disables all device auth methods for a wallet.</summary>
+    public virtual Task DisableAllDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
+        => Task.CompletedTask;
+
+    /// <summary>Prompts device auth for a specific method and returns the protected payload.</summary>
+    public virtual Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, AuthenticationType method, string reason, CancellationToken ct = default)
         => throw new NotSupportedException("Device auth is not supported on this platform.");
 
     #endregion
@@ -273,7 +290,7 @@ public abstract class BurizaStorageBase : IStorageProvider
     protected static string GetCustomConfigKey(ChainType chain, string network)
         => $"{(int)chain}:{network}";
 
-    protected static string ComputeAuthTypeHmac(byte[] key, Guid walletId, string typeStr)
+    protected static string ComputeAuthMethodsHmac(byte[] key, Guid walletId, string typeStr)
     {
         string payload = $"{walletId:N}|{typeStr}";
         byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
