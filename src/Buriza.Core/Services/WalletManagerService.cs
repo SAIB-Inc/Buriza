@@ -9,7 +9,6 @@ using Chrysalis.Wallet.Models.Keys;
 using Chrysalis.Wallet.Words;
 namespace Buriza.Core.Services;
 
-/// <inheritdoc />
 public class WalletManagerService(
     BurizaStorageBase storage,
     IBurizaChainProviderFactory providerFactory)

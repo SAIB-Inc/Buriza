@@ -26,7 +26,6 @@ public class BurizaWallet(
     [JsonIgnore]
     private byte[]? _mnemonicBytes;
 
-
     [JsonConstructor]
     public BurizaWallet() : this(null, null) { }
 

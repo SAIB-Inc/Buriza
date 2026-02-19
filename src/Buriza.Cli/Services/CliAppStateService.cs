@@ -56,5 +56,5 @@ public sealed class CliAppStateService : IBurizaAppStateService
         => $"address:{walletId:N}:{GetChainKey(chainInfo)}:{accountIndex}:";
 
     private static string GetAddressKey(Guid walletId, ChainInfo chainInfo, int accountIndex, int addressIndex, bool isChange)
-        => $"{GetAddressPrefix(walletId, chainInfo, accountIndex)}:{(isChange ? 1 : 0)}:{addressIndex}";
+        => $"{GetAddressPrefix(walletId, chainInfo, accountIndex)}{(isChange ? 1 : 0)}:{addressIndex}";
 }

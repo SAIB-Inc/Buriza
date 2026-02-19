@@ -26,6 +26,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     private readonly CliAppStateService _appState = appState;
     private BurizaWallet? _activeWallet;
     private HeartbeatService? _heartbeat;
+    private IBurizaChainProvider? _heartbeatProvider;
     private string? _heartbeatKey;
     private ulong _lastTipSlot;
     private string _lastTipHash = string.Empty;
@@ -49,10 +50,10 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
                 switch (startChoice)
                 {
                     case "Create wallet":
-                        await ExecuteWithHandlingAsync(() => CreateWalletAsync());
+                        await ExecuteWithHandlingAsync(CreateWalletAsync);
                         break;
                     case "Import wallet":
-                        await ExecuteWithHandlingAsync(() => ImportWalletAsync());
+                        await ExecuteWithHandlingAsync(ImportWalletAsync);
                         break;
                     case "Exit":
                         return;
@@ -102,19 +103,19 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             switch (choice)
             {
                 case "Unlock wallet":
-                    await ExecuteWithHandlingAsync(() => UnlockWalletAsync());
+                    await ExecuteWithHandlingAsync(UnlockWalletAsync);
                     break;
                 case "Lock wallet":
                     LockWallet();
                     break;
                 case "List wallets":
-                    await ExecuteWithHandlingAsync(() => ListWalletsAsync());
+                    await ExecuteWithHandlingAsync(ListWalletsAsync);
                     break;
                 case "Set active wallet":
-                    await ExecuteWithHandlingAsync(() => SetActiveWalletAsync());
+                    await ExecuteWithHandlingAsync(SetActiveWalletAsync);
                     break;
                 case "Export mnemonic":
-                    await ExecuteWithHandlingAsync(() => ExportMnemonicAsync());
+                    await ExecuteWithHandlingAsync(ExportMnemonicAsync);
                     break;
                 case "Create wallet":
                     await ExecuteWithHandlingAsync(() => CreateWalletAsync());
@@ -139,16 +140,16 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             switch (choice)
             {
                 case "Show receive address":
-                    await ExecuteWithHandlingAsync(() => ShowReceiveAddressAsync());
+                    await ExecuteWithHandlingAsync(ShowReceiveAddressAsync);
                     break;
                 case "Show balance":
-                    await ExecuteWithHandlingAsync(() => ShowBalanceAsync());
+                    await ExecuteWithHandlingAsync(ShowBalanceAsync);
                     break;
                 case "Show assets":
-                    await ExecuteWithHandlingAsync(() => ShowAssetsAsync());
+                    await ExecuteWithHandlingAsync(ShowAssetsAsync);
                     break;
                 case "Show UTXOs":
-                    await ExecuteWithHandlingAsync(() => ShowUtxosAsync());
+                    await ExecuteWithHandlingAsync(ShowUtxosAsync);
                     break;
                 case "Back":
                     return;
@@ -167,7 +168,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             switch (choice)
             {
                 case "Send transaction":
-                    await ExecuteWithHandlingAsync(() => SendTransactionAsync());
+                    await ExecuteWithHandlingAsync(SendTransactionAsync);
                     break;
                 case "Back":
                     return;
@@ -186,13 +187,13 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             switch (choice)
             {
                 case "Set network":
-                    await ExecuteWithHandlingAsync(() => SetNetworkAsync());
+                    await ExecuteWithHandlingAsync(SetNetworkAsync);
                     break;
                 case "Set custom provider":
-                    await ExecuteWithHandlingAsync(() => SetCustomProviderAsync());
+                    await ExecuteWithHandlingAsync(SetCustomProviderAsync);
                     break;
                 case "Clear custom provider":
-                    await ExecuteWithHandlingAsync(() => ClearCustomProviderAsync());
+                    await ExecuteWithHandlingAsync(ClearCustomProviderAsync);
                     break;
                 case "Back":
                     return;
@@ -211,7 +212,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             switch (choice)
             {
                 case "Show protocol parameters":
-                    await ExecuteWithHandlingAsync(() => ShowProtocolParametersAsync());
+                    await ExecuteWithHandlingAsync(ShowProtocolParametersAsync);
                     break;
                 case "Back":
                     return;
@@ -307,7 +308,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         return map.Count == 0 ? value.ToString() : map;
     }
 
-    private static object NormalizeDictionary(IDictionary dictionary, int depth)
+    private static Dictionary<string, object?> NormalizeDictionary(IDictionary dictionary, int depth)
     {
         Dictionary<string, object?> output = [];
         int totalCount = 0;
@@ -668,8 +669,16 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
         ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
 
-        await active.SetCustomProviderConfigAsync(chainInfo, endpoint, string.IsNullOrWhiteSpace(apiKey) ? null : apiKey, Encoding.UTF8.GetBytes(password));
-        await active.LoadCustomProviderConfigAsync(chainInfo, Encoding.UTF8.GetBytes(password));
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        try
+        {
+            await active.SetCustomProviderConfigAsync(chainInfo, endpoint, string.IsNullOrWhiteSpace(apiKey) ? null : apiKey, passwordBytes);
+            await active.LoadCustomProviderConfigAsync(chainInfo, passwordBytes);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(passwordBytes);
+        }
         AnsiConsole.MarkupLine("[bold]Custom provider saved and loaded.[/]");
         Pause();
     }
@@ -701,7 +710,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
         active.ExportMnemonic(span =>
         {
-            AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span.ToString()}[/]"))
+            AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span}[/]"))
                 .BorderColor(Color.Grey)
                 .RoundedBorder()
                 .Padding(1, 0, 1, 0));
@@ -716,7 +725,6 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             ? "[grey]No active wallet[/]"
             : $"[bold]{active.Profile.Name}[/] • {active.ActiveChain} • {active.Network}";
 
-        
         string lockStatus = active switch
         {
             null => string.Empty,
@@ -973,14 +981,15 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             return;
 
         _heartbeat?.Dispose();
+        _heartbeatProvider?.Dispose();
         _heartbeatKey = key;
         _lastTipSlot = 0;
         _lastTipHash = string.Empty;
         _lastTipAtUtc = null;
 
         ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
-        var provider = _providerFactory.CreateProvider(chainInfo);
-        _heartbeat = new HeartbeatService(provider);
+        _heartbeatProvider = _providerFactory.CreateProvider(chainInfo);
+        _heartbeat = new HeartbeatService(_heartbeatProvider);
         _heartbeat.Beat += (_, _) =>
         {
             _lastTipSlot = _heartbeat.Slot;
