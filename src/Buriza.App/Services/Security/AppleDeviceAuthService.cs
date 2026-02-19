@@ -92,7 +92,8 @@ public class AppleDeviceAuthService : IDeviceAuthService
         }
     }
 
-    public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
+    // AuthenticationType is unused — Apple's UserPresence handles both biometric and passcode natively.
+    public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
     {
         // Remove existing item first
         SecKeyChain.Remove(CreateBaseQuery(key));
@@ -124,7 +125,7 @@ public class AppleDeviceAuthService : IDeviceAuthService
         return Task.CompletedTask;
     }
 
-    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
+    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
     {
         // Create LAContext to customize the device-auth prompt
         // The keychain will automatically prompt for OS device authentication
@@ -151,7 +152,7 @@ public class AppleDeviceAuthService : IDeviceAuthService
         return Task.FromResult<byte[]?>(null);
     }
 
-    public Task RemoveSecureAsync(string key, CancellationToken ct = default)
+    public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
     {
         SecKeyChain.Remove(CreateBaseQuery(key));
         return Task.CompletedTask;

@@ -1,7 +1,8 @@
 using System.Text;
 using Buriza.Core.Interfaces;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Chain;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Security;
 using Buriza.Core.Models.Wallet;
 using Buriza.Core.Storage;
 using Chrysalis.Wallet.Models.Keys;
@@ -11,7 +12,7 @@ namespace Buriza.Core.Services;
 /// <inheritdoc />
 public class WalletManagerService(
     BurizaStorageBase storage,
-    IBurizaChainProviderFactory providerFactory) : IWalletManager
+    IBurizaChainProviderFactory providerFactory)
 {
     private readonly BurizaStorageBase _storage = storage ?? throw new ArgumentNullException(nameof(storage));
     private readonly IBurizaChainProviderFactory _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
@@ -127,6 +128,25 @@ public class WalletManagerService(
         await _storage.DeleteVaultAsync(walletId, ct);
         await _storage.DeleteWalletAsync(walletId, ct);
     }
+
+    #endregion
+
+    #region Auth Management
+
+    public Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+        => _storage.EnableAuthAsync(walletId, type, password, ct);
+
+    public Task DisableDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.DisableDeviceAuthAsync(walletId, ct);
+
+    public Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.IsDeviceAuthEnabledAsync(walletId, ct);
+
+    public Task<AuthenticationType> GetAuthTypeAsync(Guid walletId, CancellationToken ct = default)
+        => _storage.GetAuthTypeAsync(walletId, ct);
+
+    public Task<DeviceCapabilities> GetDeviceCapabilitiesAsync(CancellationToken ct = default)
+        => _storage.GetCapabilitiesAsync(ct);
 
     #endregion
 

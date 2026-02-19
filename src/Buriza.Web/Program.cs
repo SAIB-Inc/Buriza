@@ -1,5 +1,4 @@
 using Buriza.Core.Interfaces;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
 using Buriza.Core.Storage;
 using Buriza.Data.Models;
@@ -39,6 +38,6 @@ builder.Services.AddSingleton<AppStateService>();
 builder.Services.AddSingleton<IBurizaAppStateService>(sp => sp.GetRequiredService<AppStateService>());
 builder.Services.AddSingleton<ChainProviderSettings>();
 builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-builder.Services.AddScoped<IWalletManager, WalletManagerService>();
+builder.Services.AddScoped<WalletManagerService>();
 
 await builder.Build().RunAsync();

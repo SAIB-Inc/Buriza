@@ -34,14 +34,14 @@ public class PlatformDeviceAuthService : IDeviceAuthService
     public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
         => _platformService.AuthenticateAsync(reason, ct);
 
-    public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
-        => _platformService.StoreSecureAsync(key, data, ct);
+    public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
+        => _platformService.StoreSecureAsync(key, data, type, ct);
 
-    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
-        => _platformService.RetrieveSecureAsync(key, reason, ct);
+    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
+        => _platformService.RetrieveSecureAsync(key, reason, type, ct);
 
-    public Task RemoveSecureAsync(string key, CancellationToken ct = default)
-        => _platformService.RemoveSecureAsync(key, ct);
+    public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
+        => _platformService.RemoveSecureAsync(key, type, ct);
 }
 
 /// <summary>
@@ -62,12 +62,12 @@ internal class NullDeviceAuthService : IDeviceAuthService
     public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
         => Task.FromResult(DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "Device authentication not supported on this platform"));
 
-    public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
+    public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
         => throw new NotSupportedException("Device authentication not supported on this platform");
 
-    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
+    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
         => Task.FromResult<byte[]?>(null);
 
-    public Task RemoveSecureAsync(string key, CancellationToken ct = default)
+    public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
         => Task.CompletedTask;
 }

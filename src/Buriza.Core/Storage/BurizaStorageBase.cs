@@ -163,8 +163,8 @@ public abstract class BurizaStorageBase : IStorageProvider
     public virtual Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
         => Task.FromResult(false);
 
-    /// <summary>Enables device auth for a wallet.</summary>
-    public virtual Task EnableDeviceAuthAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    /// <summary>Enables the specified auth type for a wallet (biometric, pin, or password).</summary>
+    public virtual Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
         => throw new NotSupportedException("Device auth is not supported on this platform.");
 
     /// <summary>Disables device auth for a wallet.</summary>

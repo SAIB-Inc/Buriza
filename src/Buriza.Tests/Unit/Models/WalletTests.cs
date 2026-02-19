@@ -241,7 +241,7 @@ public class BurizaWalletTests
 
     #endregion
 
-    #region IWallet Query Operations Tests
+    #region Query Operations Tests
 
     [Fact]
     public async Task GetBalanceAsync_WhenLocked_ReturnsZero()
@@ -330,7 +330,7 @@ public class BurizaWalletTests
 
     #endregion
 
-    #region IWallet Transaction Operations Tests
+    #region Transaction Operations Tests
 
     [Fact]
     public async Task SendAsync_WhenNoProvider_ThrowsInvalidOperationException()

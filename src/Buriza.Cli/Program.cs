@@ -1,7 +1,6 @@
 using Buriza.Cli.Services;
 using Buriza.Cli.Ui;
 using Buriza.Core.Interfaces;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
 using Buriza.Core.Storage;
 using Buriza.Data.Models;
@@ -29,11 +28,11 @@ ChainProviderSettings settings = config
 services.AddSingleton(settings);
 
 services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-services.AddSingleton<IWalletManager, WalletManagerService>();
+services.AddSingleton<WalletManagerService>();
 
 ServiceProvider serviceProvider = services.BuildServiceProvider();
 CliShell shell = new(
-    serviceProvider.GetRequiredService<IWalletManager>(),
+    serviceProvider.GetRequiredService<WalletManagerService>(),
     serviceProvider.GetRequiredService<ChainProviderSettings>(),
     serviceProvider.GetRequiredService<IBurizaChainProviderFactory>());
 

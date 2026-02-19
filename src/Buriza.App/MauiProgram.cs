@@ -5,7 +5,6 @@ using MudBlazor.Services;
 using Buriza.UI.Services;
 using Buriza.Core.Interfaces.Security;
 using Buriza.Core.Interfaces.Storage;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Services;
 using Buriza.Core.Storage;
 using Buriza.Data.Models;
@@ -65,7 +64,7 @@ public static class MauiProgram
 			.Get<ChainProviderSettings>() ?? new ChainProviderSettings();
 		builder.Services.AddSingleton(settings);
 		builder.Services.AddSingleton<IBurizaChainProviderFactory, BurizaChainProviderFactory>();
-		builder.Services.AddSingleton<IWalletManager, WalletManagerService>();
+		builder.Services.AddSingleton<WalletManagerService>();
 
 		return builder.Build();
 	}

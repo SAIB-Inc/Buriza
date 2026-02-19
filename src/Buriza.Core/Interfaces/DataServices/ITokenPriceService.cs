@@ -12,7 +12,7 @@ public interface ITokenPriceService
     /// <summary>Gets price for a single unit.</summary>
     Task<decimal?> GetTokenPriceAsync(string unit, CancellationToken ct = default);
     /// <summary>Gets price change for a unit over a timeframe.</summary>
-    Task<TokenPriceChange?> GetPriceChangeAsync(string unit, string? timeframes = null, CancellationToken ct = default);
+    Task<TokenPriceChange?> GetPriceChangeAsync(string unit, CancellationToken ct = default);
     /// <summary>Gets native coin price for a quote currency.</summary>
     Task<decimal?> GetNativeCoinPriceAsync(string quote = "USD", CancellationToken ct = default);
 }

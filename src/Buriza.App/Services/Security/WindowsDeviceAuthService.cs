@@ -78,7 +78,8 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         }
     }
 
-    public async Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
+    // AuthenticationType is unused — Windows Hello handles both biometric and PIN natively.
+    public async Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
     {
         DeviceAuthResult authResult = await AuthenticateAsync("Authenticate to save credentials", ct);
         if (!authResult.Success)
@@ -103,7 +104,7 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         vault.Add(credential);
     }
 
-    public async Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
+    public async Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
     {
         DeviceAuthResult authResult = await AuthenticateAsync(reason, ct);
         if (!authResult.Success)
@@ -128,7 +129,7 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         }
     }
 
-    public Task RemoveSecureAsync(string key, CancellationToken ct = default)
+    public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
     {
         try
         {

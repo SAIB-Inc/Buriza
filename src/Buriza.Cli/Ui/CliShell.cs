@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
 using Buriza.Core.Models.Enums;
@@ -18,9 +17,9 @@ using Spectre.Console;
 
 namespace Buriza.Cli.Ui;
 
-public sealed class CliShell(IWalletManager walletManager, ChainProviderSettings settings, IBurizaChainProviderFactory providerFactory)
+public sealed class CliShell(WalletManagerService walletManager, ChainProviderSettings settings, IBurizaChainProviderFactory providerFactory)
 {
-    private readonly IWalletManager _walletManager = walletManager;
+    private readonly WalletManagerService _walletManager = walletManager;
     private readonly ChainProviderSettings _settings = settings;
     private readonly IBurizaChainProviderFactory _providerFactory = providerFactory;
     private HeartbeatService? _heartbeat;

@@ -68,17 +68,14 @@ public class TokenPriceService(
 
     public async Task<TokenPriceChange?> GetPriceChangeAsync(
         string unit,
-        string? timeframes = null,
         CancellationToken ct = default)
     {
-        string cacheKey = $"pricechange:{unit}:{timeframes ?? "all"}";
+        string cacheKey = $"pricechange:{unit}";
 
         if (cache.TryGetValue(cacheKey, out TokenPriceChange? cached))
             return cached;
 
         string url = $"{BaseUrl}/token/prices/chg?unit={Uri.EscapeDataString(unit)}";
-        if (!string.IsNullOrEmpty(timeframes))
-            url += $"&timeframes={Uri.EscapeDataString(timeframes)}";
 
         using HttpRequestMessage request = new(HttpMethod.Get, url);
         AddApiKeyHeader(request);
@@ -89,16 +86,30 @@ public class TokenPriceService(
 
         try
         {
-            TokenPriceChange? result = await response.Content.ReadFromJsonAsync<TokenPriceChange>(ct);
-            if (result is not null)
-                cache.Set(cacheKey, result, _cacheDuration);
+            TokenPriceChangeDto? dto = await response.Content.ReadFromJsonAsync<TokenPriceChangeDto>(ct);
+            if (dto is null)
+                return null;
 
+            TokenPriceChange result = MapToPriceChange(dto);
+            cache.Set(cacheKey, result, _cacheDuration);
             return result;
         }
         catch (JsonException)
         {
             return null;
         }
+    }
+
+    private static TokenPriceChange MapToPriceChange(TokenPriceChangeDto dto)
+    {
+        TokenPriceChange result = new();
+
+        if (dto.Chg1h.HasValue) result.Changes[PriceTimeframe.OneHour] = dto.Chg1h.Value;
+        if (dto.Chg24h.HasValue) result.Changes[PriceTimeframe.TwentyFourHours] = dto.Chg24h.Value;
+        if (dto.Chg7d.HasValue) result.Changes[PriceTimeframe.SevenDays] = dto.Chg7d.Value;
+        if (dto.Chg30d.HasValue) result.Changes[PriceTimeframe.ThirtyDays] = dto.Chg30d.Value;
+
+        return result;
     }
 
     public async Task<decimal?> GetNativeCoinPriceAsync(string quote = "USD", CancellationToken ct = default)

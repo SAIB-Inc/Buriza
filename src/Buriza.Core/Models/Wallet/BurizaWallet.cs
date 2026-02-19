@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Buriza.Core.Interfaces.Chain;
-using Buriza.Core.Interfaces.Wallet;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Models.Chain;
 using Buriza.Core.Models.Config;
@@ -19,7 +18,7 @@ namespace Buriza.Core.Models.Wallet;
 /// </summary>
 public class BurizaWallet(
     IBurizaChainProviderFactory? chainProviderFactory = null,
-    BurizaStorageBase? storage = null) : IWallet, IDisposable
+    BurizaStorageBase? storage = null) : IDisposable
 {
     private IBurizaChainProviderFactory? _chainProviderFactory = chainProviderFactory;
     private BurizaStorageBase? _storage = storage;
@@ -113,7 +112,7 @@ public class BurizaWallet(
 
     #endregion
 
-    #region IWallet - Query Operations
+    #region Query Operations
 
     public async Task<ulong> GetBalanceAsync(int? accountIndex = null, CancellationToken ct = default)
     {

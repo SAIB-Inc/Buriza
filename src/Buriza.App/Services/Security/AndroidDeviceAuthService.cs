@@ -34,6 +34,7 @@ namespace Buriza.App.Services.Security;
 public class AndroidDeviceAuthService : IDeviceAuthService
 {
     private const string CryptoKeyAlias = "buriza_crypto_key";
+    private const string PinCryptoKeyAlias = "buriza_pin_crypto_key";
     private const string DataPrefName = "buriza_secure_data";
 
     private ISharedPreferences? _dataPrefs;
@@ -122,22 +123,39 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         return tcs.Task;
     }
 
-    public Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default)
+    public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
     {
         TaskCompletionSource<object?> tcs = new();
 
         if (Platform.CurrentActivity is not AndroidX.Fragment.App.FragmentActivity activity)
             throw new InvalidOperationException("No activity available");
 
-        EnsureCryptoKey();
-        Cipher cipher = GetCipher(CipherMode.EncryptMode);
+        bool isPin = type == AuthenticationType.Pin;
 
-        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+        if (isPin)
+            EnsurePinCryptoKey();
+        else
+            EnsureCryptoKey();
+
+        Cipher cipher = isPin
+            ? GetCipher(PinCryptoKeyAlias, CipherMode.EncryptMode)
+            : GetCipher(CryptoKeyAlias, CipherMode.EncryptMode);
+
+        BiometricPrompt.PromptInfo.Builder builder = new BiometricPrompt.PromptInfo.Builder()
             .SetTitle("Buriza Wallet")
-            .SetSubtitle("Authenticate to save credentials")
-            .SetNegativeButtonText("Cancel")
-            .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong)
-            .Build();
+            .SetSubtitle("Authenticate to save credentials");
+
+        if (isPin)
+        {
+            builder.SetAllowedAuthenticators(BiometricManager.Authenticators.DeviceCredential);
+        }
+        else
+        {
+            builder.SetNegativeButtonText("Cancel");
+            builder.SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong);
+        }
+
+        BiometricPrompt.PromptInfo promptInfo = builder.Build();
 
         IExecutor? executor = ContextCompat.GetMainExecutor(activity);
         if (executor == null)
@@ -156,7 +174,7 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         return tcs.Task;
     }
 
-    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, CancellationToken ct = default)
+    public Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
     {
         TaskCompletionSource<byte[]?> tcs = new();
 
@@ -201,15 +219,31 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         byte[] iv = raw.AsSpan(1, ivLength).ToArray();
         byte[] ciphertext = raw.AsSpan(1 + ivLength).ToArray();
 
-        EnsureCryptoKey();
-        Cipher cipher = GetCipher(CipherMode.DecryptMode, iv);
+        bool isPin = type == AuthenticationType.Pin;
+        string alias = isPin ? PinCryptoKeyAlias : CryptoKeyAlias;
 
-        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
+        if (isPin)
+            EnsurePinCryptoKey();
+        else
+            EnsureCryptoKey();
+
+        Cipher cipher = GetCipher(alias, CipherMode.DecryptMode, iv);
+
+        BiometricPrompt.PromptInfo.Builder builder = new BiometricPrompt.PromptInfo.Builder()
             .SetTitle("Buriza Wallet")
-            .SetSubtitle(reason)
-            .SetNegativeButtonText("Cancel")
-            .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong)
-            .Build();
+            .SetSubtitle(reason);
+
+        if (isPin)
+        {
+            builder.SetAllowedAuthenticators(BiometricManager.Authenticators.DeviceCredential);
+        }
+        else
+        {
+            builder.SetNegativeButtonText("Cancel");
+            builder.SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong);
+        }
+
+        BiometricPrompt.PromptInfo promptInfo = builder.Build();
 
         IExecutor? executor = ContextCompat.GetMainExecutor(activity);
         if (executor == null)
@@ -231,7 +265,7 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         return tcs.Task;
     }
 
-    public Task RemoveSecureAsync(string key, CancellationToken ct = default)
+    public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
     {
         ISharedPreferences prefs = GetDataPreferences();
         ISharedPreferencesEditor? editor = prefs.Edit();
@@ -243,24 +277,30 @@ public class AndroidDeviceAuthService : IDeviceAuthService
     #region Keystore Crypto Key
 
     private static void EnsureCryptoKey()
+        => EnsureKeystoreKey(CryptoKeyAlias, (int)KeyPropertiesAuthType.BiometricStrong, invalidateOnEnrollment: true);
+
+    private static void EnsurePinCryptoKey()
+        => EnsureKeystoreKey(PinCryptoKeyAlias, (int)KeyPropertiesAuthType.DeviceCredential, invalidateOnEnrollment: false);
+
+    private static void EnsureKeystoreKey(string alias, int authType, bool invalidateOnEnrollment)
     {
         KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore")
             ?? throw new InvalidOperationException("AndroidKeyStore not available");
         keyStore.Load(null);
 
-        if (keyStore.ContainsAlias(CryptoKeyAlias))
+        if (keyStore.ContainsAlias(alias))
             return;
 
-        if (TryCreateCryptoKey(strongBoxBacked: true))
+        if (TryCreateKeystoreKey(alias, authType, invalidateOnEnrollment, strongBoxBacked: true))
             return;
 
-        if (TryCreateCryptoKey(strongBoxBacked: false))
+        if (TryCreateKeystoreKey(alias, authType, invalidateOnEnrollment, strongBoxBacked: false))
             return;
 
-        throw new InvalidOperationException("Failed to create Android Keystore crypto key");
+        throw new InvalidOperationException($"Failed to create Android Keystore key: {alias}");
     }
 
-    private static bool TryCreateCryptoKey(bool strongBoxBacked)
+    private static bool TryCreateKeystoreKey(string alias, int authType, bool invalidateOnEnrollment, bool strongBoxBacked)
     {
         try
         {
@@ -270,15 +310,15 @@ public class AndroidDeviceAuthService : IDeviceAuthService
                 ?? throw new InvalidOperationException("KeyGenerator not available");
 
             KeyGenParameterSpec.Builder builder = new(
-                CryptoKeyAlias,
+                alias,
                 KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt);
 
             builder.SetBlockModes(KeyProperties.BlockModeGcm);
             builder.SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone);
             builder.SetKeySize(256);
             builder.SetUserAuthenticationRequired(true);
-            builder.SetUserAuthenticationParameters(0, (int)KeyPropertiesAuthType.BiometricStrong);
-            builder.SetInvalidatedByBiometricEnrollment(true);
+            builder.SetUserAuthenticationParameters(0, authType);
+            builder.SetInvalidatedByBiometricEnrollment(invalidateOnEnrollment);
 
             if (strongBoxBacked)
                 builder.SetIsStrongBoxBacked(true);
@@ -293,14 +333,14 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         }
     }
 
-    private static Cipher GetCipher(CipherMode mode, byte[]? iv = null)
+    private static Cipher GetCipher(string alias, CipherMode mode, byte[]? iv = null)
     {
         KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore")
             ?? throw new InvalidOperationException("AndroidKeyStore not available");
         keyStore.Load(null);
 
-        IKey secretKey = (keyStore.GetEntry(CryptoKeyAlias, null) as KeyStore.SecretKeyEntry)?.SecretKey
-            ?? throw new InvalidOperationException("Crypto key not found in Keystore");
+        IKey secretKey = (keyStore.GetEntry(alias, null) as KeyStore.SecretKeyEntry)?.SecretKey
+            ?? throw new InvalidOperationException($"Crypto key not found in Keystore: {alias}");
 
         Cipher cipher = Cipher.GetInstance("AES/GCM/NoPadding")
             ?? throw new InvalidOperationException("AES/GCM/NoPadding cipher not available");
