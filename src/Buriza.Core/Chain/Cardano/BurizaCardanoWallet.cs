@@ -208,7 +208,7 @@ public class BurizaCardanoWallet : IChainWallet
 
     #region Transaction Helpers
 
-    public static CardanoTxParams CreateParams(string fromAddress, TransactionRequest request)
+    private static CardanoTxParams CreateParams(string fromAddress, TransactionRequest request)
     {
         Dictionary<string, (string address, bool isChange)> parties = new()
         {
