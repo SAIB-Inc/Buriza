@@ -1,7 +1,6 @@
 using Buriza.UI.Services;
 using Buriza.UI.Data.Dummy;
 using Buriza.Data.Models.Common;
-using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -17,8 +16,8 @@ public partial class ReceiveSection : ComponentBase, IDisposable
 
     protected bool IsAdvancedMode => AppStateService.IsReceiveAdvancedMode;
     private Wallet? _expandedWallet;
-    protected Wallet? CurrentWallet;
-    protected WalletAccount? CurrentWalletAccount;
+    protected Wallet? CurrentWallet { get; set; }
+    protected WalletAccount? CurrentWalletAccount { get; set; }
     protected List<Wallet> Wallets { get; set; } = [];
 
     protected override void OnInitialized()
@@ -41,21 +40,21 @@ public partial class ReceiveSection : ComponentBase, IDisposable
 
     protected void ToggleWalletExpansion(Wallet wallet)                                                                                                           
     {                                                                                                                                                    
-      if (_expandedWallet != null)
-        _expandedWallet.IsExpanded = false;
+        if (_expandedWallet != null)
+            _expandedWallet.IsExpanded = false;
 
-      if (_expandedWallet == wallet)
-      {
-        _expandedWallet = null;
-      }
-      else
-      {
-        wallet.IsExpanded = true;
-        _expandedWallet = wallet;
-      }
+        if (_expandedWallet == wallet)
+        {
+            _expandedWallet = null;
+        }
+        else
+        {
+            wallet.IsExpanded = true;
+            _expandedWallet = wallet;
+        }
     }
 
-    private async Task CopyAddressToClipboard(string address)
+    protected async Task CopyAddressToClipboard(string address)
     {
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", address);
     }

@@ -2,11 +2,10 @@
 @using Buriza.UI.Components.Common
 @using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
-@using Buriza.Data.Models.Enums
 
 @namespace Buriza.UI.Components.Layout
 
-<div class="!mt-[10px] relative w-full h-full !pb-4 !px-6 flex flex-col justify-between items-cente overflow-x-hidden">
+<div class="!mt-[10px] relative w-full h-full !pb-4 !px-6 flex flex-col justify-between items-center overflow-x-hidden">
     @if(!IsAdvancedMode)
     {
         <div class="w-full flex flex-1 flex-col justify-center">
@@ -40,7 +39,7 @@
                     @CurrentWallet?.Name
                 </MudText>
                 <MudText 
-                    Class="break-words !p-3 rounded-xl bg-[var(--mud-palette-drawer-background)] !mt-3 cursor-pointer" 
+                    Class="break-words !p-3 rounded-[12px] bg-[var(--mud-palette-drawer-background)] !mt-3 cursor-pointer" 
                     Align="Align.Center"
                     @onclick="() => CopyAddressToClipboard(CurrentWalletAccount!.Address)"  
                 >
@@ -66,7 +65,7 @@
     }
     else
     {
-        <div class="w-full flex flex-col items-center !gap-y-2 !bg-[var(--mud-palette-dark-darken)] !py-4 !px-3 rounded-xl">
+        <div class="w-full flex flex-col items-center !gap-y-2 !bg-[var(--mud-palette-dark-darken)] !py-4 !px-3 rounded-[12px]">
             @foreach(var wallet in Wallets)
             {
                 <div class="w-full">
@@ -99,14 +98,13 @@
                         </div>                    
                     </div>
                     <MudCollapse Expanded="wallet.IsExpanded">
-                        <div class="relative !mt-[10px] rounded-[11.5px] overflow-hidden">
-                            <div class="!bg-[var(--mud-palette-drawer-background)] !p-4 flex flex-col gap-y-4 w-full max-h-[266px] overflow-y-auto rounded-xl">
+                        <div class="relative !mt-[10px] rounded-[12px] overflow-hidden">
+                            <div class="!bg-[var(--mud-palette-drawer-background)] !p-4 flex flex-col gap-y-4 w-full max-h-[266px] overflow-y-auto rounded-[12px]">
                                 @foreach(WalletAccount account in wallet.Accounts)
                                 {
                                     <MudCard
                                         Class="flex flex-col !bg-transparent cursor-pointer!"
                                         Elevation="0"
-                                        Hover="true"
                                         @onclick="() => OnAccountCardClicked(wallet, account)"
                                     >
                                         <div class="flex gap-x-2 !-m-4 !p-4 hover:bg-[var(--mud-palette-gray-default)]! transition-colors">
