@@ -1,6 +1,6 @@
-using Buriza.Data.Models.Enums;
+using Buriza.Core.Models.Enums;
 
-namespace Buriza.Data.Models.Common;
+namespace Buriza.Core.Models.Transaction;
 
 public record TransactionHistory(
     string TransactionId,
@@ -13,11 +13,4 @@ public record TransactionHistory(
     decimal TransactionFeeAda,
     string? ExpiryInfo = "No limit",
     TransactionCategory Category = TransactionCategory.Default
-);
-
-public record TransactionAsset(
-    string AssetIcon,
-    string AssetName,
-    decimal Amount,
-    decimal UsdValue
 );

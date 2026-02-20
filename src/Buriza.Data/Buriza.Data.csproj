@@ -6,4 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Chrysalis" Version="1.0.5-alpha" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.76.0" />
+    <PackageReference Include="Utxorpc.Spec" Version="0.18.1-alpha" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Buriza.Core\Buriza.Core.csproj" />
+  </ItemGroup>
+
 </Project>

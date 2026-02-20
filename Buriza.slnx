@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Buriza.App/Buriza.App.csproj" />
+    <Project Path="src/Buriza.Cli/Buriza.Cli.csproj" />
+    <Project Path="src/Buriza.Core/Buriza.Core.csproj" />
+    <Project Path="src/Buriza.Data/Buriza.Data.csproj" />
+    <Project Path="src/Buriza.Extension/Buriza.Extension.csproj" />
+    <Project Path="src/Buriza.Tests/Buriza.Tests.csproj" />
+    <Project Path="src/Buriza.UI/Buriza.UI.csproj" />
+    <Project Path="src/Buriza.Web/Buriza.Web.csproj" />
+  </Folder>
+</Solution>
