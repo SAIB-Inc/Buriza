@@ -288,15 +288,18 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
                         FollowTipResponse.ActionOneofCase.Apply => new TipEvent(
                             TipAction.Apply,
                             response.Apply.Cardano?.Header?.Slot ?? 0,
-                            response.Apply.Cardano?.Header?.Hash != null ? Convert.ToHexStringLower(response.Apply.Cardano.Header.Hash.ToByteArray()) : string.Empty),
+                            response.Apply.Cardano?.Header?.Hash != null ? Convert.ToHexStringLower(response.Apply.Cardano.Header.Hash.ToByteArray()) : string.Empty,
+                            response.Apply.Cardano?.Header?.Height ?? 0),
                         FollowTipResponse.ActionOneofCase.Undo => new TipEvent(
                             TipAction.Undo,
                             response.Undo.Cardano?.Header?.Slot ?? 0,
-                            response.Undo.Cardano?.Header?.Hash != null ? Convert.ToHexStringLower(response.Undo.Cardano.Header.Hash.ToByteArray()) : string.Empty),
+                            response.Undo.Cardano?.Header?.Hash != null ? Convert.ToHexStringLower(response.Undo.Cardano.Header.Hash.ToByteArray()) : string.Empty,
+                            response.Undo.Cardano?.Header?.Height ?? 0),
                         FollowTipResponse.ActionOneofCase.Reset => new TipEvent(
                             TipAction.Reset,
                             response.Reset.Slot,
-                            response.Reset.Hash != null ? Convert.ToHexStringLower(response.Reset.Hash.ToByteArray()) : string.Empty),
+                            response.Reset.Hash != null ? Convert.ToHexStringLower(response.Reset.Hash.ToByteArray()) : string.Empty,
+                            response.Reset.Height),
                         _ => null
                     };
 

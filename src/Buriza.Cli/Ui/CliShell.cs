@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -30,6 +31,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     private IBurizaChainProvider? _heartbeatProvider;
     private string? _heartbeatKey;
     private ulong _lastTipSlot;
+    private ulong _lastTipHeight;
     private string _lastTipHash = string.Empty;
     private DateTime? _lastTipAtUtc;
     private ulong? _lastBalanceLovelace;
@@ -721,110 +723,255 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         Pause();
     }
 
-    private async Task RenderHeaderAsync()
+    // Fixed row positions in the frame layout
+    private const int RowTip = 1;        // Block/Slot/Age + Address
+    private const int RowChain = 2;      // Chain/Network + UTC time
+    private const int RowBalanceLine = 11; // Balance + lock status
+    private const int RowMenuTitle = 13; // Menu title
+    private const int RowMenuFirst = 14; // First menu item
+
+    // Previous-frame snapshots for dirty checking
+    private string _prevTipLine = string.Empty;
+    private string _prevBalanceLine = string.Empty;
+
+    /// <summary>Build the tip/address line (row 1) content.</summary>
+    private string BuildTipLine(int width)
     {
         BurizaWallet? active = _activeWallet;
-        string walletValue = active is null
-            ? "[grey]No active wallet[/]"
-            : $"[bold]{active.Profile.Name}[/] • {active.ActiveChain} • {active.Network}";
 
-        string lockStatus = active switch
+        string blockInfo = Ansi.Grey("Connecting...");
+        if (_lastTipSlot > 0)
         {
-            null => string.Empty,
-            { IsUnlocked: true } => " [green](unlocked)[/]",
-            _ => " [yellow](locked)[/]"
-        };
+            string age = _lastTipAtUtc.HasValue
+                ? Ansi.Grey($"({FormatAge(DateTime.UtcNow - _lastTipAtUtc.Value)})")
+                : string.Empty;
+            blockInfo = $"{Ansi.White($"Blk {_lastTipHeight} / Slot {_lastTipSlot}")} {age}";
+        }
 
         string? address = active is not null ? GetCachedAddress(active) : null;
-        string addressValue = string.IsNullOrEmpty(address)
-            ? "[grey]Not derived[/]"
-            : address;
+        string truncAddr = string.Empty;
+        if (!string.IsNullOrEmpty(address) && address.Length > 23)
+            truncAddr = Ansi.White($"{address[..15]}...{address[^8..]}");
+        else if (!string.IsNullOrEmpty(address))
+            truncAddr = Ansi.White(address);
 
-        string providerValue = "[grey]Not configured[/]";
-        if (active is not null)
+        StringBuilder sb = new();
+        if (!string.IsNullOrEmpty(truncAddr))
         {
-            string? endpoint = await ResolveProviderEndpointAsync(active);
-            if (!string.IsNullOrWhiteSpace(endpoint))
-                providerValue = Markup.Escape(endpoint);
+            int gap = Math.Max(1, width - Ansi.StripLen(blockInfo) - Ansi.StripLen(truncAddr));
+            sb.Append(blockInfo).Append(' ', gap).Append(truncAddr);
+        }
+        else
+        {
+            sb.Append(blockInfo);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>Build the chain/network + UTC time line (row 2) content.</summary>
+    private string BuildChainLine(int width)
+    {
+        BurizaWallet? active = _activeWallet;
+        string chainNetwork = active is not null
+            ? $"{Ansi.Cyan(active.ActiveChain.ToString())} {Ansi.Grey("•")} {Ansi.Cyan(active.Network)}"
+            : Ansi.Grey("No wallet");
+        string utcTime = Ansi.Grey($"{DateTime.UtcNow:HH:mm:ss} UTC");
+        int gap = Math.Max(1, width - Ansi.StripLen(chainNetwork) - Ansi.StripLen(utcTime));
+        return $"{chainNetwork}{new string(' ', gap)}{utcTime}";
+    }
+
+    /// <summary>Build the balance + lock status line (row 11) content.</summary>
+    private string BuildBalanceLine(int width)
+    {
+        BurizaWallet? active = _activeWallet;
+
+        string balanceText = Ansi.Grey("Unavailable");
+        if (active is not null && _lastBalanceLovelace.HasValue)
+        {
+            decimal ada = _lastBalanceLovelace.Value / 1_000_000m;
+            balanceText = Ansi.Green($"{ada:0.000000} ADA");
         }
 
-        string balanceValue = "[grey]Unavailable[/]";
-        if (active is not null)
+        string lockText = active switch
         {
-            if (!_lastBalanceLovelace.HasValue)
-                await RefreshBalanceAsync(active);
+            null => string.Empty,
+            { IsUnlocked: true } => Ansi.Green("(unlocked)"),
+            _ => Ansi.Yellow("(locked)")
+        };
 
-            if (_lastBalanceLovelace.HasValue)
-            {
-                decimal ada = _lastBalanceLovelace.Value / 1_000_000m;
-                balanceValue = $"[green]{ada:0.000000} ADA[/]";
-            }
+        StringBuilder sb = new();
+        sb.Append("  ").Append(balanceText);
+        if (!string.IsNullOrEmpty(lockText))
+        {
+            int gap = Math.Max(1, width - Ansi.StripLen(balanceText) - 2 - Ansi.StripLen(lockText));
+            sb.Append(' ', gap).Append(lockText);
         }
+        return sb.ToString();
+    }
 
-        string tipValue = "[grey]Unavailable[/]";
+    /// <summary>Write content at a specific row without touching other rows.</summary>
+    private static void WriteAtRow(int row, string content)
+    {
+        Console.Out.Write($"\x1b[{row};1H{content}\x1b[K");
+    }
+
+    /// <summary>Render a single menu item at its row.</summary>
+    private static void RenderMenuItem(IReadOnlyList<string> items, int index, bool isSelected, int menuFirstRow)
+    {
+        string line = isSelected
+            ? $"  {Ansi.BoldCyan(">")} {Ansi.Bold(items[index])}"
+            : $"    {items[index]}";
+        WriteAtRow(menuFirstRow + index, line);
+    }
+
+    /// <summary>Draw the full frame once (first render only).</summary>
+    private async Task RenderFullFrameAsync(string title, IReadOnlyList<string> items, int selected)
+    {
+        BurizaWallet? active = _activeWallet;
+        int width = Math.Max(Console.WindowWidth, 60);
+
         if (active is not null)
-        {
             EnsureHeartbeat(active);
-            if (_lastTipSlot > 0)
-            {
-                string hash = string.IsNullOrWhiteSpace(_lastTipHash)
-                    ? "-"
-                    : $"{_lastTipHash[..Math.Min(12, _lastTipHash.Length)]}…";
-                string age = _lastTipAtUtc.HasValue
-                    ? $" • {FormatAge(DateTime.UtcNow - _lastTipAtUtc.Value)}"
-                    : string.Empty;
-                tipValue = $"slot {_lastTipSlot} • {hash}{age}";
-            }
+
+        if (active is not null && !_lastBalanceLovelace.HasValue)
+            await RefreshBalanceAsync(active);
+
+        StringBuilder fb = new();
+
+        // Row 1: Tip
+        _prevTipLine = BuildTipLine(width);
+        fb.Append(_prevTipLine).Append("\x1b[K\n");
+
+        // Row 2: Chain
+        fb.Append(BuildChainLine(width)).Append("\x1b[K\n");
+
+        // Row 3: blank
+        fb.Append("\x1b[K\n");
+
+        // Row 4-8: logo
+        string[] logo =
+        [
+            @"    ____  ",
+            @"   | __ ) ",
+            @"   |  _ \ ",
+            @"   | |_) |",
+            @"   |____/ "
+        ];
+        foreach (string line in logo)
+        {
+            int pad = Math.Max(0, (width - line.Length) / 2);
+            fb.Append(' ', pad).Append(Ansi.BoldCyan(line)).Append("\x1b[K\n");
         }
 
-        Grid grid = new();
-        grid.AddColumn(new GridColumn().NoWrap());
-        grid.AddColumn(new GridColumn());
+        // Row 9: brand
+        const string brandText = "B U R I Z A";
+        int brandPad = Math.Max(0, (width - brandText.Length) / 2);
+        fb.Append(' ', brandPad).Append(Ansi.BoldWhite(brandText)).Append("\x1b[K\n");
 
-        grid.AddRow(new Markup("[grey]Wallet[/]"), new Markup($"{walletValue}{lockStatus}"));
-        grid.AddRow(new Markup("[grey]Balance[/]"), new Markup(balanceValue));
-        grid.AddRow(new Markup("[grey]Address[/]"), new Markup(addressValue));
-        grid.AddRow(new Markup("[grey]Provider[/]"), new Markup(providerValue));
-        grid.AddRow(new Markup("[grey]Tip[/]"), new Markup(tipValue));
+        // Row 10: blank
+        fb.Append("\x1b[K\n");
 
-        Panel panel = new Panel(grid)
-            .RoundedBorder()
-            .BorderColor(Color.Teal)
-            .Padding(1, 0, 1, 0);
-        panel.Header = new PanelHeader(" [bold cyan]Buriza CLI[/] ", Justify.Center);
-        AnsiConsole.Write(panel);
-        AnsiConsole.WriteLine();
+        // Row 11: balance
+        _prevBalanceLine = BuildBalanceLine(width);
+        fb.Append(_prevBalanceLine).Append("\x1b[K\n");
+
+        // Row 12: blank
+        fb.Append("\x1b[K\n");
+
+        // Row 13: menu title
+        fb.Append("  ").Append(Ansi.Grey(title)).Append("\x1b[K\n");
+
+        // Row 14+: menu items
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (i == selected)
+                fb.Append("  ").Append(Ansi.BoldCyan(">")).Append(' ').Append(Ansi.Bold(items[i]));
+            else
+                fb.Append("    ").Append(items[i]);
+            fb.Append("\x1b[K\n");
+        }
+
+        // Clear below
+        fb.Append("\x1b[J");
+
+        Console.Out.Write(fb);
+    }
+
+    /// <summary>Update only the data lines that changed (tip, chain, balance). No menu redraw.</summary>
+    private void UpdateDataLines()
+    {
+        int width = Math.Max(Console.WindowWidth, 60);
+        StringBuilder patch = new();
+
+        string tipLine = BuildTipLine(width);
+        if (tipLine != _prevTipLine)
+        {
+            _prevTipLine = tipLine;
+            patch.Append($"\x1b[{RowTip};1H").Append(tipLine).Append("\x1b[K");
+        }
+
+        string chainLine = BuildChainLine(width);
+        // Chain line always has UTC time that changes every second — always update
+        patch.Append($"\x1b[{RowChain};1H").Append(chainLine).Append("\x1b[K");
+
+        string balanceLine = BuildBalanceLine(width);
+        if (balanceLine != _prevBalanceLine)
+        {
+            _prevBalanceLine = balanceLine;
+            patch.Append($"\x1b[{RowBalanceLine};1H").Append(balanceLine).Append("\x1b[K");
+        }
+
+        if (patch.Length > 0)
+            Console.Out.Write(patch);
+    }
+
+    /// <summary>Raw ANSI escape helpers — no Spectre dependency.</summary>
+    private static class Ansi
+    {
+        public static string Grey(string s) => $"\x1b[90m{s}\x1b[0m";
+        public static string White(string s) => $"\x1b[97m{s}\x1b[0m";
+        public static string Cyan(string s) => $"\x1b[36m{s}\x1b[0m";
+        public static string Green(string s) => $"\x1b[32m{s}\x1b[0m";
+        public static string Yellow(string s) => $"\x1b[33m{s}\x1b[0m";
+        public static string Bold(string s) => $"\x1b[1m{s}\x1b[0m";
+        public static string BoldCyan(string s) => $"\x1b[1;36m{s}\x1b[0m";
+        public static string BoldWhite(string s) => $"\x1b[1;97m{s}\x1b[0m";
+
+        /// <summary>Returns the visible character length of a string (strips ANSI sequences).</summary>
+        public static int StripLen(string s)
+        {
+            int len = 0;
+            bool inEsc = false;
+            foreach (char c in s)
+            {
+                if (c == '\x1b') { inEsc = true; continue; }
+                if (inEsc) { if (c is >= 'A' and <= 'Z' or >= 'a' and <= 'z') inEsc = false; continue; }
+                len++;
+            }
+            return len;
+        }
     }
 
     private async Task<string> RunMenuLoopAsync(string title, IReadOnlyList<string> items)
     {
         int selected = 0;
         bool firstRender = true;
-        DateTime lastRenderAt = DateTime.MinValue;
 
         while (true)
         {
-            if (_needsRender || DateTime.UtcNow - lastRenderAt > TimeSpan.FromSeconds(1))
+            if (firstRender)
             {
-                if (firstRender)
-                {
-                    AnsiConsole.Clear();
-                    firstRender = false;
-                }
-                else
-                {
-                    // Move cursor to top-left without clearing — overwrites in place, no flicker
-                    Console.Write("\x1b[H");
-                }
-
-                await RenderHeaderAsync();
-                RenderMenu(title, items, selected);
-
-                // Clear any leftover lines below the current content
-                Console.Write("\x1b[J");
-
+                // Alternate screen, hide cursor, clear
+                Console.Write("\x1b[?1049h\x1b[?25l\x1b[2J\x1b[H");
+                await RenderFullFrameAsync(title, items, selected);
+                firstRender = false;
                 _needsRender = false;
-                lastRenderAt = DateTime.UtcNow;
+            }
+            else if (_needsRender)
+            {
+                // Data changed (heartbeat/balance) — patch only data lines
+                UpdateDataLines();
+                _needsRender = false;
             }
 
             if (Console.KeyAvailable)
@@ -833,16 +980,26 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
                 switch (key.Key)
                 {
                     case ConsoleKey.UpArrow:
+                    {
+                        int prev = selected;
                         selected = selected <= 0 ? items.Count - 1 : selected - 1;
-                        _needsRender = true;
+                        RenderMenuItem(items, prev, false, RowMenuFirst);
+                        RenderMenuItem(items, selected, true, RowMenuFirst);
                         break;
+                    }
                     case ConsoleKey.DownArrow:
+                    {
+                        int prev = selected;
                         selected = selected >= items.Count - 1 ? 0 : selected + 1;
-                        _needsRender = true;
+                        RenderMenuItem(items, prev, false, RowMenuFirst);
+                        RenderMenuItem(items, selected, true, RowMenuFirst);
                         break;
+                    }
                     case ConsoleKey.Enter:
+                        Console.Write("\x1b[?25h\x1b[?1049l");
                         return items[selected];
                     case ConsoleKey.Escape:
+                        Console.Write("\x1b[?25h\x1b[?1049l");
                         if (items.Contains("Back"))
                             return "Back";
                         if (items.Contains("Exit"))
@@ -857,31 +1014,6 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         }
     }
 
-    private static void RenderMenu(string title, IReadOnlyList<string> items, int selected)
-    {
-        Grid menu = new();
-        menu.AddColumn(new GridColumn().NoWrap());
-        menu.AddColumn(new GridColumn());
-
-        for (int i = 0; i < items.Count; i++)
-        {
-            string prefix = i == selected ? "[bold cyan]>[/]" : " ";
-            string label = i == selected ? $"[bold]{items[i]}[/]" : items[i];
-            menu.AddRow(new Markup(prefix), new Markup(label));
-        }
-
-        Rows content = new(
-            new Markup($"[grey]{title}[/]"),
-            menu);
-
-        Panel panel = new Panel(content)
-            .RoundedBorder()
-            .BorderColor(Color.Grey)
-            .Padding(1, 0, 1, 0);
-
-        AnsiConsole.Write(panel);
-        AnsiConsole.WriteLine();
-    }
 
 
     private async Task ExecuteWithHandlingAsync(Func<Task> action)
@@ -987,6 +1119,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         _heartbeatProvider?.Dispose();
         _heartbeatKey = key;
         _lastTipSlot = 0;
+        _lastTipHeight = 0;
         _lastTipHash = string.Empty;
         _lastTipAtUtc = null;
 
@@ -996,6 +1129,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         _heartbeat.Beat += (_, _) =>
         {
             _lastTipSlot = _heartbeat.Slot;
+            _lastTipHeight = _heartbeat.Height;
             _lastTipHash = _heartbeat.Hash;
             _lastTipAtUtc = DateTime.UtcNow;
             if (_activeWallet != null)

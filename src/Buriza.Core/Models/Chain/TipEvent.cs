@@ -5,5 +5,6 @@ namespace Buriza.Core.Models.Chain;
 public record TipEvent(
     TipAction Action,
     ulong Slot,
-    string Hash
+    string Hash,
+    ulong Height
 );

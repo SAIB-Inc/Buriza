@@ -19,6 +19,8 @@ public class HeartbeatService : IDisposable
     public ulong Slot { get; private set; }
     /// <summary>Last observed block hash.</summary>
     public string Hash { get; private set; } = string.Empty;
+    /// <summary>Last observed block height.</summary>
+    public ulong Height { get; private set; }
     /// <summary>Indicates if the service considers itself connected.</summary>
     public bool IsConnected { get; private set; }
     /// <summary>Consecutive failure count for the current session.</summary>
@@ -73,6 +75,7 @@ public class HeartbeatService : IDisposable
                     {
                         Slot = tip.Slot;
                         Hash = tip.Hash;
+                        Height = tip.Height;
                         Beat?.Invoke(this, EventArgs.Empty);
                     }
                 }

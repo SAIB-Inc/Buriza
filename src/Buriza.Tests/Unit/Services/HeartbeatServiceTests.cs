@@ -69,7 +69,7 @@ public class HeartbeatServiceTests : IDisposable
             .Returns(callInfo =>
             {
                 if (Interlocked.Increment(ref callCount) == 1)
-                    return YieldTips(new TipEvent(TipAction.Apply, 100, "abc123"));
+                    return YieldTips(new TipEvent(TipAction.Apply, 100, "abc123", 0));
                 return NeverEndingStream(callInfo.Arg<CancellationToken>());
             });
 
@@ -93,9 +93,9 @@ public class HeartbeatServiceTests : IDisposable
             {
                 if (Interlocked.Increment(ref callCount) == 1)
                     return YieldTips(
-                        new TipEvent(TipAction.Apply, 100, "hash1"),
-                        new TipEvent(TipAction.Apply, 200, "hash2"),
-                        new TipEvent(TipAction.Apply, 300, "hash3"));
+                        new TipEvent(TipAction.Apply, 100, "hash1", 0),
+                        new TipEvent(TipAction.Apply, 200, "hash2", 0),
+                        new TipEvent(TipAction.Apply, 300, "hash3", 0));
 
                 return NeverEndingStream(callInfo.Arg<CancellationToken>());
             });
@@ -125,7 +125,7 @@ public class HeartbeatServiceTests : IDisposable
             .Returns(callInfo =>
             {
                 if (Interlocked.Increment(ref callCount) == 1)
-                    return YieldTips(new TipEvent(TipAction.Apply, 50, "connected"));
+                    return YieldTips(new TipEvent(TipAction.Apply, 50, "connected", 0));
                 return NeverEndingStream(callInfo.Arg<CancellationToken>());
             });
 
@@ -198,7 +198,7 @@ public class HeartbeatServiceTests : IDisposable
                         new Exception($"error {n}"),
                         callInfo.Arg<CancellationToken>());
                 if (n == 3)
-                    return YieldTips(new TipEvent(TipAction.Apply, 100, "recovered"));
+                    return YieldTips(new TipEvent(TipAction.Apply, 100, "recovered", 0));
                 return NeverEndingStream(callInfo.Arg<CancellationToken>());
             });
 
@@ -236,7 +236,7 @@ public class HeartbeatServiceTests : IDisposable
             .Returns(callInfo =>
             {
                 if (Interlocked.Increment(ref callCount) == 1)
-                    return YieldTips(new TipEvent(TipAction.Apply, 0, ""));
+                    return YieldTips(new TipEvent(TipAction.Apply, 0, "", 0));
                 return NeverEndingStream(callInfo.Arg<CancellationToken>());
             });
 
