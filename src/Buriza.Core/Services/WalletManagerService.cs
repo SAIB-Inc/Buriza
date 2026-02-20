@@ -38,10 +38,14 @@ public class WalletManagerService(
     }
 
     /// <inheritdoc/>
+    /// <param name="passwordBytes">
+    /// Optional on MAUI where the seed is hardware-protected by OS SecureStorage.
+    /// Required on Web/Extension/CLI where the password is the actual encryption key (VaultEncryption).
+    /// </param>
     public async Task<BurizaWallet> CreateAsync(
         string name,
         ReadOnlyMemory<byte> mnemonicBytes,
-        ReadOnlyMemory<byte> passwordBytes,
+        ReadOnlyMemory<byte>? passwordBytes = null,
         ChainInfo? chainInfo = null,
         CancellationToken ct = default)
     {
@@ -162,7 +166,11 @@ public class WalletManagerService(
     public Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
         => _storage.IsPinEnabledAsync(walletId, ct);
 
-    public Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    /// <param name="password">
+    /// Optional on MAUI for passwordless wallets (biometric/PIN as primary auth).
+    /// Required when the wallet was created with a password (has a PasswordVerifier).
+    /// </param>
+    public Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
         => _storage.EnableAuthAsync(walletId, type, password, ct);
 
     public Task DisableAuthMethodAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default)

@@ -109,13 +109,18 @@ public sealed class BurizaAppStorageService(
         return !string.IsNullOrEmpty(seed);
     }
 
-    public override async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
+    // Password is optional on MAUI — seed is hardware-protected by OS SecureStorage.
+    // When provided, an Argon2id PasswordVerifier is created as an additional app-layer auth gate.
+    public override async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte>? passwordBytes = null, CancellationToken ct = default)
     {
         string seed = Convert.ToBase64String(mnemonic.Span);
         await SetSecureAsync(StorageKeys.SecureSeed(walletId), seed, ct);
 
-        PasswordVerifier verifier = VaultEncryption.CreateVerifier(passwordBytes.Span);
-        await SetJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
+        if (passwordBytes.HasValue && !passwordBytes.Value.IsEmpty)
+        {
+            PasswordVerifier verifier = VaultEncryption.CreateVerifier(passwordBytes.Value.Span);
+            await SetJsonAsync(StorageKeys.PasswordVerifier(walletId), verifier, ct);
+        }
     }
 
     public override async Task<byte[]> UnlockVaultAsync(Guid walletId, ReadOnlyMemory<byte>? password, string? biometricReason = null, CancellationToken ct = default)
@@ -262,13 +267,23 @@ public sealed class BurizaAppStorageService(
         return [];
     }
 
-    public override async Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    // Password required only if wallet has a PasswordVerifier (was created with a password).
+    // Passwordless wallets (biometric/PIN as primary auth) skip password verification.
+    public override async Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         if (type == AuthenticationType.Password)
             return; // Password is always on — no-op
 
-        if (!await VerifyPasswordAsync(walletId, password, ct))
-            throw new CryptographicException("Invalid password");
+        bool hasPassword = password.HasValue && !password.Value.IsEmpty;
+        bool hasVerifier = await GetJsonAsync<PasswordVerifier>(StorageKeys.PasswordVerifier(walletId), ct) is not null;
+
+        if (hasVerifier)
+        {
+            if (!hasPassword)
+                throw new ArgumentException("Password required for this wallet.", nameof(password));
+            if (!await VerifyPasswordAsync(walletId, password!.Value, ct))
+                throw new CryptographicException("Invalid password");
+        }
 
         byte[] seed = await LoadSecureSeedAsync(walletId, ct);
         try

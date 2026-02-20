@@ -87,10 +87,16 @@ public abstract class BurizaStorageBase : IStorageProvider
         return !string.IsNullOrEmpty(json);
     }
 
-    /// <summary>Creates the vault/seed for a wallet.</summary>
-    public virtual async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte> passwordBytes, CancellationToken ct = default)
+    /// <summary>
+    /// Creates the vault/seed for a wallet. Base implementation requires a password (Web/Extension/CLI use VaultEncryption).
+    /// MAUI overrides to allow null — seed is hardware-protected by OS SecureStorage instead.
+    /// </summary>
+    public virtual async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte>? passwordBytes = null, CancellationToken ct = default)
     {
-        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic.Span, passwordBytes.Span);
+        if (!passwordBytes.HasValue || passwordBytes.Value.IsEmpty)
+            throw new ArgumentException("Password is required for vault creation on this platform.", nameof(passwordBytes));
+
+        EncryptedVault vault = VaultEncryption.Encrypt(walletId, mnemonic.Span, passwordBytes.Value.Span);
         await SetJsonAsync(StorageKeys.Vault(walletId), vault, ct);
     }
 
@@ -176,8 +182,11 @@ public abstract class BurizaStorageBase : IStorageProvider
         return methods.Contains(AuthenticationType.Pin);
     }
 
-    /// <summary>Enables the specified auth type for a wallet. Additive — does not remove existing methods.</summary>
-    public virtual Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte> password, CancellationToken ct = default)
+    /// <summary>
+    /// Enables the specified auth type for a wallet. Additive — does not remove existing methods.
+    /// Password is optional on MAUI for passwordless wallets (biometric/PIN as primary auth).
+    /// </summary>
+    public virtual Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
         => throw new NotSupportedException("Device auth is not supported on this platform.");
 
     /// <summary>Disables a specific device auth method for a wallet.</summary>
