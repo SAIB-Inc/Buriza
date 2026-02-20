@@ -8,7 +8,7 @@
     OnClose="Cancel"    
 >
     <DialogContent>
-        <div class="h-full flex flex-col gap-y-6">
+        <div class="h-full flex flex-col gap-y-6 !px-4">
             <div>
                 <MudText
                     Class="text-xs! tracking-[0.1px]">
@@ -37,7 +37,7 @@
             </div>
 
             @*Non-ParsableWarning*@
-            @if(!_IsParsable)
+            @if(!IsParsable)
             {
             <div class="!rounded-[12px] !p-3 !bg-[var(--mud-palette-warning-darken)] w-full mx-auto flex items-center !gap-[14px]">
                 <div class="w-6 h-6 min-w-6 rounded-full bg-[var(--warning-text)] flex items-center justify-center">
@@ -60,18 +60,18 @@
                         </MudText>
                         <MudIconButton
                             Ripple="false"
-                            Icon="@(_IsSigningAddressExpanded ? @BurizaIcons.ArrowUp2Icon : @BurizaIcons.ArrowDown2Icon)"
+                            Icon="@(IsSigningAddressExpanded ? @BurizaIcons.ArrowUp2Icon : @BurizaIcons.ArrowDown2Icon)"
                             OnClick="ExpandSigningAddress"
                             Class="!bg-transparent !p-0 [&_.mud-icon-root]:text-white!"
                         />
                     </div>
                     <div>
-                        <MudCollapse Expanded="@(!_IsSigningAddressExpanded)">
+                        <MudCollapse Expanded="@(!IsSigningAddressExpanded)">
                             <div class="flex justify-between bg-[var(--mud-palette-dark-darken)] !py-3 !px-3 mb-4 rounded-lg">
                                 <MudText
                                     Class="!text-sm self-center"
                                 >
-                                    @(_address[..13] + "..." + _address[^12..])
+                                    @(Address[..13] + "..." + Address[^12..])
                                 </MudText>
                                 <MudIconButton
                                     Class="p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
@@ -80,11 +80,11 @@
                                 />     
                             </div>
                         </MudCollapse>  
-                        <MudCollapse Expanded="_IsSigningAddressExpanded">
+                        <MudCollapse Expanded="IsSigningAddressExpanded">
                             <div class="relative !p-3 bg-[var(--mud-palette-dark-darken)] rounded-lg mb-4">
                                 <MudText
                                     Class="!text-sm break-all">
-                                    <span class="!font-semibold">@_address[..5]</span><span>@_address[5..^6]</span><span class="!font-semibold">@_address[^6..]</span>
+                                    <span class="!font-semibold">@Address[..5]</span><span>@Address[5..^6]</span><span class="!font-semibold">@Address[^6..]</span>
                                 </MudText>
                                 <MudIconButton
                                     Class="absolute bottom-3 right-3 p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
@@ -96,7 +96,7 @@
                     </div>                                     
                 </div>
 
-                @if(!_IsParsable)
+                @if(!IsParsable)
                 {   
                     <div>
                         <div class="w-full flex justify-between items-center mb-2">
@@ -107,18 +107,18 @@
                             </MudText>
                             <MudIconButton
                                 Ripple="false"
-                                Icon="@(_IsPayloadExpanded ? @BurizaIcons.ArrowUp2Icon : @BurizaIcons.ArrowDown2Icon)"
+                                Icon="@(IsPayloadExpanded ? @BurizaIcons.ArrowUp2Icon : @BurizaIcons.ArrowDown2Icon)"
                                 OnClick="ExpandPayload"
                                 Class="!bg-transparent !p-0 [&_.mud-icon-root]:text-white!" 
                             />
                         </div>
                         <div class="bg-[var(--mud-palette-dark-darken)] rounded-lg">
-                            <MudCollapse Expanded="@(!_IsPayloadExpanded)">
+                            <MudCollapse Expanded="@(!IsPayloadExpanded)">
                                 <div class="flex justify-between items-center px-4 !py-[13px]">
                                     <MudText
                                         Class="!text-sm tracking-[0.014px]"
                                     >
-                                        @(_hexPayload[..26] + "...")
+                                        @(HexPayload[..26] + "...")
                                     </MudText>
                                     <MudIconButton
                                         Class="p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"
@@ -127,11 +127,11 @@
                                     />   
                                 </div>
                             </MudCollapse>
-                            <MudCollapse Expanded="_IsPayloadExpanded">
+                            <MudCollapse Expanded="IsPayloadExpanded">
                                 <div class="relative max-h-[124px] !p-3 bg-[var(--mud-palette-dark-darken)] rounded-lg">
                                     <MudText
                                         Class="!text-sm break-all">
-                                        @(_hexPayload.Length > 200 ? _hexPayload[..200] + "..." : _hexPayload)
+                                        @(HexPayload.Length > 200 ? HexPayload[..200] + "..." : HexPayload)
                                     </MudText>
                                     <MudIconButton
                                         Class="absolute bottom-3 right-3 p-1! !bg-transparent [&_.mud-icon-root]:!w-[14px] [&_.mud-icon-root]:!h-[14px] [&_.mud-icon-root]:text-[var(--mud-palette-secondary-text)]!"

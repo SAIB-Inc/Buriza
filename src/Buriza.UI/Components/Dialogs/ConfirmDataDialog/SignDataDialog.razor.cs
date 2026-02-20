@@ -12,43 +12,43 @@ public partial class SignDataDialog
     [CascadingParameter]
     private IMudDialogInstance DialogInstance { get; set; } = null!;
 
-    private bool _IsSigningAddressExpanded = false;
-    private bool _IsPayloadExpanded = false;
+    protected bool IsSigningAddressExpanded { get; set; } = false;
+    protected bool IsPayloadExpanded { get; set; } = false;
 
     // TODO: Replace with actual parsable state
-    private bool _IsParsable = true;
+    protected bool IsParsable { get; set; } = false;
 
     // TODO: Replace with actual data to confirm
-    private readonly string _address = "addr1q9qvcgumeqdg8kjupqltvw0km5s4trle5ajswjzfyatqe25mwj0rva972882vkt0d8wcnfx0yhh3zpfr5q55ald3zmeqf3wyew";
-    private readonly string _hexPayload = "84AB00D901028282582003DE2AC5E9963B97888F726307B5FC99723170F87398C256AD04765796E8BC1600825820D3F281BCE2553995B5F955FC6FDD1AC97182256D270EF34630525CCA26B5E8C33A983A044534E454B1A7954R82080ABCDEF1234567890ABCD";
+    protected string Address { get; } = "addr1q9qvcgumeqdg8kjupqltvw0km5s4trle5ajswjzfyatqe25mwj0rva972882vkt0d8wcnfx0yhh3zpfr5q55ald3zmeqf3wyew";
+    protected string HexPayload { get; } = "84AB00D901028282582003DE2AC5E9963B97888F726307B5FC99723170F87398C256AD04765796E8BC1600825820D3F281BCE2553995B5F955FC6FDD1AC97182256D270EF34630525CCA26B5E8C33A983A044534E454B1A7954R82080ABCDEF1234567890ABCD";
 
-    private void Confirm()
+    protected void Confirm()
     {
         DialogInstance.Close(DialogResult.Ok(true));
     }
 
-    private void Cancel()
+    protected void Cancel()
     {
         DialogInstance.Cancel();
     }
 
-    private async Task CopyAddressToClipboard()
+    protected async Task CopyAddressToClipboard()
     {
-        await JavaScriptBridgeService.CopyToClipboardAsync(_address);
+        await JavaScriptBridgeService.CopyToClipboardAsync(Address);
     }
 
-    private async Task CopyPayloadToClipboard()
+    protected async Task CopyPayloadToClipboard()
     {
-        await JavaScriptBridgeService.CopyToClipboardAsync(_hexPayload);
+        await JavaScriptBridgeService.CopyToClipboardAsync(HexPayload);
     }
 
-    private void ExpandSigningAddress()
+    protected void ExpandSigningAddress()
     {
-        _IsSigningAddressExpanded = !_IsSigningAddressExpanded;
+        IsSigningAddressExpanded = !IsSigningAddressExpanded;
     }
 
-    private void ExpandPayload()
+    protected void ExpandPayload()
     {
-        _IsPayloadExpanded = !_IsPayloadExpanded;
+        IsPayloadExpanded = !IsPayloadExpanded;
     }
 }
