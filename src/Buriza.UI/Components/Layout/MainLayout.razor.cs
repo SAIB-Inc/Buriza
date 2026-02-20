@@ -23,7 +23,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
     private DotNetObjectReference<MainLayout>? _dotNetRef;
     protected Anchor FilterDrawerAnchor { get; set; } = Anchor.End;
 
-    protected bool IsHeaderHidden => IsOnRoute(Routes.TransactionSuccess, Routes.Onboard, Routes.Splash, Routes.Send, Routes.SendAssets);
+    protected bool IsHeaderHidden => IsOnRoute(Routes.TransactionSuccess, Routes.Onboard, Routes.Splash, Routes.Send, Routes.SendAssets, Routes.Receive);
 
     private static MudTheme BurizaTheme => new()
     {
@@ -86,6 +86,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             SecondaryContrastText = "#AEC6FF",
             Tertiary = "#00173D",
             TertiaryLighten = "#4D4D4D",
+            TertiaryContrastText = "#FAF9FF",
             TertiaryDarken = "#164174",
             TextPrimary = "#E0E2ED",
             TextSecondary = "#8490B1",
@@ -99,6 +100,7 @@ public partial class MainLayout : LayoutComponentBase, IAsyncDisposable
             Dark = "#181B23",
             DarkDarken = "#1C1F27",
             DarkContrastText = "#272A32",
+            DrawerText = "#C1C6D7",
             Divider = "#414754",
             TableLines = "#B9C6E9",
             SuccessLighten = "#71FAC9",
