@@ -8,57 +8,47 @@ window.buriza = window.buriza || {};
 window.buriza.storage = (() => {
     const useChrome = typeof chrome?.storage?.local !== 'undefined';
 
-    const chromeGet = (key) => new Promise((resolve) =>
-        chrome.storage.local.get([key], (r) => resolve(r[key] ?? null)));
+    if (!useChrome) {
+        return {
+            get: (key) => Promise.resolve(localStorage.getItem(key)),
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, value);
+                    return Promise.resolve();
+                } catch (e) {
+                    return Promise.reject(e.name === 'QuotaExceededError'
+                        ? new Error(`Storage quota exceeded while saving '${key}'`)
+                        : e);
+                }
+            },
+            remove: (key) => Promise.resolve(localStorage.removeItem(key)),
+            exists: (key) => Promise.resolve(localStorage.getItem(key) !== null),
+            getKeys: (prefix) => Promise.resolve(
+                Object.keys(localStorage).filter(k => k.startsWith(prefix))),
+            clear: () => Promise.resolve(localStorage.clear())
+        };
+    }
 
-    const chromeSet = (key, value) => new Promise((resolve, reject) =>
-        chrome.storage.local.set({ [key]: value }, () =>
-            chrome.runtime.lastError
-                ? reject(new Error(chrome.runtime.lastError.message))
-                : resolve()));
+    const store = chrome.storage.local;
 
-    const chromeRemove = (key) => new Promise((resolve, reject) =>
-        chrome.storage.local.remove([key], () =>
-            chrome.runtime.lastError
-                ? reject(new Error(chrome.runtime.lastError.message))
-                : resolve()));
+    function checkError(resolve, reject) {
+        chrome.runtime.lastError
+            ? reject(new Error(chrome.runtime.lastError.message))
+            : resolve();
+    }
 
-    const chromeExists = (key) => new Promise((resolve) =>
-        chrome.storage.local.get([key], (r) => resolve(key in r)));
-
-    const chromeGetKeys = (prefix) => new Promise((resolve) =>
-        chrome.storage.local.get(null, (r) =>
-            resolve(Object.keys(r).filter(k => k.startsWith(prefix)))));
-
-    const chromeClear = () => new Promise((resolve, reject) =>
-        chrome.storage.local.clear(() =>
-            chrome.runtime.lastError
-                ? reject(new Error(chrome.runtime.lastError.message))
-                : resolve()));
-
-    return useChrome ? {
-        get: chromeGet,
-        set: chromeSet,
-        remove: chromeRemove,
-        exists: chromeExists,
-        getKeys: chromeGetKeys,
-        clear: chromeClear
-    } : {
-        get: (key) => Promise.resolve(localStorage.getItem(key)),
-        set: (key, value) => {
-            try {
-                localStorage.setItem(key, value);
-                return Promise.resolve();
-            } catch (e) {
-                return Promise.reject(e.name === 'QuotaExceededError'
-                    ? new Error(`Storage quota exceeded while saving '${key}'`)
-                    : e);
-            }
-        },
-        remove: (key) => Promise.resolve(localStorage.removeItem(key)),
-        exists: (key) => Promise.resolve(localStorage.getItem(key) !== null),
-        getKeys: (prefix) => Promise.resolve(
-            Object.keys(localStorage).filter(k => k.startsWith(prefix))),
-        clear: () => Promise.resolve(localStorage.clear())
+    return {
+        get: (key) => new Promise((resolve) =>
+            store.get([key], (r) => resolve(r[key] ?? null))),
+        set: (key, value) => new Promise((resolve, reject) =>
+            store.set({ [key]: value }, () => checkError(resolve, reject))),
+        remove: (key) => new Promise((resolve, reject) =>
+            store.remove([key], () => checkError(resolve, reject))),
+        exists: (key) => new Promise((resolve) =>
+            store.get([key], (r) => resolve(key in r))),
+        getKeys: (prefix) => new Promise((resolve) =>
+            store.get(null, (r) => resolve(Object.keys(r).filter(k => k.startsWith(prefix))))),
+        clear: () => new Promise((resolve, reject) =>
+            store.clear(() => checkError(resolve, reject)))
     };
 })();
