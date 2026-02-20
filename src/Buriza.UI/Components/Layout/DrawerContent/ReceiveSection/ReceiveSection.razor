@@ -32,18 +32,24 @@
                     Class="!text-[22px] !font-semibold !text-[var(--mud-palette-text-primary)]" 
                     Align="Align.Center"
                 >
-                    @SelectedWalletAccount?.Name
+                    @CurrentWalletAccount?.Name
                 </MudText>
-                <MudText 
-                    Class="break-words !p-3 rounded-xl bg-[var(--mud-palette-drawer-background)] !mt-3" 
+                <MudText
                     Align="Align.Center"
                 >
-                    <span class="!text-[var(--mud-palette-tertiary-text)] font-semibold">@SelectedWalletAccount?.Start</span><span class="!text-[var(--mud-palette-drawer-text)]">@SelectedWalletAccount?.Middle</span><span class="!text-[var(--mud-palette-tertiary-text)] font-semibold">@SelectedWalletAccount?.End</span>
+                    @CurrentWallet?.Name
+                </MudText>
+                <MudText 
+                    Class="break-words !p-3 rounded-xl bg-[var(--mud-palette-drawer-background)] !mt-3 cursor-pointer" 
+                    Align="Align.Center"
+                    @onclick="() => CopyAddressToClipboard(CurrentWalletAccount!.Address)"  
+                >
+                    <span class="!text-[var(--mud-palette-tertiary-text)] font-semibold">@CurrentWalletAccount?.Start</span><span class="!text-[var(--mud-palette-drawer-text)]">@CurrentWalletAccount?.Middle</span><span class="!text-[var(--mud-palette-tertiary-text)] font-semibold">@CurrentWalletAccount?.End</span>
                 </MudText>
                 <MudText
                     Class="w-max !mx-auto !text-xs !text-[var(--mud-palette-tertiary-text)] !font-semibold bg-[var(--mud-palette-drawer-background)] !py-1 !px-4 !mt-[10px] rounded-[99px]"
                 >
-                    @SelectedWalletAccount?.DerivationPath
+                    @CurrentWalletAccount?.DerivationPath
                 </MudText>
             </div>
         </div>
@@ -65,7 +71,7 @@
             {
                 <div class="w-full">
                     <div
-                        @onclick="() => ToggleWallet(wallet)" 
+                        @onclick="() => ToggleWalletExpansion(wallet)" 
                         class="w-full flex items-center justify-between !px-1 cursor-pointer"
                     >
                         <div class="flex items-center !gap-4">
@@ -114,7 +120,7 @@
                                             <div class="flex-1 flex flex-col gap-y-2">
                                                 <div class="flex justify-between items-center">
                                                     <MudText>@account.Name</MudText>
-                                                    <MudText Class="@(account.IsActive ? "!text-sm !text-[var(--current-text)]" : "hidden")">Current</MudText>
+                                                    <MudText Class="@(account.IsActive ? "!text-sm !text-[var(--mud-palette-primary)]" : "hidden")">Current</MudText>
                                                 </div>
                                                 <div class="flex gap-x-[2px] items-center rounded-[99px] !bg-[var(--buriza-chip-bg)] !px-2 !py-1 w-max"> 
                                                     <MudText Class="!text-xs break-all overflow-wrap-anywhere">

@@ -16,26 +16,43 @@ public partial class ReceiveSection : ComponentBase, IDisposable
     public required IJSRuntime JSRuntime { get; set; }
 
     protected bool IsAdvancedMode => AppStateService.IsReceiveAdvancedMode;
-     protected WalletAccount? SelectedWalletAccount;
+    private Wallet? _expandedWallet;
+    protected Wallet? CurrentWallet;
+    protected WalletAccount? CurrentWalletAccount;
     protected List<Wallet> Wallets { get; set; } = [];
 
     protected override void OnInitialized()
     {
         AppStateService.OnChanged += StateHasChanged;
         Wallets = WalletData.GetDummyWallets();
-        SelectedWalletAccount = Wallets                                                                                                                      
-            .SelectMany(w => w.Accounts)                                                                                                                     
-            .FirstOrDefault(a => a.IsActive);
-
-        foreach (var wallet in Wallets)                                                                                               
-        {                                                                                                                             
-            wallet.IsExpanded = wallet.Accounts.Any(a => a.IsActive);                                                                 
-        }  
+        foreach (var wallet in Wallets)                                                                                                                    
+        {
+            WalletAccount? account = wallet.Accounts.FirstOrDefault(a => a.IsActive);
+            wallet.IsExpanded = account != null;
+            if (account != null)
+            {
+                CurrentWallet = wallet;
+                CurrentWalletAccount = account;
+                _expandedWallet = CurrentWallet;
+                break;
+            }
+        }
     }
 
-    protected void ToggleWallet(Wallet wallet)
-    {
-        wallet.IsExpanded = !wallet.IsExpanded;
+    protected void ToggleWalletExpansion(Wallet wallet)                                                                                                           
+    {                                                                                                                                                    
+      if (_expandedWallet != null)
+        _expandedWallet.IsExpanded = false;
+
+      if (_expandedWallet == wallet)
+      {
+        _expandedWallet = null;
+      }
+      else
+      {
+        wallet.IsExpanded = true;
+        _expandedWallet = wallet;
+      }
     }
 
     private async Task CopyAddressToClipboard(string address)
@@ -46,25 +63,18 @@ public partial class ReceiveSection : ComponentBase, IDisposable
     protected void OnAccountCardClicked(Wallet wallet, WalletAccount account)
     {
         //TODO: i think selected wallet account should never be null
-        if(SelectedWalletAccount != null)
-            SelectedWalletAccount.IsActive = false;
+        if(CurrentWalletAccount != null)
+            CurrentWalletAccount.IsActive = false;
 
-        foreach(var w in Wallets)
-            w.IsExpanded = w == wallet;
+        if (_expandedWallet != null)                                                                                                                         
+            _expandedWallet.IsExpanded = false;   
+        wallet.IsExpanded = true;
+        CurrentWallet = wallet;
+        _expandedWallet = wallet;
 
         account.IsActive = true;
-        SelectedWalletAccount = account;
+        CurrentWalletAccount = account;
         AppStateService.IsReceiveAdvancedMode = false;
-    }
-
-    protected static string GetChipColor(AccountStatusType status)
-    {
-        return ReceiveAccountData.GetChipColor(status);
-    }
-
-    protected static string GetChipIcon(AccountStatusType status)
-    {
-        return ReceiveAccountData.GetChipIcon(status);
     }
 
     public void Dispose()
