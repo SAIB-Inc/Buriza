@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Buriza.Cli.Services;
+using Buriza.Core.Chain.Cardano;
 using Buriza.Core.Interfaces;
 using Buriza.Core.Interfaces.Chain;
 using Buriza.Core.Models.Chain;
@@ -510,14 +511,16 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     private async Task ShowReceiveAddressAsync()
     {
         BurizaWallet active = await RequireActiveWalletAsync();
-        string? address = (await active.GetAddressInfoAsync())?.Address;
-        if (string.IsNullOrEmpty(address))
+        ChainAddressData? data = await active.GetAddressInfoAsync();
+        if (data is null || string.IsNullOrEmpty(data.Address))
         {
             AnsiConsole.MarkupLine("[yellow]Wallet is locked.[/] Unlock it first to derive the address.");
             Pause();
             return;
         }
-        AnsiConsole.MarkupLine($"[bold]Receive address:[/] {address}");
+        AnsiConsole.MarkupLine($"[bold]Receive address:[/] {data.Address}");
+        if (data is CardanoAddressData cardano)
+            AnsiConsole.MarkupLine($"[bold]Staking address:[/] {cardano.StakingAddress}");
         Pause();
     }
 
@@ -733,6 +736,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     // Previous-frame snapshots for dirty checking
     private string _prevTipLine = string.Empty;
     private string _prevBalanceLine = string.Empty;
+    private long _lastClockTick;
 
     /// <summary>Build the tip/address line (row 1) content.</summary>
     private string BuildTipLine(int width)
@@ -818,10 +822,24 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     /// <summary>Render a single menu item at its row.</summary>
     private static void RenderMenuItem(IReadOnlyList<string> items, int index, bool isSelected, int menuFirstRow)
     {
+        Console.Out.Write(BuildMenuItemPatch(items, index, isSelected, menuFirstRow));
+    }
+
+    private static string BuildMenuItemPatch(IReadOnlyList<string> items, int index, bool isSelected, int menuFirstRow)
+    {
+        int row = menuFirstRow + index;
         string line = isSelected
             ? $"  {Ansi.BoldCyan(">")} {Ansi.Bold(items[index])}"
             : $"    {items[index]}";
-        WriteAtRow(menuFirstRow + index, line);
+        return $"\x1b[{row};1H{line}\x1b[K";
+    }
+
+    private static string BuildFullMenuPatch(IReadOnlyList<string> items, int selected, int menuFirstRow)
+    {
+        StringBuilder sb = new();
+        for (int i = 0; i < items.Count; i++)
+            sb.Append(BuildMenuItemPatch(items, i, i == selected, menuFirstRow));
+        return sb.ToString();
     }
 
     /// <summary>Draw the full frame once (first render only).</summary>
@@ -838,15 +856,17 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
         StringBuilder fb = new();
 
+        void pos(int row) => fb.Append($"\x1b[{row};1H");
+
         // Row 1: Tip
         _prevTipLine = BuildTipLine(width);
-        fb.Append(_prevTipLine).Append("\x1b[K\n");
+        pos(RowTip); fb.Append(_prevTipLine).Append("\x1b[K");
 
         // Row 2: Chain
-        fb.Append(BuildChainLine(width)).Append("\x1b[K\n");
+        pos(RowChain); fb.Append(BuildChainLine(width)).Append("\x1b[K");
 
         // Row 3: blank
-        fb.Append("\x1b[K\n");
+        pos(3); fb.Append("\x1b[K");
 
         // Row 4-8: logo
         string[] logo =
@@ -857,42 +877,36 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             @"   | |_) |",
             @"   |____/ "
         ];
-        foreach (string line in logo)
+        for (int l = 0; l < logo.Length; l++)
         {
-            int pad = Math.Max(0, (width - line.Length) / 2);
-            fb.Append(' ', pad).Append(Ansi.BoldCyan(line)).Append("\x1b[K\n");
+            pos(4 + l);
+            int pad = Math.Max(0, (width - logo[l].Length) / 2);
+            fb.Append(' ', pad).Append(Ansi.BoldCyan(logo[l])).Append("\x1b[K");
         }
 
         // Row 9: brand
         const string brandText = "B U R I Z A";
         int brandPad = Math.Max(0, (width - brandText.Length) / 2);
-        fb.Append(' ', brandPad).Append(Ansi.BoldWhite(brandText)).Append("\x1b[K\n");
+        pos(9); fb.Append(' ', brandPad).Append(Ansi.BoldWhite(brandText)).Append("\x1b[K");
 
         // Row 10: blank
-        fb.Append("\x1b[K\n");
+        pos(10); fb.Append("\x1b[K");
 
         // Row 11: balance
         _prevBalanceLine = BuildBalanceLine(width);
-        fb.Append(_prevBalanceLine).Append("\x1b[K\n");
+        pos(RowBalanceLine); fb.Append(_prevBalanceLine).Append("\x1b[K");
 
         // Row 12: blank
-        fb.Append("\x1b[K\n");
+        pos(12); fb.Append("\x1b[K");
 
         // Row 13: menu title
-        fb.Append("  ").Append(Ansi.Grey(title)).Append("\x1b[K\n");
+        pos(RowMenuTitle); fb.Append("  ").Append(Ansi.Grey(title)).Append("\x1b[K");
 
         // Row 14+: menu items
-        for (int i = 0; i < items.Count; i++)
-        {
-            if (i == selected)
-                fb.Append("  ").Append(Ansi.BoldCyan(">")).Append(' ').Append(Ansi.Bold(items[i]));
-            else
-                fb.Append("    ").Append(items[i]);
-            fb.Append("\x1b[K\n");
-        }
+        fb.Append(BuildFullMenuPatch(items, selected, RowMenuFirst));
 
         // Clear below
-        fb.Append("\x1b[J");
+        pos(RowMenuFirst + items.Count); fb.Append("\x1b[J");
 
         Console.Out.Write(fb);
     }
@@ -956,6 +970,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     {
         int selected = 0;
         bool firstRender = true;
+        _lastClockTick = Environment.TickCount64;
 
         while (true)
         {
@@ -967,11 +982,11 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
                 firstRender = false;
                 _needsRender = false;
             }
-            else if (_needsRender)
+            else if (_needsRender || Environment.TickCount64 - _lastClockTick >= 1000)
             {
-                // Data changed (heartbeat/balance) — patch only data lines
                 UpdateDataLines();
                 _needsRender = false;
+                _lastClockTick = Environment.TickCount64;
             }
 
             if (Console.KeyAvailable)
@@ -980,21 +995,13 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
                 switch (key.Key)
                 {
                     case ConsoleKey.UpArrow:
-                    {
-                        int prev = selected;
                         selected = selected <= 0 ? items.Count - 1 : selected - 1;
-                        RenderMenuItem(items, prev, false, RowMenuFirst);
-                        RenderMenuItem(items, selected, true, RowMenuFirst);
+                        Console.Out.Write(BuildFullMenuPatch(items, selected, RowMenuFirst));
                         break;
-                    }
                     case ConsoleKey.DownArrow:
-                    {
-                        int prev = selected;
                         selected = selected >= items.Count - 1 ? 0 : selected + 1;
-                        RenderMenuItem(items, prev, false, RowMenuFirst);
-                        RenderMenuItem(items, selected, true, RowMenuFirst);
+                        Console.Out.Write(BuildFullMenuPatch(items, selected, RowMenuFirst));
                         break;
-                    }
                     case ConsoleKey.Enter:
                         Console.Write("\x1b[?25h\x1b[?1049l");
                         return items[selected];
@@ -1018,6 +1025,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
 
     private async Task ExecuteWithHandlingAsync(Func<Task> action)
     {
+        Console.Clear();
         try
         {
             await action();

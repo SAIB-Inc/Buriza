@@ -51,10 +51,11 @@ public class BurizaCardanoWallet : IChainWallet
             string address = WalletAddress.FromPublicKeys(networkType, AddressType.Base, paymentKey, stakingKey).ToBech32();
             string stakingAddress = DeriveStakingAddress(stakingKey.Key, chainInfo.Network);
 
-            return Task.FromResult(new ChainAddressData
+            return Task.FromResult<ChainAddressData>(new CardanoAddressData
             {
                 ChainInfo = chainInfo,
-                Address = address
+                Address = address,
+                StakingAddress = stakingAddress
             });
         }
         finally
