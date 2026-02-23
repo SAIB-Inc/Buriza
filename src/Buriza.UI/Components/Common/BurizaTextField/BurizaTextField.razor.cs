@@ -32,13 +32,16 @@ public partial class BurizaTextField
     public string HelperText { get; set; } = string.Empty;
 
     [Parameter]
-    public string Icon { get; set; } = string.Empty;
+    public string AdornmentIcon { get; set; } = string.Empty;
 
     [Parameter]
     public int Lines { get; set; }
 
     [Parameter]
     public Adornment Adornment { get; set; } = Adornment.End;
+
+    [Parameter]
+    public EventCallback OnAdornmentClick { get; set; }
 
     [Parameter]
     public Variant Variant { get; set; } = Variant.Filled;

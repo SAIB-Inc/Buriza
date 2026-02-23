@@ -28,7 +28,7 @@ public partial class BurizaBaseDialog
     [Parameter]
     public EventCallback OnClose { get; set; }
 
-    private string DialogClass => $"!bg-[var(--mud-palette-background)] !rounded-[16px] !p-0 !shadow-none {Class}";
+    private string DialogClass => $"!bg-[var(--mud-palette-background)] !rounded-[28px] !p-0 !shadow-none {Class}";
 
     private string DialogTitleClass => $"!p-4 {TitleClass}";
 

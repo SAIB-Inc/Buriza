@@ -1,4 +1,4 @@
-@using Buriza.UI.Components.Common
+@using Buriza.UI.Components.Controls
 @using Buriza.UI.Resources
 
 @namespace Buriza.UI.Components.Dialogs
@@ -6,32 +6,21 @@
 <BurizaBaseDialog 
     Title="Transaction Confirmation"
     OnClose="Cancel" 
-    Class="w-[379px] h-[271px] !rounded-[28px] !p-6" 
-    TitleClass="p-0! mb-3!"
+    Class="w-[314px] min-[425px]:w-[379px] !p-6" 
+    TitleClass="p-0! min-[425px]:mb-3!"
     ActionsClass="!justify-end px-0! pt-0! pb-0!"
 >
     <DialogContent>
-        <div class="h-full flex flex-col justify-between">
+        <div class="h-full flex flex-col !gap-y-6">
             <div>
                 <MudText
-                    Class="text-xs! tracking-[0.1px]">
+                    Class="text-xs! tracking-[0.1px] break-words !text-center min-[425px]:!text-start"
+                >
                     Please sign the transaction with your password
                 </MudText>
             </div>
             <div class="relative !mb-6">
-                <BurizaTextField 
-                    @bind-Value="_password"
-                    Label="Password" 
-                    InputType="@_passwordInputType"
-                />
-                <div>
-                    <MudIconButton
-                        Ripple="false"
-                        Icon="@(_showPassword ? @BurizaIcons.HiddenIcon : @BurizaIcons.VisibleIcon)"
-                        OnClick="TogglePasswordVisibility"
-                        Class="absolute top-1/2 -translate-y-1/2 right-3 !p-0 block [&_.mud-icon-root]:!text-white"
-                    />                    
-                </div>
+                <BurizaPasswordField/>
             </div>
         </div>
     </DialogContent>
