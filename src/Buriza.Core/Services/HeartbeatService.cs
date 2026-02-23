@@ -52,7 +52,7 @@ public class HeartbeatService : IDisposable
             }
             catch (Exception ex)
             {
-                HandleFatalError(ex, "HeartbeatService fatal error");
+                HandleError(ex, "HeartbeatService fatal error", isFatal: true);
             }
         });
     }
@@ -106,35 +106,20 @@ public class HeartbeatService : IDisposable
         }
     }
 
-    private void HandleError(Exception ex, string message)
+    private void HandleError(Exception ex, string message, bool isFatal = false)
     {
-        // Always log if logger is available
-        _logger?.LogError(ex, "{Message}", message);
+        if (isFatal)
+            _logger?.LogCritical(ex, "{Message}", message);
+        else
+            _logger?.LogError(ex, "{Message}", message);
 
-        // Always raise error event for subscribers (works even without logger)
         try
         {
-            Error?.Invoke(this, new HeartbeatErrorEventArgs(ex, message, ConsecutiveFailures));
+            Error?.Invoke(this, new HeartbeatErrorEventArgs(ex, message, ConsecutiveFailures, isFatal));
         }
         catch
         {
             // Don't let subscriber exceptions crash the heartbeat service
-        }
-    }
-
-    private void HandleFatalError(Exception ex, string message)
-    {
-        // Always log critical errors
-        _logger?.LogCritical(ex, "{Message}", message);
-
-        // Raise error event with fatal flag
-        try
-        {
-            Error?.Invoke(this, new HeartbeatErrorEventArgs(ex, message, ConsecutiveFailures, IsFatal: true));
-        }
-        catch
-        {
-            // Don't let subscriber exceptions mask the fatal error
         }
     }
 

@@ -262,11 +262,7 @@ public class WalletLifecycleTests
         {
             BurizaWallet wallet = await CreateWallet(walletManager);
 
-            string? exportedMnemonic = null;
-            wallet.ExportMnemonic(mnemonic =>
-            {
-                exportedMnemonic = mnemonic.ToString();
-            });
+            string exportedMnemonic = wallet.ExportMnemonic();
 
             Assert.Equal(TestMnemonic, exportedMnemonic);
         }

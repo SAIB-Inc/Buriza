@@ -383,11 +383,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         if (string.IsNullOrEmpty(password))
             return;
 
-        string mnemonic = "";
-        WalletManagerService.GenerateMnemonic(24, span =>
-        {
-            mnemonic = span.ToString();
-        });
+        string mnemonic = WalletManagerService.GenerateMnemonic(24);
 
         AnsiConsole.Write(new Panel(new Markup($"[bold]Write down your mnemonic:[/]\n\n[white]{mnemonic}[/]"))
             .BorderColor(Color.Grey)
@@ -716,13 +712,11 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             finally { CryptographicOperations.ZeroMemory(passwordBytes); }
         }
 
-        active.ExportMnemonic(span =>
-        {
-            AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{span}[/]"))
-                .BorderColor(Color.Grey)
-                .RoundedBorder()
-                .Padding(1, 0, 1, 0));
-        });
+        string mnemonic = active.ExportMnemonic();
+        AnsiConsole.Write(new Panel(new Markup($"[bold]Mnemonic:[/]\n\n[white]{mnemonic}[/]"))
+            .BorderColor(Color.Grey)
+            .RoundedBorder()
+            .Padding(1, 0, 1, 0));
         Pause();
     }
 
@@ -811,18 +805,6 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             sb.Append(' ', gap).Append(lockText);
         }
         return sb.ToString();
-    }
-
-    /// <summary>Write content at a specific row without touching other rows.</summary>
-    private static void WriteAtRow(int row, string content)
-    {
-        Console.Out.Write($"\x1b[{row};1H{content}\x1b[K");
-    }
-
-    /// <summary>Render a single menu item at its row.</summary>
-    private static void RenderMenuItem(IReadOnlyList<string> items, int index, bool isSelected, int menuFirstRow)
-    {
-        Console.Out.Write(BuildMenuItemPatch(items, index, isSelected, menuFirstRow));
     }
 
     private static string BuildMenuItemPatch(IReadOnlyList<string> items, int index, bool isSelected, int menuFirstRow)
@@ -1035,16 +1017,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             AnsiConsole.MarkupLine("[red]Error:[/] Invalid password or PIN.");
             Pause();
         }
-        catch (Grpc.Core.RpcException)
-        {
-            AnsiConsole.MarkupLine("[red]Network error:[/] Provider is not configured or unreachable.");
-            string hint = await BuildProviderHintAsync();
-            if (!string.IsNullOrEmpty(hint))
-                AnsiConsole.MarkupLine(hint);
-            AnsiConsole.MarkupLine("[grey]Use 'Set custom provider' or edit appsettings.json.[/]");
-            Pause();
-        }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is Grpc.Core.RpcException or HttpRequestException)
         {
             AnsiConsole.MarkupLine("[red]Network error:[/] Provider is not configured or unreachable.");
             string hint = await BuildProviderHintAsync();

@@ -61,30 +61,6 @@ public class BurizaStorageAuthMethodsTests : IDisposable
     }
 
     [Fact]
-    public async Task IsDeviceAuthEnabledAsync_Default_ReturnsFalse()
-    {
-        bool enabled = await _storage.IsDeviceAuthEnabledAsync(_walletId);
-
-        Assert.False(enabled);
-    }
-
-    [Fact]
-    public async Task IsBiometricEnabledAsync_Default_ReturnsFalse()
-    {
-        bool enabled = await _storage.IsBiometricEnabledAsync(_walletId);
-
-        Assert.False(enabled);
-    }
-
-    [Fact]
-    public async Task IsPinEnabledAsync_Default_ReturnsFalse()
-    {
-        bool enabled = await _storage.IsPinEnabledAsync(_walletId);
-
-        Assert.False(enabled);
-    }
-
-    [Fact]
     public async Task EnableAuthAsync_Default_ThrowsNotSupportedException()
     {
         await Assert.ThrowsAsync<NotSupportedException>(() =>
@@ -133,30 +109,6 @@ public class BurizaStorageAuthMethodsTests : IDisposable
         HashSet<AuthenticationType> methods = await _walletManager.GetEnabledAuthMethodsAsync(_walletId);
 
         Assert.Empty(methods);
-    }
-
-    [Fact]
-    public async Task WalletManagerService_IsDeviceAuthEnabledAsync_DelegatesToStorage()
-    {
-        bool enabled = await _walletManager.IsDeviceAuthEnabledAsync(_walletId);
-
-        Assert.False(enabled);
-    }
-
-    [Fact]
-    public async Task WalletManagerService_IsBiometricEnabledAsync_DelegatesToStorage()
-    {
-        bool enabled = await _walletManager.IsBiometricEnabledAsync(_walletId);
-
-        Assert.False(enabled);
-    }
-
-    [Fact]
-    public async Task WalletManagerService_IsPinEnabledAsync_DelegatesToStorage()
-    {
-        bool enabled = await _walletManager.IsPinEnabledAsync(_walletId);
-
-        Assert.False(enabled);
     }
 
     [Fact]

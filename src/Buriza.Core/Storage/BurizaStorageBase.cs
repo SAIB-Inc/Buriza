@@ -161,27 +161,6 @@ public abstract class BurizaStorageBase : IStorageProvider
     public virtual Task<HashSet<AuthenticationType>> GetEnabledAuthMethodsAsync(Guid walletId, CancellationToken ct = default)
         => Task.FromResult(new HashSet<AuthenticationType>());
 
-    /// <summary>Returns true if any device auth method (biometric or pin) is enabled for a wallet.</summary>
-    public virtual async Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
-    {
-        HashSet<AuthenticationType> methods = await GetEnabledAuthMethodsAsync(walletId, ct);
-        return methods.Count > 0;
-    }
-
-    /// <summary>Returns true if biometric auth is enabled for a wallet.</summary>
-    public virtual async Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
-    {
-        HashSet<AuthenticationType> methods = await GetEnabledAuthMethodsAsync(walletId, ct);
-        return methods.Contains(AuthenticationType.Biometric);
-    }
-
-    /// <summary>Returns true if PIN auth is enabled for a wallet.</summary>
-    public virtual async Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
-    {
-        HashSet<AuthenticationType> methods = await GetEnabledAuthMethodsAsync(walletId, ct);
-        return methods.Contains(AuthenticationType.Pin);
-    }
-
     /// <summary>
     /// Enables the specified auth type for a wallet. Additive — does not remove existing methods.
     /// Password is optional on MAUI for passwordless wallets (biometric/PIN as primary auth).

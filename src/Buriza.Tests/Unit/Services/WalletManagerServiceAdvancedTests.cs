@@ -251,31 +251,23 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         // Arrange
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
         await wallet.UnlockAsync(TestPasswordBytes);
-        int? exportedLength = null;
 
         // Act
-        wallet.ExportMnemonic(mnemonic =>
-        {
-            exportedLength = mnemonic.Length;
-        });
+        string exportedMnemonic = wallet.ExportMnemonic();
 
         // Assert
-        Assert.Equal(TestMnemonic.Length, exportedLength);
+        Assert.Equal(TestMnemonic.Length, exportedMnemonic.Length);
     }
 
     [Fact]
-    public async Task ExportMnemonic_CallbackReceivesCorrectMnemonic()
+    public async Task ExportMnemonic_ReturnsCorrectMnemonic()
     {
         // Arrange
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
         await wallet.UnlockAsync(TestPasswordBytes);
-        string? exportedMnemonic = null;
 
         // Act
-        wallet.ExportMnemonic(mnemonic =>
-        {
-            exportedMnemonic = mnemonic.ToString();
-        });
+        string exportedMnemonic = wallet.ExportMnemonic();
 
         // Assert
         Assert.Equal(TestMnemonic, exportedMnemonic);

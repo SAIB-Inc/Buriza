@@ -168,14 +168,9 @@ public class WalletManagerServiceTests : IDisposable
     public void GenerateMnemonic_Returns24Words()
     {
         // Act
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(24, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(24);
 
         // Assert
-        Assert.NotNull(generatedMnemonic);
         string[] words = generatedMnemonic.Split(' ');
         Assert.Equal(24, words.Length);
     }
@@ -184,14 +179,9 @@ public class WalletManagerServiceTests : IDisposable
     public void GenerateMnemonic_Returns12Words()
     {
         // Act
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(12, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(12);
 
         // Assert
-        Assert.NotNull(generatedMnemonic);
         string[] words = generatedMnemonic.Split(' ');
         Assert.Equal(12, words.Length);
     }
@@ -200,14 +190,9 @@ public class WalletManagerServiceTests : IDisposable
     public void GenerateMnemonic_ReturnsValidBip39Mnemonic()
     {
         // Act
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(24, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(24);
 
         // Assert - Should be valid (can be used to create wallet)
-        Assert.NotNull(generatedMnemonic);
         string[] words = generatedMnemonic.Split(' ');
         Assert.Equal(24, words.Length);
     }
@@ -216,14 +201,10 @@ public class WalletManagerServiceTests : IDisposable
     public void GenerateMnemonic_GeneratesUniqueMnemonics()
     {
         // Act
-        string? mnemonic1 = null;
-        string? mnemonic2 = null;
-        WalletManagerService.GenerateMnemonic(24, m => mnemonic1 = m.ToString());
-        WalletManagerService.GenerateMnemonic(24, m => mnemonic2 = m.ToString());
+        string mnemonic1 = WalletManagerService.GenerateMnemonic(24);
+        string mnemonic2 = WalletManagerService.GenerateMnemonic(24);
 
         // Assert - Two generations should produce different mnemonics
-        Assert.NotNull(mnemonic1);
-        Assert.NotNull(mnemonic2);
         Assert.NotEqual(mnemonic1, mnemonic2);
     }
 
@@ -231,14 +212,10 @@ public class WalletManagerServiceTests : IDisposable
     public async Task GenerateMnemonic_ThenCreateFromMnemonic_CreatesWallet()
     {
         // Arrange
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(24, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(24);
 
         // Act
-        BurizaWallet wallet = await CreateWalletAsync("New Wallet", generatedMnemonic!, TestPassword);
+        BurizaWallet wallet = await CreateWalletAsync("New Wallet", generatedMnemonic, TestPassword);
 
         // Assert
         Assert.NotNull(wallet);
@@ -249,21 +226,13 @@ public class WalletManagerServiceTests : IDisposable
     public async Task GenerateMnemonic_ThenCreateFromMnemonic_CanExportSameMnemonic()
     {
         // Arrange - Generate and create wallet
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(24, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(24);
 
-        BurizaWallet wallet = await CreateWalletAsync("New Wallet", generatedMnemonic!, TestPassword);
+        BurizaWallet wallet = await CreateWalletAsync("New Wallet", generatedMnemonic, TestPassword);
 
         // Act - Export mnemonic
         await wallet.UnlockAsync(TestPasswordBytes);
-        string? exportedMnemonic = null;
-        wallet.ExportMnemonic(mnemonic =>
-        {
-            exportedMnemonic = mnemonic.ToString();
-        });
+        string exportedMnemonic = wallet.ExportMnemonic();
 
         // Assert - Exported mnemonic should match the generated one
         Assert.Equal(generatedMnemonic, exportedMnemonic);
@@ -273,14 +242,10 @@ public class WalletManagerServiceTests : IDisposable
     public async Task GenerateMnemonic_12Words_ThenCreateFromMnemonic_Works()
     {
         // Arrange
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(12, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(12);
 
         // Act
-        BurizaWallet wallet = await CreateWalletAsync("12 Word Wallet", generatedMnemonic!, TestPassword);
+        BurizaWallet wallet = await CreateWalletAsync("12 Word Wallet", generatedMnemonic, TestPassword);
 
         // Assert
         Assert.NotNull(wallet);
@@ -291,11 +256,7 @@ public class WalletManagerServiceTests : IDisposable
     public async Task GenerateMnemonic_ThenCreateFromMnemonic_DerivesCorrectAddresses()
     {
         // Arrange
-        string? generatedMnemonic = null;
-        WalletManagerService.GenerateMnemonic(24, mnemonic =>
-        {
-            generatedMnemonic = mnemonic.ToString();
-        });
+        string generatedMnemonic = WalletManagerService.GenerateMnemonic(24);
 
         // Act
         BurizaWallet wallet = await CreateWalletAsync("New Wallet", generatedMnemonic!, TestPassword);
@@ -485,13 +446,9 @@ public class WalletManagerServiceTests : IDisposable
         // Arrange
         BurizaWallet wallet = await CreateWalletAsync("Test Wallet", TestMnemonic, TestPassword);
         await wallet.UnlockAsync(TestPasswordBytes);
-        string? exportedMnemonic = null;
 
         // Act
-        wallet.ExportMnemonic(mnemonic =>
-        {
-            exportedMnemonic = mnemonic.ToString();
-        });
+        string exportedMnemonic = wallet.ExportMnemonic();
 
         // Assert
         Assert.Equal(TestMnemonic, exportedMnemonic);
@@ -510,7 +467,7 @@ public class WalletManagerServiceTests : IDisposable
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() =>
-            wallet.ExportMnemonic(_ => { }));
+            wallet.ExportMnemonic());
     }
 
     #endregion

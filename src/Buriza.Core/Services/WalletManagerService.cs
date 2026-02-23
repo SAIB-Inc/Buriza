@@ -13,28 +13,18 @@ public class WalletManagerService(
     BurizaStorageBase storage,
     IBurizaChainProviderFactory providerFactory)
 {
-    private readonly BurizaStorageBase _storage = storage ?? throw new ArgumentNullException(nameof(storage));
-    private readonly IBurizaChainProviderFactory _providerFactory = providerFactory ?? throw new ArgumentNullException(nameof(providerFactory));
+    private readonly BurizaStorageBase _storage = storage;
+    private readonly IBurizaChainProviderFactory _providerFactory = providerFactory;
 
     #region Wallet Lifecycle — Create → Get → SetActive → Delete
 
-    /// <inheritdoc/>
-    /// <remarks>
-    /// Chrysalis allocates mnemonic words as managed strings internally.
-    /// We zero the char[] copy but cannot zero the library's immutable strings.
-    /// </remarks>
-    public static void GenerateMnemonic(int wordCount, Action<ReadOnlySpan<char>> onMnemonic)
+    /// <summary>Generates a BIP-39 mnemonic phrase.</summary>
+    /// <param name="wordCount">Number of words (12, 15, 18, 21, or 24).</param>
+    /// <returns>A space-separated mnemonic phrase.</returns>
+    public static string GenerateMnemonic(int wordCount)
     {
         Mnemonic mnemonic = Mnemonic.Generate(English.Words, wordCount);
-        char[] mnemonicChars = string.Join(" ", mnemonic.Words).ToCharArray();
-        try
-        {
-            onMnemonic(mnemonicChars);
-        }
-        finally
-        {
-            Array.Clear(mnemonicChars);
-        }
+        return string.Join(" ", mnemonic.Words);
     }
 
     /// <inheritdoc/>
@@ -54,7 +44,7 @@ public class WalletManagerService(
         if (!ValidateMnemonic(mnemonicBytes.Span))
             throw new ArgumentException("Invalid mnemonic", nameof(mnemonicBytes));
 
-        BurizaWallet wallet = new(_providerFactory, _storage)
+        BurizaWallet wallet = new(_providerFactory, _storage, mnemonicBytes)
         {
             Id = Guid.NewGuid(),
             Profile = new WalletProfile { Name = name },
@@ -84,7 +74,6 @@ public class WalletManagerService(
             throw;
         }
 
-        wallet.UnlockWith(mnemonicBytes);
         return wallet;
     }
 
@@ -156,15 +145,6 @@ public class WalletManagerService(
 
     public Task<HashSet<AuthenticationType>> GetEnabledAuthMethodsAsync(Guid walletId, CancellationToken ct = default)
         => _storage.GetEnabledAuthMethodsAsync(walletId, ct);
-
-    public Task<bool> IsDeviceAuthEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => _storage.IsDeviceAuthEnabledAsync(walletId, ct);
-
-    public Task<bool> IsBiometricEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => _storage.IsBiometricEnabledAsync(walletId, ct);
-
-    public Task<bool> IsPinEnabledAsync(Guid walletId, CancellationToken ct = default)
-        => _storage.IsPinEnabledAsync(walletId, ct);
 
     /// <param name="password">
     /// Optional on MAUI for passwordless wallets (biometric/PIN as primary auth).

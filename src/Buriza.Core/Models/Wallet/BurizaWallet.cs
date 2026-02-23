@@ -26,6 +26,14 @@ public class BurizaWallet(
     [JsonIgnore]
     private byte[]? _mnemonicBytes;
 
+    internal BurizaWallet(
+        IBurizaChainProviderFactory chainProviderFactory,
+        BurizaStorageBase storage,
+        ReadOnlyMemory<byte> mnemonicBytes) : this(chainProviderFactory, storage)
+    {
+        _mnemonicBytes = mnemonicBytes.ToArray();
+    }
+
     [JsonConstructor]
     public BurizaWallet() : this(null, null) { }
 
@@ -65,12 +73,6 @@ public class BurizaWallet(
         _mnemonicBytes = await EnsureStorage().UnlockVaultAsync(Id, password, biometricReason, ct);
     }
 
-    internal void UnlockWith(ReadOnlyMemory<byte> mnemonicBytes)
-    {
-        if (IsUnlocked) return;
-        _mnemonicBytes = mnemonicBytes.ToArray();
-    }
-
     public void Lock()
     {
         if (IsUnlocked)
@@ -106,7 +108,7 @@ public class BurizaWallet(
 
     /// <summary>Gets the chain wallet for the active chain.</summary>
     [JsonIgnore]
-    public IChainWallet ChainWallet
+    internal IChainWallet ChainWallet
     {
         get
         {
@@ -276,20 +278,13 @@ public class BurizaWallet(
 
     #region Sensitive Operations
 
-    public void ExportMnemonic(Action<ReadOnlySpan<char>> onMnemonic)
+    /// <summary>Returns the mnemonic phrase as a UTF-8 string. Wallet must be unlocked.</summary>
+    public string ExportMnemonic()
     {
         if (!IsUnlocked)
             throw new InvalidOperationException("Wallet must be unlocked to export mnemonic.");
 
-        char[] mnemonicChars = Encoding.UTF8.GetChars(_mnemonicBytes!);
-        try
-        {
-            onMnemonic(mnemonicChars);
-        }
-        finally
-        {
-            Array.Clear(mnemonicChars);
-        }
+        return Encoding.UTF8.GetString(_mnemonicBytes!);
     }
 
     #endregion
@@ -366,7 +361,7 @@ public class BurizaWallet(
 
     #region Persistence
 
-    public Task SaveAsync(CancellationToken ct = default)
+    internal Task SaveAsync(CancellationToken ct = default)
         => EnsureStorage().SaveWalletAsync(this, ct);
 
     #endregion
