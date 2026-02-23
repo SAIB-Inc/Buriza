@@ -195,12 +195,7 @@ public abstract class BurizaStorageBase : IStorageProvider
     /// <summary>Saves custom provider config and optional API key. Password required for Web/Extension/CLI (VaultEncryption); MAUI uses SecureStorage directly.</summary>
     public virtual async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
-        string key = GetCustomConfigKey(config.Chain, config.Network);
-        CustomProviderConfig updated = config with { HasCustomApiKey = !string.IsNullOrEmpty(apiKey) };
-        configs[key] = updated;
-        await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
-
+        // Encrypt/delete API key vault first — if encryption fails, config is not persisted in a stale state.
         if (!string.IsNullOrEmpty(apiKey))
         {
             if (!password.HasValue || password.Value.IsEmpty)
@@ -224,6 +219,12 @@ public abstract class BurizaStorageBase : IStorageProvider
         {
             await RemoveAsync(StorageKeys.ApiKeyVault((int)config.Chain, config.Network), ct);
         }
+
+        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
+        string key = GetCustomConfigKey(config.Chain, config.Network);
+        CustomProviderConfig updated = config with { HasCustomApiKey = !string.IsNullOrEmpty(apiKey) };
+        configs[key] = updated;
+        await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
     }
 
     /// <summary>Deletes custom provider config for a chain.</summary>

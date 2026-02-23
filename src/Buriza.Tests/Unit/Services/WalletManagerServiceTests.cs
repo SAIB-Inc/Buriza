@@ -399,19 +399,19 @@ public class WalletManagerServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteAsync_UpdatesActiveWallet()
+    public async Task DeleteAsync_ActiveWallet_ClearsActiveSelection()
     {
         // Arrange
         BurizaWallet wallet1 = await CreateWalletAsync("Wallet 1", TestMnemonic, TestPassword);
-        BurizaWallet wallet2 = await CreateWalletAsync("Wallet 2", TestMnemonic, TestPassword);
+        await CreateWalletAsync("Wallet 2", TestMnemonic, TestPassword);
         await _walletManager.SetActiveAsync(wallet1.Id);
 
         // Act - Delete active wallet
         await _walletManager.DeleteAsync(wallet1.Id);
 
-        // Assert - Should switch to remaining wallet
+        // Assert - Active is cleared, user must select manually
         BurizaWallet? active = await _walletManager.GetActiveAsync();
-        Assert.Equal(wallet2.Id, active?.Id);
+        Assert.Null(active);
     }
 
     [Fact]

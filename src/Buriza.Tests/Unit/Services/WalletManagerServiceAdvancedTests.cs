@@ -93,8 +93,7 @@ public class WalletManagerServiceAdvancedTests : IDisposable
 
         // Assert
         Assert.False(wallet.IsUnlocked);
-        ChainAddressData? data = await wallet.GetAddressInfoAsync();
-        Assert.Null(data);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetAddressInfoAsync());
     }
 
     [Fact]
@@ -334,10 +333,10 @@ public class WalletManagerServiceAdvancedTests : IDisposable
     #region Wallet Lifecycle Edge Cases
 
     [Fact]
-    public async Task DeleteActiveWallet_WithMultipleWallets_SwitchesToRemaining()
+    public async Task DeleteActiveWallet_WithMultipleWallets_ClearsActiveSelection()
     {
         // Arrange
-        BurizaWallet wallet1 = await CreateWalletAsync("Wallet 1", TestMnemonic, TestPassword);
+        await CreateWalletAsync("Wallet 1", TestMnemonic, TestPassword);
         BurizaWallet wallet2 = await CreateWalletAsync("Wallet 2", TestMnemonic, TestPassword);
 
         // wallet2 should be active (most recently created)
@@ -347,10 +346,9 @@ public class WalletManagerServiceAdvancedTests : IDisposable
         // Act - Delete the active wallet
         await _walletManager.DeleteAsync(wallet2.Id);
 
-        // Assert - Should switch to wallet1
+        // Assert - Active is cleared, user must select manually
         active = await _walletManager.GetActiveAsync();
-        Assert.NotNull(active);
-        Assert.Equal(wallet1.Id, active.Id);
+        Assert.Null(active);
     }
 
     [Fact]

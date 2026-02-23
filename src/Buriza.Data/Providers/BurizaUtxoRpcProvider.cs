@@ -441,9 +441,10 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
             TxHash: txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
             OutputIndex: (int)(txoRef?.Index ?? 0),
             Value: ToUlong(txOutput.Coin),
-            Address: txOutput.Address != null ? Address.FromBytes(txOutput.Address.ToByteArray()).ToBech32() : null,
+            Address: txOutput.Address != null ? Address.FromBytes(txOutput.Address.ToByteArray()).ToBech32() : string.Empty,
             Assets: [.. txOutput.Assets.SelectMany(ma =>
-                ma.Assets.Select(a => CreateAsset(ma.PolicyId.ToByteArray(), a.Name.ToByteArray(), ToUlong(a.OutputCoin))))]
+                ma.Assets.Select(a => CreateAsset(ma.PolicyId.ToByteArray(), a.Name.ToByteArray(), ToUlong(a.OutputCoin))))],
+            Raw: []
         );
     }
 
@@ -484,8 +485,9 @@ public class BurizaUtxoRpcProvider : IBurizaChainProvider, ICardanoDataProvider
             TxHash: txoRef?.Hash != null ? Convert.ToHexStringLower(txoRef.Hash.ToByteArray()) : string.Empty,
             OutputIndex: (int)(txoRef?.Index ?? 0),
             Value: lovelace,
-            Address: address,
-            Assets: assets
+            Address: address ?? string.Empty,
+            Assets: assets,
+            Raw: []
         );
     }
 

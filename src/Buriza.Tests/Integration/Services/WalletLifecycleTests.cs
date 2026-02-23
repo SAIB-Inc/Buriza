@@ -66,7 +66,7 @@ public class WalletLifecycleTests
 
             wallet.Lock();
             Assert.False(wallet.IsUnlocked);
-            Assert.Null(await wallet.GetAddressInfoAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetAddressInfoAsync());
 
             await wallet.UnlockAsync(TestPasswordBytes);
             Assert.True(wallet.IsUnlocked);
@@ -116,6 +116,11 @@ public class WalletLifecycleTests
             Assert.Equal(walletA.Id, active!.Id);
 
             await walletManager.DeleteAsync(walletA.Id);
+            active = await walletManager.GetActiveAsync();
+            Assert.Null(active);
+
+            // User manually selects remaining wallet
+            await walletManager.SetActiveAsync(walletB.Id);
             active = await walletManager.GetActiveAsync();
             Assert.NotNull(active);
             Assert.Equal(walletB.Id, active!.Id);

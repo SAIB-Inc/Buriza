@@ -115,7 +115,7 @@ public class BurizaCardanoWallet : IChainWallet
                         Address: r.Address,
                         Amount: r.Amount,
                         Assets: r.Assets))],
-                TotalAmount: (ulong)request.Recipients.Sum(r => (long)r.Amount)
+                TotalAmount: request.Recipients.Aggregate(0UL, (sum, r) => checked(sum + r.Amount))
             )
         );
     }
@@ -157,7 +157,7 @@ public class BurizaCardanoWallet : IChainWallet
 
     #region Key Derivation Helpers
 
-    public static string DeriveStakingAddress(byte[] stakingPublicKey, string network)
+    private static string DeriveStakingAddress(byte[] stakingPublicKey, string network)
     {
         byte networkNibble = network == "mainnet" ? (byte)1 : (byte)0;
         byte headerByte = (byte)(0xE0 | networkNibble);

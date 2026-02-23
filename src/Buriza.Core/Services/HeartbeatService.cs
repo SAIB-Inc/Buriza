@@ -8,7 +8,7 @@ namespace Buriza.Core.Services;
 /// <summary>
 /// Follows chain tip updates and exposes heartbeat events with backoff and retry.
 /// </summary>
-public class HeartbeatService : IDisposable
+public class HeartbeatService : IAsyncDisposable, IDisposable
 {
     /// <summary>Raised when a new tip is received.</summary>
     public event EventHandler? Beat;
@@ -29,6 +29,7 @@ public class HeartbeatService : IDisposable
     private readonly IBurizaChainProvider _provider;
     private readonly ILogger<HeartbeatService>? _logger;
     private readonly CancellationTokenSource _cts = new();
+    private readonly Task _followTask;
     private bool _disposed;
 
     // Exponential backoff configuration
@@ -44,7 +45,7 @@ public class HeartbeatService : IDisposable
         _provider = provider;
         _logger = logger;
 
-        _ = Task.Run(async () =>
+        _followTask = Task.Run(async () =>
         {
             try
             {
@@ -65,12 +66,12 @@ public class HeartbeatService : IDisposable
         {
             try
             {
-                IsConnected = true;
                 ConsecutiveFailures = 0;
-                currentDelayMs = InitialDelayMs; // Reset backoff on successful connection
+                currentDelayMs = InitialDelayMs;
 
                 await foreach (TipEvent tip in _provider.FollowTipAsync(_cts.Token))
                 {
+                    IsConnected = true;
                     if (tip.Slot > 0)
                     {
                         Slot = tip.Slot;
@@ -124,12 +125,25 @@ public class HeartbeatService : IDisposable
     }
 
     /// <inheritdoc/>
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        await _cts.CancelAsync();
+        await _followTask.ConfigureAwait(false);
+        _cts.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
 
         _cts.Cancel();
+        _followTask.Wait();
         _cts.Dispose();
         GC.SuppressFinalize(this);
     }

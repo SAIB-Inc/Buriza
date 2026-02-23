@@ -11,6 +11,6 @@ public record TransactionHistory(
     List<TransactionAsset> Assets,
     decimal CollateralAda,
     decimal TransactionFeeAda,
-    string? ExpiryInfo = "No limit",
+    string? ExpiryInfo = null,
     TransactionCategory Category = TransactionCategory.Default
 );

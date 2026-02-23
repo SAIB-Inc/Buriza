@@ -137,16 +137,13 @@ public class BurizaWalletTests
     #region GetAddressInfoAsync Tests
 
     [Fact]
-    public async Task GetAddressInfoAsync_WhenLocked_ReturnsNull()
+    public async Task GetAddressInfoAsync_WhenLocked_Throws()
     {
         // Arrange
         BurizaWallet wallet = new() { Id = Guid.Parse("00000000-0000-0000-0000-000000000001"), Profile = new WalletProfile { Name = "Test" } };
 
-        // Act
-        ChainAddressData? result = await wallet.GetAddressInfoAsync();
-
-        // Assert
-        Assert.Null(result);
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetAddressInfoAsync());
     }
 
     [Fact]
@@ -244,7 +241,7 @@ public class BurizaWalletTests
     #region Query Operations Tests
 
     [Fact]
-    public async Task GetBalanceAsync_WhenLocked_ReturnsZero()
+    public async Task GetBalanceAsync_WhenLocked_Throws()
     {
         // Arrange
         BurizaWallet wallet = new()
@@ -255,11 +252,8 @@ public class BurizaWalletTests
         };
         AttachMockProvider(wallet);
 
-        // Act
-        ulong result = await wallet.GetBalanceAsync();
-
-        // Assert
-        Assert.Equal(0UL, result);
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => wallet.GetBalanceAsync());
     }
 
     [Fact]
@@ -300,7 +294,7 @@ public class BurizaWalletTests
         // Arrange
         (BurizaWallet wallet, IBurizaChainProvider mockProvider) = CreateUnlockedWalletWithMockChainWallet("addr_test1qz...");
 
-        List<Utxo> utxos = [new Utxo(TxHash: "tx1", OutputIndex: 0, Value: 1_000_000, Address: "addr_test1qz...")];
+        List<Utxo> utxos = [new Utxo(TxHash: "tx1", OutputIndex: 0, Value: 1_000_000, Address: "addr_test1qz...", Assets: [], Raw: [])];
         mockProvider.GetUtxosAsync("addr_test1qz...", Arg.Any<CancellationToken>()).Returns(utxos);
 
         // Act

@@ -37,6 +37,7 @@ public class BurizaWallet(
     [JsonConstructor]
     public BurizaWallet() : this(null, null) { }
 
+    /// <summary>Unique wallet identifier.</summary>
     public required Guid Id { get; init; }
 
     /// <summary>Wallet profile (name, label, avatar).</summary>
@@ -54,6 +55,7 @@ public class BurizaWallet(
     /// <summary>All accounts in this wallet.</summary>
     public List<BurizaWalletAccount> Accounts { get; set; } = [];
 
+    /// <summary>Timestamp of last user interaction with this wallet.</summary>
     public DateTime? LastAccessedAt { get; set; }
 
     internal void Attach(IBurizaChainProviderFactory chainProviderFactory, BurizaStorageBase storage)
@@ -64,15 +66,21 @@ public class BurizaWallet(
 
     #region Lock / Unlock
 
+    /// <summary>Indicates whether the mnemonic is currently decrypted in memory.</summary>
     [JsonIgnore]
     public bool IsUnlocked => _mnemonicBytes is not null;
 
+    /// <summary>Decrypts the vault and loads the mnemonic into memory.</summary>
+    /// <param name="password">Vault password. Required on Web/Extension/CLI.</param>
+    /// <param name="biometricReason">Prompt reason for biometric auth on MAUI.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task UnlockAsync(ReadOnlyMemory<byte>? password = null, string? biometricReason = null, CancellationToken ct = default)
     {
         if (IsUnlocked) return;
         _mnemonicBytes = await EnsureStorage().UnlockVaultAsync(Id, password, biometricReason, ct);
     }
 
+    /// <summary>Zeros the in-memory mnemonic and locks the wallet.</summary>
     public void Lock()
     {
         if (IsUnlocked)
@@ -86,13 +94,18 @@ public class BurizaWallet(
 
     #region Account & Address Helpers
 
+    /// <summary>Returns the account at the current active index, or null if not found.</summary>
     public BurizaWalletAccount? GetActiveAccount() =>
         Accounts.FirstOrDefault(a => a.Index == ActiveAccountIndex);
 
+    /// <summary>Derives chain address data for the given account. Wallet must be unlocked.</summary>
+    /// <param name="accountIndex">Account index. Defaults to the active account.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Address data, or null if the account is not found.</returns>
     public async Task<ChainAddressData?> GetAddressInfoAsync(int? accountIndex = null, CancellationToken ct = default)
     {
         if (!IsUnlocked)
-            return null;
+            throw new InvalidOperationException("Wallet must be unlocked.");
 
         BurizaWalletAccount? account = accountIndex.HasValue
             ? Accounts.FirstOrDefault(a => a.Index == accountIndex.Value)
@@ -121,33 +134,39 @@ public class BurizaWallet(
 
     #region Query Operations
 
+    /// <summary>Gets the ADA balance for an account. Wallet must be unlocked.</summary>
+    /// <param name="accountIndex">Account index. Defaults to the active account.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<ulong> GetBalanceAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        using IBurizaChainProvider provider = EnsureProvider();
-
         string? address = (await GetAddressInfoAsync(accountIndex, ct))?.Address;
         if (string.IsNullOrEmpty(address)) return 0;
 
+        using IBurizaChainProvider provider = EnsureProvider();
         return await provider.GetBalanceAsync(address, ct);
     }
 
+    /// <summary>Gets native assets for an account. Wallet must be unlocked.</summary>
+    /// <param name="accountIndex">Account index. Defaults to the active account.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<Asset>> GetAssetsAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        using IBurizaChainProvider provider = EnsureProvider();
-
         string? address = (await GetAddressInfoAsync(accountIndex, ct))?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
+        using IBurizaChainProvider provider = EnsureProvider();
         return await provider.GetAssetsAsync(address, ct);
     }
 
+    /// <summary>Gets UTxOs for an account. Wallet must be unlocked.</summary>
+    /// <param name="accountIndex">Account index. Defaults to the active account.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<Utxo>> GetUtxosAsync(int? accountIndex = null, CancellationToken ct = default)
     {
-        using IBurizaChainProvider provider = EnsureProvider();
-
         string? address = (await GetAddressInfoAsync(accountIndex, ct))?.Address;
         if (string.IsNullOrEmpty(address)) return [];
 
+        using IBurizaChainProvider provider = EnsureProvider();
         return await provider.GetUtxosAsync(address, ct);
     }
 
@@ -158,6 +177,10 @@ public class BurizaWallet(
     private const int MaxAccountDiscoveryLimit = 50;
     private const string DefaultAccountName = "Account {0}";
 
+    /// <summary>Creates a new account in this wallet and persists it.</summary>
+    /// <param name="name">Display name for the account.</param>
+    /// <param name="accountIndex">Specific index, or auto-increments from the highest existing index.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<BurizaWalletAccount> CreateAccountAsync(string name, int? accountIndex = null, CancellationToken ct = default)
     {
         int index = accountIndex ?? (Accounts.Count > 0 ? Accounts.Max(a => a.Index) + 1 : 0);
@@ -177,6 +200,9 @@ public class BurizaWallet(
         return account;
     }
 
+    /// <summary>Sets the active account index. Account must exist.</summary>
+    /// <param name="accountIndex">The account index to activate.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task SetActiveAccountAsync(int accountIndex, CancellationToken ct = default)
     {
         _ = Accounts.FirstOrDefault(a => a.Index == accountIndex)
@@ -187,6 +213,11 @@ public class BurizaWallet(
         await SaveAsync(ct);
     }
 
+    /// <summary>Updates account display properties. Account must exist.</summary>
+    /// <param name="accountIndex">The account to update.</param>
+    /// <param name="name">New display name, or null to keep current.</param>
+    /// <param name="avatar">New avatar, or null to keep current.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task UpdateAccountAsync(int accountIndex, string? name = null, string? avatar = null, CancellationToken ct = default)
     {
         BurizaWalletAccount account = Accounts.FirstOrDefault(a => a.Index == accountIndex)
@@ -198,6 +229,10 @@ public class BurizaWallet(
         await SaveAsync(ct);
     }
 
+    /// <summary>Scans the chain for used accounts up to a gap limit. Wallet must be unlocked.</summary>
+    /// <param name="accountGapLimit">Number of consecutive empty accounts before stopping.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Newly discovered accounts.</returns>
     public async Task<IReadOnlyList<BurizaWalletAccount>> DiscoverAccountsAsync(int accountGapLimit = 5, CancellationToken ct = default)
     {
         if (!IsUnlocked)
@@ -253,6 +288,9 @@ public class BurizaWallet(
 
     #region Chain Management
 
+    /// <summary>Switches the wallet to a different chain/network.</summary>
+    /// <param name="chainInfo">Target chain and network.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task SetActiveChainAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         if (!EnsureFactory().GetSupportedChains().Contains(chainInfo.Chain))
@@ -268,9 +306,16 @@ public class BurizaWallet(
 
     #region Password Operations
 
+    /// <summary>Verifies a password against the wallet's vault.</summary>
+    /// <param name="password">Password to verify.</param>
+    /// <param name="ct">Cancellation token.</param>
     public Task<bool> VerifyPasswordAsync(ReadOnlyMemory<byte> password, CancellationToken ct = default)
         => EnsureStorage().VerifyPasswordAsync(Id, password, ct);
 
+    /// <summary>Changes the wallet's vault password.</summary>
+    /// <param name="currentPassword">Current password for decryption.</param>
+    /// <param name="newPassword">New password for re-encryption.</param>
+    /// <param name="ct">Cancellation token.</param>
     public Task ChangePasswordAsync(ReadOnlyMemory<byte> currentPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default)
         => EnsureStorage().ChangePasswordAsync(Id, currentPassword, newPassword, ct);
 
@@ -291,9 +336,11 @@ public class BurizaWallet(
 
     #region Custom Provider Config
 
+    /// <summary>Gets the custom provider config for a chain, or null if not set.</summary>
     public Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
         => EnsureStorage().GetCustomProviderConfigAsync(chainInfo, ct);
 
+    /// <summary>Sets a custom provider endpoint and optional API key for a chain.</summary>
     public async Task SetCustomProviderConfigAsync(ChainInfo chainInfo, string? endpoint, string? apiKey, ReadOnlyMemory<byte>? password = null, string? name = null, CancellationToken ct = default)
     {
         string? normalizedEndpoint = ValidateAndNormalizeEndpoint(endpoint);
@@ -312,12 +359,14 @@ public class BurizaWallet(
         EnsureFactory().SetChainConfig(chainInfo, new ServiceConfig(normalizedEndpoint, normalizedApiKey));
     }
 
+    /// <summary>Removes the custom provider config for a chain.</summary>
     public async Task ClearCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         await EnsureStorage().DeleteCustomProviderConfigAsync(chainInfo, ct);
         EnsureFactory().ClearChainConfig(chainInfo);
     }
 
+    /// <summary>Loads stored custom provider config into the runtime factory.</summary>
     public async Task LoadCustomProviderConfigAsync(ChainInfo chainInfo, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         (CustomProviderConfig Config, string? ApiKey)? result =
@@ -388,6 +437,7 @@ public class BurizaWallet(
 
     #endregion
 
+    /// <summary>Locks the wallet and releases resources.</summary>
     public void Dispose()
     {
         Lock();
