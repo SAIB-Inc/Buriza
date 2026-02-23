@@ -776,7 +776,4 @@ public class VaultEncryptionTests
 
     #endregion
 
-    #region KDF Parameter Validation Tests
-
-    #endregion
 }

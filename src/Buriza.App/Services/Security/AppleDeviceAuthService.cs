@@ -25,18 +25,18 @@ public class AppleDeviceAuthService : IDeviceAuthService
 {
     private const string ServiceName = "com.saibinc.buriza";
 
-    public Task<bool> IsAvailableAsync(CancellationToken ct = default)
+    /// <summary>
+    /// Probes for available auth types (Face ID, Touch ID, Optic ID, passcode).
+    /// Uses LAContext.BiometryType to determine which biometric sensor is present.
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Device capabilities including biometric sensor type and passcode support.</returns>
+    public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
     {
         using LAContext context = new();
-        return Task.FromResult(context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthentication, out _));
-    }
-
-    public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
-    {
-        bool supportsAny = await IsAvailableAsync(ct);
+        bool supportsAny = context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthentication, out _);
         List<DeviceAuthType> types = [];
 
-        using LAContext context = new();
         bool supportsBiometrics = context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, out _);
         if (supportsBiometrics)
         {
@@ -48,11 +48,11 @@ public class AppleDeviceAuthService : IDeviceAuthService
         if (supportsAny)
             types.Add(DeviceAuthType.PinOrPasscode);
 
-        return new DeviceCapabilities(
+        return Task.FromResult(new DeviceCapabilities(
             IsSupported: supportsAny,
             SupportsBiometrics: supportsBiometrics,
             SupportsPin: supportsAny,
-            AvailableTypes: types);
+            AvailableTypes: types));
     }
 
     private static DeviceAuthType? GetAuthType(LAContext context)
@@ -64,35 +64,16 @@ public class AppleDeviceAuthService : IDeviceAuthService
             _ => null
         };
 
-    public async Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
-    {
-        using LAContext context = new();
-
-        if (!context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthentication, out NSError? availabilityError))
-        {
-            return DeviceAuthResult.Failed(
-                MapError(availabilityError),
-                availabilityError?.LocalizedDescription ?? "Device authentication not available");
-        }
-
-        try
-        {
-            (bool success, NSError? error) = await context.EvaluatePolicyAsync(
-                LAPolicy.DeviceOwnerAuthentication,
-                reason);
-
-            if (success)
-                return DeviceAuthResult.Succeeded();
-
-            return DeviceAuthResult.Failed(MapError(error), error?.LocalizedDescription ?? "Authentication failed");
-        }
-        catch (Exception ex)
-        {
-            return DeviceAuthResult.Failed(DeviceAuthError.Failure, ex.Message);
-        }
-    }
-
-    // AuthenticationType is unused — Apple's UserPresence handles both biometric and passcode natively.
+    /// <summary>
+    /// Stores data in the iOS/macOS Keychain protected by SecAccessControl with UserPresence.
+    /// The Keychain item is hardware-bound — the OS requires biometric or passcode verification
+    /// before the item can be read. Unlike Android, no explicit encryption is needed because
+    /// the Keychain itself enforces access control at the hardware level (Secure Enclave).
+    /// </summary>
+    /// <param name="key">Keychain account identifier for the item.</param>
+    /// <param name="data">Plaintext bytes to store (e.g., mnemonic seed).</param>
+    /// <param name="type">Auth type (unused — Apple's UserPresence handles both biometric and passcode).</param>
+    /// <param name="ct">Cancellation token.</param>
     public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
     {
         // Remove existing item first
@@ -120,11 +101,20 @@ public class AppleDeviceAuthService : IDeviceAuthService
 
         SecStatusCode result = SecKeyChain.Add(record);
         if (result != SecStatusCode.Success && result != SecStatusCode.DuplicateItem)
-            throw new InvalidOperationException($"Failed to store secure data: {result}");
+            throw new InvalidOperationException($"Keychain store failed ({MapStatus(result)}): {result}");
 
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Retrieves a UserPresence-protected Keychain item. The OS automatically prompts for
+    /// biometric or passcode authentication before granting access to the stored data.
+    /// </summary>
+    /// <param name="key">Keychain account identifier for the item.</param>
+    /// <param name="reason">Localized reason shown in the system auth prompt.</param>
+    /// <param name="type">Auth type (unused — Keychain access control handles auth natively).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Decrypted plaintext bytes, or null if not found or authentication fails.</returns>
     public Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
     {
         // Create LAContext to customize the device-auth prompt
@@ -144,14 +134,21 @@ public class AppleDeviceAuthService : IDeviceAuthService
         SecRecord? match = SecKeyChain.QueryAsRecord(query, out SecStatusCode result);
 
         if (result == SecStatusCode.Success && match?.ValueData != null)
-        {
             return Task.FromResult<byte[]?>([.. match.ValueData]);
-        }
 
-        // Map keychain errors to null (auth failed, cancelled, item not found, etc.)
+        if (result == SecStatusCode.AuthFailed)
+            throw new InvalidOperationException($"Keychain retrieval failed ({MapStatus(result)}): authentication failed");
+
+        if (result == SecStatusCode.UserCanceled)
+            throw new OperationCanceledException("User cancelled biometric authentication");
+
         return Task.FromResult<byte[]?>(null);
     }
 
+    /// <summary>Removes a Keychain item by account key. No authentication required for deletion.</summary>
+    /// <param name="key">Keychain account identifier for the item to remove.</param>
+    /// <param name="type">Auth type (unused).</param>
+    /// <param name="ct">Cancellation token.</param>
     public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
     {
         SecKeyChain.Remove(CreateBaseQuery(key));
@@ -164,22 +161,13 @@ public class AppleDeviceAuthService : IDeviceAuthService
         Account = key
     };
 
-    private static DeviceAuthError MapError(NSError? error)
+    private static DeviceAuthError MapStatus(SecStatusCode status) => status switch
     {
-        if (error == null)
-            return DeviceAuthError.Failure;
-
-        return (LAStatus)(int)error.Code switch
-        {
-            LAStatus.UserCancel => DeviceAuthError.Cancelled,
-            LAStatus.UserFallback => DeviceAuthError.Cancelled,
-            LAStatus.BiometryLockout => DeviceAuthError.LockedOut,
-            LAStatus.BiometryNotAvailable => DeviceAuthError.NotAvailable,
-            LAStatus.BiometryNotEnrolled => DeviceAuthError.NotEnrolled,
-            LAStatus.AuthenticationFailed => DeviceAuthError.Failure,
-            LAStatus.PasscodeNotSet => DeviceAuthError.NotAvailable,
-            _ => DeviceAuthError.Failure
-        };
-    }
+        SecStatusCode.AuthFailed => DeviceAuthError.Failure,
+        SecStatusCode.UserCanceled => DeviceAuthError.Cancelled,
+        SecStatusCode.InteractionNotAllowed => DeviceAuthError.NotAvailable,
+        SecStatusCode.ItemNotFound => DeviceAuthError.NotAvailable,
+        _ => DeviceAuthError.Failure
+    };
 }
 #endif

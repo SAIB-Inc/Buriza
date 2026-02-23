@@ -25,14 +25,8 @@ public class PlatformDeviceAuthService : IDeviceAuthService
 #endif
     }
 
-    public Task<bool> IsAvailableAsync(CancellationToken ct = default)
-        => _platformService.IsAvailableAsync(ct);
-
     public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => _platformService.GetCapabilitiesAsync(ct);
-
-    public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
-        => _platformService.AuthenticateAsync(reason, ct);
 
     public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
         => _platformService.StoreSecureAsync(key, data, type, ct);
@@ -49,18 +43,12 @@ public class PlatformDeviceAuthService : IDeviceAuthService
 /// </summary>
 internal class NullDeviceAuthService : IDeviceAuthService
 {
-    public Task<bool> IsAvailableAsync(CancellationToken ct = default)
-        => Task.FromResult(false);
-
     public Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => Task.FromResult(new DeviceCapabilities(
             IsSupported: false,
             SupportsBiometrics: false,
             SupportsPin: false,
             AvailableTypes: []));
-
-    public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
-        => Task.FromResult(DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "Device authentication not supported on this platform"));
 
     public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
         => throw new NotSupportedException("Device authentication not supported on this platform");

@@ -25,13 +25,15 @@ public sealed class BurizaAppStorageService(
     private const int MaxFailedAttemptsBeforeLockout = 5;
     private static readonly TimeSpan BaseLockoutDuration = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan MaxLockoutDuration = TimeSpan.FromHours(1);
-    private static readonly Lock _keyTrackingLock = new();
+    private readonly Lock _keyTrackingLock = new();
 
     #region IStorageProvider
 
+    /// <inheritdoc/>
     public override Task<string?> GetAsync(string key, CancellationToken ct = default)
         => Task.FromResult(_preferences.Get<string?>(key, null));
 
+    /// <inheritdoc/>
     public override Task SetAsync(string key, string value, CancellationToken ct = default)
     {
         _preferences.Set(key, value);
@@ -39,6 +41,7 @@ public sealed class BurizaAppStorageService(
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public override Task RemoveAsync(string key, CancellationToken ct = default)
     {
         _preferences.Remove(key);
@@ -46,9 +49,11 @@ public sealed class BurizaAppStorageService(
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public override Task<bool> ExistsAsync(string key, CancellationToken ct = default)
         => Task.FromResult(_preferences.ContainsKey(key));
 
+    /// <inheritdoc/>
     public override Task<IReadOnlyList<string>> GetKeysAsync(string prefix, CancellationToken ct = default)
     {
         HashSet<string> keys = GetTrackedKeys();
@@ -56,6 +61,7 @@ public sealed class BurizaAppStorageService(
         return Task.FromResult<IReadOnlyList<string>>(matching);
     }
 
+    /// <inheritdoc/>
     public override async Task ClearAsync(CancellationToken ct = default)
     {
         IReadOnlyList<BurizaWallet> wallets = await LoadAllWalletsAsync(ct);
@@ -103,6 +109,7 @@ public sealed class BurizaAppStorageService(
 
     #region Vault Lifecycle
 
+    /// <inheritdoc/>
     public override async Task<bool> HasVaultAsync(Guid walletId, CancellationToken ct = default)
     {
         string? seed = await GetSecureAsync(StorageKeys.SecureSeed(walletId), ct);
@@ -111,6 +118,7 @@ public sealed class BurizaAppStorageService(
 
     // Password is optional on MAUI — seed is hardware-protected by OS SecureStorage.
     // When provided, an Argon2id PasswordVerifier is created as an additional app-layer auth gate.
+    /// <inheritdoc/>
     public override async Task CreateVaultAsync(Guid walletId, ReadOnlyMemory<byte> mnemonic, ReadOnlyMemory<byte>? passwordBytes = null, CancellationToken ct = default)
     {
         string seed = Convert.ToBase64String(mnemonic.Span);
@@ -123,6 +131,7 @@ public sealed class BurizaAppStorageService(
         }
     }
 
+    /// <inheritdoc/>
     public override async Task<byte[]> UnlockVaultAsync(Guid walletId, ReadOnlyMemory<byte>? password, string? biometricReason = null, CancellationToken ct = default)
     {
         await EnsureNotLockedAsync(walletId, ct);
@@ -161,6 +170,7 @@ public sealed class BurizaAppStorageService(
         }
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> VerifyPasswordAsync(Guid walletId, ReadOnlyMemory<byte> password, CancellationToken ct = default)
     {
         await EnsureNotLockedAsync(walletId, ct);
@@ -176,6 +186,7 @@ public sealed class BurizaAppStorageService(
         return ok;
     }
 
+    /// <inheritdoc/>
     public override async Task ChangePasswordAsync(Guid walletId, ReadOnlyMemory<byte> oldPassword, ReadOnlyMemory<byte> newPassword, CancellationToken ct = default)
     {
         await EnsureNotLockedAsync(walletId, ct);
@@ -188,6 +199,7 @@ public sealed class BurizaAppStorageService(
         await ResetLockoutStateAsync(walletId, ct);
     }
 
+    /// <inheritdoc/>
     public override async Task DeleteVaultAsync(Guid walletId, CancellationToken ct = default)
     {
         await RemoveAsync(StorageKeys.PasswordVerifier(walletId), ct);
@@ -214,11 +226,9 @@ public sealed class BurizaAppStorageService(
         return await LoadSecureSeedAsync(walletId, ct);
     }
 
+    /// <inheritdoc/>
     public override async Task<byte[]> AuthenticateWithDeviceAuthAsync(Guid walletId, AuthenticationType method, string reason, CancellationToken ct = default)
     {
-        if (!await _deviceAuthService.IsAvailableAsync(ct))
-            throw new InvalidOperationException("Device authentication is unavailable. Please re-enable it or use password authentication.");
-
         byte[]? seed = await _deviceAuthService.RetrieveSecureAsync(
             GetDeviceAuthKey(walletId, method), reason, method, ct);
 
@@ -239,9 +249,11 @@ public sealed class BurizaAppStorageService(
 
     #region Device Auth
 
+    /// <inheritdoc/>
     public override Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
         => _deviceAuthService.GetCapabilitiesAsync(ct);
 
+    /// <inheritdoc/>
     public override async Task<HashSet<AuthenticationType>> GetEnabledAuthMethodsAsync(Guid walletId, CancellationToken ct = default)
     {
         string? methodsStr = await GetAsync(StorageKeys.EnabledAuthMethods(walletId), ct);
@@ -269,6 +281,7 @@ public sealed class BurizaAppStorageService(
 
     // Password required only if wallet has a PasswordVerifier (was created with a password).
     // Passwordless wallets (biometric/PIN as primary auth) skip password verification.
+    /// <inheritdoc/>
     public override async Task EnableAuthAsync(Guid walletId, AuthenticationType type, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
         if (type == AuthenticationType.Password)
@@ -300,6 +313,7 @@ public sealed class BurizaAppStorageService(
         await SetEnabledAuthMethodsAsync(walletId, methods, ct);
     }
 
+    /// <inheritdoc/>
     public override async Task DisableAuthMethodAsync(Guid walletId, AuthenticationType type, CancellationToken ct = default)
     {
         if (type == AuthenticationType.Password)
@@ -312,6 +326,7 @@ public sealed class BurizaAppStorageService(
         await SetEnabledAuthMethodsAsync(walletId, methods, ct);
     }
 
+    /// <inheritdoc/>
     public override async Task DisableAllDeviceAuthAsync(Guid walletId, CancellationToken ct = default)
     {
         await _deviceAuthService.RemoveSecureAsync(StorageKeys.BiometricSeed(walletId), AuthenticationType.Biometric, ct);
@@ -359,6 +374,7 @@ public sealed class BurizaAppStorageService(
 
     #region Custom Provider Config
 
+    /// <inheritdoc/>
     public override async Task<CustomProviderConfig?> GetCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
@@ -366,21 +382,25 @@ public sealed class BurizaAppStorageService(
         return configs.TryGetValue(key, out CustomProviderConfig? config) ? config : null;
     }
 
+    /// <inheritdoc/>
     public override async Task SaveCustomProviderConfigAsync(CustomProviderConfig config, string? apiKey, ReadOnlyMemory<byte>? password = null, CancellationToken ct = default)
     {
-        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
-        string key = GetCustomConfigKey(config.Chain, config.Network);
-        CustomProviderConfig updated = config with { HasCustomApiKey = !string.IsNullOrEmpty(apiKey) };
-        configs[key] = updated;
-        await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
-
+        // Store/remove API key in SecureStorage BEFORE persisting config to prevent
+        // stale HasCustomApiKey = true if SecureStorage write fails.
         string vaultKey = StorageKeys.ApiKeyVault((int)config.Chain, config.Network);
         if (!string.IsNullOrEmpty(apiKey))
             await SetSecureAsync(vaultKey, apiKey, ct);
         else
             await RemoveSecureAsync(vaultKey, ct);
+
+        Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
+        string key = GetCustomConfigKey(config.Chain, config.Network);
+        CustomProviderConfig updated = config with { HasCustomApiKey = !string.IsNullOrEmpty(apiKey) };
+        configs[key] = updated;
+        await SetJsonAsync(StorageKeys.CustomConfigs, configs, ct);
     }
 
+    /// <inheritdoc/>
     public override async Task DeleteCustomProviderConfigAsync(ChainInfo chainInfo, CancellationToken ct = default)
     {
         Dictionary<string, CustomProviderConfig> configs = await GetJsonAsync<Dictionary<string, CustomProviderConfig>>(StorageKeys.CustomConfigs, ct) ?? [];
@@ -391,6 +411,7 @@ public sealed class BurizaAppStorageService(
         await RemoveSecureAsync(StorageKeys.ApiKeyVault((int)chainInfo.Chain, chainInfo.Network), ct);
     }
 
+    /// <inheritdoc/>
     public override async Task<(CustomProviderConfig Config, string? ApiKey)?> GetCustomProviderConfigWithApiKeyAsync(
         ChainInfo chainInfo,
         ReadOnlyMemory<byte>? password = null,
@@ -579,7 +600,7 @@ public sealed class BurizaAppStorageService(
         {
             return JsonSerializer.Deserialize<HashSet<string>>(keysJson) ?? [];
         }
-        catch
+        catch (JsonException)
         {
             return [];
         }
@@ -625,7 +646,7 @@ public sealed class BurizaAppStorageService(
         {
             return JsonSerializer.Deserialize<HashSet<string>>(keysJson) ?? [];
         }
-        catch
+        catch (JsonException)
         {
             return [];
         }

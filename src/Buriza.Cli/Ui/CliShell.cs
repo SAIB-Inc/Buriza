@@ -1,5 +1,4 @@
 using System.Collections;
-using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -33,7 +32,6 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     private string? _heartbeatKey;
     private ulong _lastTipSlot;
     private ulong _lastTipHeight;
-    private string _lastTipHash = string.Empty;
     private DateTime? _lastTipAtUtc;
     private ulong? _lastBalanceLovelace;
     private bool _balanceRefreshing;
@@ -1110,7 +1108,6 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         _heartbeatKey = key;
         _lastTipSlot = 0;
         _lastTipHeight = 0;
-        _lastTipHash = string.Empty;
         _lastTipAtUtc = null;
 
         ChainInfo chainInfo = ChainRegistry.Get(active.ActiveChain, active.Network);
@@ -1120,7 +1117,6 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
         {
             _lastTipSlot = _heartbeat.Slot;
             _lastTipHeight = _heartbeat.Height;
-            _lastTipHash = _heartbeat.Hash;
             _lastTipAtUtc = DateTime.UtcNow;
             if (_activeWallet != null)
                 _ = RefreshBalanceAsync(_activeWallet);
@@ -1139,7 +1135,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
             ulong balance = await active.GetBalanceAsync();
             _lastBalanceLovelace = balance;
         }
-        catch
+        catch (Exception)
         {
             // Ignore provider failures; keep last balance if any.
         }

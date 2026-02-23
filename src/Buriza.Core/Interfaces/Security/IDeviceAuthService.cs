@@ -5,11 +5,7 @@ namespace Buriza.Core.Interfaces.Security;
 
 public interface IDeviceAuthService
 {
-    Task<bool> IsAvailableAsync(CancellationToken ct = default);
-
     Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
-
-    Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default);
 
     Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default);
 

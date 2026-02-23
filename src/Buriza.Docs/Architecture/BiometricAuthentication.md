@@ -58,7 +58,6 @@ Platform-specific biometric abstraction. Implemented per-platform in MAUI.
 public interface IDeviceAuthService
 {
     Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default);
-    Task<bool> IsAvailableAsync(CancellationToken ct = default);
     Task<BiometricType?> GetBiometricTypeAsync(CancellationToken ct = default);
     Task<BiometricResult> AuthenticateAsync(string reason, CancellationToken ct = default);
     Task StoreSecureAsync(string key, byte[] data, CancellationToken ct = default);

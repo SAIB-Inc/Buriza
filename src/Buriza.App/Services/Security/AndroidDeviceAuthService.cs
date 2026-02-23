@@ -39,14 +39,12 @@ public class AndroidDeviceAuthService : IDeviceAuthService
 
     private ISharedPreferences? _dataPrefs;
 
-    public Task<bool> IsAvailableAsync(CancellationToken ct = default)
-    {
-        Context? context = Platform.CurrentActivity ?? Platform.AppContext;
-        BiometricManager manager = BiometricManager.From(context);
-        int result = manager.CanAuthenticate(BiometricManager.Authenticators.BiometricStrong | BiometricManager.Authenticators.DeviceCredential);
-        return Task.FromResult(result == BiometricManager.BiometricSuccess);
-    }
-
+    /// <summary>
+    /// Probes device hardware for supported auth types (fingerprint, face, iris, PIN/passcode).
+    /// Uses PackageManager feature flags for biometric granularity (API 29+).
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Device capabilities including which biometric sensors and credential types are available.</returns>
     public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
     {
         Context context = Platform.CurrentActivity ?? Platform.AppContext;
@@ -88,41 +86,17 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             AvailableTypes: types);
     }
 
-    public Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
-    {
-        TaskCompletionSource<DeviceAuthResult> tcs = new();
-
-        if (Platform.CurrentActivity is not AndroidX.Fragment.App.FragmentActivity activity)
-        {
-            tcs.SetResult(DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "No activity available"));
-            return tcs.Task;
-        }
-
-        BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-            .SetTitle("Buriza Wallet")
-            .SetSubtitle(reason)
-            .SetAllowedAuthenticators(BiometricManager.Authenticators.BiometricStrong | BiometricManager.Authenticators.DeviceCredential)
-            .Build();
-
-        IExecutor? executor = ContextCompat.GetMainExecutor(activity);
-        if (executor == null)
-        {
-            tcs.SetResult(DeviceAuthResult.Failed(DeviceAuthError.NotAvailable, "Could not get main executor"));
-            return tcs.Task;
-        }
-
-        BiometricPrompt biometricPrompt = new(activity, executor, new AuthOnlyCallback(tcs));
-        biometricPrompt.Authenticate(promptInfo);
-
-        ct.Register(() =>
-        {
-            biometricPrompt.CancelAuthentication();
-            tcs.TrySetResult(DeviceAuthResult.Failed(DeviceAuthError.Cancelled, "Authentication cancelled"));
-        });
-
-        return tcs.Task;
-    }
-
+    /// <summary>
+    /// Encrypts and stores data bound to device hardware via Keystore-backed AES-256-GCM.
+    /// Data is encrypted through a CryptoObject-bound Cipher so the key material never leaves
+    /// the secure hardware (TEE/StrongBox) and can only be used after biometric verification.
+    /// This binds the data to hardware — without successful authentication, decryption is
+    /// physically impossible even on a rooted device.
+    /// </summary>
+    /// <param name="key">SharedPreferences key to store the encrypted blob under.</param>
+    /// <param name="data">Plaintext bytes to encrypt (e.g., mnemonic seed).</param>
+    /// <param name="type">Auth type — Biometric uses BiometricStrong, Pin uses DeviceCredential.</param>
+    /// <param name="ct">Cancellation token — cancels the biometric prompt.</param>
     public Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
     {
         TaskCompletionSource<object?> tcs = new();
@@ -174,6 +148,16 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         return tcs.Task;
     }
 
+    /// <summary>
+    /// Retrieves and decrypts hardware-bound data. Loads the ciphertext from SharedPreferences,
+    /// parses the IV, then prompts BiometricPrompt with a decrypt-mode CryptoObject.
+    /// Decryption only succeeds if the user authenticates — the Keystore hardware enforces this.
+    /// </summary>
+    /// <param name="key">SharedPreferences key where the encrypted blob is stored.</param>
+    /// <param name="reason">Subtitle text shown in the BiometricPrompt dialog.</param>
+    /// <param name="type">Auth type — determines which Keystore alias and prompt mode to use.</param>
+    /// <param name="ct">Cancellation token — cancels the biometric prompt.</param>
+    /// <returns>Decrypted plaintext bytes, or null if data not found or authentication fails.</returns>
     public Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
     {
         TaskCompletionSource<byte[]?> tcs = new();
@@ -184,40 +168,14 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             return tcs.Task;
         }
 
-        ISharedPreferences prefs = GetDataPreferences();
-        string? stored = prefs.GetString(key, null);
-        if (string.IsNullOrEmpty(stored))
+        (byte[] iv, byte[] ciphertext)? parsed = LoadEncryptedBlob(key);
+        if (parsed is null)
         {
             tcs.SetResult(null);
             return tcs.Task;
         }
 
-        byte[] raw;
-        try
-        {
-            raw = Convert.FromBase64String(stored);
-        }
-        catch (FormatException)
-        {
-            tcs.SetResult(null);
-            return tcs.Task;
-        }
-
-        if (raw.Length < 2)
-        {
-            tcs.SetResult(null);
-            return tcs.Task;
-        }
-
-        int ivLength = raw[0];
-        if (raw.Length < 1 + ivLength)
-        {
-            tcs.SetResult(null);
-            return tcs.Task;
-        }
-
-        byte[] iv = raw.AsSpan(1, ivLength).ToArray();
-        byte[] ciphertext = raw.AsSpan(1 + ivLength).ToArray();
+        (byte[] iv, byte[] ciphertext) = parsed.Value;
 
         bool isPin = type == AuthenticationType.Pin;
         string alias = isPin ? PinCryptoKeyAlias : CryptoKeyAlias;
@@ -265,6 +223,39 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         return tcs.Task;
     }
 
+    private (byte[] iv, byte[] ciphertext)? LoadEncryptedBlob(string key)
+    {
+        ISharedPreferences prefs = GetDataPreferences();
+        string? stored = prefs.GetString(key, null);
+        if (string.IsNullOrEmpty(stored))
+            return null;
+
+        byte[] raw;
+        try
+        {
+            raw = Convert.FromBase64String(stored);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+
+        if (raw.Length < 2)
+            return null;
+
+        int ivLength = raw[0];
+        if (raw.Length < 1 + ivLength)
+            return null;
+
+        byte[] iv = raw.AsSpan(1, ivLength).ToArray();
+        byte[] ciphertext = raw.AsSpan(1 + ivLength).ToArray();
+        return (iv, ciphertext);
+    }
+
+    /// <summary>Removes the encrypted blob from SharedPreferences. Does not delete the Keystore key.</summary>
+    /// <param name="key">SharedPreferences key to remove.</param>
+    /// <param name="type">Auth type (unused — removal doesn't require authentication).</param>
+    /// <param name="ct">Cancellation token.</param>
     public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
     {
         ISharedPreferences prefs = GetDataPreferences();
@@ -276,13 +267,22 @@ public class AndroidDeviceAuthService : IDeviceAuthService
 
     #region Keystore Crypto Key
 
+    /// <summary>Ensures the biometric Keystore key exists. Invalidated when biometric enrollment changes.</summary>
     private static void EnsureCryptoKey()
-        => EnsureKeystoreKey(CryptoKeyAlias, (int)KeyPropertiesAuthType.BiometricStrong, invalidateOnEnrollment: true);
+        => EnsureKeystoreKey(CryptoKeyAlias, (int)KeyPropertiesAuthType.BiometricStrong);
 
+    /// <summary>Ensures the PIN/passcode Keystore key exists. Not invalidated on enrollment change.</summary>
     private static void EnsurePinCryptoKey()
-        => EnsureKeystoreKey(PinCryptoKeyAlias, (int)KeyPropertiesAuthType.DeviceCredential, invalidateOnEnrollment: false);
+        => EnsureKeystoreKey(PinCryptoKeyAlias, (int)KeyPropertiesAuthType.DeviceCredential);
 
-    private static void EnsureKeystoreKey(string alias, int authType, bool invalidateOnEnrollment)
+    /// <summary>
+    /// Creates an AES-256-GCM key in Android Keystore if it doesn't already exist.
+    /// Tries StrongBox (dedicated hardware chip) first, falls back to TEE (on-chip secure zone).
+    /// Biometric keys are automatically invalidated on enrollment change; credential keys are not.
+    /// </summary>
+    /// <param name="alias">Keystore alias identifying the key.</param>
+    /// <param name="authType">Keystore auth type flag (BiometricStrong or DeviceCredential).</param>
+    private static void EnsureKeystoreKey(string alias, int authType)
     {
         KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore")
             ?? throw new InvalidOperationException("AndroidKeyStore not available");
@@ -291,16 +291,16 @@ public class AndroidDeviceAuthService : IDeviceAuthService
         if (keyStore.ContainsAlias(alias))
             return;
 
-        if (TryCreateKeystoreKey(alias, authType, invalidateOnEnrollment, strongBoxBacked: true))
+        if (TryCreateKeystoreKey(alias, authType, strongBoxBacked: true))
             return;
 
-        if (TryCreateKeystoreKey(alias, authType, invalidateOnEnrollment, strongBoxBacked: false))
+        if (TryCreateKeystoreKey(alias, authType, strongBoxBacked: false))
             return;
 
         throw new InvalidOperationException($"Failed to create Android Keystore key: {alias}");
     }
 
-    private static bool TryCreateKeystoreKey(string alias, int authType, bool invalidateOnEnrollment, bool strongBoxBacked)
+    private static bool TryCreateKeystoreKey(string alias, int authType, bool strongBoxBacked)
     {
         try
         {
@@ -318,7 +318,7 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             builder.SetKeySize(256);
             builder.SetUserAuthenticationRequired(true);
             builder.SetUserAuthenticationParameters(0, authType);
-            builder.SetInvalidatedByBiometricEnrollment(invalidateOnEnrollment);
+            builder.SetInvalidatedByBiometricEnrollment(authType == (int)KeyPropertiesAuthType.BiometricStrong);
 
             if (strongBoxBacked)
                 builder.SetIsStrongBoxBacked(true);
@@ -327,12 +327,20 @@ public class AndroidDeviceAuthService : IDeviceAuthService
             keyGenerator.GenerateKey();
             return true;
         }
-        catch
+        catch (Exception)
         {
             return false;
         }
     }
 
+    /// <summary>
+    /// Loads the Keystore key by alias and initializes an AES/GCM/NoPadding Cipher.
+    /// Encrypt mode generates a fresh IV; decrypt mode requires the original IV.
+    /// </summary>
+    /// <param name="alias">Keystore alias of the AES key.</param>
+    /// <param name="mode">Encrypt or Decrypt.</param>
+    /// <param name="iv">IV bytes required for decryption. Null for encryption (Cipher generates its own).</param>
+    /// <returns>An initialized Cipher ready for DoFinal inside a CryptoObject callback.</returns>
     private static Cipher GetCipher(string alias, CipherMode mode, byte[]? iv = null)
     {
         KeyStore keyStore = KeyStore.GetInstance("AndroidKeyStore")
@@ -362,23 +370,6 @@ public class AndroidDeviceAuthService : IDeviceAuthService
     }
 
     #region Biometric Callbacks
-
-    /// <summary>
-    /// Callback for AuthenticateAsync — no crypto operation, just auth result.
-    /// </summary>
-    private class AuthOnlyCallback(TaskCompletionSource<DeviceAuthResult> tcs) : BiometricPrompt.AuthenticationCallback
-    {
-        public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result)
-            => tcs.TrySetResult(DeviceAuthResult.Succeeded());
-
-        // Intentionally empty: OnAuthenticationFailed fires per-attempt (e.g., fingerprint mismatch).
-        // The user can retry. Android guarantees OnAuthenticationError is called on terminal failure
-        // (lockout, cancel, timeout), which resolves the tcs.
-        public override void OnAuthenticationFailed() { }
-
-        public override void OnAuthenticationError(int errorCode, Java.Lang.ICharSequence? errString)
-            => tcs.TrySetResult(MapError(errorCode, errString));
-    }
 
     /// <summary>
     /// Callback for StoreSecureAsync — encrypts data with the CryptoObject Cipher on success.

@@ -12,7 +12,7 @@ using System.Text.Json.Serialization;
 namespace Buriza.Core.Models.Wallet;
 
 /// <summary>
-/// HD Wallet following BIP-39/BIP-44 standards.
+/// HD Wallet following CIP-1852 standards.
 /// One wallet = one mnemonic seed that can derive keys for multiple chains.
 /// Chain-agnostic — all chain-specific logic lives in IChainWallet implementations.
 /// </summary>

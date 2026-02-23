@@ -25,23 +25,25 @@ public class WindowsDeviceAuthService : IDeviceAuthService
 {
     private const string ResourceName = "BurizaWallet";
 
-    public async Task<bool> IsAvailableAsync(CancellationToken ct = default)
+    /// <summary>
+    /// Probes for available auth types. Windows Hello exposes a unified credential
+    /// (face, fingerprint, or PIN) so only <see cref="DeviceAuthType.PinOrPasscode"/> is reported.
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Device capabilities — biometrics are reported as unsupported since Windows Hello abstracts them behind a single credential.</returns>
+    public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
     {
+        bool isSupported;
         try
         {
             UserConsentVerifierAvailability availability =
                 await UserConsentVerifier.CheckAvailabilityAsync();
-            return availability == UserConsentVerifierAvailability.Available;
+            isSupported = availability == UserConsentVerifierAvailability.Available;
         }
-        catch
+        catch (Exception)
         {
-            return false;
+            isSupported = false;
         }
-    }
-
-    public async Task<DeviceCapabilities> GetCapabilitiesAsync(CancellationToken ct = default)
-    {
-        bool isSupported = await IsAvailableAsync(ct);
         List<DeviceAuthType> types = [];
         if (isSupported)
             types.Add(DeviceAuthType.PinOrPasscode);
@@ -53,7 +55,7 @@ public class WindowsDeviceAuthService : IDeviceAuthService
             AvailableTypes: types);
     }
 
-    public async Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
+    private async Task<DeviceAuthResult> AuthenticateAsync(string reason, CancellationToken ct = default)
     {
         try
         {
@@ -78,7 +80,16 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         }
     }
 
-    // AuthenticationType is unused — Windows Hello handles both biometric and PIN natively.
+    /// <summary>
+    /// Encrypts and stores data using DPAPI (CurrentUser scope) inside the Windows Credential Locker.
+    /// Requires Windows Hello authentication before storing. Data is encrypted with
+    /// <see cref="ProtectedData.Protect"/> which binds the ciphertext to the current Windows user
+    /// account — it cannot be decrypted by another user or on another machine.
+    /// </summary>
+    /// <param name="key">Credential Locker key to store the encrypted blob under.</param>
+    /// <param name="data">Plaintext bytes to encrypt (e.g., mnemonic seed).</param>
+    /// <param name="type">Auth type (unused — Windows Hello handles both biometric and PIN natively).</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task StoreSecureAsync(string key, byte[] data, AuthenticationType type, CancellationToken ct = default)
     {
         DeviceAuthResult authResult = await AuthenticateAsync("Authenticate to save credentials", ct);
@@ -104,6 +115,15 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         vault.Add(credential);
     }
 
+    /// <summary>
+    /// Retrieves and decrypts a DPAPI-protected credential from the Credential Locker.
+    /// Prompts Windows Hello authentication before accessing the stored data.
+    /// </summary>
+    /// <param name="key">Credential Locker key for the stored item.</param>
+    /// <param name="reason">Localized reason shown in the Windows Hello prompt.</param>
+    /// <param name="type">Auth type (unused — Windows Hello handles auth natively).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Decrypted plaintext bytes, or null if not found or authentication fails.</returns>
     public async Task<byte[]?> RetrieveSecureAsync(string key, string reason, AuthenticationType type, CancellationToken ct = default)
     {
         DeviceAuthResult authResult = await AuthenticateAsync(reason, ct);
@@ -129,6 +149,10 @@ public class WindowsDeviceAuthService : IDeviceAuthService
         }
     }
 
+    /// <summary>Removes a credential from the Credential Locker. No authentication required for deletion.</summary>
+    /// <param name="key">Credential Locker key for the item to remove.</param>
+    /// <param name="type">Auth type (unused).</param>
+    /// <param name="ct">Cancellation token.</param>
     public Task RemoveSecureAsync(string key, AuthenticationType type, CancellationToken ct = default)
     {
         try
