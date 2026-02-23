@@ -737,8 +737,16 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     {
         BurizaWallet? active = _activeWallet;
 
-        string blockInfo = Ansi.Grey("Connecting...");
-        if (_lastTipSlot > 0)
+        string blockInfo;
+        if (_heartbeat is null)
+            blockInfo = Ansi.Grey("No provider");
+        else if (_heartbeat.ConsecutiveFailures > 0 && _lastTipSlot == 0)
+            blockInfo = Ansi.Red("Unavailable");
+        else if (_heartbeat.ConsecutiveFailures > 0)
+            blockInfo = Ansi.Yellow("Disconnected");
+        else
+            blockInfo = Ansi.Grey("Connecting...");
+        if (_lastTipSlot > 0 && _heartbeat is { IsConnected: true })
         {
             string age = _lastTipAtUtc.HasValue
                 ? Ansi.Grey($"({FormatAge(DateTime.UtcNow - _lastTipAtUtc.Value)})")
@@ -924,6 +932,7 @@ public sealed class CliShell(WalletManagerService walletManager, ChainProviderSe
     /// <summary>Raw ANSI escape helpers — no Spectre dependency.</summary>
     private static class Ansi
     {
+        public static string Red(string s) => $"\x1b[31m{s}\x1b[0m";
         public static string Grey(string s) => $"\x1b[90m{s}\x1b[0m";
         public static string White(string s) => $"\x1b[97m{s}\x1b[0m";
         public static string Cyan(string s) => $"\x1b[36m{s}\x1b[0m";
