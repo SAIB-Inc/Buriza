@@ -1,5 +1,5 @@
-using Buriza.Data.Models.Common;
-using Buriza.Data.Models.Enums;
+using Buriza.Core.Models.Enums;
+using Buriza.Core.Models.Transaction;
 using Buriza.UI.Resources;
 
 namespace Buriza.UI.Data.Dummy;

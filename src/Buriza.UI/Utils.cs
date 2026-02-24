@@ -1,4 +1,4 @@
-using Buriza.Data.Models.Enums;
+using Buriza.Core.Models.Enums;
 
 namespace Buriza.UI;
 

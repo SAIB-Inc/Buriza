@@ -3,6 +3,9 @@
   "name": "Buriza",
   "description": "Cross-platform Cardano wallet extension",
   "version": "0.1",
+  "permissions": [
+    "storage"
+  ],
   "background": {
     "service_worker": "content/BackgroundWorker.js",
     "type": "module"

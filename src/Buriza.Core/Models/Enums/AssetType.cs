@@ -1,4 +1,4 @@
-namespace Buriza.Data.Models.Enums;
+namespace Buriza.Core.Models.Enums;
 
 public enum AssetType
 {

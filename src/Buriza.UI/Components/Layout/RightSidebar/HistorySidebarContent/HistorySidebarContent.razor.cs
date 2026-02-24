@@ -1,7 +1,9 @@
+using Buriza.Core.Models.Transaction;
 using Buriza.UI.Data.Dummy;
 using Buriza.Data.Models.Common;
 using Buriza.Data.Models.Enums;
 using Microsoft.AspNetCore.Components;
+using Buriza.Core.Models.Enums;
 
 namespace Buriza.UI.Components.Layout;
 

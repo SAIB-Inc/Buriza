@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Buriza.Core\Buriza.Core.csproj" />
     <ProjectReference Include="..\Buriza.Data\Buriza.Data.csproj" />
   </ItemGroup>
 

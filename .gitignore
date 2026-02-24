@@ -383,6 +383,7 @@ ehthumbs_vista.db
 **/wwwroot/css/app.css
 **/wwwroot/js/app.js
 
-# App settings (may contain API keys and secrets)
+# App settings (may contain API keys)
 **/appsettings.json
 **/appsettings.*.json
+!**/appsettings.example.json

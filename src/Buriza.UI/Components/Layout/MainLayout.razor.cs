@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 using MudBlazor;
 using static Buriza.Data.Models.Enums.DrawerContentType;
+using Buriza.Core.Models.Enums;
 
 namespace Buriza.UI.Components.Layout;
 

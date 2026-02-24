@@ -1,7 +1,8 @@
-using Buriza.Data.Models.Enums;
-
 namespace Buriza.Data.Models.Common;
 
+/// <summary>
+/// UI view model for displaying fungible token assets.
+/// </summary>
 public record TokenAsset(
     string AssetIcon,
     string AssetName,
@@ -10,6 +11,9 @@ public record TokenAsset(
     float UsdConversion
 );
 
+/// <summary>
+/// UI view model for displaying NFT assets.
+/// </summary>
 public record NftAsset(
     string AssetIcon,
     string AssetName,
